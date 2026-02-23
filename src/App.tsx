@@ -1,43 +1,70 @@
 import { useKeycloak } from "@react-keycloak/web";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import RoleRedirect from "./components/RoleRedirect";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminPage from "./pages/AdminPage";
+import ManagerPage from "./pages/ManagerPage";
+import EmployeePage from "./pages/EmployeePage";
 
 function App() {
   const { keycloak, initialized } = useKeycloak();
 
   if (!initialized) {
-    return (
-      <div style={{ fontFamily: "system-ui", padding: 24 }}>
-        Initialisation de l'authentification...
-      </div>
-    );
+    return null;
   }
 
   const handleLogin = () =>
-    keycloak.login({ redirectUri: window.location.origin });
-
-  const handleLogout = () =>
-    keycloak.logout({ redirectUri: window.location.origin });
+    keycloak.login({ redirectUri: `${window.location.origin}/` });
 
   return (
-    <div style={{ fontFamily: "system-ui", padding: 24 }}>
-      {!keycloak.authenticated ? (
-        <button
-          onClick={handleLogin}
-          style={{ padding: "10px 20px", fontSize: "16px" }}
-        >
-          Login
-        </button>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div>Vous êtes connecté.</div>
-          <button
-            onClick={handleLogout}
-            style={{ padding: "10px 20px", fontSize: "16px" }}
-          >
-            Logout
-          </button>
-        </div>
-      )}
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            !keycloak.authenticated ? (
+              <div style={{ fontFamily: "system-ui", padding: 24 }}>
+                <h1>Skillify</h1>
+                <button
+                  onClick={handleLogin}
+                  style={{ padding: "10px 20px", fontSize: "16px" }}
+                >
+                  Connexion
+                </button>
+              </div>
+            ) : (
+              <RoleRedirect />
+            )
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
+              <ManagerPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN", "MANAGER", "EMPLOYEE"]}>
+              <EmployeePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

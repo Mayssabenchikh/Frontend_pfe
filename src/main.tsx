@@ -10,10 +10,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       authClient={keycloak}
       initOptions={{
         onLoad: "login-required",
-        
         checkLoginIframe: false,
-
         silentCheckSsoFallback: false,
+        redirectUri: `${window.location.origin}/`,
       }}
     >
       <App />
