@@ -30,3 +30,19 @@ export function getApiError(err: unknown, fallback: string): string {
 export function ensureArray<T>(value: T | T[] | null | undefined): T[] {
   return Array.isArray(value) ? value : [];
 }
+
+export function getAvatarColor(str: string): [string, string] {
+  const palettes: [string, string][] = [
+    ["#8b5cf6", "#6366f1"],
+    ["#06b6d4", "#0ea5e9"],
+    ["#10b981", "#14b8a6"],
+    ["#f59e0b", "#f97316"],
+    ["#ec4899", "#f43f5e"],
+    ["#6366f1", "#8b5cf6"],
+    ["#84cc16", "#22c55e"],
+    ["#a855f7", "#ec4899"],
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return palettes[Math.abs(hash) % palettes.length];
+}

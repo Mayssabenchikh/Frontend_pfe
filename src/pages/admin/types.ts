@@ -5,9 +5,28 @@ export type UserListDto = {
   lastName: string;
   role: string;
   enabled: boolean;
+  department?: string | null;
+  jobTitle?: string | null;
+  phone?: string | null;
+  hireDate?: string | null;
+  avatarUrl?: string | null;
 };
 
-export type NavId = "dashboard" | "users";
+export type ArchivedUserDto = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  department?: string | null;
+  jobTitle?: string | null;
+  phone?: string | null;
+  hireDate?: string | null;
+  archivedAt?: string | null;
+  avatarUrl?: string | null;
+};
+
+export type NavId = "dashboard" | "users" | "archives" | "profile";
 
 export type AdminRole = "MANAGER" | "EMPLOYEE";
 

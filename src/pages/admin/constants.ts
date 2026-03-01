@@ -10,14 +10,14 @@ export const ROLE_OPTIONS = [
 ] as const;
 
 export const MESSAGES = {
-  userCreated: "Utilisateur créé.",
+  userCreated: "Utilisateur créé avec succès.",
   userUpdated: "Utilisateur mis à jour.",
-  errorGeneric: "Erreur",
-  errorLoad: "Erreur chargement",
+  errorGeneric: "Une erreur est survenue.",
+  errorLoad: "Erreur lors du chargement.",
   loading: "Chargement...",
-  noUsers: "Aucun utilisateur.",
-  submit: "Envoi...",
-  create: "Créer",
+  noUsers: "Aucun utilisateur trouvé.",
+  submit: "Envoi en cours...",
+  create: "Créer l'utilisateur",
   save: "Enregistrer",
   cancel: "Annuler",
   close: "Fermer",

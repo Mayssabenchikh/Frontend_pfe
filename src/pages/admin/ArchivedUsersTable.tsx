@@ -7,31 +7,22 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { Search, Pencil, ArchiveIcon, PowerOff, Power } from "lucide-react";
+import { Search, RotateCcw, Trash2, X, ArchiveIcon } from "lucide-react";
 
-import type { UserListDto } from "./types";
-import { MESSAGES } from "./constants";
+import type { ArchivedUserDto } from "./types";
 import { getAvatarColor } from "./utils";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 type Props = {
-  users: UserListDto[]; loading: boolean; error: string | null;
-  togglingId: string | null;
-  archivingId: string | null;
-  onEdit: (user: UserListDto) => void;
-  onToggleEnabled: (user: UserListDto) => void;
-  onArchive: (user: UserListDto) => void;
+  users: ArchivedUserDto[];
+  loading: boolean;
+  error: string | null;
+  restoringId: string | null;
+  deletingId: string | null;
+  onRestore: (user: ArchivedUserDto) => void;
+  onDeletePermanently: (user: ArchivedUserDto) => void;
 };
-
-const ROLE_LABELS: Record<string, string> = { MANAGER: "Manager", ADMIN: "Admin", EMPLOYEE: "Employé" };
-const ROLE_STYLES: Record<string, React.CSSProperties> = {
-  MANAGER:  { background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa" },
-  ADMIN:    { background: "#f5f3ff", color: "#7c3aed", border: "1px solid #ddd6fe" },
-  EMPLOYEE: { background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" },
-};
-
-const statuses = ["Tous", "Actif", "Inactif"] as const;
 
 function SkeletonRow() {
   return (
@@ -42,36 +33,39 @@ function SkeletonRow() {
         <div style={{ height: 12, width: 120, borderRadius: 6, background: "#e8edf5" }} />
         <div style={{ height: 10, width: 180, borderRadius: 6, background: "#f1f5f9" }} />
       </div>
-      <div style={{ height: 20, width: 60, borderRadius: 8, background: "#e8edf5" }} />
-      <div style={{ height: 20, width: 50, borderRadius: 8, background: "#e8edf5" }} />
+      <div style={{ height: 20, width: 80, borderRadius: 8, background: "#e8edf5" }} />
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ height: 28, width: 80, borderRadius: 8, background: "#e8edf5" }} />
-        <div style={{ height: 28, width: 88, borderRadius: 8, background: "#e8edf5" }} />
+        <div style={{ height: 28, width: 100, borderRadius: 8, background: "#e8edf5" }} />
       </div>
     </div>
   );
 }
 
-export function UsersTable({ users, loading, error, togglingId, archivingId, onEdit, onToggleEnabled, onArchive }: Props) {
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleDateString("fr-TN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+export function ArchivedUsersTable({ users, loading, error, restoringId, deletingId, onRestore, onDeletePermanently }: Props) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<(typeof statuses)[number]>("Tous");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filtered = useMemo(() =>
     users.filter((u) => {
       const fullName = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
       const haystack = [fullName, u.email, u.role, u.department ?? "", u.jobTitle ?? ""].join(" ").toLowerCase();
-      const matchSearch = haystack.includes(search.toLowerCase());
-      const matchStatus = statusFilter === "Tous" || (statusFilter === "Actif" ? u.enabled : !u.enabled);
-      return matchSearch && matchStatus;
+      return haystack.includes(search.toLowerCase());
     }),
-    [users, search, statusFilter]
+    [users, search]
   );
 
-  const columnDefs = useMemo<ColDef<UserListDto>[]>(() => [
+  const columnDefs = useMemo<ColDef<ArchivedUserDto>[]>(() => [
     {
-      headerName: "Utilisateur", field: "firstName", flex: 1.6, minWidth: 200,
-      cellRenderer: (p: ICellRendererParams<UserListDto>) => {
+      headerName: "Utilisateur", field: "firstName", flex: 1.4, minWidth: 200,
+      cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => {
         const u = p.data; if (!u) return null;
         const fullName = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email;
         const initials = `${u.firstName?.[0] ?? ""}${u.lastName?.[0] ?? ""}`.trim().toUpperCase() || u.email?.[0]?.toUpperCase() || "U";
@@ -79,82 +73,46 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {u.avatarUrl ? (
-              <img src={u.avatarUrl} alt={fullName} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }} />
+              <img src={u.avatarUrl} alt={fullName} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0, opacity: 0.7, boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }} />
             ) : (
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0, boxShadow: `0 2px 8px ${gradient[0]}40` }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0, opacity: 0.7 }}>
                 {initials}
               </div>
             )}
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{fullName}</span>
-          </div>
-        );
-      },
-    },
-    {
-      headerName: "Contact", field: "email", flex: 1.4, minWidth: 200,
-      cellRenderer: (p: ICellRendererParams<UserListDto>) => {
-        const u = p.data; if (!u) return null;
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: 12, color: "#94a3b8" }}>{u.email}</span>
-            {u.phone && <span style={{ fontSize: 11, color: "#b0b8cc" }}>{u.phone}</span>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>{fullName}</span>
+              <span style={{ fontSize: 11, color: "#94a3b8" }}>{u.email}</span>
+            </div>
           </div>
         );
       },
     },
     {
       headerName: "Département / Poste", field: "department", flex: 1.2, minWidth: 160,
-      cellRenderer: (p: ICellRendererParams<UserListDto>) => {
+      cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => {
         const u = p.data; if (!u) return null;
         if (!u.department && !u.jobTitle) return <span style={{ fontSize: 12, color: "#cbd5e1" }}>—</span>;
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {u.department && <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>{u.department}</span>}
-            {u.jobTitle && <span style={{ fontSize: 11, color: "#94a3b8" }}>{u.jobTitle}</span>}
+            {u.department && <span style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8" }}>{u.department}</span>}
+            {u.jobTitle && <span style={{ fontSize: 11, color: "#b0b8cc" }}>{u.jobTitle}</span>}
           </div>
         );
       },
     },
     {
-      headerName: "Rôle", field: "role", flex: 0.8, minWidth: 120,
-      cellRenderer: (p: ICellRendererParams<UserListDto>) => {
-        const role = (p.value as string) ?? "";
-        return (
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: 5,
-            borderRadius: 6, padding: "3px 9px", fontSize: 11, fontWeight: 600,
-            ...(ROLE_STYLES[role] ?? ROLE_STYLES.EMPLOYEE),
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: role === "MANAGER" ? "#ea580c" : role === "ADMIN" ? "#6d28d9" : "#2563eb" }} />
-            {ROLE_LABELS[role] ?? role}
-          </span>
-        );
-      },
+      headerName: "Archivé le", field: "archivedAt", flex: 0.9, minWidth: 130,
+      cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => (
+        <span style={{ fontSize: 12, color: "#94a3b8" }}>{formatDate(p.data?.archivedAt)}</span>
+      ),
     },
     {
-      headerName: "Statut", field: "enabled", flex: 0.6, minWidth: 100,
-      cellRenderer: (p: ICellRendererParams<UserListDto>) => {
-        const on = Boolean(p.data?.enabled);
-        return (
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: 5,
-            borderRadius: 6, padding: "3px 9px", fontSize: 11, fontWeight: 600,
-            border: `1px solid ${on ? "#bbf7d0" : "#e2e8f0"}`,
-            background: on ? "#f0fdf4" : "#f8fafc",
-            color: on ? "#16a34a" : "#94a3b8",
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: on ? "#22c55e" : "#cbd5e1" }} />
-            {on ? "Actif" : "Inactif"}
-          </span>
-        );
-      },
-    },
-    {
-      headerName: "Actions", flex: 0.7, minWidth: 140, sortable: false, filter: false,
-      cellRenderer: (p: ICellRendererParams<UserListDto>) => {
+      headerName: "Actions", flex: 0.8, minWidth: 160, sortable: false, filter: false,
+      cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => {
         const u = p.data; if (!u) return null;
-        const isTog = togglingId === u.id;
-        const isArch = archivingId === u.id;
+        const isRes = restoringId === u.id;
+        const isDel = deletingId === u.id;
+        const isConfirming = confirmDeleteId === u.id;
 
         const iconBtn = (
           color: string, hoverBg: string, hoverColor: string,
@@ -163,20 +121,14 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
           children: React.ReactNode
         ) => (
           <button
-            type="button"
-            title={title}
-            onClick={onClick}
-            disabled={disabled}
+            type="button" title={title} onClick={onClick} disabled={disabled}
             style={{
               width: 32, height: 32, borderRadius: 8,
-              border: "1px solid #e8edf5",
-              background: "#fff",
+              border: "1px solid #e8edf5", background: "#fff",
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               cursor: disabled ? "not-allowed" : "pointer",
               opacity: disabled ? 0.45 : 1,
-              color,
-              transition: "all 0.15s",
-              flexShrink: 0,
+              color, transition: "all 0.15s", flexShrink: 0,
             }}
             onMouseEnter={(e) => {
               if (!disabled) {
@@ -201,25 +153,50 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
 
         return (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-            {iconBtn("#6366f1", "#ede9fe", "#4338ca", "Modifier", false, () => onEdit(u),
-              isTog ? <span style={{ fontSize: 10 }}>…</span> : <Pencil size={13} strokeWidth={2} />
+            {iconBtn("#22c55e", "#dcfce7", "#15803d", "Restaurer", isRes, () => onRestore(u),
+              isRes ? <span style={{ fontSize: 10 }}>…</span> : <RotateCcw size={13} strokeWidth={2} />
             )}
-            {u.enabled
-              ? iconBtn("#ef4444", "#fee2e2", "#dc2626", "Désactiver", isTog, () => onToggleEnabled(u),
-                  isTog ? <span style={{ fontSize: 10 }}>…</span> : <PowerOff size={13} strokeWidth={2} />
-                )
-              : iconBtn("#22c55e", "#dcfce7", "#15803d", "Activer", isTog, () => onToggleEnabled(u),
-                  isTog ? <span style={{ fontSize: 10 }}>…</span> : <Power size={13} strokeWidth={2} />
-                )
-            }
-            {iconBtn("#f59e0b", "#fffbeb", "#b45309", "Archiver", isArch, () => onArchive(u),
-              isArch ? <span style={{ fontSize: 10 }}>…</span> : <ArchiveIcon size={13} strokeWidth={2} />
+
+            {isConfirming ? (
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => { setConfirmDeleteId(null); onDeletePermanently(u); }}
+                  disabled={isDel}
+                  style={{
+                    height: 32, borderRadius: 8, border: "none",
+                    background: "linear-gradient(135deg,#ef4444,#dc2626)",
+                    padding: "0 12px", fontSize: 11, fontWeight: 700, color: "#fff",
+                    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5,
+                    boxShadow: "0 2px 8px rgba(239,68,68,0.4)",
+                  }}
+                >
+                  <Trash2 size={11} strokeWidth={2.5} /> Confirmer
+                </button>
+                <button
+                  type="button" onClick={() => setConfirmDeleteId(null)}
+                  style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    border: "1px solid #e8edf5", background: "#fff",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: "#94a3b8",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#94a3b8"; }}
+                >
+                  <X size={13} strokeWidth={2} />
+                </button>
+              </div>
+            ) : (
+              iconBtn("#ef4444", "#fee2e2", "#dc2626", "Supprimer définitivement", isDel, () => setConfirmDeleteId(u.id),
+                isDel ? <span style={{ fontSize: 10 }}>…</span> : <Trash2 size={13} strokeWidth={2} />
+              )
             )}
           </div>
         );
       },
     },
-  ], [onEdit, onToggleEnabled, onArchive, togglingId, archivingId]);
+  ], [onRestore, onDeletePermanently, restoringId, deletingId, confirmDeleteId]);
 
   const defaultColDef: ColDef = useMemo(() => ({ resizable: true, sortable: true, flex: 1, minWidth: 100, suppressHeaderMenuButton: true }), []);
 
@@ -234,19 +211,22 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+      {/* Banner info */}
+      <div style={{ padding: "10px 24px", background: "#fffbeb", borderBottom: "1px solid #fde68a", display: "flex", alignItems: "center", gap: 10 }}>
+        <ArchiveIcon size={15} strokeWidth={2} color="#b45309" style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: 12, color: "#92400e" }}>
+          Les utilisateurs archivés ne peuvent plus se connecter. Vous pouvez les restaurer à tout moment ou les supprimer définitivement.
+        </span>
+      </div>
+
       {/* Filter bar */}
-      <div style={{
-        display: "flex", gap: 12, flexWrap: "wrap",
-        padding: "14px 24px",
-        background: "#fafbff",
-        borderBottom: "1px solid #e8edf5",
-      }}>
+      <div style={{ display: "flex", gap: 12, padding: "14px 24px", background: "#fafbff", borderBottom: "1px solid #e8edf5" }}>
         <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
           <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#b0b8cc", pointerEvents: "none" }}>
             <Search size={14} />
           </span>
           <input
-            type="search" placeholder="Rechercher par nom, email, rôle…"
+            type="search" placeholder="Rechercher dans les archives…"
             value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
             style={{
@@ -259,18 +239,12 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
             }}
           />
         </div>
-        <select
-          value={statusFilter} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value as (typeof statuses)[number])}
-          style={{ borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8faff", padding: "9px 14px", fontSize: 13, color: "#475569", outline: "none", cursor: "pointer" }}
-        >
-          {statuses.map((s) => <option key={s} value={s}>{s === "Tous" ? "Tous les statuts" : s}</option>)}
-        </select>
       </div>
 
       {/* Table */}
       {loading ? (
         <div style={{ flex: 1, background: "#fff" }}>
-          {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
+          {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -282,10 +256,9 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               --ag-row-hover-color: #f0f0ff;
               --ag-border-color: #e8edf5;
               --ag-header-foreground-color: #64748b;
-              --ag-foreground-color: #1e293b;
               --ag-font-size: 13px;
               --ag-cell-horizontal-padding: 16px;
-              --ag-row-height: 52px;
+              --ag-row-height: 56px;
               --ag-header-height: 42px;
             }
             .ag-theme-quartz .ag-header-cell-label {
@@ -294,22 +267,13 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
             }
             .ag-theme-quartz .ag-row { border-bottom: 1px solid #f1f5f9; }
             .ag-theme-quartz .ag-cell {
-              display: flex !important;
-              align-items: center !important;
-              line-height: normal !important;
+              display: flex !important; align-items: center !important; line-height: normal !important;
             }
-            .ag-theme-quartz .ag-cell-wrapper {
-              width: 100%;
-              display: flex;
-              align-items: center;
-            }
-            .ag-theme-quartz .ag-paging-panel {
-              border-top: 1px solid #e8edf5; background: #fafbff;
-              color: #94a3b8; font-size: 12px;
-            }
+            .ag-theme-quartz .ag-cell-wrapper { width: 100%; display: flex; align-items: center; }
+            .ag-theme-quartz .ag-paging-panel { border-top: 1px solid #e8edf5; background: #fafbff; color: #94a3b8; font-size: 12px; }
           `}</style>
           <div className="ag-theme-quartz" style={{ flex: 1, width: "100%", overflow: "hidden" }}>
-            <AgGridReact<UserListDto>
+            <AgGridReact<ArchivedUserDto>
               theme="legacy"
               rowData={filtered}
               columnDefs={columnDefs}
@@ -318,18 +282,18 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               paginationPageSize={15}
               paginationPageSizeSelector={false}
               suppressCellFocus
-              rowHeight={52}
+              rowHeight={56}
               headerHeight={42}
               noRowsOverlayComponent={() => (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "60px 0", color: "#94a3b8" }}>
-                  <span style={{ fontSize: 40 }}>👥</span>
-                  <p style={{ fontSize: 13, margin: 0 }}>{MESSAGES.noUsers}</p>
+                  <span style={{ fontSize: 40 }}>📭</span>
+                  <p style={{ fontSize: 13, margin: 0 }}>Aucun utilisateur archivé</p>
                 </div>
               )}
             />
           </div>
           <div style={{ padding: "8px 24px", textAlign: "right", fontSize: 11, color: "#b0b8cc", borderTop: "1px solid #e8edf5", background: "#fafbff", flexShrink: 0 }}>
-            {filtered.length} utilisateur{filtered.length !== 1 ? "s" : ""} affiché{filtered.length !== 1 ? "s" : ""} sur {users.length}
+            {filtered.length} utilisateur{filtered.length !== 1 ? "s" : ""} archivé{filtered.length !== 1 ? "s" : ""}
           </div>
         </div>
       )}

@@ -1,50 +1,245 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
-  color-scheme: light;
-  color: #0f172a;
-  background-color: #f8fafc;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Inter", -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #f8fafc;
+    color: #1e293b;
+  }
 }
 
-a {
-  font-weight: 500;
-  color: #4f46e5;
-  text-decoration: none;
-}
-a:hover {
-  color: #4338ca;
+/* AG Grid — clean minimal theme matching the design */
+.ag-theme-quartz {
+  --ag-foreground-color: #1e293b;
+  --ag-background-color: #ffffff;
+  --ag-header-background-color: #f8fafc;
+  --ag-header-foreground-color: #94a3b8;
+  --ag-border-color: transparent;
+  --ag-row-hover-color: #faf5ff;
+  --ag-selected-row-background-color: #f5f3ff;
+  --ag-font-family: "Inter", sans-serif;
+  --ag-font-size: 13px;
+  --ag-row-height: 56px;
+  --ag-header-height: 44px;
+  --ag-cell-horizontal-padding: 20px;
+  --ag-wrapper-border-radius: 0;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
+.ag-theme-quartz .ag-header {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ag-theme-quartz .ag-root-wrapper {
+  border: none;
+}
+
+.ag-theme-quartz .ag-row {
+  border-bottom: 1px solid #f8fafc;
+  transition: background-color 0.1s;
+}
+
+.ag-theme-quartz .ag-paging-panel {
+  border-top: 1px solid #f1f5f9;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.ag-theme-quartz .ag-cell {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Responsive layout ───────────────────────────────────────── */
+
+/* Sidebar overlay backdrop */
+.sidebar-backdrop {
+  display: none;
+  position: fixed; inset: 0; z-index: 29;
+  background: rgba(15,23,42,0.45);
+  backdrop-filter: blur(2px);
+}
+
+/* Admin layout root */
+.admin-layout {
+  display: flex;
   min-height: 100vh;
+  background: #f4f6fb;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #f3f4f6;
+/* Sidebar */
+.admin-sidebar {
+  width: 240px;
+  min-width: 240px;
+  flex-shrink: 0;
+  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Main content area */
+.admin-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Header left offset matches sidebar width */
+.admin-header-fixed {
+  position: fixed;
+  top: 0; right: 0; left: 240px;
+  z-index: 40;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e8edf5;
+  box-shadow: 0 1px 12px rgba(67,56,202,0.08);
+  transition: left 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Hamburger button — hidden on desktop */
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid #e8edf5;
+  background: #f8faff;
   cursor: pointer;
-  transition: border-color 0.25s, background-color 0.25s;
+  color: #4338ca;
+  flex-shrink: 0;
 }
-button:hover {
-  border-color: #4f46e5;
-  background-color: #e5e7eb;
+
+/* Dashboard padding */
+.dashboard-padding {
+  padding: 32px 32px 40px;
 }
-button:focus,
-button:focus-visible {
-  outline: 3px solid #4f46e5;
-  outline-offset: 2px;
+
+/* Profile layout */
+.profile-layout {
+  display: flex;
+  gap: 28px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.profile-left  { width: 260px; flex-shrink: 0; }
+.profile-right { flex: 1; }
+
+/* Modal grid */
+.modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 24px;
+  background: #fafbff;
+  border-bottom: 1px solid #e8edf5;
+}
+
+/* ── Tablet (≤ 900px) ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  .profile-layout { flex-direction: column; }
+  .profile-left   { width: 100%; }
+}
+
+/* ── Mobile (≤ 768px) ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Sidebar becomes a drawer */
+  .admin-sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 30;
+    transform: translateX(-100%);
+  }
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-backdrop.open {
+    display: block;
+  }
+
+  /* Header spans full width */
+  .admin-header-fixed {
+    left: 0;
+    padding: 0 16px;
+  }
+
+  /* Hamburger visible */
+  .hamburger-btn {
+    display: flex;
+  }
+
+  /* Dashboard padding */
+  .dashboard-padding {
+    padding: 20px 16px 28px;
+  }
+
+  /* Profile */
+  .profile-layout { padding: 16px; gap: 16px; }
+  .profile-right  { min-width: 0; }
+
+  /* Modal grid → single column */
+  .modal-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    padding: 12px 16px;
+    flex-direction: column;
+  }
+
+  /* Users toolbar */
+  .users-toolbar {
+    padding: 12px 16px !important;
+  }
+}
+
+/* ── Small mobile (≤ 480px) ─────────────────────────────────── */
+@media (max-width: 480px) {
+  .admin-header-fixed {
+    padding: 0 12px;
+  }
+  .dashboard-padding {
+    padding: 14px 12px 20px;
+  }
+}
+
+/* ── Modal responsive ───────────────────────────────────────── */
+@media (max-width: 600px) {
+  /* Modal overlay padding réduit */
+  [role="dialog"] > div {
+    max-width: 100% !important;
+    border-radius: 16px !important;
+    margin: 8px !important;
+  }
+}
+
+/* ── PersonalSection / SecuritySection padding ──────────────── */
+@media (max-width: 768px) {
+  .profile-section-content {
+    padding: 20px 18px !important;
+  }
 }
