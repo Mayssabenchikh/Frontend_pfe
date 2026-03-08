@@ -7,7 +7,8 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { Search, RotateCcw, Trash2, X, ArchiveIcon } from "lucide-react";
+import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
+import { MagnifyingGlassIcon, ArrowPathIcon, TrashIcon, ArchiveBoxIcon } from "@heroicons/react/24/outline";
 
 import type { ArchivedUserDto } from "./types";
 import { getAvatarColor } from "./utils";
@@ -21,22 +22,21 @@ type Props = {
   restoringId: string | null;
   deletingId: string | null;
   onRestore: (user: ArchivedUserDto) => void;
-  onDeletePermanently: (user: ArchivedUserDto) => void;
+  onRequestDelete: (user: ArchivedUserDto) => void;
 };
 
 function SkeletonRow() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 16, borderBottom: "1px solid #f1f5f9", padding: "14px 24px", animation: "pulse 1.5s ease-in-out infinite" }}>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
-      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#e8edf5", flexShrink: 0 }} />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ height: 12, width: 120, borderRadius: 6, background: "#e8edf5" }} />
-        <div style={{ height: 10, width: 180, borderRadius: 6, background: "#f1f5f9" }} />
+    <div className="flex items-center gap-4 px-6 py-4 border-b border-violet-100/60 animate-pulse">
+      <div className="w-9 h-9 rounded-full bg-violet-100 shrink-0" />
+      <div className="flex-1 flex flex-col gap-2">
+        <div className="h-3 w-32 rounded-full bg-violet-100" />
+        <div className="h-2.5 w-48 rounded-full bg-violet-50" />
       </div>
-      <div style={{ height: 20, width: 80, borderRadius: 8, background: "#e8edf5" }} />
-      <div style={{ display: "flex", gap: 8 }}>
-        <div style={{ height: 28, width: 80, borderRadius: 8, background: "#e8edf5" }} />
-        <div style={{ height: 28, width: 100, borderRadius: 8, background: "#e8edf5" }} />
+      <div className="h-5 w-24 rounded-full bg-violet-100" />
+      <div className="flex gap-2">
+        <div className="h-8 w-8 rounded-lg bg-violet-100" />
+        <div className="h-8 w-8 rounded-lg bg-violet-100" />
       </div>
     </div>
   );
@@ -48,10 +48,95 @@ function formatDate(iso: string | null | undefined): string {
   return d.toLocaleDateString("fr-TN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export function ArchivedUsersTable({ users, loading, error, restoringId, deletingId, onRestore, onDeletePermanently }: Props) {
+const AG_THEME = `
+  .ag-theme-archived {
+    --ag-background-color: #f8f7ff;
+    --ag-header-background-color: rgba(139,92,246,0.06);
+    --ag-odd-row-background-color: #f8f7ff;
+    --ag-even-row-background-color: #f8f7ff;
+    --ag-row-hover-color: #ede9fe;
+    --ag-selected-row-background-color: #ede9fe;
+    --ag-border-color: #e5e1f8;
+    --ag-header-foreground-color: #4c1d95;
+    --ag-font-size: 14px;
+    --ag-cell-horizontal-padding: 20px;
+    --ag-row-height: 60px;
+    --ag-header-height: 44px;
+    --ag-borders: none;
+    --ag-row-border-style: solid;
+    --ag-row-border-width: 1px;
+    --ag-row-border-color: #ede9fe;
+    --ag-header-column-separator-display: none;
+  }
+
+  .ag-theme-archived .ag-root-wrapper {
+    border: none;
+    border-radius: 0;
+  }
+
+  .ag-theme-archived .ag-header {
+    border-bottom: 1px solid #ddd6fe;
+  }
+
+  .ag-theme-archived .ag-header-cell-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #5b21b6;
+  }
+
+  .ag-theme-archived .ag-header-cell:hover .ag-header-cell-label {
+    color: #3b0764;
+  }
+
+  .ag-theme-archived .ag-row {
+    transition: background 0.15s ease;
+  }
+
+  .ag-theme-archived .ag-row:last-child {
+    border-bottom: none;
+  }
+
+  .ag-theme-archived .ag-cell {
+    display: flex !important;
+    align-items: center !important;
+    line-height: normal !important;
+  }
+
+  .ag-theme-archived .ag-cell-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .ag-theme-archived .ag-paging-panel {
+    border-top: 1px solid rgba(139,92,246,0.1);
+    background: rgba(139,92,246,0.04);
+    color: #5b21b6;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 0 20px;
+    height: 44px;
+  }
+
+  .ag-theme-archived .ag-paging-button {
+    color: #5b21b6;
+  }
+
+  .ag-theme-archived .ag-paging-button:hover:not(:disabled) {
+    color: #3b0764;
+    background: #ede9fe;
+    border-radius: 6px;
+  }
+
+  .ag-theme-archived .ag-sort-indicator-icon {
+    color: #7c3aed;
+  }
+`;
+
+export function ArchivedUsersTable({ users, loading, error, restoringId, deletingId, onRestore, onRequestDelete }: Props) {
   const [search, setSearch] = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filtered = useMemo(() =>
     users.filter((u) => {
@@ -64,217 +149,291 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
 
   const columnDefs = useMemo<ColDef<ArchivedUserDto>[]>(() => [
     {
-      headerName: "Utilisateur", field: "firstName", flex: 1.4, minWidth: 200,
+      headerName: "Utilisateur",
+      field: "firstName",
+      flex: 1.5,
+      minWidth: 220,
       cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => {
-        const u = p.data; if (!u) return null;
+        const u = p.data;
+        if (!u) return null;
         const fullName = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email;
         const initials = `${u.firstName?.[0] ?? ""}${u.lastName?.[0] ?? ""}`.trim().toUpperCase() || u.email?.[0]?.toUpperCase() || "U";
         const gradient = getAvatarColor(u.email);
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="flex items-center gap-3">
             {u.avatarUrl ? (
-              <img src={u.avatarUrl} alt={fullName} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0, opacity: 0.7, boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }} />
+              <img
+                src={u.avatarUrl}
+                alt={fullName}
+                className="w-9 h-9 rounded-full object-cover shrink-0 ring-2 ring-violet-100"
+                style={{ opacity: 0.8 }}
+              />
             ) : (
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0, opacity: 0.7 }}>
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ring-2 ring-white shadow-sm"
+                style={{
+                  background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+                  opacity: 0.85,
+                }}
+              >
                 {initials}
               </div>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>{fullName}</span>
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>{u.email}</span>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              {/* darker: #2e1065 instead of #3b1f6e */}
+              <span
+                className="text-sm font-semibold truncate"
+                style={{ color: "#1e293b", fontSize: 14 }}
+              >
+                {fullName}
+              </span>
+              <span
+                className="text-xs truncate"
+                style={{ color: "#64748b", fontSize: 12 }}
+              >
+                {u.email}
+              </span>
             </div>
           </div>
         );
       },
     },
     {
-      headerName: "Département / Poste", field: "department", flex: 1.2, minWidth: 160,
+      headerName: "Département / Poste",
+      field: "department",
+      flex: 1.2,
+      minWidth: 170,
       cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => {
-        const u = p.data; if (!u) return null;
-        if (!u.department && !u.jobTitle) return <span style={{ fontSize: 12, color: "#cbd5e1" }}>—</span>;
+        const u = p.data;
+        if (!u) return null;
+        if (!u.department && !u.jobTitle)
+          return <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>;
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {u.department && <span style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8" }}>{u.department}</span>}
-            {u.jobTitle && <span style={{ fontSize: 11, color: "#b0b8cc" }}>{u.jobTitle}</span>}
+          <div className="flex flex-col gap-0.5">
+            {u.department && (
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>
+                {u.department}
+              </span>
+            )}
+            {u.jobTitle && (
+              <span style={{ fontSize: 12, color: "#64748b" }}>
+                {u.jobTitle}
+              </span>
+            )}
           </div>
         );
       },
     },
     {
-      headerName: "Archivé le", field: "archivedAt", flex: 0.9, minWidth: 130,
+      headerName: "Archivé le",
+      field: "archivedAt",
+      flex: 0.9,
+      minWidth: 140,
       cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => (
-        <span style={{ fontSize: 12, color: "#94a3b8" }}>{formatDate(p.data?.archivedAt)}</span>
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+          style={{
+            background: "rgba(109,40,217,0.1)",
+            // darker date text
+            color: "#4c1d95",
+            border: "1px solid rgba(109,40,217,0.2)",
+          }}
+        >
+          {formatDate(p.data?.archivedAt)}
+        </span>
       ),
     },
     {
-      headerName: "Actions", flex: 0.8, minWidth: 160, sortable: false, filter: false,
+      headerName: "Actions",
+      flex: 0.7,
+      minWidth: 120,
+      sortable: false,
+      filter: false,
       cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => {
-        const u = p.data; if (!u) return null;
+        const u = p.data;
+        if (!u) return null;
         const isRes = restoringId === u.id;
         const isDel = deletingId === u.id;
-        const isConfirming = confirmDeleteId === u.id;
-
-        const iconBtn = (
-          color: string, hoverBg: string, hoverColor: string,
-          title: string, disabled: boolean,
-          onClick: () => void,
-          children: React.ReactNode
-        ) => (
-          <button
-            type="button" title={title} onClick={onClick} disabled={disabled}
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              border: "1px solid #e8edf5", background: "#fff",
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              cursor: disabled ? "not-allowed" : "pointer",
-              opacity: disabled ? 0.45 : 1,
-              color, transition: "all 0.15s", flexShrink: 0,
-            }}
-            onMouseEnter={(e) => {
-              if (!disabled) {
-                e.currentTarget.style.background = hoverBg;
-                e.currentTarget.style.borderColor = hoverBg;
-                e.currentTarget.style.color = hoverColor;
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = `0 3px 8px ${hoverBg}80`;
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#fff";
-              e.currentTarget.style.borderColor = "#e8edf5";
-              e.currentTarget.style.color = color;
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            {children}
-          </button>
-        );
 
         return (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-            {iconBtn("#22c55e", "#dcfce7", "#15803d", "Restaurer", isRes, () => onRestore(u),
-              isRes ? <span style={{ fontSize: 10 }}>…</span> : <RotateCcw size={13} strokeWidth={2} />
-            )}
+          <div className="flex items-center gap-1.5">
+            {/* Restore button */}
+            <button
+              type="button"
+              title="Restaurer"
+              disabled={isRes}
+              onClick={() => onRestore(u)}
+              className="group relative w-8 h-8 rounded-lg inline-flex items-center justify-center transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: isRes ? "rgba(34,197,94,0.1)" : "rgba(34,197,94,0.08)",
+                border: "1px solid rgba(34,197,94,0.25)",
+                // darker green icon
+                color: "#15803d",
+              }}
+              onMouseEnter={e => {
+                if (!isRes) {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,197,94,0.15)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(34,197,94,0.4)";
+                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 8px rgba(34,197,94,0.2)";
+                }
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,197,94,0.08)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(34,197,94,0.25)";
+                (e.currentTarget as HTMLButtonElement).style.transform = "";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "";
+              }}
+            >
+              {isRes
+                ? <span style={{ fontSize: 10, fontWeight: 700, color: "#15803d" }}>···</span>
+                : <ArrowPathIcon className="w-3.5 h-3.5" />
+              }
+            </button>
 
-            {isConfirming ? (
-              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                <button
-                  type="button"
-                  onClick={() => { setConfirmDeleteId(null); onDeletePermanently(u); }}
-                  disabled={isDel}
-                  style={{
-                    height: 32, borderRadius: 8, border: "none",
-                    background: "linear-gradient(135deg,#ef4444,#dc2626)",
-                    padding: "0 12px", fontSize: 11, fontWeight: 700, color: "#fff",
-                    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5,
-                    boxShadow: "0 2px 8px rgba(239,68,68,0.4)",
-                  }}
-                >
-                  <Trash2 size={11} strokeWidth={2.5} /> Confirmer
-                </button>
-                <button
-                  type="button" onClick={() => setConfirmDeleteId(null)}
-                  style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    border: "1px solid #e8edf5", background: "#fff",
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: "#94a3b8",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#94a3b8"; }}
-                >
-                  <X size={13} strokeWidth={2} />
-                </button>
-              </div>
-            ) : (
-              iconBtn("#ef4444", "#fee2e2", "#dc2626", "Supprimer définitivement", isDel, () => setConfirmDeleteId(u.id),
-                isDel ? <span style={{ fontSize: 10 }}>…</span> : <Trash2 size={13} strokeWidth={2} />
-              )
-            )}
+            {/* Delete button */}
+            <button
+              type="button"
+              title="Supprimer définitivement"
+              disabled={isDel}
+              onClick={() => onRequestDelete(u)}
+              className="w-8 h-8 rounded-lg inline-flex items-center justify-center transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: isDel ? "rgba(239,68,68,0.1)" : "rgba(239,68,68,0.07)",
+                border: "1px solid rgba(239,68,68,0.2)",
+                // darker red icon
+                color: "#b91c1c",
+              }}
+              onMouseEnter={e => {
+                if (!isDel) {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.14)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(239,68,68,0.35)";
+                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 8px rgba(239,68,68,0.18)";
+                }
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.07)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(239,68,68,0.2)";
+                (e.currentTarget as HTMLButtonElement).style.transform = "";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "";
+              }}
+            >
+              {isDel
+                ? <span style={{ fontSize: 10, fontWeight: 700, color: "#b91c1c" }}>···</span>
+                : <TrashIcon className="w-3.5 h-3.5" />
+              }
+            </button>
           </div>
         );
       },
     },
-  ], [onRestore, onDeletePermanently, restoringId, deletingId, confirmDeleteId]);
+  ], [onRestore, onRequestDelete, restoringId, deletingId]);
 
-  const defaultColDef: ColDef = useMemo(() => ({ resizable: true, sortable: true, flex: 1, minWidth: 100, suppressHeaderMenuButton: true }), []);
+  const defaultColDef: ColDef = useMemo(() => ({
+    resizable: false,
+    sortable: true,
+    flex: 1,
+    minWidth: 100,
+    suppressHeaderMenuButton: true,
+  }), []);
 
   if (error) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", textAlign: "center" }}>
-        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#fef2f2", border: "1px solid #fecaca", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12, color: "#ef4444", fontSize: 20 }}>⚠</div>
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#991b1b" }}>{error}</p>
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center"
+        style={{ background: "#f8f7ff" }}
+      >
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 text-2xl shadow-sm"
+          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
+        >
+          ⚠
+        </div>
+        <p className="text-sm font-semibold" style={{ color: "#7f1d1d" }}>{error}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-      {/* Banner info */}
-      <div style={{ padding: "10px 24px", background: "#fffbeb", borderBottom: "1px solid #fde68a", display: "flex", alignItems: "center", gap: 10 }}>
-        <ArchiveIcon size={15} strokeWidth={2} color="#b45309" style={{ flexShrink: 0 }} />
-        <span style={{ fontSize: 12, color: "#92400e" }}>
-          Les utilisateurs archivés ne peuvent plus se connecter. Vous pouvez les restaurer à tout moment ou les supprimer définitivement.
+    <div className="flex flex-col flex-1 overflow-hidden">
+      <style>{AG_THEME}</style>
+
+      {/* Top banner */}
+      <div
+        className="flex items-center gap-3 px-6 py-3"
+        style={{
+          background: "linear-gradient(90deg, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.06) 100%)",
+          borderBottom: "1px solid rgba(251,191,36,0.3)",
+        }}
+      >
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.3)" }}
+        >
+          <ArchiveBoxIcon className="w-3.5 h-3.5" style={{ color: "#92400e" }} />
+        </div>
+        {/* darker amber text in banner */}
+        <span className="text-xs font-medium" style={{ color: "#78350f" }}>
+          Les utilisateurs archivés ne peuvent plus se connecter.
+          Vous pouvez les restaurer à tout moment ou les supprimer définitivement.
         </span>
       </div>
 
-      {/* Filter bar */}
-      <div style={{ display: "flex", gap: 12, padding: "14px 24px", background: "#fafbff", borderBottom: "1px solid #e8edf5" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#b0b8cc", pointerEvents: "none" }}>
-            <Search size={14} />
-          </span>
+      {/* Search bar */}
+      <div
+        className="flex items-center gap-3 px-6 py-3 pb-5"
+        style={{ borderBottom: "1px solid rgba(139,92,246,0.1)" }}
+      >
+        <div className="relative flex-1 max-w-sm">
+          <MagnifyingGlassIcon
+            className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-violet-400"
+          />
           <input
-            type="search" placeholder="Rechercher dans les archives…"
-            value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
+            type="search"
+            placeholder="Rechercher dans les archives…"
+            value={search}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+            className="w-full rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none transition-all duration-150"
             style={{
-              width: "100%", borderRadius: 10,
-              border: `1.5px solid ${searchFocused ? "#818cf8" : "#e2e8f0"}`,
-              background: searchFocused ? "#fff" : "#f8faff",
-              padding: "9px 14px 9px 36px", fontSize: 13, color: "#1e293b",
-              outline: "none", boxShadow: searchFocused ? "0 0 0 3px rgba(67,56,202,0.12)" : "none",
-              transition: "all 0.15s", boxSizing: "border-box",
+              border: "1px solid rgba(139,92,246,0.2)",
+              background: "#fff",
+              color: "#4c1d95",
+            }}
+            onFocus={e => {
+              e.currentTarget.style.borderColor = "#7c3aed";
+              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.12)";
+            }}
+            onBlur={e => {
+              e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)";
+              e.currentTarget.style.boxShadow = "0 1px 3px rgba(139,92,246,0.08)";
             }}
           />
         </div>
+
+        {/* Count badge */}
+        <span
+          className="ml-auto text-xs font-semibold px-3 py-1.5 rounded-full"
+          style={{
+            background: "rgba(139,92,246,0.08)",
+            color: "#5b21b6",
+            border: "1px solid rgba(139,92,246,0.12)",
+          }}
+        >
+          {filtered.length} archivé{filtered.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
-        <div style={{ flex: 1, background: "#fff" }}>
-          {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
+        <div className="flex-1 px-6 pt-4" style={{ background: "#f8f7ff" }}>
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <style>{`
-            .ag-theme-quartz {
-              --ag-background-color: #ffffff;
-              --ag-header-background-color: #fafbff;
-              --ag-odd-row-background-color: #fcfcff;
-              --ag-row-hover-color: #f0f0ff;
-              --ag-border-color: #e8edf5;
-              --ag-header-foreground-color: #64748b;
-              --ag-font-size: 13px;
-              --ag-cell-horizontal-padding: 16px;
-              --ag-row-height: 56px;
-              --ag-header-height: 42px;
-            }
-            .ag-theme-quartz .ag-header-cell-label {
-              font-size: 11px; font-weight: 700;
-              text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8;
-            }
-            .ag-theme-quartz .ag-row { border-bottom: 1px solid #f1f5f9; }
-            .ag-theme-quartz .ag-cell {
-              display: flex !important; align-items: center !important; line-height: normal !important;
-            }
-            .ag-theme-quartz .ag-cell-wrapper { width: 100%; display: flex; align-items: center; }
-            .ag-theme-quartz .ag-paging-panel { border-top: 1px solid #e8edf5; background: #fafbff; color: #94a3b8; font-size: 12px; }
-          `}</style>
-          <div className="ag-theme-quartz" style={{ flex: 1, width: "100%", overflow: "hidden" }}>
+        <div className="flex-1 flex flex-col overflow-hidden px-6 pt-4" style={{ background: "#f8f7ff" }}>
+          <div className="ag-theme-quartz ag-theme-archived flex-1 w-full overflow-hidden">
             <AgGridReact<ArchivedUserDto>
               theme="legacy"
+              localeText={AG_GRID_LOCALE_FR}
               rowData={filtered}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
@@ -283,17 +442,28 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               paginationPageSizeSelector={false}
               suppressCellFocus
               rowHeight={56}
-              headerHeight={42}
+              headerHeight={44}
+              domLayout="normal"
               noRowsOverlayComponent={() => (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "60px 0", color: "#94a3b8" }}>
-                  <span style={{ fontSize: 40 }}>📭</span>
-                  <p style={{ fontSize: 13, margin: 0 }}>Aucun utilisateur archivé</p>
+                <div className="flex flex-col items-center gap-3 py-20">
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+                    style={{
+                      background: "rgba(109,40,217,0.07)",
+                      border: "1px solid rgba(109,40,217,0.15)",
+                    }}
+                  >
+                    📭
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-sm font-bold" style={{ color: "#4c1d95" }}>Aucun utilisateur archivé</p>
+                    <p className="text-xs" style={{ color: "#a78bfa" }}>
+                      {search ? "Aucun résultat pour cette recherche" : "Les utilisateurs archivés apparaîtront ici"}
+                    </p>
+                  </div>
                 </div>
               )}
             />
-          </div>
-          <div style={{ padding: "8px 24px", textAlign: "right", fontSize: 11, color: "#b0b8cc", borderTop: "1px solid #e8edf5", background: "#fafbff", flexShrink: 0 }}>
-            {filtered.length} utilisateur{filtered.length !== 1 ? "s" : ""} archivé{filtered.length !== 1 ? "s" : ""}
           </div>
         </div>
       )}

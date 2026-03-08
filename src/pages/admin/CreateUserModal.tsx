@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import type { AdminRole } from "./types";
 import { ROLE_OPTIONS, MESSAGES } from "./constants";
-import { X, AlertCircle, Camera, UserCircle } from "lucide-react";
+import { XMarkIcon, ExclamationCircleIcon, CameraIcon, UserCircleIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { getAvatarColor } from "./utils";
 import { toast } from "sonner";
 
@@ -47,36 +47,41 @@ function validate(fields: {
   return errors;
 }
 
-const baseInput: React.CSSProperties = {
-  width: "100%", borderRadius: 10, border: "1.5px solid #e2e8f0",
-  background: "#f8faff", padding: "10px 14px", fontSize: 13,
-  color: "#1e293b", outline: "none", boxSizing: "border-box", transition: "all 0.15s",
-};
-const errorInput: React.CSSProperties = { ...baseInput, borderColor: "#fca5a5", background: "#fff5f5" };
-const labelStyle: React.CSSProperties = {
-  display: "block", fontSize: 10, fontWeight: 700,
-  textTransform: "uppercase", letterSpacing: "0.12em", color: "#94a3b8", marginBottom: 6,
-};
-
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-      <AlertCircle size={11} color="#ef4444" />
-      <span style={{ fontSize: 11, color: "#ef4444" }}>{msg}</span>
+    <div className="flex items-center gap-1 mt-1">
+      <ExclamationCircleIcon className="w-3 h-3 text-red-500 shrink-0" />
+      <span className="text-xs text-red-500">{msg}</span>
     </div>
   );
 }
 
-function applyFocus(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>, hasError: boolean) {
-  e.target.style.border = `1.5px solid ${hasError ? "#f87171" : "#6d28d9"}`;
-  e.target.style.background = "#fff";
-  e.target.style.boxShadow = hasError ? "0 0 0 3px rgba(239,68,68,0.1)" : "0 0 0 3px rgba(67,56,202,0.12)";
+function FormInput({ id, type = "text", value, onChange, onBlur, onFocus, placeholder, hasError }: {
+  id: string; type?: string; value: string;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  onBlur: React.FocusEventHandler<HTMLInputElement>;
+  onFocus: React.FocusEventHandler<HTMLInputElement>;
+  placeholder?: string; hasError: boolean;
+}) {
+  return (
+    <input
+      id={id} type={type} value={value}
+      onChange={onChange} onBlur={onBlur} onFocus={onFocus}
+      placeholder={placeholder}
+      className={`w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-800 outline-none transition
+        focus:border-violet-600 focus:ring-2 focus:ring-violet-100 focus:bg-white
+        ${hasError ? "border-red-300 bg-red-50" : "border-slate-200 bg-slate-50"}`}
+    />
+  );
 }
-function applyBlur(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>, hasError: boolean) {
-  e.target.style.border = `1.5px solid ${hasError ? "#fca5a5" : "#e2e8f0"}`;
-  e.target.style.background = hasError ? "#fff5f5" : "#f8faff";
-  e.target.style.boxShadow = "none";
+
+function FormLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
+  return (
+    <label htmlFor={htmlFor} className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1.5">
+      {children}
+    </label>
+  );
 }
 
 export function CreateUserModal({
@@ -120,10 +125,7 @@ export function CreateUserModal({
     onSubmit(e, avatarFile);
   };
 
-  const handleClose = () => {
-    removeAvatar();
-    onClose();
-  };
+  const handleClose = () => { removeAvatar(); onClose(); };
 
   const revalidate = useCallback((field: keyof FieldErrors, value: string) => {
     if (!touched.has(field)) return;
@@ -141,75 +143,68 @@ export function CreateUserModal({
 
   if (!open) return null;
 
-  const inp = (field: keyof FieldErrors) => errors[field] ? errorInput : baseInput;
-  const err = (field: keyof FieldErrors) => errors[field];
-
+  const hasErr = (f: keyof FieldErrors) => !!errors[f];
+  const errMsg = (f: keyof FieldErrors) => errors[f];
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.trim().toUpperCase() || "?";
   const gradient = getAvatarColor(email || "new");
 
   return (
     <div
       onClick={handleClose}
-      style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(30,27,75,0.35)", backdropFilter: "blur(4px)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-indigo-950/30 backdrop-blur-sm"
       role="dialog" aria-modal="true"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%", maxWidth: 520, borderRadius: 20,
-          border: "1px solid #e8edf5", background: "#fff",
-          boxShadow: "0 24px 64px rgba(67,56,202,0.18)",
-          animation: "modalIn 0.2s cubic-bezier(0.16,1,0.3,1) both",
-          maxHeight: "90vh", overflowY: "auto",
-        }}
+        className="w-full max-w-lg rounded-2xl border border-slate-100 bg-white shadow-2xl max-h-[90vh] overflow-y-auto animate-[modalIn_0.2s_cubic-bezier(0.16,1,0.3,1)_both]"
       >
-        <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid #f1f5f9" }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <div>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e1b4b" }}>Nouvel utilisateur</h2>
-            <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Remplissez les informations ci-dessous</p>
+            <h2 className="text-base font-bold text-indigo-950">Nouvel utilisateur</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Remplissez les informations ci-dessous</p>
           </div>
-          <button onClick={handleClose} style={{ width: 32, height: 32, borderRadius: "50%", border: "1.5px solid #e2e8f0", background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#94a3b8" }}>
-            <X size={14} />
+          <button onClick={handleClose} className="w-8 h-8 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-400 transition">
+            <XMarkIcon className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={handleSubmit} noValidate className="p-6 flex flex-col gap-4">
 
           {/* Avatar picker */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 0", borderBottom: "1px solid #f1f5f9" }}>
-            <div style={{ position: "relative", flexShrink: 0 }}>
+          <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
+            <div className="relative shrink-0">
               {avatarPreview ? (
-                <img src={avatarPreview} alt="avatar" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "3px solid #ede9fe", boxShadow: "0 4px 16px rgba(67,56,202,0.2)" }} />
+                <img src={avatarPreview} alt="avatar" className="w-16 h-16 rounded-full object-cover border-3 border-violet-100 shadow-md" style={{ borderWidth: 3 }} />
               ) : (firstName || lastName) ? (
-                <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "#fff", border: "3px solid #ede9fe", boxShadow: "0 4px 16px rgba(67,56,202,0.2)" }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-md"
+                  style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, border: "3px solid #ede9fe" }}>
                   {initials}
                 </div>
               ) : (
-                <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #e2e8f0" }}>
-                  <UserCircle size={32} color="#cbd5e1" strokeWidth={1.5} />
+                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200">
+                  <UserCircleIcon className="w-8 h-8 text-slate-300" />
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                title="Choisir une photo"
-                style={{ position: "absolute", bottom: 0, right: 0, width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#4338ca,#6d28d9)", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}
-              >
-                <Camera size={11} strokeWidth={2.5} />
+              <button type="button" onClick={() => fileInputRef.current?.click()} title="Choisir une photo"
+                className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-700 to-violet-700 border-2 border-white flex items-center justify-center text-white cursor-pointer">
+                <CameraIcon className="w-3 h-3" />
               </button>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
             </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#1e293b" }}>Photo de profil</p>
-              <p style={{ margin: "2px 0 8px", fontSize: 11, color: "#94a3b8" }}>JPG, PNG ou WebP · max 5 Mo · optionnel</p>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button type="button" onClick={() => fileInputRef.current?.click()} style={{ fontSize: 11, fontWeight: 600, color: "#4338ca", background: "#ede9fe", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-800">Photo de profil</p>
+              <p className="text-xs text-slate-400 mt-0.5 mb-2">JPG, PNG ou WebP · max 5 Mo · optionnel</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => fileInputRef.current?.click()}
+                  className="text-xs font-semibold text-indigo-600 bg-violet-100 hover:bg-violet-200 rounded-lg px-2.5 py-1 transition">
                   {avatarPreview ? "Changer" : "Choisir"}
                 </button>
                 {avatarPreview && (
-                  <button type="button" onClick={removeAvatar} style={{ fontSize: 11, fontWeight: 500, color: "#94a3b8", background: "#f1f5f9", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                  <button type="button" onClick={removeAvatar}
+                    className="text-xs font-medium text-slate-400 bg-slate-100 hover:bg-slate-200 rounded-lg px-2.5 py-1 transition">
                     Supprimer
                   </button>
                 )}
@@ -217,105 +212,105 @@ export function CreateUserModal({
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <label style={labelStyle} htmlFor="c-email">Email <span style={{ color: "#ef4444" }}>*</span></label>
-            <input id="c-email" type="email" style={inp("email")} value={email}
+          {/* Email */}
+          <div>
+            <FormLabel htmlFor="c-email">Email <span className="text-red-500">*</span></FormLabel>
+            <FormInput id="c-email" type="email" value={email} hasError={hasErr("email")}
               onChange={(e) => { onEmailChange(e.target.value); revalidate("email", e.target.value); }}
-              onBlur={(e) => { touch("email"); revalidate("email", e.target.value); applyBlur(e, !!err("email")); }}
-              onFocus={(e) => applyFocus(e, !!err("email"))}
+              onBlur={(e) => { touch("email"); revalidate("email", e.target.value); }}
+              onFocus={() => {}}
               placeholder="ex: ahmed.ben.ali@whitecapetech.com"
             />
-            <FieldError msg={err("email")} />
+            <FieldError msg={errMsg("email")} />
           </div>
 
-          <div className="modal-grid-2">
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label style={labelStyle} htmlFor="c-fn">Prénom <span style={{ color: "#ef4444" }}>*</span></label>
-              <input id="c-fn" type="text" style={inp("firstName")} value={firstName}
+          {/* Prénom / Nom */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <FormLabel htmlFor="c-fn">Prénom <span className="text-red-500">*</span></FormLabel>
+              <FormInput id="c-fn" value={firstName} hasError={hasErr("firstName")}
                 onChange={(e) => { onFirstNameChange(e.target.value); revalidate("firstName", e.target.value); }}
-                onBlur={(e) => { touch("firstName"); revalidate("firstName", e.target.value); applyBlur(e, !!err("firstName")); }}
-                onFocus={(e) => applyFocus(e, !!err("firstName"))}
-                placeholder="ex: Ahmed"
+                onBlur={(e) => { touch("firstName"); revalidate("firstName", e.target.value); }}
+                onFocus={() => {}} placeholder="ex: Ahmed"
               />
-              <FieldError msg={err("firstName")} />
+              <FieldError msg={errMsg("firstName")} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label style={labelStyle} htmlFor="c-ln">Nom <span style={{ color: "#ef4444" }}>*</span></label>
-              <input id="c-ln" type="text" style={inp("lastName")} value={lastName}
+            <div>
+              <FormLabel htmlFor="c-ln">Nom <span className="text-red-500">*</span></FormLabel>
+              <FormInput id="c-ln" value={lastName} hasError={hasErr("lastName")}
                 onChange={(e) => { onLastNameChange(e.target.value); revalidate("lastName", e.target.value); }}
-                onBlur={(e) => { touch("lastName"); revalidate("lastName", e.target.value); applyBlur(e, !!err("lastName")); }}
-                onFocus={(e) => applyFocus(e, !!err("lastName"))}
-                placeholder="ex: Ben Ali"
+                onBlur={(e) => { touch("lastName"); revalidate("lastName", e.target.value); }}
+                onFocus={() => {}} placeholder="ex: Ben Ali"
               />
-              <FieldError msg={err("lastName")} />
+              <FieldError msg={errMsg("lastName")} />
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <label style={labelStyle} htmlFor="c-role">Rôle <span style={{ color: "#ef4444" }}>*</span></label>
-            <select id="c-role" style={{ ...baseInput, cursor: "pointer" }} value={role}
-              onChange={(e) => onRoleChange(e.target.value as AdminRole)}
-              onFocus={(e) => applyFocus(e, false)} onBlur={(e) => applyBlur(e, false)}
-            >
+          {/* Rôle */}
+          <div>
+            <FormLabel htmlFor="c-role">Rôle <span className="text-red-500">*</span></FormLabel>
+            <select id="c-role" value={role} onChange={(e) => onRoleChange(e.target.value as AdminRole)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none cursor-pointer transition focus:border-violet-600 focus:ring-2 focus:ring-violet-100 focus:bg-white">
               {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
 
-          <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 14 }}>
-            <p style={{ margin: "0 0 12px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#94a3b8" }}>Informations professionnelles</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div className="modal-grid-2">
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle} htmlFor="c-dept">Département</label>
-                  <input id="c-dept" type="text" style={inp("department")} value={department}
+          {/* Informations professionnelles */}
+          <div className="border-t border-slate-100 pt-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Informations professionnelles</p>
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <FormLabel htmlFor="c-dept">Département</FormLabel>
+                  <FormInput id="c-dept" value={department} hasError={hasErr("department")}
                     onChange={(e) => { onDepartmentChange(e.target.value); revalidate("department", e.target.value); }}
-                    onBlur={(e) => { touch("department"); revalidate("department", e.target.value); applyBlur(e, !!err("department")); }}
-                    onFocus={(e) => applyFocus(e, !!err("department"))}
-                    placeholder="ex: Ingénierie Logicielle"
+                    onBlur={(e) => { touch("department"); revalidate("department", e.target.value); }}
+                    onFocus={() => {}} placeholder="ex: Ingénierie Logicielle"
                   />
-                  <FieldError msg={err("department")} />
+                  <FieldError msg={errMsg("department")} />
                 </div>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle} htmlFor="c-job">Poste</label>
-                  <input id="c-job" type="text" style={inp("jobTitle")} value={jobTitle}
+                <div>
+                  <FormLabel htmlFor="c-job">Poste</FormLabel>
+                  <FormInput id="c-job" value={jobTitle} hasError={hasErr("jobTitle")}
                     onChange={(e) => { onJobTitleChange(e.target.value); revalidate("jobTitle", e.target.value); }}
-                    onBlur={(e) => { touch("jobTitle"); revalidate("jobTitle", e.target.value); applyBlur(e, !!err("jobTitle")); }}
-                    onFocus={(e) => applyFocus(e, !!err("jobTitle"))}
-                    placeholder="ex: Ingénieur Java"
+                    onBlur={(e) => { touch("jobTitle"); revalidate("jobTitle", e.target.value); }}
+                    onFocus={() => {}} placeholder="ex: Ingénieur Java"
                   />
-                  <FieldError msg={err("jobTitle")} />
+                  <FieldError msg={errMsg("jobTitle")} />
                 </div>
               </div>
-              <div className="modal-grid-2">
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle} htmlFor="c-phone">Téléphone</label>
-                  <input id="c-phone" type="tel" style={inp("phone")} value={phone}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <FormLabel htmlFor="c-phone">Téléphone</FormLabel>
+                  <FormInput id="c-phone" type="tel" value={phone} hasError={hasErr("phone")}
                     onChange={(e) => { onPhoneChange(e.target.value); revalidate("phone", e.target.value); }}
-                    onBlur={(e) => { touch("phone"); revalidate("phone", e.target.value); applyBlur(e, !!err("phone")); }}
-                    onFocus={(e) => applyFocus(e, !!err("phone"))}
-                    placeholder="+216 20 123 456"
+                    onBlur={(e) => { touch("phone"); revalidate("phone", e.target.value); }}
+                    onFocus={() => {}} placeholder="+216 20 123 456"
                   />
-                  <FieldError msg={err("phone")} />
+                  <FieldError msg={errMsg("phone")} />
                 </div>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle} htmlFor="c-hire">Date d'embauche</label>
-                  <input id="c-hire" type="date" style={inp("hireDate")} value={hireDate}
+                <div>
+                  <FormLabel htmlFor="c-hire">Date d'embauche</FormLabel>
+                  <FormInput id="c-hire" type="date" value={hireDate} hasError={hasErr("hireDate")}
                     onChange={(e) => { onHireDateChange(e.target.value); revalidate("hireDate", e.target.value); }}
-                    onBlur={(e) => { touch("hireDate"); revalidate("hireDate", e.target.value); applyBlur(e, !!err("hireDate")); }}
-                    onFocus={(e) => applyFocus(e, !!err("hireDate"))}
+                    onBlur={(e) => { touch("hireDate"); revalidate("hireDate", e.target.value); }}
+                    onFocus={() => {}}
                   />
-                  <FieldError msg={err("hireDate")} />
+                  <FieldError msg={errMsg("hireDate")} />
                 </div>
               </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, borderTop: "1px solid #f1f5f9", paddingTop: 16 }}>
-            <button type="button" onClick={handleClose} style={{ borderRadius: 10, border: "1.5px solid #e2e8f0", padding: "8px 18px", fontSize: 13, fontWeight: 500, color: "#475569", background: "#fff", cursor: "pointer" }}>
+          {/* Actions */}
+          <div className="flex justify-end gap-2.5 border-t border-slate-100 pt-4">
+            <button type="button" onClick={handleClose}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-500 bg-white hover:bg-slate-50 transition">
               {MESSAGES.cancel}
             </button>
-            <button type="submit" disabled={loading} style={{ borderRadius: 10, border: "none", padding: "8px 20px", fontSize: 13, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#4338ca,#6d28d9)", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 16px rgba(67,56,202,0.4)" }}>
-              {loading && <span style={{ width: 13, height: 13, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", display: "inline-block", animation: "spin 0.7s linear infinite" }} />}
+            <button type="submit" disabled={loading}
+              className="flex items-center gap-2 rounded-xl border-none px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-indigo-700 to-violet-700 shadow-md disabled:opacity-70 disabled:cursor-not-allowed transition">
+              {loading && <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />}
               {loading ? MESSAGES.submit : MESSAGES.create}
             </button>
           </div>

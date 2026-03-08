@@ -1,38 +1,29 @@
-import { Users, TrendingUp, UserX } from "lucide-react";
+import { UserGroupIcon, ArrowTrendingUpIcon, UserMinusIcon } from "@heroicons/react/24/outline";
 
 type CardProps = {
-  label: string; value: number; icon: React.ReactNode;
-  iconColor: string; iconBg: string; accentColor: string; note?: string;
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  iconClass: string;
+  iconBgClass: string;
+  note?: string;
 };
 
-function Card({ label, value, icon, iconColor, iconBg, accentColor, note }: CardProps) {
+function Card({ label, value, icon, iconClass, iconBgClass, note }: CardProps) {
   return (
-    <div
-      style={{
-        background: "#fff", borderRadius: 16,
-        border: `1.5px solid ${accentColor}18`,
-        padding: "24px", boxShadow: "0 2px 16px rgba(99,102,241,0.06)",
-        position: "relative", overflow: "hidden",
-        transition: "transform 0.2s, box-shadow 0.2s", cursor: "default",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 8px 28px ${accentColor}18`;
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 16px rgba(99,102,241,0.06)";
-      }}
-    >
-      <div style={{ position: "absolute", right: -24, top: -24, width: 100, height: 100, borderRadius: "50%", background: `${accentColor}06`, pointerEvents: "none" }} />
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+    <div className="relative rounded-2xl border p-6 overflow-hidden transition-all -translate-y-0.5 shadow-md cursor-default" style={{ background: "rgba(255,255,255,0.5)", borderColor: "rgba(139,92,246,0.15)" }}>
+      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-slate-50 pointer-events-none z-0" />
+      <div className="flex items-start justify-between relative z-10">
         <div>
-          <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "#94a3b8", margin: "0 0 8px" }}>{label}</p>
-          <p style={{ fontSize: 40, fontWeight: 800, color: "#0f172a", margin: 0, lineHeight: 1, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.03em" }}>{value}</p>
-          {note && <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>{note}</p>}
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-900 mb-2">{label}</p>
+          <p className="text-4xl font-extrabold text-violet-900 leading-none tabular-nums tracking-tight">{value}</p>
+          {note && <p className="text-xs text-slate-900 mt-2">{note}</p>}
         </div>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 4px 12px ${accentColor}25` }}>
-          <span style={{ color: iconColor }}>{icon}</span>
+        <div
+          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${iconBgClass} ${iconClass}`}
+          style={{ minWidth: 44, minHeight: 44 }}
+        >
+          {icon}
         </div>
       </div>
     </div>
@@ -41,10 +32,29 @@ function Card({ label, value, icon, iconColor, iconBg, accentColor, note }: Card
 
 export function AdminStats({ total, actifs, inactifs }: { total: number; actifs: number; inactifs: number }) {
   return (
-    <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-      <Card label="Total utilisateurs" value={total}   icon={<Users size={20} strokeWidth={1.75} />}      iconColor="#4338ca" iconBg="#ede9fe" accentColor="#4338ca" />
-      <Card label="Comptes actifs"     value={actifs}  icon={<TrendingUp size={20} strokeWidth={1.75} />} iconColor="#10b981" iconBg="#ecfdf5" accentColor="#10b981" note="Comptes opérationnels" />
-      <Card label="Comptes inactifs"   value={inactifs} icon={<UserX size={20} strokeWidth={1.75} />}    iconColor="#94a3b8" iconBg="#f1f5f9" accentColor="#94a3b8" />
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <Card
+        label="Total utilisateurs"
+        value={total}
+        icon={<UserGroupIcon className="w-5 h-5 text-indigo-600" />}
+        iconClass="text-indigo-600"
+        iconBgClass="bg-violet-100"
+      />
+      <Card
+        label="Comptes actifs"
+        value={actifs}
+        icon={<ArrowTrendingUpIcon className="w-5 h-5 text-emerald-600" />}
+        iconClass="text-emerald-600"
+        iconBgClass="bg-emerald-100"
+        note="Comptes opérationnels"
+      />
+      <Card
+        label="Comptes inactifs"
+        value={inactifs}
+        icon={<UserMinusIcon className="w-5 h-5 text-slate-500" />}
+        iconClass="text-slate-400"
+        iconBgClass="bg-slate-100"
+      />
     </div>
   );
 }

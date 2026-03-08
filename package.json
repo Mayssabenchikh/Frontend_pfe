@@ -10,12 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ag-grid-community/locale": "^35.1.0",
+    "@heroicons/react": "^2.2.0",
     "@react-keycloak/web": "^3.4.0",
     "ag-grid-community": "^35.1.0",
     "ag-grid-react": "^35.1.0",
     "axios": "^1.13.5",
     "keycloak-js": "^26.2.3",
-    "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",

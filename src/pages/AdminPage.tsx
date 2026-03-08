@@ -3,16 +3,20 @@ import { useKeycloak } from "@react-keycloak/web";
 import { toast } from "sonner";
 import { http } from "../api/http";
 import { getPrimaryRole } from "../auth/roles";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@heroicons/react/24/outline";
 
 import type { UserListDto, ArchivedUserDto, NavId, AdminRole, TokenParsed } from "./admin/types";
 import { ROLE_LABELS, MESSAGES } from "./admin/constants";
 import { getDisplayName, getInitials, getApiError, ensureArray } from "./admin/utils";
+import { ConfirmModal } from "../components/ConfirmModal";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminHeader } from "./admin/AdminHeader";
+import { AdminBreadcrumbs } from "./admin/AdminBreadcrumbs";
 import { AdminStats } from "./admin/AdminStats";
 import { UsersTable } from "./admin/UsersTable";
 import { ArchivedUsersTable } from "./admin/ArchivedUsersTable";
+import { SkillsCatalog } from "./admin/SkillsCatalog";
+import { SkillCategories } from "./admin/SkillCategories";
 import { AdminProfile } from "./admin/AdminProfile";
 import { CreateUserModal } from "./admin/CreateUserModal";
 import { EditUserModal } from "./admin/EditUserModal";
@@ -60,6 +64,7 @@ export default function AdminPage() {
   const [archivedError, setArchivedError] = useState<string | null>(null);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<ArchivedUserDto | null>(null);
 
   const usersList = useMemo(() => ensureArray(users), [users]);
   const stats = useMemo(() => ({
@@ -214,6 +219,13 @@ export default function AdminPage() {
   }, [createEmail, createFirstName, createLastName, createRole, createDepartment, createJobTitle, createPhone, createHireDate, loadUsers, resetCreateForm]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handler = () => { if (mq.matches) setSidebarCollapsed(false); };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
   const roleLabel = ROLE_LABELS[getPrimaryRole(token ?? undefined) ?? ""] ?? "—";
 
   const handleNavChange = (view: NavId) => {
@@ -223,7 +235,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="admin-layout">
+    <div className="admin-layout" data-sidebar-collapsed={sidebarCollapsed || undefined}>
       {/* Mobile backdrop */}
       <div
         className={`sidebar-backdrop${sidebarOpen ? " open" : ""}`}
@@ -236,11 +248,13 @@ export default function AdminPage() {
         displayName={getDisplayName(token)} roleLabel={roleLabel}
         avatarUrl={token?.picture ?? null} initials={getInitials(token)}
         mobileOpen={sidebarOpen}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
       />
 
       <div className="admin-content">
         <AdminHeader
-          currentView={currentView} displayName={getDisplayName(token)}
+          displayName={getDisplayName(token)}
           initials={getInitials(token)} avatarUrl={adminAvatarUrl}
           onLogout={() => keycloak.logout({ redirectUri: `${window.location.origin}/` })}
           onNavigate={setCurrentView}
@@ -248,6 +262,7 @@ export default function AdminPage() {
         />
 
         <main style={{ flex: 1, display: "flex", flexDirection: "column", paddingTop: 64, overflow: "hidden" }}>
+          <AdminBreadcrumbs currentView={currentView} onNavigate={handleNavChange} />
 
           {currentView === "dashboard" && (
             <div className="dashboard-padding">
@@ -269,21 +284,33 @@ export default function AdminPage() {
             />
           )}
 
+          {currentView === "skills" && (
+            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
+              <SkillsCatalog />
+            </section>
+          )}
+
+          {currentView === "skillCategories" && (
+            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
+              <SkillCategories />
+            </section>
+          )}
+
           {currentView === "archives" && (
-            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#fff", overflow: "hidden" }}>
+            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
               <ArchivedUsersTable
                 users={archivedUsers} loading={archivedLoading} error={archivedError}
                 restoringId={restoringId} deletingId={deletingId}
-                onRestore={handleRestoreUser} onDeletePermanently={handleDeletePermanently}
+                onRestore={handleRestoreUser} onRequestDelete={setDeleteConfirmUser}
               />
             </section>
           )}
 
           {currentView === "users" && (
-            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#fff", overflow: "hidden" }}>
+            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
               <div className="users-toolbar" style={{
                 display: "flex", alignItems: "center", justifyContent: "flex-end",
-                padding: "14px 24px", borderBottom: "1px solid #e8edf5", background: "#fff",
+                padding: "14px 24px", borderBottom: "1px solid rgba(139,92,246,0.1)",
               }}>
                 <button
                   type="button"
@@ -299,7 +326,7 @@ export default function AdminPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 6px 24px rgba(67,56,202,0.55)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(67,56,202,0.4)"; e.currentTarget.style.transform = "translateY(0)"; }}
                 >
-                  <Plus size={15} strokeWidth={2.5} />
+                  <PlusIcon className="w-4 h-4" />
                   Nouvel utilisateur
                 </button>
               </div>
@@ -337,6 +364,23 @@ export default function AdminPage() {
           loading={editLoading} onClose={() => setEditingUser(null)} onSubmit={handleUpdateUser}
         />
       )}
+
+      <ConfirmModal
+        open={!!deleteConfirmUser}
+        title="Confirmer la suppression définitive"
+        message={deleteConfirmUser ? `Supprimer définitivement « ${deleteConfirmUser.firstName} ${deleteConfirmUser.lastName} » ? Cette action est irréversible.` : ""}
+        confirmLabel="Supprimer définitivement"
+        variant="danger"
+        loading={deletingId !== null}
+        onConfirm={() => {
+          if (deleteConfirmUser) {
+            const u = deleteConfirmUser;
+            setDeleteConfirmUser(null);
+            handleDeletePermanently(u);
+          }
+        }}
+        onCancel={() => setDeleteConfirmUser(null)}
+      />
     </div>
   );
 }

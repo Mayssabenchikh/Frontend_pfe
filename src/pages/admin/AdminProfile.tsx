@@ -1,31 +1,86 @@
-import { useState, useRef, useCallback } from "react";
-import { Camera, Loader2, User, Mail, Phone, Building2, Briefcase, CalendarDays, Shield, CheckCircle2 } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { CameraIcon, ArrowPathIcon, UserIcon, EnvelopeIcon, PhoneIcon, BuildingOffice2Icon, BriefcaseIcon, CalendarDaysIcon, ShieldCheckIcon, CheckCircleIcon, PencilSquareIcon, ArrowDownTrayIcon, XMarkIcon, EyeIcon, EyeSlashIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
 import type { TokenParsed } from "./types";
 import { getAvatarColor } from "./utils";
+
+type AdminProfileData = {
+  phone: string | null;
+  department: string | null;
+  jobTitle: string | null;
+  hireDate: string | null;
+};
 
 type Props = {
   token: TokenParsed | undefined;
   adminKeycloakId: string | undefined;
   initialAvatarUrl?: string | null;
   onAvatarUpdate?: (url: string) => void;
+  onProfileUpdate?: (firstName: string, lastName: string) => void;
 };
 
 type Section = "personal" | "security";
 
-export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvatarUpdate }: Props) {
+export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvatarUpdate, onProfileUpdate }: Props) {
   const firstName = token?.given_name ?? "";
   const lastName = token?.family_name ?? "";
   const email = token?.email ?? "";
-  const fullName = [firstName, lastName].filter(Boolean).join(" ") || "Administrateur";
-  const initials = `${firstName[0] ?? ""}${lastName[0] ?? ""}`.trim().toUpperCase() || "AD";
+
+  const [editedFirstName, setEditedFirstName] = useState(firstName);
+  const [editedLastName, setEditedLastName] = useState(lastName);
+  const [isEditing, setIsEditing] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const [extraData, setExtraData] = useState<AdminProfileData>({ phone: null, department: null, jobTitle: null, hireDate: null });
+  const [loadingExtra, setLoadingExtra] = useState(true);
+
+  useEffect(() => {
+    setLoadingExtra(true);
+    http.get<AdminProfileData>("/api/admin/me")
+      .then((res) => setExtraData(res.data))
+      .catch(() => {})
+      .finally(() => setLoadingExtra(false));
+  }, []);
+
+  const displayFirst = isEditing ? editedFirstName : (editedFirstName || firstName);
+  const displayLast = isEditing ? editedLastName : (editedLastName || lastName);
+  const fullName = [displayFirst, displayLast].filter(Boolean).join(" ") || "Administrateur";
+  const initials = `${displayFirst[0] ?? ""}${displayLast[0] ?? ""}`.trim().toUpperCase() || "AD";
   const gradient = getAvatarColor(email);
 
   const [section, setSection] = useState<Section>("personal");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl ?? token?.picture ?? null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveProfile = useCallback(async () => {
+    const fn = editedFirstName.trim();
+    const ln = editedLastName.trim();
+    if (!fn || fn.length < 2) { toast.error("Le prénom doit contenir au moins 2 caractères."); return; }
+    if (!ln || ln.length < 2) { toast.error("Le nom doit contenir au moins 2 caractères."); return; }
+    setSavingProfile(true);
+    try {
+      await http.put("/api/admin/me/profile", { firstName: fn, lastName: ln });
+      setIsEditing(false);
+      onProfileUpdate?.(fn, ln);
+      toast.success("Profil mis à jour.");
+    } catch {
+      toast.error("Erreur lors de la mise à jour du profil.");
+    } finally {
+      setSavingProfile(false);
+    }
+  }, [editedFirstName, editedLastName, onProfileUpdate]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditedFirstName(firstName);
+    setEditedLastName(lastName);
+    setIsEditing(false);
+  }, [firstName, lastName]);
+
+  const handleExtraUpdate = useCallback((updated: AdminProfileData) => {
+    setExtraData(updated);
+  }, []);
 
   const handleAvatarChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,34 +111,26 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
   }, [adminKeycloakId, initialAvatarUrl, token?.picture, onAvatarUpdate]);
 
   const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
-    { id: "personal", label: "Informations personnelles", icon: <User size={15} strokeWidth={2} /> },
-    { id: "security", label: "Sécurité & Mot de passe",   icon: <Shield size={15} strokeWidth={2} /> },
+{ id: "personal", label: "Informations personnelles", icon: <UserIcon className="w-4 h-4" /> },
+  { id: "security", label: "Sécurité & Mot de passe", icon: <ShieldCheckIcon className="w-4 h-4" /> },
   ];
 
   return (
-    <div style={{ padding: "clamp(16px, 4vw, 32px)", overflowY: "auto", flex: 1 }}>
-      <div className="profile-layout">
+    <div className="flex-1 overflow-y-auto p-4 md:p-8">
+      <div className="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto">
 
         {/* Left panel */}
-        <div className="profile-left" style={{
-          background: "#fff", borderRadius: 20,
-          border: "1px solid #e8edf5",
-          boxShadow: "0 4px 24px rgba(67,56,202,0.06)",
-          display: "flex", flexDirection: "column",
-          overflow: "hidden",
-        }}>
-          {/* Avatar section */}
-          <div style={{
-            padding: "32px 24px 24px",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-            background: "linear-gradient(160deg,#f5f3ff 0%,#fff 60%)",
-            borderBottom: "1px solid #f1f5f9",
-          }}>
-            <div style={{ position: "relative" }}>
+        <div className="lg:w-64 shrink-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+          {/* Avatar */}
+          <div className="flex flex-col items-center gap-3 px-6 pt-8 pb-6 bg-gradient-to-b from-violet-50 to-white border-b border-slate-100">
+            <div className="relative">
               {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} style={{ width: 88, height: 88, borderRadius: "50%", objectFit: "cover", border: "4px solid #ede9fe", boxShadow: "0 8px 24px rgba(67,56,202,0.2)" }} />
+                <img src={avatarUrl} alt={fullName} className="w-22 h-22 rounded-full object-cover border-4 border-violet-100 shadow-lg" style={{ width: 88, height: 88 }} />
               ) : (
-                <div style={{ width: 88, height: 88, borderRadius: "50%", background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: "#fff", border: "4px solid #ede9fe", boxShadow: "0 8px 24px rgba(67,56,202,0.2)" }}>
+                <div
+                  className="w-22 h-22 rounded-full flex items-center justify-center text-3xl font-bold text-white border-4 border-violet-100 shadow-lg"
+                  style={{ width: 88, height: 88, background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
+                >
                   {initials}
                 </div>
               )}
@@ -92,35 +139,27 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
                 title="Changer la photo"
-                style={{
-                  position: "absolute", bottom: 2, right: 2,
-                  width: 28, height: 28, borderRadius: "50%",
-                  background: "linear-gradient(135deg,#4338ca,#6d28d9)",
-                  border: "2.5px solid #fff",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: uploadingAvatar ? "not-allowed" : "pointer", color: "#fff",
-                  boxShadow: "0 2px 8px rgba(67,56,202,0.4)",
-                }}
+                className="absolute bottom-0.5 right-0.5 w-7 h-7 rounded-full bg-gradient-to-br from-indigo-700 to-violet-700 border-2 border-white flex items-center justify-center text-white shadow-md disabled:cursor-not-allowed"
               >
                 {uploadingAvatar
-                  ? <Loader2 size={13} style={{ animation: "spin 0.7s linear infinite" }} />
-                  : <Camera size={13} strokeWidth={2.5} />
+                  ? <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />
+                  : <CameraIcon className="w-3.5 h-3.5" />
                 }
               </button>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
             </div>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#1e1b4b" }}>{fullName}</p>
-              <p style={{ margin: "3px 0 0", fontSize: 12, color: "#94a3b8" }}>Administrateur</p>
+            <div className="text-center">
+              <p className="text-sm font-bold text-indigo-950">{fullName}</p>
+              <p className="text-xs text-slate-400 mt-0.5">Administrateur</p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 20, padding: "4px 12px" }}>
-              <CheckCircle2 size={12} color="#16a34a" strokeWidth={2.5} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#16a34a" }}>Compte actif</span>
+            <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-3 py-1">
+              <CheckCircleIcon className="w-3 h-3 text-green-600" />
+              <span className="text-xs font-semibold text-green-600">Compte actif</span>
             </div>
           </div>
 
           {/* Nav */}
-          <nav style={{ padding: "12px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
+          <nav className="p-3 flex flex-col gap-1">
             {SECTIONS.map((s) => {
               const active = section === s.id;
               return (
@@ -128,23 +167,13 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
                   key={s.id}
                   type="button"
                   onClick={() => setSection(s.id)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    width: "100%", borderRadius: 10, padding: "10px 14px",
-                    border: "none", cursor: "pointer", fontSize: 13,
-                    fontWeight: active ? 600 : 500,
-                    background: active ? "rgba(67,56,202,0.10)" : "transparent",
-                    color: active ? "#3730a3" : "#64748b",
-                    textAlign: "left", transition: "all 0.15s",
-                    position: "relative",
-                  }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "#f0f0ff"; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
+                  className={`relative flex items-center gap-2.5 w-full rounded-xl px-3.5 py-2.5 text-sm font-medium text-left transition-all
+                    ${active ? "bg-indigo-50 text-indigo-800 font-semibold" : "text-slate-500 hover:bg-slate-50"}`}
                 >
                   {active && (
-                    <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 18, borderRadius: "0 4px 4px 0", background: "linear-gradient(180deg,#4338ca,#6d28d9)" }} />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
                   )}
-                  <span style={{ color: active ? "#4338ca" : "#b0b8cc" }}>{s.icon}</span>
+                  <span className={active ? "text-indigo-600" : "text-slate-300"}>{s.icon}</span>
                   {s.label}
                 </button>
               );
@@ -153,145 +182,425 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
         </div>
 
         {/* Right panel */}
-        <div className="profile-right" style={{
-          background: "#fff", borderRadius: 20,
-          border: "1px solid #e8edf5",
-          boxShadow: "0 4px 24px rgba(67,56,202,0.06)",
-          overflow: "hidden",
-        }}>
-          {section === "personal" && <PersonalSection firstName={firstName} lastName={lastName} email={email} />}
+        <div className="flex-1 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          {section === "personal" && (
+            <PersonalSection
+              firstName={editedFirstName || firstName}
+              lastName={editedLastName || lastName}
+              email={email}
+              isEditing={isEditing}
+              saving={savingProfile}
+              onEditedFirstNameChange={setEditedFirstName}
+              onEditedLastNameChange={setEditedLastName}
+              onEdit={() => { setEditedFirstName(firstName); setEditedLastName(lastName); setIsEditing(true); }}
+              onSave={handleSaveProfile}
+              onCancel={handleCancelEdit}
+              extraData={extraData}
+              loadingExtra={loadingExtra}
+              onExtraUpdate={handleExtraUpdate}
+            />
+          )}
           {section === "security" && <SecuritySection />}
         </div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
 
-function PersonalSection({ firstName, lastName, email }: { firstName: string; lastName: string; email: string }) {
+/* ─── Personal Section ─────────────────────────────────────────────────────── */
+
+function PersonalSection({
+  firstName, lastName, email,
+  isEditing, saving,
+  onEditedFirstNameChange, onEditedLastNameChange,
+  onEdit, onSave, onCancel,
+  extraData, loadingExtra, onExtraUpdate,
+}: {
+  firstName: string; lastName: string; email: string;
+  isEditing: boolean; saving: boolean;
+  onEditedFirstNameChange: (v: string) => void;
+  onEditedLastNameChange: (v: string) => void;
+  onEdit: () => void; onSave: () => void; onCancel: () => void;
+  extraData: AdminProfileData;
+  loadingExtra: boolean;
+  onExtraUpdate: (data: AdminProfileData) => void;
+}) {
+  const [editPhone, setEditPhone] = useState(extraData.phone ?? "");
+  const [editDept, setEditDept] = useState(extraData.department ?? "");
+  const [editJob, setEditJob] = useState(extraData.jobTitle ?? "");
+  const [editHire, setEditHire] = useState(extraData.hireDate ?? "");
+  const [isEditingExtra, setIsEditingExtra] = useState(false);
+  const [savingExtra, setSavingExtra] = useState(false);
+
+  useEffect(() => {
+    if (!isEditingExtra) {
+      setEditPhone(extraData.phone ?? "");
+      setEditDept(extraData.department ?? "");
+      setEditJob(extraData.jobTitle ?? "");
+      setEditHire(extraData.hireDate ?? "");
+    }
+  }, [extraData, isEditingExtra]);
+
+  const handleSaveExtra = async () => {
+    setSavingExtra(true);
+    try {
+      const res = await http.put<AdminProfileData>("/api/admin/me/extra", {
+        phone: editPhone.trim() || null,
+        department: editDept.trim() || null,
+        jobTitle: editJob.trim() || null,
+        hireDate: editHire || null,
+      });
+      onExtraUpdate(res.data);
+      setIsEditingExtra(false);
+      toast.success("Informations mises à jour.");
+    } catch {
+      toast.error("Erreur lors de la mise à jour.");
+    } finally {
+      setSavingExtra(false);
+    }
+  };
+
   return (
-    <div className="profile-section-content" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
-      <div>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e1b4b" }}>Informations personnelles</h2>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: "#94a3b8" }}>Ces informations proviennent de votre compte Keycloak.</p>
+    <div className="p-6 md:p-8 flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-bold text-indigo-950">Informations personnelles</h2>
+          <p className="text-xs text-slate-400 mt-1">
+            {isEditing ? "Modifiez vos informations puis enregistrez." : "Cliquez sur Modifier pour changer votre nom."}
+          </p>
+        </div>
+        {!isEditing ? (
+          <button type="button" onClick={onEdit}
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition shrink-0">
+            <PencilSquareIcon className="w-3.5 h-3.5" /> Modifier
+          </button>
+        ) : (
+          <div className="flex gap-2 shrink-0">
+            <button type="button" onClick={onCancel} disabled={saving}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">
+              <XMarkIcon className="w-3.5 h-3.5" /> Annuler
+            </button>
+            <button type="button" onClick={onSave} disabled={saving}
+              className="flex items-center gap-1.5 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-md disabled:opacity-70 disabled:cursor-not-allowed transition">
+              {saving ? <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" /> : <ArrowDownTrayIcon className="w-3.5 h-3.5" />}
+              {saving ? "Enregistrement..." : "Enregistrer"}
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="modal-grid-2" style={{ gap: 18 }}>
-        <ReadonlyField icon={<User size={14} color="#4338ca" />} label="Prénom" value={firstName || "—"} />
-        <ReadonlyField icon={<User size={14} color="#4338ca" />} label="Nom" value={lastName || "—"} />
+      {/* Nom / Prénom */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {isEditing ? (
+          <>
+            <EditableField label="Prénom" icon={<UserIcon className="w-4 h-4 text-indigo-600" />}
+              value={firstName} onChange={onEditedFirstNameChange} placeholder="Prénom" autoFocus />
+            <EditableField label="Nom" icon={<UserIcon className="w-4 h-4 text-indigo-600" />}
+              value={lastName} onChange={onEditedLastNameChange} placeholder="Nom" />
+          </>
+        ) : (
+          <>
+            <ReadonlyField icon={<UserIcon className="w-4 h-4 text-indigo-600" />} label="Prénom" value={firstName || "—"} />
+            <ReadonlyField icon={<UserIcon className="w-4 h-4 text-indigo-600" />} label="Nom" value={lastName || "—"} />
+          </>
+        )}
       </div>
 
+      {/* Email */}
       <ReadonlyField
-        icon={<Mail size={14} color="#4338ca" />}
+        icon={<EnvelopeIcon className="w-4 h-4 text-indigo-600" />}
         label="Adresse e-mail"
         value={email || "—"}
-        badge={<span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#16a34a", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 20, padding: "2px 10px" }}><CheckCircle2 size={11} strokeWidth={2.5} />Vérifié</span>}
+        badge={
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 border border-green-200 rounded-full px-2.5 py-0.5">
+            <CheckCircleIcon className="w-3 h-3" /> Vérifié
+          </span>
+        }
       />
 
-      <div className="modal-grid-2" style={{ gap: 18 }}>
-        <ReadonlyField icon={<Phone size={14} color="#4338ca" />} label="Téléphone" value="—" />
-        <ReadonlyField icon={<CalendarDays size={14} color="#4338ca" />} label="Date d'embauche" value="—" />
-      </div>
-
-      <div className="modal-grid-2" style={{ gap: 18 }}>
-        <ReadonlyField icon={<Building2 size={14} color="#4338ca" />} label="Département" value="—" />
-        <ReadonlyField icon={<Briefcase size={14} color="#4338ca" />} label="Poste" value="—" />
-      </div>
-
-      <div style={{ background: "#f8faff", border: "1px solid #e8edf5", borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <Shield size={16} color="#4338ca" style={{ flexShrink: 0, marginTop: 1 }} />
-        <div>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#3730a3" }}>Informations gérées par Keycloak</p>
-          <p style={{ margin: "3px 0 0", fontSize: 11, color: "#94a3b8" }}>Pour modifier votre nom ou email, rendez-vous dans la console Keycloak ou contactez votre administrateur système.</p>
+      {/* Informations professionnelles */}
+      <div className="border-t border-slate-100 pt-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Informations professionnelles</p>
+          {!loadingExtra && !isEditingExtra ? (
+            <button type="button" onClick={() => setIsEditingExtra(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition">
+              <PencilSquareIcon className="w-3 h-3" /> Modifier
+            </button>
+          ) : isEditingExtra ? (
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setIsEditingExtra(false)} disabled={savingExtra}
+                className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">
+                <XMarkIcon className="w-3 h-3" /> Annuler
+              </button>
+              <button type="button" onClick={handleSaveExtra} disabled={savingExtra}
+                className="flex items-center gap-1 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-3 py-1 text-xs font-bold text-white shadow disabled:opacity-70 disabled:cursor-not-allowed transition">
+                {savingExtra ? <ArrowPathIcon className="w-3 h-3 animate-spin" /> : <ArrowDownTrayIcon className="w-3 h-3" />}
+                {savingExtra ? "..." : "Enregistrer"}
+              </button>
+            </div>
+          ) : null}
         </div>
+
+        {loadingExtra ? (
+          <div className="flex justify-center py-5">
+            <ArrowPathIcon className="w-5 h-5 animate-spin text-violet-700" />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {isEditingExtra ? (
+                <ExtraField icon={<PhoneIcon className="w-4 h-4 text-indigo-600" />} label="Téléphone" value={editPhone} onChange={setEditPhone} placeholder="+216 20 123 456" type="tel" />
+              ) : (
+                <ReadonlyField icon={<PhoneIcon className="w-4 h-4 text-indigo-600" />} label="Téléphone" value={extraData.phone || "—"} />
+              )}
+              {isEditingExtra ? (
+                <ExtraField icon={<CalendarDaysIcon className="w-4 h-4 text-indigo-600" />} label="Date d'embauche" value={editHire} onChange={setEditHire} type="date" />
+              ) : (
+                <ReadonlyField icon={<CalendarDaysIcon className="w-4 h-4 text-indigo-600" />} label="Date d'embauche" value={extraData.hireDate || "—"} />
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {isEditingExtra ? (
+                <ExtraField icon={<BuildingOffice2Icon className="w-4 h-4 text-indigo-600" />} label="Département" value={editDept} onChange={setEditDept} placeholder="ex: Ingénierie" />
+              ) : (
+                <ReadonlyField icon={<BuildingOffice2Icon className="w-4 h-4 text-indigo-600" />} label="Département" value={extraData.department || "—"} />
+              )}
+              {isEditingExtra ? (
+                <ExtraField icon={<BriefcaseIcon className="w-4 h-4 text-indigo-600" />} label="Poste" value={editJob} onChange={setEditJob} placeholder="ex: Administrateur Système" />
+              ) : (
+                <ReadonlyField icon={<BriefcaseIcon className="w-4 h-4 text-indigo-600" />} label="Poste" value={extraData.jobTitle || "—"} />
+              )}
+            </div>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+/* ─── Security Section ─────────────────────────────────────────────────────── */
+
+function passwordStrength(pwd: string): { score: number; label: string; color: string; tw: string } {
+  if (!pwd) return { score: 0, label: "", color: "", tw: "bg-slate-200" };
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  if (score <= 1) return { score, label: "Très faible", color: "text-red-500", tw: "bg-red-500" };
+  if (score === 2) return { score, label: "Faible", color: "text-orange-500", tw: "bg-orange-500" };
+  if (score === 3) return { score, label: "Moyen", color: "text-yellow-500", tw: "bg-yellow-400" };
+  if (score === 4) return { score, label: "Fort", color: "text-green-500", tw: "bg-green-500" };
+  return { score, label: "Très fort", color: "text-green-700", tw: "bg-green-600" };
+}
+
+function PasswordField({ id, label, value, show, onToggle, onChange, error, placeholder, autoComplete }: {
+  id: string; label: string; value: string; show: boolean;
+  onToggle: () => void; onChange: (v: string) => void;
+  error?: string; placeholder?: string; autoComplete?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
+        <LockClosedIcon className="w-3 h-3 text-indigo-600" /> {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          className={`w-full rounded-xl border px-3.5 py-2.5 pr-10 text-sm text-slate-800 outline-none transition
+            focus:border-violet-600 focus:ring-2 focus:ring-violet-100 focus:bg-white
+            ${error ? "border-red-300 bg-red-50" : "border-slate-200 bg-slate-50"}`}
+        />
+        <button type="button" onClick={onToggle}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          {show ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+        </button>
+      </div>
+      {error && (
+        <div className="flex items-center gap-1 mt-0.5">
+          <XMarkIcon className="w-3 h-3 text-red-500" />
+          <span className="text-xs text-red-500">{error}</span>
+        </div>
+      )}
     </div>
   );
 }
 
 function SecuritySection() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ current?: string; newPwd?: string; confirm?: string }>({});
+
+  const strength = passwordStrength(newPassword);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: typeof fieldErrors = {};
+    if (!currentPassword) errs.current = "Requis.";
+    if (!newPassword || newPassword.length < 8) errs.newPwd = "Minimum 8 caractères.";
+    if (newPassword === currentPassword) errs.newPwd = "Le nouveau mot de passe doit être différent de l'ancien.";
+    if (!confirmPassword) errs.confirm = "Requis.";
+    else if (newPassword !== confirmPassword) errs.confirm = "Les mots de passe ne correspondent pas.";
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setSaving(true);
+    try {
+      await http.post("/api/admin/me/change-password", { currentPassword, newPassword, confirmPassword });
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+      setFieldErrors({});
+      toast.success("Mot de passe modifié avec succès.");
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "Erreur lors du changement de mot de passe.";
+      if (msg.toLowerCase().includes("incorrect")) {
+        setFieldErrors({ current: "Mot de passe actuel incorrect." });
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [currentPassword, newPassword, confirmPassword]);
+
   return (
-    <div className="profile-section-content" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="p-6 md:p-8 flex flex-col gap-6">
       <div>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e1b4b" }}>Sécurité & Mot de passe</h2>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: "#94a3b8" }}>Gérez la sécurité de votre compte.</p>
+        <h2 className="text-base font-bold text-indigo-950">Sécurité & Mot de passe</h2>
+        <p className="text-xs text-slate-400 mt-1">Modifiez votre mot de passe de connexion.</p>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <SecurityItem
-          title="Mot de passe"
-          description="Votre mot de passe est géré par Keycloak. Cliquez pour le modifier via la console de compte."
-          actionLabel="Modifier le mot de passe"
-          actionColor="#4338ca"
-          onAction={() => window.open("http://localhost:8081/realms/skillify/account/#/security/signingin", "_blank")}
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+        <PasswordField
+          id="sec-current" label="Mot de passe actuel"
+          value={currentPassword} show={showCurrent}
+          onToggle={() => setShowCurrent((v) => !v)}
+          onChange={setCurrentPassword}
+          error={fieldErrors.current}
+          placeholder="Votre mot de passe actuel"
+          autoComplete="current-password"
         />
-        <SecurityItem
-          title="Sessions actives"
-          description="Gérez vos sessions actives et déconnectez les appareils non reconnus."
-          actionLabel="Voir les sessions"
-          actionColor="#4338ca"
-          onAction={() => window.open("http://localhost:8081/realms/skillify/account/#/security/device-activity", "_blank")}
-        />
-      </div>
 
-      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <Shield size={16} color="#b45309" style={{ flexShrink: 0, marginTop: 1 }} />
+        <div className="border-t border-slate-100 pt-5 flex flex-col gap-5">
+          <PasswordField
+            id="sec-new" label="Nouveau mot de passe"
+            value={newPassword} show={showNew}
+            onToggle={() => setShowNew((v) => !v)}
+            onChange={setNewPassword}
+            error={fieldErrors.newPwd}
+            placeholder="Minimum 8 caractères"
+            autoComplete="new-password"
+          />
+
+          {newPassword && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= strength.score ? strength.tw : "bg-slate-200"}`} />
+                ))}
+              </div>
+              {strength.label && <span className={`text-xs font-semibold ${strength.color}`}>{strength.label}</span>}
+            </div>
+          )}
+
+          <PasswordField
+            id="sec-confirm" label="Confirmer le nouveau mot de passe"
+            value={confirmPassword} show={showConfirm}
+            onToggle={() => setShowConfirm((v) => !v)}
+            onChange={setConfirmPassword}
+            error={fieldErrors.confirm}
+            placeholder="Répétez le nouveau mot de passe"
+            autoComplete="new-password"
+          />
+        </div>
+
+        <div className="flex justify-end pt-1">
+          <button type="submit" disabled={saving}
+            className="flex items-center gap-2 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-5 py-2.5 text-sm font-bold text-white shadow-md disabled:opacity-70 disabled:cursor-not-allowed transition">
+            {saving ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <LockClosedIcon className="w-4 h-4" />}
+            {saving ? "Modification..." : "Modifier le mot de passe"}
+          </button>
+        </div>
+      </form>
+
+      <div className="flex items-start gap-3 rounded-xl bg-green-50 border border-green-200 p-4">
+        <ShieldCheckIcon className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
         <div>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#92400e" }}>Authentification gérée par Keycloak</p>
-          <p style={{ margin: "3px 0 0", fontSize: 11, color: "#b45309" }}>La gestion des mots de passe et des sessions est déléguée à Keycloak pour une sécurité maximale.</p>
+          <p className="text-xs font-semibold text-green-700">Conseils de sécurité</p>
+          <p className="text-xs text-green-600 mt-0.5">Utilisez au moins 8 caractères avec des majuscules, chiffres et symboles. Ne réutilisez pas d'anciens mots de passe.</p>
         </div>
       </div>
     </div>
   );
 }
 
-function ReadonlyField({ icon, label, value, badge }: { icon: React.ReactNode; label: string; value: string; badge?: React.ReactNode }) {
+/* ─── Shared field components ──────────────────────────────────────────────── */
+
+function EditableField({ icon, label, value, onChange, placeholder, type = "text", autoFocus }: {
+  icon: React.ReactNode; label: string; value: string;
+  onChange: (v: string) => void; placeholder?: string; type?: string; autoFocus?: boolean;
+}) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#94a3b8", display: "flex", alignItems: "center", gap: 5 }}>
+    <div className="flex flex-col gap-1.5">
+      <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
         {icon} {label}
       </label>
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        borderRadius: 10, border: "1.5px solid #e2e8f0",
-        background: "#f8faff", padding: "10px 14px",
-        fontSize: 13, color: value === "—" ? "#cbd5e1" : "#1e293b", fontWeight: value === "—" ? 400 : 500,
-      }}>
-        <span>{value}</span>
-        {badge}
-      </div>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        className="w-full rounded-xl border border-violet-500 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none ring-2 ring-violet-100 transition focus:border-indigo-600 focus:ring-indigo-100"
+      />
     </div>
   );
 }
 
-function SecurityItem({ title, description, actionLabel, actionColor, onAction }: {
-  title: string; description: string; actionLabel: string; actionColor: string; onAction: () => void;
+function ExtraField({ icon, label, value, onChange, placeholder, type = "text" }: {
+  icon: React.ReactNode; label: string; value: string;
+  onChange: (v: string) => void; placeholder?: string; type?: string;
 }) {
   return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "16px 20px", borderRadius: 14,
-      border: "1.5px solid #e8edf5", background: "#fafbff",
-      gap: 16,
-    }}>
-      <div style={{ flex: 1 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{title}</p>
-        <p style={{ margin: "3px 0 0", fontSize: 11, color: "#94a3b8" }}>{description}</p>
+    <div className="flex flex-col gap-1.5">
+      <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
+        {icon} {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl border border-violet-500 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none ring-2 ring-violet-100 transition focus:border-indigo-600 focus:ring-indigo-100"
+      />
+    </div>
+  );
+}
+
+function ReadonlyField({ icon, label, value, badge }: {
+  icon: React.ReactNode; label: string; value: string; badge?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
+        {icon} {label}
+      </label>
+      <div className={`flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm ${value === "—" ? "text-slate-300" : "text-slate-800 font-medium"}`}>
+        <span>{value}</span>
+        {badge}
       </div>
-      <button
-        type="button"
-        onClick={onAction}
-        style={{
-          flexShrink: 0, borderRadius: 10, border: `1.5px solid ${actionColor}`,
-          background: "transparent", padding: "7px 16px",
-          fontSize: 12, fontWeight: 600, color: actionColor,
-          cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(67,56,202,0.08)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-      >
-        {actionLabel}
-      </button>
     </div>
   );
 }

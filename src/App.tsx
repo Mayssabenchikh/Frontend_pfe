@@ -4,6 +4,8 @@ import RoleRedirect from "./components/RoleRedirect";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminPage from "./pages/AdminPage";
 import ManagerPage from "./pages/ManagerPage";
+import { ProjectsList } from "./pages/manager/ProjectsList";
+import { ProjectDetail } from "./pages/manager/ProjectDetail";
 import EmployeePage from "./pages/EmployeePage";
 
 function App() {
@@ -53,7 +55,11 @@ function App() {
               <ManagerPage />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="/manager/projects" replace />} />
+          <Route path="projects" element={<ProjectsList />} />
+          <Route path="projects/:id" element={<ProjectDetail />} />
+        </Route>
         <Route
           path="/employee"
           element={

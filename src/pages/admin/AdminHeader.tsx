@@ -1,9 +1,8 @@
 import { useState } from "react";
+import { ArrowRightOnRectangleIcon, UserCircleIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import type { NavId } from "./types";
-import { ChevronDown, LogOut, UserCircle, Menu } from "lucide-react";
 
 type Props = {
-  currentView: NavId;
   displayName: string | null;
   initials: string | null;
   avatarUrl?: string | null;
@@ -12,106 +11,65 @@ type Props = {
   onMenuToggle: () => void;
 };
 
-const TITLES: Record<NavId, { title: string; subtitle: string }> = {
-  dashboard: { title: "Tableau de bord", subtitle: "Vue d'ensemble de votre espace administration" },
-  users:     { title: "Gestion des utilisateurs", subtitle: "Gérez les comptes, rôles et accès" },
-  archives:  { title: "Archives", subtitle: "Utilisateurs archivés — restaurez ou supprimez définitivement" },
-  profile:   { title: "Mon Profil", subtitle: "Gérez vos informations personnelles" },
-};
-
-export function AdminHeader({ currentView, displayName, initials, avatarUrl, onLogout, onNavigate, onMenuToggle }: Props) {
+export function AdminHeader({ displayName, initials, avatarUrl, onLogout, onNavigate, onMenuToggle }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { title, subtitle } = TITLES[currentView];
   const safeName = displayName || "Administrateur";
   const safeInitials = initials?.trim() || safeName.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "AD";
 
   return (
-    <header className="admin-header-fixed">
-      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-        {/* Hamburger — visible only on mobile via CSS */}
+    <header className="admin-header-fixed flex items-center justify-between px-4 md:px-6 bg-white border-b border-slate-100 shadow-sm z-30">
+
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Hamburger — visible only on mobile */}
         <button
           type="button"
-          className="hamburger-btn"
+          className="hamburger-btn flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition"
           onClick={onMenuToggle}
           aria-label="Menu"
         >
-          <Menu size={18} strokeWidth={2} />
+          <Bars3Icon className="w-5 h-5" />
         </button>
-        <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 15, fontWeight: 700, color: "#1e1b4b", letterSpacing: "-0.01em", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</h1>
-          <p style={{ fontSize: 11, color: "#94a3b8", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subtitle}</p>
-        </div>
       </div>
 
       {/* User menu */}
-      <div style={{ position: "relative" }}>
+      <div className="relative">
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          style={{
-            display: "flex", alignItems: "center", gap: 9,
-            borderRadius: 999, border: "1.5px solid #e8edf5",
-            background: "#f8faff", padding: "5px 14px 5px 5px", cursor: "pointer",
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#ede9fe"; e.currentTarget.style.borderColor = "#a5b4fc"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "#f8faff"; e.currentTarget.style.borderColor = "#e8edf5"; }}
+          className="flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 p-1 cursor-pointer hover:bg-violet-50 hover:border-indigo-200 transition"
+          aria-label="Menu utilisateur"
         >
           {avatarUrl ? (
-            <img src={avatarUrl} alt={safeName} style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", boxShadow: "0 2px 8px rgba(67,56,202,0.3)", flexShrink: 0 }} />
+            <img src={avatarUrl} alt={safeName} className="w-8 h-8 rounded-full object-cover shadow shrink-0" />
           ) : (
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#4338ca,#6d28d9)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", boxShadow: "0 2px 8px rgba(67,56,202,0.4)", flexShrink: 0 }}>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-700 to-violet-700 flex items-center justify-center text-xs font-bold text-white shadow shrink-0">
               {safeInitials}
             </div>
           )}
-          <span className="hidden md:block" style={{ fontSize: 13, fontWeight: 500, color: "#374151", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {safeName}
-          </span>
-          <span className="hidden md:block" style={{ color: "#94a3b8" }}>
-            <ChevronDown size={14} />
-          </span>
         </button>
 
         {menuOpen && (
           <>
-            <div style={{ position: "fixed", inset: 0, zIndex: 40 }} onClick={() => setMenuOpen(false)} />
-            <div style={{
-              position: "absolute", right: 0, top: 46, zIndex: 50,
-              minWidth: 180, borderRadius: 14, border: "1px solid #e8edf5",
-              background: "#fff", boxShadow: "0 8px 32px rgba(99,102,241,0.12)", overflow: "hidden",
-            }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", margin: 0 }}>{safeName}</p>
-                <p style={{ fontSize: 11, color: "#94a3b8", margin: 0 }}>Administrateur</p>
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div className="absolute right-0 top-12 z-50 min-w-[180px] rounded-2xl border border-slate-100 bg-white shadow-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <p className="text-sm font-semibold text-slate-800">{safeName}</p>
+                <p className="text-xs text-slate-400">Administrateur</p>
               </div>
-              <div style={{ padding: 6 }}>
+              <div className="p-1.5">
                 <button
                   onClick={() => { setMenuOpen(false); onNavigate("profile"); }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, width: "100%",
-                    padding: "8px 12px", borderRadius: 8, border: "none",
-                    background: "transparent", cursor: "pointer", color: "#374151",
-                    fontSize: 13, fontWeight: 500,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f0f0ff")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition"
                 >
-                  <UserCircle size={14} color="#4338ca" />
-                  <span>Mon profil</span>
+                  <UserCircleIcon className="w-4 h-4 text-indigo-600" />
+                  Mon profil
                 </button>
-                <div style={{ height: 1, background: "#f1f5f9", margin: "4px 0" }} />
+                <div className="h-px bg-slate-100 my-1" />
                 <button
                   onClick={() => { setMenuOpen(false); onLogout(); }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, width: "100%",
-                    padding: "8px 12px", borderRadius: 8, border: "none",
-                    background: "transparent", cursor: "pointer", color: "#ef4444",
-                    fontSize: 13, fontWeight: 500,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#fef2f2")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition"
                 >
-                  <LogOut size={14} />
-                  <span>Déconnexion</span>
+                  <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                  Déconnexion
                 </button>
               </div>
             </div>

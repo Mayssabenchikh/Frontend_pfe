@@ -7,7 +7,8 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { Search, Pencil, ArchiveIcon, PowerOff, Power } from "lucide-react";
+import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
+import { MagnifyingGlassIcon, PencilSquareIcon, ArchiveBoxIcon, NoSymbolIcon, PowerIcon } from "@heroicons/react/24/outline";
 
 import type { UserListDto } from "./types";
 import { MESSAGES } from "./constants";
@@ -26,9 +27,9 @@ type Props = {
 
 const ROLE_LABELS: Record<string, string> = { MANAGER: "Manager", ADMIN: "Admin", EMPLOYEE: "Employé" };
 const ROLE_STYLES: Record<string, React.CSSProperties> = {
-  MANAGER:  { background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa" },
-  ADMIN:    { background: "#f5f3ff", color: "#7c3aed", border: "1px solid #ddd6fe" },
-  EMPLOYEE: { background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" },
+  MANAGER:  { background: "#fff7ed", color: "#9a3412", border: "1px solid #fed7aa" },
+  ADMIN:    { background: "#f5f3ff", color: "#4c1d95", border: "1px solid #ddd6fe" },
+  EMPLOYEE: { background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe" },
 };
 
 const statuses = ["Tous", "Actif", "Inactif"] as const;
@@ -85,7 +86,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
                 {initials}
               </div>
             )}
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{fullName}</span>
+            {/* darker name: #0f172a instead of #1e293b */}
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>{fullName}</span>
           </div>
         );
       },
@@ -96,8 +98,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
         const u = p.data; if (!u) return null;
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: 12, color: "#94a3b8" }}>{u.email}</span>
-            {u.phone && <span style={{ fontSize: 11, color: "#b0b8cc" }}>{u.phone}</span>}
+            <span style={{ fontSize: 14, color: "#334155" }}>{u.email}</span>
+            {u.phone && <span style={{ fontSize: 12, color: "#64748b" }}>{u.phone}</span>}
           </div>
         );
       },
@@ -109,8 +111,9 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
         if (!u.department && !u.jobTitle) return <span style={{ fontSize: 12, color: "#cbd5e1" }}>—</span>;
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {u.department && <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>{u.department}</span>}
-            {u.jobTitle && <span style={{ fontSize: 11, color: "#94a3b8" }}>{u.jobTitle}</span>}
+            {/* darker department: #1e293b instead of #475569 */}
+            {u.department && <span style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>{u.department}</span>}
+            {u.jobTitle && <span style={{ fontSize: 12, color: "#64748b" }}>{u.jobTitle}</span>}
           </div>
         );
       },
@@ -139,9 +142,10 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             borderRadius: 6, padding: "3px 9px", fontSize: 11, fontWeight: 600,
-            border: `1px solid ${on ? "#bbf7d0" : "#e2e8f0"}`,
+            border: `1px solid ${on ? "#86efac" : "#e2e8f0"}`,
             background: on ? "#f0fdf4" : "#f8fafc",
-            color: on ? "#16a34a" : "#94a3b8",
+            // darker status text
+            color: on ? "#15803d" : "#64748b",
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: on ? "#22c55e" : "#cbd5e1" }} />
             {on ? "Actif" : "Inactif"}
@@ -169,8 +173,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
             disabled={disabled}
             style={{
               width: 32, height: 32, borderRadius: 8,
-              border: "1px solid #e8edf5",
-              background: "#fff",
+              border: "1px solid rgba(109,40,217,0.25)",
+              background: "transparent",
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               cursor: disabled ? "not-allowed" : "pointer",
               opacity: disabled ? 0.45 : 1,
@@ -188,8 +192,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#fff";
-              e.currentTarget.style.borderColor = "#e8edf5";
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = "rgba(109,40,217,0.25)";
               e.currentTarget.style.color = color;
               e.currentTarget.style.transform = "translateY(0)";
               e.currentTarget.style.boxShadow = "none";
@@ -201,19 +205,22 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
 
         return (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-            {iconBtn("#6366f1", "#ede9fe", "#4338ca", "Modifier", false, () => onEdit(u),
-              isTog ? <span style={{ fontSize: 10 }}>…</span> : <Pencil size={13} strokeWidth={2} />
+            {/* Edit - darker indigo */}
+            {iconBtn("#4338ca", "#ede9fe", "#3730a3", "Modifier", false, () => onEdit(u),
+              isTog ? <span style={{ fontSize: 10 }}>…</span> : <PencilSquareIcon className="w-3.5 h-3.5" />
             )}
+            {/* Toggle - darker green/red */}
             {u.enabled
-              ? iconBtn("#ef4444", "#fee2e2", "#dc2626", "Désactiver", isTog, () => onToggleEnabled(u),
-                  isTog ? <span style={{ fontSize: 10 }}>…</span> : <PowerOff size={13} strokeWidth={2} />
+              ? iconBtn("#dc2626", "#fee2e2", "#b91c1c", "Désactiver", isTog, () => onToggleEnabled(u),
+                  isTog ? <span style={{ fontSize: 10 }}>…</span> : <NoSymbolIcon className="w-3.5 h-3.5" />
                 )
-              : iconBtn("#22c55e", "#dcfce7", "#15803d", "Activer", isTog, () => onToggleEnabled(u),
-                  isTog ? <span style={{ fontSize: 10 }}>…</span> : <Power size={13} strokeWidth={2} />
+              : iconBtn("#15803d", "#dcfce7", "#166534", "Activer", isTog, () => onToggleEnabled(u),
+                  isTog ? <span style={{ fontSize: 10 }}>…</span> : <PowerIcon className="w-3.5 h-3.5" />
                 )
             }
-            {iconBtn("#f59e0b", "#fffbeb", "#b45309", "Archiver", isArch, () => onArchive(u),
-              isArch ? <span style={{ fontSize: 10 }}>…</span> : <ArchiveIcon size={13} strokeWidth={2} />
+            {/* Archive - darker amber */}
+            {iconBtn("#b45309", "#fffbeb", "#92400e", "Archiver", isArch, () => onArchive(u),
+              isArch ? <span style={{ fontSize: 10 }}>…</span> : <ArchiveBoxIcon className="w-3.5 h-3.5" />
             )}
           </div>
         );
@@ -227,7 +234,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", textAlign: "center" }}>
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#fef2f2", border: "1px solid #fecaca", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12, color: "#ef4444", fontSize: 20 }}>⚠</div>
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#991b1b" }}>{error}</p>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "#7f1d1d" }}>{error}</p>
       </div>
     );
   }
@@ -237,31 +244,38 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
       {/* Filter bar */}
       <div style={{
         display: "flex", gap: 12, flexWrap: "wrap",
-        padding: "14px 24px",
-        background: "#fafbff",
-        borderBottom: "1px solid #e8edf5",
+        padding: "8px 24px 16px 24px",
+        borderBottom: "1px solid rgba(139,92,246,0.1)",
       }}>
         <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#b0b8cc", pointerEvents: "none" }}>
-            <Search size={14} />
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#a78bfa", pointerEvents: "none" }}>
+            <MagnifyingGlassIcon className="w-4 h-4" />
           </span>
           <input
             type="search" placeholder="Rechercher par nom, email, rôle…"
             value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
             style={{
-              width: "100%", borderRadius: 10,
-              border: `1.5px solid ${searchFocused ? "#818cf8" : "#e2e8f0"}`,
-              background: searchFocused ? "#fff" : "#f8faff",
-              padding: "9px 14px 9px 36px", fontSize: 13, color: "#1e293b",
-              outline: "none", boxShadow: searchFocused ? "0 0 0 3px rgba(67,56,202,0.12)" : "none",
+              width: "100%", borderRadius: 12,
+              border: `1px solid ${searchFocused ? "#7c3aed" : "rgba(139,92,246,0.2)"}`,
+              background: "#fff",
+              padding: "10px 14px 10px 36px", fontSize: 14,
+              color: "#4c1d95",
+              outline: "none", boxShadow: searchFocused ? "0 0 0 3px rgba(109,40,217,0.12)" : "none",
               transition: "all 0.15s", boxSizing: "border-box",
             }}
           />
         </div>
         <select
           value={statusFilter} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value as (typeof statuses)[number])}
-          style={{ borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8faff", padding: "9px 14px", fontSize: 13, color: "#475569", outline: "none", cursor: "pointer" }}
+          style={{
+            borderRadius: 12,
+            border: "1px solid rgba(139,92,246,0.2)",
+            background: "#fff",
+            padding: "10px 14px", fontSize: 14,
+            color: "#4c1d95",
+            outline: "none", cursor: "pointer",
+          }}
         >
           {statuses.map((s) => <option key={s} value={s}>{s === "Tous" ? "Tous les statuts" : s}</option>)}
         </select>
@@ -269,30 +283,32 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
 
       {/* Table */}
       {loading ? (
-        <div style={{ flex: 1, background: "#fff" }}>
+        <div style={{ flex: 1, padding: "0 24px" }}>
           {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: "12px 24px 0 24px" }}>
           <style>{`
             .ag-theme-quartz {
-              --ag-background-color: #ffffff;
-              --ag-header-background-color: #fafbff;
-              --ag-odd-row-background-color: #fcfcff;
+              --ag-background-color: #f8f7ff;
+              --ag-header-background-color: rgba(109,40,217,0.06);
+              --ag-odd-row-background-color: #f8f7ff;
               --ag-row-hover-color: #f0f0ff;
               --ag-border-color: #e8edf5;
-              --ag-header-foreground-color: #64748b;
-              --ag-foreground-color: #1e293b;
-              --ag-font-size: 13px;
+              --ag-header-foreground-color: #4c1d95;
+              --ag-foreground-color: #0f172a;
+              --ag-font-size: 14px;
               --ag-cell-horizontal-padding: 16px;
               --ag-row-height: 52px;
               --ag-header-height: 42px;
             }
             .ag-theme-quartz .ag-header-cell-label {
-              font-size: 11px; font-weight: 700;
-              text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8;
+              font-size: 10.5px; font-weight: 700;
+              text-transform: uppercase; letter-spacing: 0.08em;
+              /* darker header labels */
+              color: #5b21b6;
             }
-            .ag-theme-quartz .ag-row { border-bottom: 1px solid #f1f5f9; }
+            .ag-theme-quartz .ag-row { border-bottom: 1px solid #ede9fe; }
             .ag-theme-quartz .ag-cell {
               display: flex !important;
               align-items: center !important;
@@ -304,13 +320,18 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               align-items: center;
             }
             .ag-theme-quartz .ag-paging-panel {
-              border-top: 1px solid #e8edf5; background: #fafbff;
-              color: #94a3b8; font-size: 12px;
+              border-top: 1px solid rgba(109,40,217,0.12);
+              background: rgba(109,40,217,0.04);
+              /* darker pagination text */
+              color: #5b21b6;
+              font-size: 12px;
+              font-weight: 500;
             }
           `}</style>
           <div className="ag-theme-quartz" style={{ flex: 1, width: "100%", overflow: "hidden" }}>
             <AgGridReact<UserListDto>
               theme="legacy"
+              localeText={AG_GRID_LOCALE_FR}
               rowData={filtered}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
@@ -321,14 +342,15 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               rowHeight={52}
               headerHeight={42}
               noRowsOverlayComponent={() => (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "60px 0", color: "#94a3b8" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "60px 0" }}>
                   <span style={{ fontSize: 40 }}>👥</span>
-                  <p style={{ fontSize: 13, margin: 0 }}>{MESSAGES.noUsers}</p>
+                  <p style={{ fontSize: 14, margin: 0, color: "#5b21b6", fontWeight: 500 }}>{MESSAGES.noUsers}</p>
                 </div>
               )}
             />
           </div>
-          <div style={{ padding: "8px 24px", textAlign: "right", fontSize: 11, color: "#b0b8cc", borderTop: "1px solid #e8edf5", background: "#fafbff", flexShrink: 0 }}>
+          {/* darker footer count */}
+          <div style={{ padding: "8px 24px", textAlign: "right", fontSize: 12, color: "#7c3aed", fontWeight: 500, borderTop: "1px solid rgba(139,92,246,0.1)", flexShrink: 0 }}>
             {filtered.length} utilisateur{filtered.length !== 1 ? "s" : ""} affiché{filtered.length !== 1 ? "s" : ""} sur {users.length}
           </div>
         </div>

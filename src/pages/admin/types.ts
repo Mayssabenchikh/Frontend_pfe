@@ -26,7 +26,36 @@ export type ArchivedUserDto = {
   avatarUrl?: string | null;
 };
 
-export type NavId = "dashboard" | "users" | "archives" | "profile";
+export type NavId = "dashboard" | "users" | "archives" | "skills" | "skillCategories" | "profile";
+
+export type SkillCategoryDto = { id: number; name: string; skillsCount?: number; sampleSkillNames?: string[] };
+export type SkillCategoryPageDto = {
+  content: SkillCategoryDto[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+};
+export type SkillPageDto = {
+  content: SkillDto[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+};
+export type SkillDto = {
+  id: number;
+  name: string;
+  categoryId: number;
+  categoryName: string;
+  levelMin: number;
+  levelMax: number;
+  synonyms: string[];
+};
 
 export type AdminRole = "MANAGER" | "EMPLOYEE";
 
