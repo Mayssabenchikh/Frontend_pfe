@@ -3,11 +3,21 @@ import { useKeycloak } from "@react-keycloak/web";
 import { toast } from "sonner";
 import { http } from "../api/http";
 import { getPrimaryRole } from "../auth/roles";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  XMarkIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  BuildingOffice2Icon,
+  BriefcaseIcon,
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+} from "@heroicons/react/24/outline";
 
 import type { UserListDto, ArchivedUserDto, NavId, AdminRole, TokenParsed } from "./admin/types";
 import { ROLE_LABELS, MESSAGES } from "./admin/constants";
-import { getDisplayName, getInitials, getApiError, ensureArray } from "./admin/utils";
+import { getDisplayName, getInitials, getApiError, ensureArray, getAvatarColor } from "./admin/utils";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminHeader } from "./admin/AdminHeader";
@@ -65,6 +75,7 @@ export default function AdminPage() {
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<ArchivedUserDto | null>(null);
+  const [viewUser, setViewUser] = useState<UserListDto | null>(null);
 
   const usersList = useMemo(() => ensureArray(users), [users]);
   const stats = useMemo(() => ({
@@ -261,12 +272,12 @@ export default function AdminPage() {
           onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
 
-        <main style={{ flex: 1, display: "flex", flexDirection: "column", paddingTop: 64, overflow: "hidden" }}>
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden pt-16">
           <AdminBreadcrumbs currentView={currentView} onNavigate={handleNavChange} />
 
           {currentView === "dashboard" && (
             <div className="dashboard-padding">
-              <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexDirection: "column", gap: 28 }}>
+              <div className="mx-auto flex max-w-[1100px] flex-col gap-7">
                 <AdminStats total={stats.total} actifs={stats.actifs} inactifs={stats.inactifs} />
               </div>
             </div>
@@ -285,19 +296,19 @@ export default function AdminPage() {
           )}
 
           {currentView === "skills" && (
-            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
+            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <SkillsCatalog />
             </section>
           )}
 
           {currentView === "skillCategories" && (
-            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
+            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <SkillCategories />
             </section>
           )}
 
           {currentView === "archives" && (
-            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
+            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <ArchivedUsersTable
                 users={archivedUsers} loading={archivedLoading} error={archivedError}
                 restoringId={restoringId} deletingId={deletingId}
@@ -307,35 +318,29 @@ export default function AdminPage() {
           )}
 
           {currentView === "users" && (
-            <section style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8f7ff", overflow: "hidden" }}>
-              <div className="users-toolbar" style={{
-                display: "flex", alignItems: "center", justifyContent: "flex-end",
-                padding: "14px 24px", borderBottom: "1px solid rgba(139,92,246,0.1)",
-              }}>
+            <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+              <div className="users-toolbar flex w-full shrink-0 items-center justify-end border-b border-violet-500/10 px-6 py-3.5">
                 <button
                   type="button"
                   onClick={() => { resetCreateForm(); setCreateModalOpen(true); }}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 8,
-                    borderRadius: 10, border: "none", padding: "9px 18px",
-                    fontSize: 13, fontWeight: 600, color: "#fff",
-                    background: "linear-gradient(135deg,#4338ca,#6d28d9)",
-                    cursor: "pointer", boxShadow: "0 4px 16px rgba(67,56,202,0.4)",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 6px 24px rgba(67,56,202,0.55)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(67,56,202,0.4)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-none bg-gradient-to-br from-indigo-600 to-violet-600 px-[18px] py-2.5 text-[13px] font-semibold text-white shadow-[0_4px_16px_rgba(67,56,202,0.4)] transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(67,56,202,0.55)]"
                 >
                   <PlusIcon className="w-4 h-4" />
                   Nouvel utilisateur
                 </button>
               </div>
 
-              <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <UsersTable
-                  users={usersList} loading={usersLoading} error={usersError}
-                  togglingId={togglingId} archivingId={archivingId}
-                  onEdit={startEdit} onToggleEnabled={handleToggleEnabled} onArchive={handleArchiveUser}
+                  users={usersList}
+                  loading={usersLoading}
+                  error={usersError}
+                  togglingId={togglingId}
+                  archivingId={archivingId}
+                  onEdit={startEdit}
+                  onView={setViewUser}
+                  onToggleEnabled={handleToggleEnabled}
+                  onArchive={handleArchiveUser}
                 />
               </div>
             </section>
@@ -363,6 +368,135 @@ export default function AdminPage() {
           onPhoneChange={setEditPhone} onHireDateChange={setEditHireDate}
           loading={editLoading} onClose={() => setEditingUser(null)} onSubmit={handleUpdateUser}
         />
+      )}
+
+      {viewUser && (
+        <div
+          onClick={() => setViewUser(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-violet-500/20 bg-white shadow-[0_32px_80px_rgba(109,40,217,0.15)] max-h-[90vh] flex flex-col animate-[modalIn_0.25s_cubic-bezier(0.16,1,0.3,1)_both]"
+          >
+            <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+
+            {/* Bandeau gradient + en-tête */}
+            <div className="shrink-0 border-b border-slate-100 bg-gradient-to-br from-violet-50 to-white">
+              <div className="flex items-start justify-between gap-3 px-6 pt-6 pb-4">
+                <div className="flex min-w-0 flex-1 items-start gap-4">
+                  <div className="relative shrink-0">
+                    {viewUser.avatarUrl ? (
+                      <img
+                        src={viewUser.avatarUrl}
+                        alt={`${viewUser.firstName} ${viewUser.lastName}`}
+                        className="h-16 w-16 rounded-2xl border-2 border-violet-100 object-cover shadow-lg"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-violet-100 text-2xl font-bold text-white shadow-lg"
+                        style={{
+                          background: `linear-gradient(135deg, ${getAvatarColor(viewUser.email)[0]}, ${getAvatarColor(viewUser.email)[1]})`,
+                        }}
+                      >
+                        {((viewUser.firstName?.[0] ?? "") + (viewUser.lastName?.[0] ?? "")).trim().toUpperCase() || "U"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg font-bold text-slate-900 truncate">
+                      {`${viewUser.firstName} ${viewUser.lastName}`.trim() || viewUser.email}
+                    </h2>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                      <EnvelopeIcon className="h-4 w-4 shrink-0 text-violet-400" />
+                      <span className="truncate">{viewUser.email}</span>
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800">
+                        {ROLE_LABELS[viewUser.role] ?? viewUser.role}
+                      </span>
+                      {viewUser.enabled ? (
+                        <span className="inline-flex items-center gap-1 rounded-lg border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                          <CheckCircleIcon className="h-3.5 w-3.5" />
+                          Actif
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                          <NoSymbolIcon className="h-3.5 w-3.5" />
+                          Inactif
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewUser(null)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+                  aria-label="Fermer"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Corps : champs avec icônes */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                Informations professionnelles
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                    <BuildingOffice2Icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Département</p>
+                    <p className="mt-0.5 text-sm font-medium text-slate-800">{viewUser.department || "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                    <BriefcaseIcon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Poste</p>
+                    <p className="mt-0.5 text-sm font-medium text-slate-800">{viewUser.jobTitle || "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                    <PhoneIcon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Téléphone</p>
+                    <p className="mt-0.5 text-sm font-medium text-slate-800">{viewUser.phone || "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                    <CalendarDaysIcon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Date d&apos;embauche</p>
+                    <p className="mt-0.5 text-sm font-medium text-slate-800">
+                      {viewUser.hireDate
+                        ? new Date(viewUser.hireDate).toLocaleDateString("fr-FR", {
+                            year: "numeric",
+                            month: "long",
+                            day: "2-digit",
+                          })
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       )}
 
       <ConfirmModal

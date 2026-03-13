@@ -166,59 +166,29 @@ export function SkillsCatalog() {
         }
       `}</style>
 
-      <section
-        className="relative flex flex-col flex-1 overflow-hidden min-h-0"
-        style={{ background: "#f8f7ff" }}
-      >
+      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
         {/* ── Toolbar ── */}
-        <div
-          className="relative z-10 flex flex-wrap items-center gap-3 px-6 py-2"
-          style={{ borderBottom: "1px solid rgba(139,92,246,0.1)" }}
-        >
+        <div className="relative z-10 flex flex-wrap items-center gap-3 border-b border-violet-500/10 px-6 py-2">
           {/* Left: search + category filter */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Search */}
-            <div className="relative flex-1 min-w-[240px] max-w-[400px]">
-              <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-violet-400" />
+            <div className="relative min-w-[240px] max-w-[400px] flex-1">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Rechercher une compétence…"
-                className="w-full pl-9 pr-4 outline-none transition-all duration-150"
-                style={{
-                  borderRadius: 12,
-                  border: "1px solid rgba(139,92,246,0.2)",
-                  background: "#fff",
-                  padding: "10px 14px 10px 36px",
-                  fontSize: 14,
-                  color: "#4c1d95",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#7c3aed";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.12)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(139,92,246,0.2)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
+                className="w-full rounded-xl border border-violet-500/20 bg-white py-2.5 pl-9 pr-4 text-sm text-violet-900 outline-none transition-all duration-150 focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
               />
             </div>
             {/* Category filter */}
-            <div className="relative flex items-center shrink-0">
-            <FunnelIcon className="w-4 h-4 absolute left-3.5 text-violet-400 pointer-events-none" />
+            <div className="relative flex shrink-0 items-center">
+            <FunnelIcon className="pointer-events-none absolute left-3.5 h-4 w-4 text-violet-400" />
             <select
               value={categoryFilter ?? ""}
               onChange={(e) => setCategoryFilter(e.target.value ? Number(e.target.value) : null)}
-              className="appearance-none pl-10 pr-8 outline-none cursor-pointer transition-all duration-150"
-              style={{
-                borderRadius: 12,
-                border: "1px solid rgba(139,92,246,0.2)",
-                background: "#fff",
-                padding: "10px 14px 10px 40px",
-                fontSize: 14,
-                color: "#4c1d95",
-              }}
+              className="cursor-pointer appearance-none rounded-xl border border-violet-500/20 bg-white py-2.5 pl-10 pr-8 text-sm text-violet-900 outline-none transition-all duration-150 focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
             >
               <option value="">Toutes les catégories</option>
               {categories.map((c) => (
@@ -248,19 +218,9 @@ export function SkillsCatalog() {
               type="button"
               onClick={openCreate}
               disabled={categories.length === 0}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                borderRadius: 10, border: "none", padding: "9px 18px",
-                fontSize: 13, fontWeight: 600, color: "#fff",
-                background: "linear-gradient(135deg,#4338ca,#6d28d9)",
-                cursor: "pointer", boxShadow: "0 4px 16px rgba(67,56,202,0.4)",
-                transition: "all 0.15s",
-                opacity: categories.length === 0 ? 0.5 : 1,
-              }}
-              onMouseEnter={(e) => { if (categories.length > 0) { e.currentTarget.style.boxShadow = "0 6px 24px rgba(67,56,202,0.55)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(67,56,202,0.4)"; e.currentTarget.style.transform = "translateY(0)"; }}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-none bg-gradient-to-br from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/40 transition-all duration-150 hover:-translate-y-px hover:shadow-xl hover:shadow-indigo-500/50 disabled:opacity-50"
             >
-              <PlusIcon className="w-4 h-4" />
+              <PlusIcon className="h-4 w-4" />
               Nouvelle compétence
             </button>
           </div>
@@ -280,23 +240,16 @@ export function SkillsCatalog() {
 
           {/* Loading skeletons */}
           {loading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-5">
+            <div className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-28 rounded-2xl animate-pulse"
-                  style={{
-                    background: "rgba(139,92,246,0.06)",
-                    border: "1px solid rgba(139,92,246,0.1)",
-                    animationDelay: `${i * 60}ms`,
-                  }}
-                />
+                <div key={i} className="h-28 rounded-2xl border border-violet-500/10 bg-violet-500/[0.06] animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
               ))}
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="flex items-center gap-3 p-4 rounded-2xl text-sm text-red-600"
-              style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)" }}>
+            <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-4 text-sm text-red-600">
               <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-red-100">
                 <XMarkIcon className="w-3 h-3 text-red-500" />
               </div>
@@ -333,10 +286,7 @@ export function SkillsCatalog() {
 
         {/* ── Pagination (fixée en bas) ── */}
         {!loading && !error && skills.length > 0 && pageData && (
-          <div
-            className="shrink-0 flex items-center justify-between gap-3 px-6 pt-2 pb-3"
-            style={{ borderTop: "1px solid rgba(139,92,246,0.1)" }}
-          >
+          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-violet-500/10 px-6 pb-3 pt-2">
             <p className="text-sm text-slate-400">
               Page {page + 1} sur {pageData.totalPages}
               {" · "}
@@ -347,31 +297,19 @@ export function SkillsCatalog() {
                 type="button"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0 || loading}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                  text-slate-500 border border-slate-200
-                  hover:border-violet-300 hover:text-violet-600
-                  disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-slate-500
-                  transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-violet-300"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500 shadow-sm transition-all duration-150 hover:border-violet-300 hover:text-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-500"
               >
-                <ChevronLeftIcon className="w-4 h-4" />
+                <ChevronLeftIcon className="h-4 w-4" />
                 Précédent
               </button>
               <button
                 type="button"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= pageData.totalPages - 1 || loading}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                  text-white disabled:opacity-40 disabled:cursor-not-allowed
-                  transition-all duration-150 active:scale-[0.97]
-                  focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
-                style={{
-                  background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)",
-                  boxShadow: "0 4px 14px rgba(124,58,237,0.35)",
-                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(124,58,237,0.35)] transition-all duration-150 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Suivant
-                <ChevronRightIcon className="w-4 h-4" />
+                <ChevronRightIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -439,44 +377,18 @@ interface SkillCardProps {
 }
 
 function SkillCard({ skill, index, isDeleting, onEdit, onDelete }: SkillCardProps) {
-  const [hovered, setHovered] = useState(false);
-
   return (
     <div
-      className="fade-up relative group rounded-xl cursor-default flex flex-col overflow-hidden
-        transition-all duration-300 ease-out"
-      style={{
-        height: "132px",
-        minWidth: "0",
-        animationDelay: `${index * 35}ms`,
-        background: hovered ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.95)",
-        border: "1px solid rgba(148,163,184,0.2)",
-        boxShadow: hovered
-          ? "0 12px 40px -8px rgba(99,102,241,0.2), 0 0 0 1px rgba(139,92,246,0.08)"
-          : "0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04)",
-        transform: hovered ? "translateY(-4px) scale(1.01)" : "translateY(0) scale(1)",
-        backdropFilter: "blur(12px)",
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className="fade-up group relative flex h-[132px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-[12px] transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.01] group-hover:bg-white/98 group-hover:shadow-[0_12px_40px_-8px_rgba(99,102,241,0.2),0_0_0_1px_rgba(139,92,246,0.08)]"
+      style={{ animationDelay: `${index * 35}ms` }}
     >
       {/* Accent bar top */}
-      <div
-        className="absolute top-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: "linear-gradient(90deg, #8b5cf6 0%, #6366f1 100%)" }}
-      />
+      <div className="absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-violet-500 to-indigo-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-      <div className="flex flex-col gap-1 p-2.5 flex-1 min-h-0 min-w-0">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 p-2.5">
         {/* Ligne 1 : icône + nom à droite */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0
-              shadow-sm transition-transform duration-200 group-hover:scale-105"
-            style={{
-              background: "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(99,102,241,0.06) 100%)",
-              border: "1px solid rgba(139,92,246,0.15)",
-            }}
-          >
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-violet-500/15 bg-gradient-to-br from-violet-500/10 to-indigo-500/[0.06] shadow-sm transition-transform duration-200 group-hover:scale-105">
             {getSkillIconUrl(skill.name) ? (
               <img src={getSkillIconUrl(skill.name)!} alt="" className="w-7 h-7 object-contain" />
             ) : (
@@ -520,25 +432,11 @@ function SkillCard({ skill, index, isDeleting, onEdit, onDelete }: SkillCardProp
         </div>
 
         {/* Badges */}
-        <div className="flex items-center gap-1.5 flex-wrap mt-auto">
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
-            style={{
-              background: "rgba(139,92,246,0.08)",
-              color: "#5b21b6",
-              border: "1px solid rgba(139,92,246,0.12)",
-            }}
-          >
+        <div className="mt-auto flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex items-center rounded-md border border-violet-500/15 bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-800">
             {skill.categoryName}
           </span>
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
-            style={{
-              background: "rgba(99,102,241,0.06)",
-              color: "#4338ca",
-              border: "1px solid rgba(99,102,241,0.1)",
-            }}
-          >
+          <span className="inline-flex items-center rounded-md border border-indigo-500/10 bg-indigo-500/[0.06] px-2 py-0.5 text-xs font-medium text-indigo-700">
             Niv. {skill.levelMin}–{skill.levelMax}
           </span>
         </div>
@@ -559,12 +457,9 @@ interface EmptyStateProps {
 
 function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center gap-5">
+    <div className="flex flex-col items-center justify-center gap-5 py-24 text-center">
       <div className="relative">
-        <div
-          className="w-20 h-20 rounded-3xl flex items-center justify-center"
-          style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.16)" }}
-        >
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-violet-500/20 bg-violet-500/10">
           {icon}
         </div>
       </div>
@@ -605,30 +500,17 @@ interface SkillFormModalProps {
 
 function SkillFormModal({ title, categories, form, setForm, onSubmit, onClose, submitLoading }: SkillFormModalProps) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(109,40,217,0.1)", backdropFilter: "blur(10px)" }}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/10 p-4 backdrop-blur-[10px]">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div
-        className="relative w-full max-w-md rounded-3xl overflow-hidden"
-        style={{
-          background: "rgba(255,255,255,0.97)",
-          border: "1px solid rgba(139,92,246,0.2)",
-          backdropFilter: "blur(32px)",
-          boxShadow: "0 32px 80px rgba(109,40,217,0.18), 0 8px 32px rgba(109,40,217,0.1)",
-        }}
-      >
-        <div className="h-px w-full"
-          style={{ background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.6) 50%, transparent)" }} />
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/20 bg-white/[0.97] shadow-[0_32px_80px_rgba(109,40,217,0.18),0_8px_32px_rgba(109,40,217,0.1)] backdrop-blur-[32px]">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-violet-500/60 to-transparent" />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-7 pt-6 pb-4">
+        <div className="flex items-center justify-between px-7 pb-4 pt-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.22)" }}>
-              <BoltIcon className="w-4 h-4 text-violet-600" />
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-violet-500/25 bg-violet-500/10">
+              <BoltIcon className="h-4 w-4 text-violet-600" />
             </div>
             <h2 className="text-sm font-bold text-violet-950 tracking-tight">{title}</h2>
           </div>
@@ -706,15 +588,7 @@ function SkillFormModal({ title, categories, form, setForm, onSubmit, onClose, s
             <button
               type="submit"
               disabled={submitLoading || !form.name.trim() || !form.categoryId}
-              className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                text-xs font-semibold text-white overflow-hidden
-                disabled:opacity-40 disabled:cursor-not-allowed
-                transition-all duration-200 active:scale-[0.97]
-                focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
-              style={{
-                background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)",
-                boxShadow: "0 4px 18px rgba(124,58,237,0.36), inset 0 1px 0 rgba(255,255,255,0.22)",
-              }}
+              className="relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-5 py-2.5 text-xs font-semibold text-white shadow-[0_4px_18px_rgba(124,58,237,0.36),inset_0_1px_0_rgba(255,255,255,0.22)] transition-all duration-200 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitLoading && <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />}
               {submitLoading ? "Enregistrement…" : "Enregistrer"}
@@ -733,22 +607,7 @@ function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full px-4 py-2.5 rounded-xl text-sm text-violet-950
-        placeholder:text-slate-300 bg-violet-50/60
-        focus:outline-none transition-all duration-200"
-      style={{ border: "1px solid rgba(139,92,246,0.2)" }}
-      onFocus={(e) => {
-        e.currentTarget.style.border = "1px solid rgba(124,58,237,0.55)";
-        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.12)";
-        e.currentTarget.style.background = "rgba(248,247,255,0.9)";
-        props.onFocus?.(e);
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.border = "1px solid rgba(139,92,246,0.2)";
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.background = "rgba(245,243,255,0.6)";
-        props.onBlur?.(e);
-      }}
+      className="w-full rounded-xl border border-violet-500/20 bg-violet-50/60 px-4 py-2.5 text-sm text-violet-950 placeholder:text-slate-300 transition-all duration-200 focus:border-violet-500/55 focus:bg-[#f8f7ff]/90 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
     />
   );
 }
@@ -757,21 +616,7 @@ function StyledSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className="w-full appearance-none px-4 py-2.5 pr-8 rounded-xl text-sm text-violet-950
-        bg-violet-50/60 focus:outline-none transition-all duration-200 cursor-pointer"
-      style={{ border: "1px solid rgba(139,92,246,0.2)" }}
-      onFocus={(e) => {
-        e.currentTarget.style.border = "1px solid rgba(124,58,237,0.55)";
-        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.12)";
-        e.currentTarget.style.background = "#fff";
-        props.onFocus?.(e);
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.border = "1px solid rgba(139,92,246,0.2)";
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.background = "rgba(245,243,255,0.6)";
-        props.onBlur?.(e);
-      }}
+      className="w-full cursor-pointer appearance-none rounded-xl border border-violet-500/20 bg-violet-50/60 px-4 py-2.5 pr-8 text-sm text-violet-950 transition-all duration-200 focus:border-violet-500/55 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
     />
   );
 }

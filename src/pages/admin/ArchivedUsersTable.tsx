@@ -165,34 +165,19 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               <img
                 src={u.avatarUrl}
                 alt={fullName}
-                className="w-9 h-9 rounded-full object-cover shrink-0 ring-2 ring-violet-100"
-                style={{ opacity: 0.8 }}
+                className="w-9 h-9 rounded-full object-cover shrink-0 ring-2 ring-violet-100 opacity-80"
               />
             ) : (
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ring-2 ring-white shadow-sm"
-                style={{
-                  background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-                  opacity: 0.85,
-                }}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ring-2 ring-white shadow-sm opacity-90"
+                style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
               >
                 {initials}
               </div>
             )}
             <div className="flex flex-col gap-0.5 min-w-0">
-              {/* darker: #2e1065 instead of #3b1f6e */}
-              <span
-                className="text-sm font-semibold truncate"
-                style={{ color: "#1e293b", fontSize: 14 }}
-              >
-                {fullName}
-              </span>
-              <span
-                className="text-xs truncate"
-                style={{ color: "#64748b", fontSize: 12 }}
-              >
-                {u.email}
-              </span>
+              <span className="text-sm font-semibold text-slate-800 truncate">{fullName}</span>
+              <span className="text-xs text-slate-500 truncate">{u.email}</span>
             </div>
           </div>
         );
@@ -207,18 +192,14 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
         const u = p.data;
         if (!u) return null;
         if (!u.department && !u.jobTitle)
-          return <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>;
+          return <span className="text-xs text-slate-400">—</span>;
         return (
           <div className="flex flex-col gap-0.5">
             {u.department && (
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>
-                {u.department}
-              </span>
+              <span className="text-sm font-semibold text-slate-800">{u.department}</span>
             )}
             {u.jobTitle && (
-              <span style={{ fontSize: 12, color: "#64748b" }}>
-                {u.jobTitle}
-              </span>
+              <span className="text-xs text-slate-500">{u.jobTitle}</span>
             )}
           </div>
         );
@@ -230,15 +211,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
       flex: 0.9,
       minWidth: 140,
       cellRenderer: (p: ICellRendererParams<ArchivedUserDto>) => (
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-          style={{
-            background: "rgba(109,40,217,0.1)",
-            // darker date text
-            color: "#4c1d95",
-            border: "1px solid rgba(109,40,217,0.2)",
-          }}
-        >
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-xs font-medium text-violet-900">
           {formatDate(p.data?.archivedAt)}
         </span>
       ),
@@ -263,32 +236,10 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               title="Restaurer"
               disabled={isRes}
               onClick={() => onRestore(u)}
-              className="group relative w-8 h-8 rounded-lg inline-flex items-center justify-center transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{
-                background: isRes ? "rgba(34,197,94,0.1)" : "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.25)",
-                // darker green icon
-                color: "#15803d",
-              }}
-              onMouseEnter={e => {
-                if (!isRes) {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,197,94,0.15)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(34,197,94,0.4)";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 8px rgba(34,197,94,0.2)";
-                }
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,197,94,0.08)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(34,197,94,0.25)";
-                (e.currentTarget as HTMLButtonElement).style.transform = "";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "";
-              }}
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40
+                ${isRes ? "bg-green-500/10 text-green-700" : "border border-green-500/25 bg-green-500/[0.08] text-green-700 hover:-translate-y-px hover:bg-green-500/15 hover:border-green-500/40 hover:shadow-[0_2px_8px_rgba(34,197,94,0.2)]"}`}
             >
-              {isRes
-                ? <span style={{ fontSize: 10, fontWeight: 700, color: "#15803d" }}>···</span>
-                : <ArrowPathIcon className="w-3.5 h-3.5" />
-              }
+              {isRes ? <span className="text-[10px] font-bold">···</span> : <ArrowPathIcon className="w-3.5 h-3.5" />}
             </button>
 
             {/* Delete button */}
@@ -297,32 +248,10 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               title="Supprimer définitivement"
               disabled={isDel}
               onClick={() => onRequestDelete(u)}
-              className="w-8 h-8 rounded-lg inline-flex items-center justify-center transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{
-                background: isDel ? "rgba(239,68,68,0.1)" : "rgba(239,68,68,0.07)",
-                border: "1px solid rgba(239,68,68,0.2)",
-                // darker red icon
-                color: "#b91c1c",
-              }}
-              onMouseEnter={e => {
-                if (!isDel) {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.14)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(239,68,68,0.35)";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 8px rgba(239,68,68,0.18)";
-                }
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.07)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(239,68,68,0.2)";
-                (e.currentTarget as HTMLButtonElement).style.transform = "";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "";
-              }}
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40
+                ${isDel ? "bg-red-500/10 text-red-800" : "border border-red-500/20 bg-red-500/[0.07] text-red-800 hover:-translate-y-px hover:bg-red-500/15 hover:border-red-500/35 hover:shadow-[0_2px_8px_rgba(239,68,68,0.18)]"}`}
             >
-              {isDel
-                ? <span style={{ fontSize: 10, fontWeight: 700, color: "#b91c1c" }}>···</span>
-                : <TrashIcon className="w-3.5 h-3.5" />
-              }
+              {isDel ? <span className="text-[10px] font-bold">···</span> : <TrashIcon className="w-3.5 h-3.5" />}
             </button>
           </div>
         );
@@ -340,16 +269,11 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center"
-        style={{ background: "#f8f7ff" }}
-      >
-        <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 text-2xl shadow-sm"
-          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
-        >
+      <div className="flex flex-col items-center justify-center bg-[#f8f7ff] px-6 py-20 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-2xl shadow-sm">
           ⚠
         </div>
-        <p className="text-sm font-semibold" style={{ color: "#7f1d1d" }}>{error}</p>
+        <p className="text-sm font-semibold text-red-900">{error}</p>
       </div>
     );
   }
@@ -359,77 +283,42 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
       <style>{AG_THEME}</style>
 
       {/* Top banner */}
-      <div
-        className="flex items-center gap-3 px-6 py-3"
-        style={{
-          background: "linear-gradient(90deg, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.06) 100%)",
-          borderBottom: "1px solid rgba(251,191,36,0.3)",
-        }}
-      >
-        <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.3)" }}
-        >
-          <ArchiveBoxIcon className="w-3.5 h-3.5" style={{ color: "#92400e" }} />
+      <div className="flex items-center gap-3 border-b border-amber-400/30 bg-gradient-to-r from-amber-400/10 to-amber-400/5 px-6 py-3">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/20">
+          <ArchiveBoxIcon className="w-3.5 h-3.5 text-amber-800" />
         </div>
-        {/* darker amber text in banner */}
-        <span className="text-xs font-medium" style={{ color: "#78350f" }}>
+        <span className="text-xs font-medium text-amber-900">
           Les utilisateurs archivés ne peuvent plus se connecter.
           Vous pouvez les restaurer à tout moment ou les supprimer définitivement.
         </span>
       </div>
 
       {/* Search bar */}
-      <div
-        className="flex items-center gap-3 px-6 py-3 pb-5"
-        style={{ borderBottom: "1px solid rgba(139,92,246,0.1)" }}
-      >
-        <div className="relative flex-1 max-w-sm">
-          <MagnifyingGlassIcon
-            className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-violet-400"
-          />
+      <div className="flex items-center gap-3 border-b border-violet-500/10 px-6 py-3 pb-5">
+        <div className="relative max-w-sm flex-1">
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400" />
           <input
             type="search"
             placeholder="Rechercher dans les archives…"
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            className="w-full rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none transition-all duration-150"
-            style={{
-              border: "1px solid rgba(139,92,246,0.2)",
-              background: "#fff",
-              color: "#4c1d95",
-            }}
-            onFocus={e => {
-              e.currentTarget.style.borderColor = "#7c3aed";
-              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.12)";
-            }}
-            onBlur={e => {
-              e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)";
-              e.currentTarget.style.boxShadow = "0 1px 3px rgba(139,92,246,0.08)";
-            }}
+            className="w-full rounded-xl border border-violet-500/20 bg-white py-2.5 pl-9 pr-4 text-sm text-violet-900 outline-none transition-all duration-150 focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
           />
         </div>
 
         {/* Count badge */}
-        <span
-          className="ml-auto text-xs font-semibold px-3 py-1.5 rounded-full"
-          style={{
-            background: "rgba(139,92,246,0.08)",
-            color: "#5b21b6",
-            border: "1px solid rgba(139,92,246,0.12)",
-          }}
-        >
+        <span className="ml-auto rounded-full border border-violet-500/15 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-800">
           {filtered.length} archivé{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="flex-1 px-6 pt-4" style={{ background: "#f8f7ff" }}>
+        <div className="flex-1 bg-[#f8f7ff] px-6 pt-4">
           {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (
-        <div className="flex-1 flex flex-col overflow-hidden px-6 pt-4" style={{ background: "#f8f7ff" }}>
+        <div className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 pt-4">
           <div className="ag-theme-quartz ag-theme-archived flex-1 w-full overflow-hidden">
             <AgGridReact<ArchivedUserDto>
               theme="legacy"
@@ -446,18 +335,12 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               domLayout="normal"
               noRowsOverlayComponent={() => (
                 <div className="flex flex-col items-center gap-3 py-20">
-                  <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-                    style={{
-                      background: "rgba(109,40,217,0.07)",
-                      border: "1px solid rgba(109,40,217,0.15)",
-                    }}
-                  >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 text-3xl">
                     📭
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm font-bold" style={{ color: "#4c1d95" }}>Aucun utilisateur archivé</p>
-                    <p className="text-xs" style={{ color: "#a78bfa" }}>
+                    <p className="text-sm font-bold text-violet-900">Aucun utilisateur archivé</p>
+                    <p className="text-xs text-violet-400">
                       {search ? "Aucun résultat pour cette recherche" : "Les utilisateurs archivés apparaîtront ici"}
                     </p>
                   </div>

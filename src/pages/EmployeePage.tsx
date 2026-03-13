@@ -7,36 +7,20 @@ export default function EmployeePage() {
   const displayName = [token?.given_name, token?.family_name].filter(Boolean).join(" ") || token?.email || "Employé";
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "system-ui" }}>
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "16px 24px",
-          borderBottom: "1px solid #e2e8f0",
-          background: "#fff",
-        }}
-      >
-        <h1 style={{ fontSize: 18, fontWeight: 700, color: "#1e293b" }}>Espace employé</h1>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 14, color: "#64748b" }}>{displayName}</span>
+    <div className="flex min-h-screen flex-col font-sans">
+      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <h1 className="text-lg font-bold text-slate-800">Espace employé</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-slate-500">{displayName}</span>
           <button
             onClick={() => keycloak.logout({ redirectUri: `${window.location.origin}/` })}
-            style={{
-              padding: "8px 16px",
-              fontSize: 14,
-              borderRadius: 8,
-              border: "1px solid #e2e8f0",
-              background: "#fff",
-              cursor: "pointer",
-            }}
+            className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm"
           >
             Déconnexion
           </button>
         </div>
       </header>
-      <main style={{ flex: 1, padding: 0 }}>
+      <main className="flex flex-1 flex-col p-0">
         <EmployeeProfile />
       </main>
     </div>

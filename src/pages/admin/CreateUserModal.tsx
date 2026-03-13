@@ -177,10 +177,10 @@ export function CreateUserModal({
           <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
             <div className="relative shrink-0">
               {avatarPreview ? (
-                <img src={avatarPreview} alt="avatar" className="w-16 h-16 rounded-full object-cover border-3 border-violet-100 shadow-md" style={{ borderWidth: 3 }} />
+                <img src={avatarPreview} alt="avatar" className="h-16 w-16 rounded-full object-cover border-[3px] border-violet-100 shadow-md" />
               ) : (firstName || lastName) ? (
-                <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-md"
-                  style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, border: "3px solid #ede9fe" }}>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-violet-100 text-2xl font-bold text-white shadow-md"
+                  style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}>
                   {initials}
                 </div>
               ) : (

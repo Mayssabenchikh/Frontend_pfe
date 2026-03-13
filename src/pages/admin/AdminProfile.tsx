@@ -125,11 +125,11 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
           <div className="flex flex-col items-center gap-3 px-6 pt-8 pb-6 bg-gradient-to-b from-violet-50 to-white border-b border-slate-100">
             <div className="relative">
               {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} className="w-22 h-22 rounded-full object-cover border-4 border-violet-100 shadow-lg" style={{ width: 88, height: 88 }} />
+                <img src={avatarUrl} alt={fullName} className="h-[88px] w-[88px] rounded-full object-cover border-4 border-violet-100 shadow-lg" />
               ) : (
                 <div
-                  className="w-22 h-22 rounded-full flex items-center justify-center text-3xl font-bold text-white border-4 border-violet-100 shadow-lg"
-                  style={{ width: 88, height: 88, background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
+                  className="flex h-[88px] w-[88px] items-center justify-center rounded-full border-4 border-violet-100 text-3xl font-bold text-white shadow-lg"
+                  style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
                 >
                   {initials}
                 </div>

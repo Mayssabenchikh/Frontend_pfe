@@ -191,10 +191,10 @@ export function EditUserModal({
           <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
             <div className="relative shrink-0">
               {avatarPreview ? (
-                <img src={avatarPreview} alt={fullName} className="w-16 h-16 rounded-full object-cover shadow-md" style={{ border: "3px solid #ede9fe" }} />
+                <img src={avatarPreview} alt={fullName} className="h-16 w-16 rounded-full object-cover border-[3px] border-violet-100 shadow-md" />
               ) : (
-                <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-md"
-                  style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, border: "3px solid #ede9fe" }}>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-violet-100 text-2xl font-bold text-white shadow-md"
+                  style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}>
                   {initials}
                 </div>
               )}

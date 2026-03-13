@@ -31,45 +31,41 @@ export function EmployeeProfile() {
       .finally(() => setLoading(false));
   }, []);
 
+  const statusClass = (status: string) =>
+    status === "VALIDATED"
+      ? "bg-green-100 text-green-800"
+      : status === "FAILED"
+        ? "bg-red-100 text-red-900"
+        : "bg-amber-100 text-amber-800";
+
   return (
-    <div style={{ padding: 24 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Mes compétences</h2>
+    <div className="p-6">
+      <h2 className="mb-4 text-xl font-bold">Mes compétences</h2>
       {loading && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#64748b" }}>
-          <ArrowPathIcon className="w-5 h-5 animate-spin" />
+        <div className="flex items-center gap-2 text-slate-500">
+          <ArrowPathIcon className="h-5 w-5 animate-spin" />
           Chargement...
         </div>
       )}
-      {error && <p style={{ color: "#ef4444", fontSize: 14 }}>{error}</p>}
+      {error && <p className="text-sm text-red-500">{error}</p>}
       {!loading && !error && skills.length === 0 && (
-        <p style={{ color: "#94a3b8", fontSize: 14 }}>
+        <p className="text-sm text-slate-400">
           Aucune compétence pour le moment. Les compétences seront extraites de votre CV (fonctionnalité à venir).
         </p>
       )}
       {!loading && !error && skills.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {skills.map((s) => (
             <div
               key={s.id}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "12px 16px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0",
-              }}
+              className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
             >
               <div>
-                <span style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>{s.skillName}</span>
-                <span style={{ fontSize: 12, color: "#64748b", marginLeft: 8 }}>{s.categoryName}</span>
-                <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 8 }}>Niveau {s.level}</span>
+                <span className="text-sm font-semibold text-slate-800">{s.skillName}</span>
+                <span className="ml-2 text-xs text-slate-500">{s.categoryName}</span>
+                <span className="ml-2 text-xs text-slate-400">Niveau {s.level}</span>
               </div>
-              <span
-                style={{
-                  fontSize: 11,
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  background: s.status === "VALIDATED" ? "#dcfce7" : s.status === "FAILED" ? "#fee2e2" : "#fef3c7",
-                  color: s.status === "VALIDATED" ? "#166534" : s.status === "FAILED" ? "#991b1b" : "#92400e",
-                }}
-              >
+              <span className={`rounded-md px-2 py-1 text-[11px] font-medium ${statusClass(s.status)}`}>
                 {STATUS_LABELS[s.status] ?? s.status}
               </span>
             </div>
