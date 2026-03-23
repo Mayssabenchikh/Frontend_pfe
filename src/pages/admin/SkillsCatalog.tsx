@@ -17,6 +17,7 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline";
 import { skillsApi } from "../../api/skillsApi";
 import type { SkillDto, SkillCategoryDto } from "./types";
@@ -53,6 +54,12 @@ export function SkillsCatalog() {
   const [deletingId, setDeletingId]         = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm]   = useState<SkillDto | null>(null);
   const [updateConfirm, setUpdateConfirm]   = useState(false);
+  const [synonymModalSkill, setSynonymModalSkill] = useState<SkillDto | null>(null);
+  const [synonymInput, setSynonymInput] = useState("");
+  const [synonymSubmitLoading, setSynonymSubmitLoading] = useState(false);
+  const [synonymRemovingAlias, setSynonymRemovingAlias] = useState<string | null>(null);
+  const [synonymDeleteConfirm, setSynonymDeleteConfirm] = useState<{ skill: SkillDto; alias: string } | null>(null);
+  const [editingSynonymAlias, setEditingSynonymAlias] = useState<string | null>(null);
 
   const skills = pageData?.content ?? [];
 
@@ -150,6 +157,87 @@ export function SkillsCatalog() {
     resetForm();
     if (categories.length) setForm((f) => ({ ...f, categoryId: categories[0].id }));
     setCreateModal(true);
+  };
+
+  const openSynonyms = (skill: SkillDto) => {
+    setSynonymModalSkill(skill);
+    setSynonymInput("");
+    setEditingSynonymAlias(null);
+    setSynonymDeleteConfirm(null);
+  };
+
+  const refreshSynonymSkill = useCallback((skillId: number) => {
+    skillsApi.getSkill(skillId)
+      .then((res) => {
+        const updated = res.data;
+        if (!updated) return;
+        setPageData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            content: prev.content.map((s) => (s.id === skillId ? updated : s)),
+          };
+        });
+        setSynonymModalSkill(updated);
+      })
+      .catch((err) => {
+        toast.error(getApiError(err, "Impossible de rafraîchir la liste des synonymes"));
+      });
+  }, []);
+
+  const handleAddOrUpdateSynonym = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!synonymModalSkill) return;
+
+    const alias = synonymInput.trim();
+    if (!alias) return;
+
+    const alreadyExists = (synonymModalSkill.synonyms ?? [])
+      .some((s) => s.toLowerCase() === alias.toLowerCase() && s !== editingSynonymAlias);
+    if (alreadyExists) {
+      toast.error("Ce synonyme existe déjà");
+      return;
+    }
+
+    setSynonymSubmitLoading(true);
+
+    const addFlow = () =>
+      skillsApi.addSynonym(synonymModalSkill.id, alias)
+        .then(() => {
+          toast.success(editingSynonymAlias ? "Synonyme modifié" : "Synonyme ajouté");
+          setSynonymInput("");
+          setEditingSynonymAlias(null);
+          refreshSynonymSkill(synonymModalSkill.id);
+        })
+        .catch((err) => toast.error(getApiError(err, "Échec de l'ajout du synonyme")))
+        .finally(() => setSynonymSubmitLoading(false));
+
+    if (!editingSynonymAlias) {
+      addFlow();
+      return;
+    }
+
+    skillsApi.removeSynonym(synonymModalSkill.id, editingSynonymAlias)
+      .then(() => addFlow())
+      .catch((err) => {
+        toast.error(getApiError(err, "Échec de la modification du synonyme"));
+        setSynonymSubmitLoading(false);
+      });
+  };
+
+  const handleRemoveSynonym = (skill: SkillDto, alias: string) => {
+    setSynonymRemovingAlias(alias);
+    skillsApi.removeSynonym(skill.id, alias)
+      .then(() => {
+        toast.success("Synonyme supprimé");
+        if (editingSynonymAlias === alias) {
+          setEditingSynonymAlias(null);
+          setSynonymInput("");
+        }
+        refreshSynonymSkill(skill.id);
+      })
+      .catch((err) => toast.error(getApiError(err, "Échec de la suppression du synonyme")))
+      .finally(() => setSynonymRemovingAlias(null));
   };
 
   return (
@@ -276,6 +364,7 @@ export function SkillsCatalog() {
                   skill={s}
                   index={i}
                   isDeleting={deletingId === s.id}
+                  onManageSynonyms={() => openSynonyms(s)}
                   onEdit={() => openEdit(s)}
                   onDelete={() => handleDeleteClick(s)}
                 />
@@ -361,6 +450,139 @@ export function SkillsCatalog() {
         onConfirm={confirmUpdate}
         onCancel={() => setUpdateConfirm(false)}
       />
+
+      {synonymModalSkill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/20 p-4 backdrop-blur-[6px]">
+          <div className="absolute inset-0" onClick={() => setSynonymModalSkill(null)} />
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-500/20 bg-white shadow-[0_30px_80px_rgba(76,29,149,0.22)]">
+            <div className="flex items-center justify-between border-b border-violet-500/10 bg-gradient-to-br from-violet-50 to-indigo-50 px-6 py-4">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-violet-500">Référentiel</p>
+                <h3 className="truncate text-base font-bold text-slate-900">
+                  Synonymes de {synonymModalSkill.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSynonymModalSkill(null)}
+                className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                aria-label="Fermer"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-5 px-6 py-5">
+              <form onSubmit={handleAddOrUpdateSynonym} className="rounded-2xl border border-violet-200 bg-violet-50/60 p-4">
+                <p className="mb-3 text-xs font-semibold text-violet-800">
+                  {editingSynonymAlias ? `Modifier « ${editingSynonymAlias} »` : "Ajouter un nouveau synonyme"}
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="text"
+                    value={synonymInput}
+                    onChange={(e) => setSynonymInput(e.target.value)}
+                    placeholder="Ex: react js, js react, framework react..."
+                    className="w-full rounded-xl border border-violet-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2">
+                    {editingSynonymAlias && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingSynonymAlias(null);
+                          setSynonymInput("");
+                        }}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50"
+                      >
+                        Annuler
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={synonymSubmitLoading || !synonymInput.trim()}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-violet-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {synonymSubmitLoading && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
+                      {editingSynonymAlias ? "Enregistrer" : "Ajouter"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Liste des synonymes ({synonymModalSkill.synonyms?.length ?? 0})
+                </p>
+                {(!synonymModalSkill.synonyms || synonymModalSkill.synonyms.length === 0) ? (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+                    Aucun synonyme enregistré pour cette compétence.
+                  </div>
+                ) : (
+                  <div className="mx-auto grid w-full max-w-2xl grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {synonymModalSkill.synonyms.map((alias) => (
+                      <div
+                        key={alias}
+                        className="flex items-center justify-between gap-1.5 rounded-xl border border-violet-200/80 bg-gradient-to-br from-white to-violet-50/40 px-2 py-1.5 shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-violet-300 hover:shadow-md"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-[11px] font-semibold text-slate-800">{alias}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingSynonymAlias(alias);
+                              setSynonymInput(alias);
+                            }}
+                            className="rounded-lg p-1 text-slate-500 transition hover:bg-violet-100 hover:text-violet-700"
+                            aria-label={`Modifier ${alias}`}
+                          >
+                            <PencilSquareIcon className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSynonymDeleteConfirm({ skill: synonymModalSkill, alias })}
+                            disabled={synonymRemovingAlias === alias}
+                            className="rounded-lg p-1 text-slate-500 transition hover:bg-red-100 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label={`Supprimer ${alias}`}
+                          >
+                            {synonymRemovingAlias === alias ? (
+                              <ArrowPathIcon className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <TrashIcon className="h-3 w-3" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={!!synonymDeleteConfirm}
+        title="Supprimer le synonyme"
+        message={
+          synonymDeleteConfirm
+            ? `Supprimer « ${synonymDeleteConfirm.alias} » de la compétence « ${synonymDeleteConfirm.skill.name} » ?`
+            : ""
+        }
+        confirmLabel="Supprimer"
+        variant="danger"
+        loading={synonymRemovingAlias !== null}
+        onConfirm={() => {
+          if (!synonymDeleteConfirm) return;
+          handleRemoveSynonym(synonymDeleteConfirm.skill, synonymDeleteConfirm.alias);
+          setSynonymDeleteConfirm(null);
+        }}
+        onCancel={() => setSynonymDeleteConfirm(null)}
+      />
     </>
   );
 }
@@ -372,11 +594,12 @@ interface SkillCardProps {
   skill: SkillDto;
   index: number;
   isDeleting: boolean;
+  onManageSynonyms: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function SkillCard({ skill, index, isDeleting, onEdit, onDelete }: SkillCardProps) {
+function SkillCard({ skill, index, isDeleting, onManageSynonyms, onEdit, onDelete }: SkillCardProps) {
   return (
     <div
       className="fade-up group relative flex h-[132px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-[12px] transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.01] group-hover:bg-white/98 group-hover:shadow-[0_12px_40px_-8px_rgba(99,102,241,0.2),0_0_0_1px_rgba(139,92,246,0.08)]"
@@ -439,6 +662,14 @@ function SkillCard({ skill, index, isDeleting, onEdit, onDelete }: SkillCardProp
           <span className="inline-flex items-center rounded-md border border-indigo-500/10 bg-indigo-500/[0.06] px-2 py-0.5 text-xs font-medium text-indigo-700">
             Niv. {skill.levelMin}–{skill.levelMax}
           </span>
+          <button
+            type="button"
+            onClick={onManageSynonyms}
+            className="inline-flex items-center gap-1 rounded-md border border-violet-300/50 bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-700 transition hover:border-violet-400 hover:bg-violet-100"
+          >
+            <TagIcon className="h-3 w-3" />
+            Synonymes ({skill.synonyms?.length ?? 0})
+          </button>
         </div>
       </div>
     </div>

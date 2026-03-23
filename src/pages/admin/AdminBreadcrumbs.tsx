@@ -6,6 +6,7 @@ const LABELS: Record<NavId, string> = {
   users: "Utilisateurs",
   archives: "Archives",
   skills: "Référentiel compétences",
+  skillRequests: "Demandes compétences",
   skillCategories: "Catégories",
   profile: "Mon profil",
 };

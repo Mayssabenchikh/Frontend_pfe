@@ -18,6 +18,9 @@ import {
   EyeIcon,
   EyeSlashIcon,
   LockClosedIcon,
+  SparklesIcon,
+  DocumentTextIcon,
+  CloudArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
@@ -37,18 +40,18 @@ type TokenParsed = {
   picture?: string;
 };
 
-type ManagerOutletContext = {
+type EmployeeOutletContext = {
   onAvatarUpdate?: (url: string) => void;
 };
 
-type Section = "personal" | "security";
+type Section = "personal" | "security" | "cv";
 
-export function ManagerProfile() {
+export function EmployeeMyProfile() {
   const { keycloak } = useKeycloak();
   const token = keycloak.tokenParsed as TokenParsed | undefined;
-  const managerKeycloakId = keycloak.subject;
+  const employeeKeycloakId = keycloak.subject;
 
-  const { onAvatarUpdate } = useOutletContext<ManagerOutletContext>() || {};
+  const { onAvatarUpdate } = useOutletContext<EmployeeOutletContext>() || {};
 
   const firstName = token?.given_name ?? "";
   const lastName = token?.family_name ?? "";
@@ -64,7 +67,7 @@ export function ManagerProfile() {
 
   useEffect(() => {
     setLoadingExtra(true);
-    http.get<ProfileData>("/api/manager/me")
+    http.get<ProfileData>("/api/employee/me")
       .then((res) => setExtraData(res.data))
       .catch(() => {})
       .finally(() => setLoadingExtra(false));
@@ -72,8 +75,8 @@ export function ManagerProfile() {
 
   const displayFirst = isEditing ? editedFirstName : (editedFirstName || firstName);
   const displayLast = isEditing ? editedLastName : (editedLastName || lastName);
-  const fullName = [displayFirst, displayLast].filter(Boolean).join(" ") || "Manager";
-  const initials = `${displayFirst[0] ?? ""}${displayLast[0] ?? ""}`.trim().toUpperCase() || "MG";
+  const fullName = [displayFirst, displayLast].filter(Boolean).join(" ") || "Employé";
+  const initials = `${displayFirst[0] ?? ""}${displayLast[0] ?? ""}`.trim().toUpperCase() || "EM";
   const gradient = getAvatarColor(email);
 
   const [section, setSection] = useState<Section>("personal");
@@ -81,8 +84,15 @@ export function ManagerProfile() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // CV extraction state
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [cvFileName, setCvFileName] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const cvInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    http.get<{ avatarUrl?: string }>("/api/manager/me")
+    http.get<{ avatarUrl?: string }>("/api/employee/me")
       .then((res) => {
         if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl);
       })
@@ -96,7 +106,7 @@ export function ManagerProfile() {
     if (!ln || ln.length < 2) { toast.error("Le nom doit contenir au moins 2 caractères."); return; }
     setSavingProfile(true);
     try {
-      await http.put("/api/manager/me/profile", { firstName: fn, lastName: ln });
+      await http.put("/api/employee/me/profile", { firstName: fn, lastName: ln });
       setIsEditing(false);
       toast.success("Profil mis à jour.");
     } catch {
@@ -118,7 +128,7 @@ export function ManagerProfile() {
 
   const handleAvatarChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !managerKeycloakId) return;
+    if (!file || !employeeKeycloakId) return;
     if (!file.type.startsWith("image/")) { toast.error("Veuillez sélectionner une image."); return; }
     if (file.size > 5 * 1024 * 1024) { toast.error("L'image ne doit pas dépasser 5 Mo."); return; }
 
@@ -130,7 +140,7 @@ export function ManagerProfile() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await http.post<{ avatarUrl: string }>("/api/manager/me/avatar", formData, {
+      const res = await http.post<{ avatarUrl: string }>("/api/employee/me/avatar", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAvatarUrl(res.data.avatarUrl);
@@ -142,10 +152,83 @@ export function ManagerProfile() {
     } finally {
       setUploadingAvatar(false);
     }
-  }, [managerKeycloakId, token?.picture, onAvatarUpdate]);
+  }, [employeeKeycloakId, token?.picture, onAvatarUpdate]);
+
+  // CV extraction result
+  const [extractionResult, setExtractionResult] = useState<{
+    matchedSkills: { skillName: string; categoryName: string }[];
+    unmatchedSkills: string[];
+    pendingRequestsCreated: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!employeeKeycloakId) return;
+    http.get<{ fileName: string | null; cvUrl: string | null; uploadedAt: string | null }>("/api/employee/me/cv")
+      .then((res) => {
+        setCvFileName(res.data?.fileName ?? null);
+      })
+      .catch(() => {});
+  }, [employeeKeycloakId]);
+
+  // CV handlers
+  const handleCvDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && (file.type === "application/pdf" || file.name.endsWith(".pdf") || file.name.endsWith(".docx"))) {
+      setCvFile(file);
+      setCvFileName(file.name);
+      setExtractionResult(null);
+    } else {
+      toast.error("Veuillez déposer un fichier PDF ou DOCX.");
+    }
+  };
+
+  const handleCvSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCvFile(file);
+      setCvFileName(file.name);
+      setExtractionResult(null);
+    }
+  };
+
+  const handleExtractSkills = async () => {
+    if (!cvFile) return;
+    setExtracting(true);
+    setExtractionResult(null);
+
+    const form = new FormData();
+    form.append("file", cvFile);
+
+    try {
+      const res = await http.post<{
+        matchedSkills: { skillName: string; categoryName: string }[];
+        unmatchedSkills: string[];
+        pendingRequestsCreated: number;
+      }>("/api/employee/me/cv/extract", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setExtractionResult(res.data);
+      const matched = res.data.matchedSkills?.length ?? 0;
+      const unmatched = res.data.unmatchedSkills?.length ?? 0;
+      if (matched > 0) {
+        toast.success(`${matched} compétence(s) ajoutée(s) à votre profil !`);
+      }
+      if (unmatched > 0) {
+        toast.info(`${unmatched} compétence(s) non reconnue(s) envoyée(s) à l'administrateur.`);
+      }
+      setCvFileName(cvFile.name);
+    } catch {
+      toast.error("Erreur lors de l'extraction des compétences.");
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
     { id: "personal", label: "Informations personnelles", icon: <UserIcon className="w-4 h-4" /> },
+    { id: "cv", label: "Extraction CV", icon: <SparklesIcon className="w-4 h-4" /> },
     { id: "security", label: "Sécurité & Mot de passe", icon: <ShieldCheckIcon className="w-4 h-4" /> },
   ];
 
@@ -184,7 +267,7 @@ export function ManagerProfile() {
             </div>
             <div className="text-center">
               <p className="text-sm font-bold text-indigo-950">{fullName}</p>
-              <p className="text-xs text-slate-400 mt-0.5">Manager</p>
+              <p className="text-xs text-slate-400 mt-0.5">Employé</p>
             </div>
             <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-3 py-1">
               <CheckCircleIcon className="w-3 h-3 text-green-600" />
@@ -235,6 +318,20 @@ export function ManagerProfile() {
             />
           )}
           {section === "security" && <SecuritySection />}
+          {section === "cv" && (
+            <CVSection
+              cvFile={cvFile}
+              cvFileName={cvFileName}
+              dragOver={dragOver}
+              extracting={extracting}
+              cvInputRef={cvInputRef}
+              onDragOver={setDragOver}
+              onCvDrop={handleCvDrop}
+              onCvSelect={handleCvSelect}
+              onExtract={handleExtractSkills}
+              extractionResult={extractionResult}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -278,7 +375,7 @@ function PersonalSection({
   const handleSaveExtra = async () => {
     setSavingExtra(true);
     try {
-      const res = await http.put<ProfileData>("/api/manager/me/extra", {
+      const res = await http.put<ProfileData>("/api/employee/me/extra", {
         phone: editPhone.trim() || null,
         department: editDept.trim() || null,
         jobTitle: editJob.trim() || null,
@@ -402,7 +499,7 @@ function PersonalSection({
                 <ReadonlyField icon={<BuildingOffice2Icon className="w-4 h-4 text-indigo-600" />} label="Département" value={extraData.department || "—"} />
               )}
               {isEditingExtra ? (
-                <ExtraField icon={<BriefcaseIcon className="w-4 h-4 text-indigo-600" />} label="Poste" value={editJob} onChange={setEditJob} placeholder="ex: Manager de projet" />
+                <ExtraField icon={<BriefcaseIcon className="w-4 h-4 text-indigo-600" />} label="Poste" value={editJob} onChange={setEditJob} placeholder="ex: Développeur" />
               ) : (
                 <ReadonlyField icon={<BriefcaseIcon className="w-4 h-4 text-indigo-600" />} label="Poste" value={extraData.jobTitle || "—"} />
               )}
@@ -493,7 +590,7 @@ function SecuritySection() {
 
     setSaving(true);
     try {
-      await http.post("/api/manager/me/change-password", { currentPassword, newPassword, confirmPassword });
+      await http.post("/api/employee/me/change-password", { currentPassword, newPassword, confirmPassword });
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
       setFieldErrors({});
       toast.success("Mot de passe modifié avec succès.");
@@ -569,6 +666,166 @@ function SecuritySection() {
         </div>
       </form>
 
+    </div>
+  );
+}
+
+/* ─── CV Section ───────────────────────────────────────────────────────────── */
+
+function CVSection({
+  cvFile,
+  cvFileName,
+  dragOver,
+  extracting,
+  cvInputRef,
+  onDragOver,
+  onCvDrop,
+  onCvSelect,
+  onExtract,
+  extractionResult,
+}: {
+  cvFile: File | null;
+  cvFileName: string | null;
+  dragOver: boolean;
+  extracting: boolean;
+  cvInputRef: React.RefObject<HTMLInputElement | null>;
+  onDragOver: (v: boolean) => void;
+  onCvDrop: (e: React.DragEvent) => void;
+  onCvSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onExtract: () => void;
+  extractionResult: {
+    matchedSkills: { skillName: string; categoryName: string }[];
+    unmatchedSkills: string[];
+    pendingRequestsCreated: number;
+  } | null;
+}) {
+  return (
+    <div className="p-6 md:p-8 flex flex-col gap-6">
+      <div className="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm">
+        <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-violet-400">
+          Extraction des compétences
+        </p>
+
+        <div
+          className={`flex flex-col items-center rounded-xl border-2 border-dashed p-8 transition-all ${
+            dragOver
+              ? "scale-[1.01] border-violet-500 bg-violet-50"
+              : "border-violet-200 bg-slate-50/50"
+          }`}
+          onDragOver={(e) => { e.preventDefault(); onDragOver(true); }}
+          onDragLeave={() => onDragOver(false)}
+          onDrop={onCvDrop}
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-100 to-indigo-100">
+            <SparklesIcon className="h-7 w-7 text-violet-600" />
+          </div>
+
+          <h3 className="mt-4 text-base font-bold tracking-tight text-slate-900">
+            Importez votre CV
+          </h3>
+          <p className="mt-1.5 text-center text-sm leading-relaxed text-slate-500">
+            Glissez-déposez votre CV (PDF ou DOCX) pour analyser vos compétences
+          </p>
+
+          {(cvFile || cvFileName) && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
+              <DocumentTextIcon className="h-3.5 w-3.5" />
+              {cvFile?.name ?? cvFileName}
+            </div>
+          )}
+
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => cvInputRef.current?.click()}
+              className="rounded-lg border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-50"
+            >
+              Choisir un fichier
+            </button>
+            <button
+              type="button"
+              onClick={onExtract}
+              disabled={!cvFile || extracting}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-violet-200 transition hover:-translate-y-px hover:from-violet-700 hover:to-indigo-700 hover:shadow-violet-300 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {extracting ? (
+                <>
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                  Extraction en cours…
+                </>
+              ) : (
+                <>
+                  <CloudArrowUpIcon className="h-4 w-4" />
+                  Extraire
+                </>
+              )}
+            </button>
+          </div>
+          <input ref={cvInputRef} type="file" accept=".pdf,.docx" className="hidden" onChange={onCvSelect} />
+        </div>
+      </div>
+
+      {/* Extraction Results */}
+      {extractionResult && (
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Résultat de l'extraction
+          </p>
+
+          {/* Matched Skills */}
+          {extractionResult.matchedSkills.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-semibold text-green-700">
+                  Compétences ajoutées ({extractionResult.matchedSkills.length})
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {extractionResult.matchedSkills.map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-3 py-1 text-xs font-medium text-green-700"
+                  >
+                    {skill.skillName}
+                    <span className="text-green-500">•</span>
+                    <span className="text-green-600">{skill.categoryName}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Unmatched Skills */}
+          {extractionResult.unmatchedSkills.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <ArrowPathIcon className="h-4 w-4 text-amber-600" />
+                <span className="text-sm font-semibold text-amber-700">
+                  En attente de validation ({extractionResult.unmatchedSkills.length})
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {extractionResult.unmatchedSkills.map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-700"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                Ces compétences seront examinées par un administrateur et ajoutées au référentiel si validées.
+              </p>
+            </div>
+          )}
+
+          {extractionResult.matchedSkills.length === 0 && extractionResult.unmatchedSkills.length === 0 && (
+            <p className="text-sm text-slate-500">Aucune compétence détectée dans le CV.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

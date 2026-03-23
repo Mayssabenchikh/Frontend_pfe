@@ -206,7 +206,7 @@ export default function ManagerPage() {
         <main className="flex flex-1 flex-col overflow-hidden pt-16">
           <ManagerBreadcrumbs />
           <div className="dashboard-padding">
-            <Outlet context={{ managerAvatarUrl: avatarUrl, managerName: displayName, managerEmail: email, currentPath: location.pathname }} />
+            <Outlet context={{ managerAvatarUrl: avatarUrl, managerName: displayName, managerEmail: email, currentPath: location.pathname, onAvatarUpdate: setAvatarUrl }} />
           </div>
         </main>
       </div>

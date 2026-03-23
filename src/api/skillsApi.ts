@@ -1,5 +1,12 @@
 import { http } from "./http";
-import type { SkillCategoryDto, SkillCategoryPageDto, SkillDto, SkillPageDto } from "../pages/admin/types";
+import type {
+  SkillCategoryDto,
+  SkillCategoryPageDto,
+  SkillDto,
+  SkillPageDto,
+  PendingSkillRequestDto,
+  PendingSkillRequestPageDto,
+} from "../pages/admin/types";
 
 const BASE = "/api/admin";
 
@@ -37,4 +44,19 @@ export const skillsApi = {
     http.post(`${BASE}/skills/${skillId}/synonyms`, { alias }),
   removeSynonym: (skillId: number, alias: string) =>
     http.delete(`${BASE}/skills/${skillId}/synonyms`, { params: { alias } }),
+  listPendingSkillRequests: (opts?: { page?: number; size?: number; status?: "PENDING" | "APPROVED" | "MERGED" | "REJECTED" }) => {
+    const params: Record<string, string | number> = { page: opts?.page ?? 0, size: opts?.size ?? 20 };
+    if (opts?.status) params.status = opts.status;
+    return http.get<PendingSkillRequestPageDto>(`${BASE}/pending-skills`, { params });
+  },
+  listPendingSkillRequestsAll: () =>
+    http.get<PendingSkillRequestDto[]>(`${BASE}/pending-skills`),
+  getPendingSkillRequestsCount: () =>
+    http.get<{ count: number }>(`${BASE}/pending-skills/count`),
+  getPendingSkillRequestsStats: () =>
+    http.get<Record<"PENDING" | "APPROVED" | "MERGED" | "REJECTED", number>>(`${BASE}/pending-skills/stats`),
+  resolvePendingSkillRequest: (
+    id: number,
+    data: { action: "APPROVE" | "MERGE" | "REJECT"; categoryId?: number; existingSkillId?: number; adminNotes?: string }
+  ) => http.post(`${BASE}/pending-skills/${id}/resolve`, data),
 };

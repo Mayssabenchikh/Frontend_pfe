@@ -26,7 +26,7 @@ export type ArchivedUserDto = {
   avatarUrl?: string | null;
 };
 
-export type NavId = "dashboard" | "users" | "archives" | "skills" | "skillCategories" | "profile";
+export type NavId = "dashboard" | "users" | "archives" | "skills" | "skillRequests" | "skillCategories" | "profile";
 
 export type SkillCategoryDto = { id: number; name: string; skillsCount?: number; sampleSkillNames?: string[] };
 export type SkillCategoryPageDto = {
@@ -55,6 +55,27 @@ export type SkillDto = {
   levelMin: number;
   levelMax: number;
   synonyms: string[];
+};
+
+export type PendingSkillRequestDto = {
+  id: number;
+  rawSkillName: string;
+  requestedByName: string;
+  requestedByEmail: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "MERGED" | string;
+  resolvedSkillId: number | null;
+  resolvedSkillName: string | null;
+  adminNotes: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+};
+
+export type PendingSkillRequestPageDto = {
+  content: PendingSkillRequestDto[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
 };
 
 export type AdminRole = "MANAGER" | "EMPLOYEE";

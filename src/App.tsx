@@ -10,6 +10,8 @@ import { ProjectsList } from "./pages/manager/ProjectsList";
 import { ProjectDetail } from "./pages/manager/ProjectDetail";
 import { ManagerProfile } from "./pages/manager/ManagerProfile";
 import EmployeePage from "./pages/EmployeePage";
+import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
+import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
 
 function App() {
   const { keycloak, initialized } = useKeycloak();
@@ -84,7 +86,10 @@ function App() {
               <EmployeePage />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<EmployeeDashboard />} />
+          <Route path="profile" element={<EmployeeMyProfile />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -167,7 +167,7 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
                   key={s.id}
                   type="button"
                   onClick={() => setSection(s.id)}
-                  className={`relative flex items-center gap-2.5 w-full rounded-xl px-3.5 py-2.5 text-sm font-medium text-left transition-all
+                  className={`relative flex items-center gap-2.5 w-full rounded-xl px-3.5 py-2.5 text-sm font-medium text-left transition-all whitespace-nowrap
                     ${active ? "bg-indigo-50 text-indigo-800 font-semibold" : "text-slate-500 hover:bg-slate-50"}`}
                 >
                   {active && (
@@ -535,13 +535,6 @@ function SecuritySection() {
         </div>
       </form>
 
-      <div className="flex items-start gap-3 rounded-xl bg-green-50 border border-green-200 p-4">
-        <ShieldCheckIcon className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs font-semibold text-green-700">Conseils de sécurité</p>
-          <p className="text-xs text-green-600 mt-0.5">Utilisez au moins 8 caractères avec des majuscules, chiffres et symboles. Ne réutilisez pas d'anciens mots de passe.</p>
-        </div>
-      </div>
     </div>
   );
 }

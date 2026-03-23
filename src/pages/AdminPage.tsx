@@ -27,6 +27,7 @@ import { UsersTable } from "./admin/UsersTable";
 import { ArchivedUsersTable } from "./admin/ArchivedUsersTable";
 import { SkillsCatalog } from "./admin/SkillsCatalog";
 import { SkillCategories } from "./admin/SkillCategories";
+import { PendingSkillRequests } from "./admin/PendingSkillRequests";
 import { AdminProfile } from "./admin/AdminProfile";
 import { CreateUserModal } from "./admin/CreateUserModal";
 import { EditUserModal } from "./admin/EditUserModal";
@@ -304,6 +305,12 @@ export default function AdminPage() {
           {currentView === "skillCategories" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <SkillCategories />
+            </section>
+          )}
+
+          {currentView === "skillRequests" && (
+            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+              <PendingSkillRequests />
             </section>
           )}
 
