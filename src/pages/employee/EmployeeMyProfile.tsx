@@ -740,10 +740,17 @@ function CVSection({
   employeeSkills: EmployeeSkillItem[];
   pendingUnrecognizedSkills: string[];
 }) {
+  const isFirstCvFlow = !cvFileName && !extractionResult;
+  const compact = !isFirstCvFlow;
+
   return (
     <div className="p-2.5 md:p-3 flex flex-col gap-2">
-      <div className="rounded-2xl border border-violet-100 bg-white p-3 shadow-sm">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-violet-400">
+      <div
+        className={`rounded-2xl border border-violet-100 bg-white shadow-sm flex flex-col ${
+          compact ? "p-3 min-h-[260px]" : "p-5 min-h-[420px]"
+        }`}
+      >
+        <p className={`${compact ? "mb-2 text-[10px]" : "mb-3 text-xs"} font-bold uppercase tracking-widest text-violet-400`}>
           Extraction des compétences
         </p>
 
@@ -752,34 +759,34 @@ function CVSection({
             dragOver
               ? "scale-[1.01] border-violet-500 bg-violet-50"
               : "border-violet-200 bg-slate-50/50"
-          }`}
+          } ${compact ? "min-h-[180px] justify-start" : "min-h-[280px] flex-1 justify-center"}`}
           onDragOver={(e) => { e.preventDefault(); onDragOver(true); }}
           onDragLeave={() => onDragOver(false)}
           onDrop={onCvDrop}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-200 bg-gradient-to-br from-violet-100 to-indigo-100">
-            <SparklesIcon className="h-5 w-5 text-violet-600" />
+          <div className={`flex items-center justify-center border border-violet-200 bg-gradient-to-br from-violet-100 to-indigo-100 ${compact ? "h-11 w-11 rounded-xl" : "h-14 w-14 rounded-2xl"}`}>
+            <SparklesIcon className={`${compact ? "h-5 w-5" : "h-7 w-7"} text-violet-600`} />
           </div>
 
-          <h3 className="mt-2 text-sm font-bold tracking-tight text-slate-900">
+          <h3 className={`${compact ? "mt-2 text-sm" : "mt-3 text-base"} font-bold tracking-tight text-slate-900`}>
             Importez votre CV
           </h3>
-          <p className="mt-1 text-center text-xs leading-relaxed text-slate-500">
+          <p className={`${compact ? "mt-1 text-xs" : "mt-1.5 text-sm"} text-center leading-relaxed text-slate-500`}>
             Glissez-déposez votre CV (PDF ou DOCX) pour analyser vos compétences
           </p>
 
           {(cvFile || cvFileName) && (
-            <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
-              <DocumentTextIcon className="h-3.5 w-3.5" />
+            <div className={`${compact ? "mt-2 gap-1.5 rounded-lg px-2.5 py-1 text-xs" : "mt-3 gap-2 rounded-xl px-3 py-1.5 text-sm"} flex items-center border border-violet-200 bg-violet-50 font-semibold text-violet-700`}>
+              <DocumentTextIcon className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
               {cvFile?.name ?? cvFileName}
             </div>
           )}
 
-          <div className="mt-2.5 flex flex-wrap justify-center gap-2">
+          <div className={`${compact ? "mt-2.5 gap-2" : "mt-4 gap-2.5"} flex flex-wrap justify-center`}>
             <button
               type="button"
               onClick={() => cvInputRef.current?.click()}
-              className="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-50"
+              className={`${compact ? "rounded-lg px-3 py-1.5 text-xs" : "rounded-xl px-4 py-2 text-sm"} border border-violet-200 bg-white font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-50`}
             >
               Choisir un fichier
             </button>
@@ -787,16 +794,16 @@ function CVSection({
               type="button"
               onClick={onExtract}
               disabled={!cvFile || extracting}
-              className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md shadow-violet-200 transition hover:-translate-y-px hover:from-violet-700 hover:to-indigo-700 hover:shadow-violet-300 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`${compact ? "gap-1.5 rounded-lg px-4 py-1.5 text-xs" : "gap-2 rounded-xl px-5 py-2 text-sm"} flex items-center bg-gradient-to-r from-violet-600 to-indigo-600 font-semibold text-white shadow-md shadow-violet-200 transition hover:-translate-y-px hover:from-violet-700 hover:to-indigo-700 hover:shadow-violet-300 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50`}
             >
               {extracting ? (
                 <>
-                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                  <ArrowPathIcon className={`${compact ? "h-4 w-4" : "h-5 w-5"} animate-spin`} />
                   Extraction en cours…
                 </>
               ) : (
                 <>
-                  <CloudArrowUpIcon className="h-4 w-4" />
+                  <CloudArrowUpIcon className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
                   Extraire
                 </>
               )}
@@ -938,29 +945,6 @@ function ExtractionResultsSection({
             </div>
           )}
 
-          {extractionResult && extractionResult.matchedSkills.length > 0 && (
-            <div className="mb-3">
-              <div className="mb-2 flex items-center gap-2">
-                <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-semibold text-green-700">
-                  Compétences ajoutées ({extractionResult.matchedSkills.length})
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {extractionResult.matchedSkills.map((skill, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-3 py-1 text-xs font-medium text-green-700"
-                  >
-                    {skill.skillName}
-                    <span className="text-green-500">•</span>
-                    <span className="text-green-600">{skill.categoryName}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
           {(pendingUnrecognizedSkills.length > 0 || (extractionResult?.unmatchedSkills.length ?? 0) > 0) && (
             <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/60 to-white p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
@@ -998,11 +982,7 @@ function ExtractionResultsSection({
             <p className="text-sm text-slate-500">Aucune compétence détectée dans le CV.</p>
           )}
         </div>
-      ) : (
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Aucun résultat d'extraction pour le moment.</p>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

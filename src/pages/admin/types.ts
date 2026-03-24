@@ -62,6 +62,13 @@ export type PendingSkillRequestDto = {
   rawSkillName: string;
   requestedByName: string;
   requestedByEmail: string;
+  requestersCount: number;
+  requesters: {
+    keycloakId: string;
+    name: string;
+    email: string;
+    requestedAt: string | null;
+  }[];
   status: "PENDING" | "APPROVED" | "REJECTED" | "MERGED" | string;
   resolvedSkillId: number | null;
   resolvedSkillName: string | null;
