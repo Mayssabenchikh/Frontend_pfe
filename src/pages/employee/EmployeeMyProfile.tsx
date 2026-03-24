@@ -21,6 +21,7 @@ import {
   SparklesIcon,
   DocumentTextIcon,
   CloudArrowUpIcon,
+  BeakerIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
@@ -42,6 +43,16 @@ type TokenParsed = {
 
 type EmployeeOutletContext = {
   onAvatarUpdate?: (url: string) => void;
+};
+
+type EmployeeSkillItem = {
+  id: number;
+  skillId: number;
+  skillName: string;
+  categoryName: string;
+  level: number;
+  status: "EXTRACTED" | "QUIZ_PENDING" | "VALIDATED" | "FAILED" | string;
+  source: string;
 };
 
 type Section = "personal" | "security" | "cv";
@@ -160,6 +171,8 @@ export function EmployeeMyProfile() {
     unmatchedSkills: string[];
     pendingRequestsCreated: number;
   } | null>(null);
+  const [employeeSkills, setEmployeeSkills] = useState<EmployeeSkillItem[]>([]);
+  const [pendingUnrecognizedSkills, setPendingUnrecognizedSkills] = useState<string[]>([]);
 
   useEffect(() => {
     if (!employeeKeycloakId) return;
@@ -169,6 +182,26 @@ export function EmployeeMyProfile() {
       })
       .catch(() => {});
   }, [employeeKeycloakId]);
+
+  const loadEmployeeSkills = useCallback(() => {
+    http.get<EmployeeSkillItem[]>("/api/employee/me/skills")
+      .then((res) => setEmployeeSkills(res.data ?? []))
+      .catch(() => setEmployeeSkills([]));
+  }, []);
+
+  useEffect(() => {
+    loadEmployeeSkills();
+  }, [loadEmployeeSkills]);
+
+  const loadPendingUnrecognizedSkills = useCallback(() => {
+    http.get<string[]>("/api/employee/me/pending-skills")
+      .then((res) => setPendingUnrecognizedSkills(res.data ?? []))
+      .catch(() => setPendingUnrecognizedSkills([]));
+  }, []);
+
+  useEffect(() => {
+    loadPendingUnrecognizedSkills();
+  }, [loadPendingUnrecognizedSkills]);
 
   // CV handlers
   const handleCvDrop = (e: React.DragEvent) => {
@@ -219,6 +252,8 @@ export function EmployeeMyProfile() {
         toast.info(`${unmatched} compétence(s) non reconnue(s) envoyée(s) à l'administrateur.`);
       }
       setCvFileName(cvFile.name);
+      loadEmployeeSkills();
+      loadPendingUnrecognizedSkills();
     } catch {
       toast.error("Erreur lors de l'extraction des compétences.");
     } finally {
@@ -233,13 +268,13 @@ export function EmployeeMyProfile() {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8">
-      <div className="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto">
+    <div className="flex-1 overflow-y-auto -mt-4 px-4 pb-0 pt-0 md:-mt-6 md:px-8 md:pb-0 md:pt-1">
+      <div className="flex flex-col lg:flex-row gap-4 max-w-5xl mx-auto">
 
         {/* Left panel */}
         <div className="lg:w-64 shrink-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
           {/* Avatar */}
-          <div className="flex flex-col items-center gap-3 px-6 pt-8 pb-6 bg-gradient-to-b from-violet-50 to-white border-b border-slate-100">
+          <div className="flex flex-col items-center gap-2.5 px-5 pt-6 pb-5 bg-gradient-to-b from-violet-50 to-white border-b border-slate-100">
             <div className="relative">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={fullName} className="h-[88px] w-[88px] rounded-full object-cover border-4 border-violet-100 shadow-lg" />
@@ -276,7 +311,7 @@ export function EmployeeMyProfile() {
           </div>
 
           {/* Nav */}
-          <nav className="p-3 flex flex-col gap-1">
+          <nav className="p-2.5 flex flex-col gap-1">
             {SECTIONS.map((s) => {
               const active = section === s.id;
               return (
@@ -330,6 +365,8 @@ export function EmployeeMyProfile() {
               onCvSelect={handleCvSelect}
               onExtract={handleExtractSkills}
               extractionResult={extractionResult}
+              employeeSkills={employeeSkills}
+              pendingUnrecognizedSkills={pendingUnrecognizedSkills}
             />
           )}
         </div>
@@ -392,7 +429,7 @@ function PersonalSection({
   };
 
   return (
-    <div className="p-6 md:p-8 flex flex-col gap-6">
+    <div className="p-4 md:p-5 flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -451,7 +488,7 @@ function PersonalSection({
       />
 
       {/* Informations professionnelles */}
-      <div className="border-t border-slate-100 pt-5">
+      <div className="border-t border-slate-100 pt-4">
         <div className="flex items-center justify-between mb-4">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Informations professionnelles</p>
           {!loadingExtra && !isEditingExtra ? (
@@ -480,7 +517,7 @@ function PersonalSection({
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {isEditingExtra ? (
                 <ExtraField icon={<PhoneIcon className="w-4 h-4 text-indigo-600" />} label="Téléphone" value={editPhone} onChange={setEditPhone} placeholder="+216 20 123 456" type="tel" />
               ) : (
@@ -492,7 +529,7 @@ function PersonalSection({
                 <ReadonlyField icon={<CalendarDaysIcon className="w-4 h-4 text-indigo-600" />} label="Date d'embauche" value={extraData.hireDate || "—"} />
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {isEditingExtra ? (
                 <ExtraField icon={<BuildingOffice2Icon className="w-4 h-4 text-indigo-600" />} label="Département" value={editDept} onChange={setEditDept} placeholder="ex: Ingénierie" />
               ) : (
@@ -607,13 +644,13 @@ function SecuritySection() {
   }, [currentPassword, newPassword, confirmPassword]);
 
   return (
-    <div className="p-6 md:p-8 flex flex-col gap-6">
+    <div className="p-4 md:p-5 flex flex-col gap-4">
       <div>
         <h2 className="text-base font-bold text-indigo-950">Sécurité & Mot de passe</h2>
         <p className="text-xs text-slate-400 mt-1">Modifiez votre mot de passe de connexion.</p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <PasswordField
           id="sec-current" label="Mot de passe actuel"
           value={currentPassword} show={showCurrent}
@@ -624,7 +661,7 @@ function SecuritySection() {
           autoComplete="current-password"
         />
 
-        <div className="border-t border-slate-100 pt-5 flex flex-col gap-5">
+        <div className="border-t border-slate-100 pt-4 flex flex-col gap-4">
           <PasswordField
             id="sec-new" label="Nouveau mot de passe"
             value={newPassword} show={showNew}
@@ -683,6 +720,8 @@ function CVSection({
   onCvSelect,
   onExtract,
   extractionResult,
+  employeeSkills,
+  pendingUnrecognizedSkills,
 }: {
   cvFile: File | null;
   cvFileName: string | null;
@@ -698,16 +737,18 @@ function CVSection({
     unmatchedSkills: string[];
     pendingRequestsCreated: number;
   } | null;
+  employeeSkills: EmployeeSkillItem[];
+  pendingUnrecognizedSkills: string[];
 }) {
   return (
-    <div className="p-6 md:p-8 flex flex-col gap-6">
-      <div className="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm">
-        <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-violet-400">
+    <div className="p-2.5 md:p-3 flex flex-col gap-2">
+      <div className="rounded-2xl border border-violet-100 bg-white p-3 shadow-sm">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-violet-400">
           Extraction des compétences
         </p>
 
         <div
-          className={`flex flex-col items-center rounded-xl border-2 border-dashed p-8 transition-all ${
+          className={`flex flex-col items-center rounded-xl border-2 border-dashed p-3 transition-all ${
             dragOver
               ? "scale-[1.01] border-violet-500 bg-violet-50"
               : "border-violet-200 bg-slate-50/50"
@@ -716,29 +757,29 @@ function CVSection({
           onDragLeave={() => onDragOver(false)}
           onDrop={onCvDrop}
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-100 to-indigo-100">
-            <SparklesIcon className="h-7 w-7 text-violet-600" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-200 bg-gradient-to-br from-violet-100 to-indigo-100">
+            <SparklesIcon className="h-5 w-5 text-violet-600" />
           </div>
 
-          <h3 className="mt-4 text-base font-bold tracking-tight text-slate-900">
+          <h3 className="mt-2 text-sm font-bold tracking-tight text-slate-900">
             Importez votre CV
           </h3>
-          <p className="mt-1.5 text-center text-sm leading-relaxed text-slate-500">
+          <p className="mt-1 text-center text-xs leading-relaxed text-slate-500">
             Glissez-déposez votre CV (PDF ou DOCX) pour analyser vos compétences
           </p>
 
           {(cvFile || cvFileName) && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
+            <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
               <DocumentTextIcon className="h-3.5 w-3.5" />
               {cvFile?.name ?? cvFileName}
             </div>
           )}
 
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <div className="mt-2.5 flex flex-wrap justify-center gap-2">
             <button
               type="button"
               onClick={() => cvInputRef.current?.click()}
-              className="rounded-lg border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-50"
+              className="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-50"
             >
               Choisir un fichier
             </button>
@@ -746,7 +787,7 @@ function CVSection({
               type="button"
               onClick={onExtract}
               disabled={!cvFile || extracting}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-violet-200 transition hover:-translate-y-px hover:from-violet-700 hover:to-indigo-700 hover:shadow-violet-300 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md shadow-violet-200 transition hover:-translate-y-px hover:from-violet-700 hover:to-indigo-700 hover:shadow-violet-300 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {extracting ? (
                 <>
@@ -765,17 +806,141 @@ function CVSection({
         </div>
       </div>
 
-      {/* Extraction Results */}
-      {extractionResult && (
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+      <ExtractionResultsSection
+        extractionResult={extractionResult}
+        employeeSkills={employeeSkills}
+        pendingUnrecognizedSkills={pendingUnrecognizedSkills}
+      />
+    </div>
+  );
+}
+
+function ExtractionResultsSection({
+  extractionResult,
+  employeeSkills,
+  pendingUnrecognizedSkills,
+}: {
+  extractionResult: {
+    matchedSkills: { skillName: string; categoryName: string }[];
+    unmatchedSkills: string[];
+    pendingRequestsCreated: number;
+  } | null;
+  employeeSkills: EmployeeSkillItem[];
+  pendingUnrecognizedSkills: string[];
+}) {
+  const [skillsPage, setSkillsPage] = useState(0);
+  const SKILLS_PER_PAGE = 4;
+
+  useEffect(() => {
+    const maxPage = Math.max(0, Math.ceil(employeeSkills.length / SKILLS_PER_PAGE) - 1);
+    if (skillsPage > maxPage) setSkillsPage(maxPage);
+  }, [employeeSkills.length, skillsPage]);
+
+  const validatedCount = employeeSkills.filter((s) => s.status === "VALIDATED").length;
+  const pendingQuizCount = employeeSkills.filter((s) => s.status === "QUIZ_PENDING" || s.status === "EXTRACTED").length;
+  const failedCount = employeeSkills.filter((s) => s.status === "FAILED").length;
+  const totalSkillPages = Math.max(1, Math.ceil(employeeSkills.length / SKILLS_PER_PAGE));
+  const pagedSkills = employeeSkills.slice(
+    skillsPage * SKILLS_PER_PAGE,
+    (skillsPage + 1) * SKILLS_PER_PAGE
+  );
+
+  return (
+    <div className="flex flex-col gap-2">
+      {(extractionResult || employeeSkills.length > 0 || pendingUnrecognizedSkills.length > 0) ? (
+        <div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-violet-400">
             Résultat de l'extraction
           </p>
 
-          {/* Matched Skills */}
-          {extractionResult.matchedSkills.length > 0 && (
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
+          {employeeSkills.length > 0 && (
+            <div className="mb-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/60 to-white p-3.5">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-200 bg-violet-100/70">
+                    <BeakerIcon className="h-4 w-4 text-violet-600" />
+                  </div>
+                  <span className="text-sm font-bold text-violet-900">
+                    Compétences extraites ({employeeSkills.length})
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                    Validées: {validatedCount}
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
+                    Quiz en attente: {pendingQuizCount}
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
+                    À repasser: {failedCount}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                {pagedSkills.map((skill) => {
+                  const isValidated = skill.status === "VALIDATED";
+                  const statusClass = skill.status === "VALIDATED"
+                    ? "border-green-200 bg-green-50 text-green-700"
+                    : skill.status === "FAILED"
+                      ? "border-rose-200 bg-rose-50 text-rose-700"
+                      : "border-violet-200 bg-violet-50 text-violet-700";
+                  const statusLabel = skill.status === "VALIDATED"
+                    ? "Validée"
+                    : skill.status === "FAILED"
+                      ? "À repasser"
+                      : "Quiz en attente";
+                  return (
+                    <div
+                      key={skill.id}
+                      className="group flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-violet-200 hover:shadow-md"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900">{skill.skillName}</p>
+                        <p className="text-xs text-slate-500">{skill.categoryName} · Niveau {skill.level}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>
+                          {statusLabel}
+                        </span>
+                        {!isValidated && (
+                          <button
+                            type="button"
+                            onClick={() => toast.info("Quiz bientôt disponible")}
+                            className="rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-[10px] font-semibold text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-50"
+                          >
+                            Passer quiz
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {totalSkillPages > 1 && (
+                <div className="mt-2.5 flex items-center justify-center gap-2">
+                  {Array.from({ length: totalSkillPages }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSkillsPage(idx)}
+                      aria-label={`Aller à la page ${idx + 1}`}
+                      className={`h-2.5 w-2.5 rounded-full transition-all ${
+                        skillsPage === idx
+                          ? "scale-110 bg-violet-600"
+                          : "bg-violet-200 hover:bg-violet-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {extractionResult && extractionResult.matchedSkills.length > 0 && (
+            <div className="mb-3">
+              <div className="mb-2 flex items-center gap-2">
                 <CheckCircleIcon className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-semibold text-green-700">
                   Compétences ajoutées ({extractionResult.matchedSkills.length})
@@ -796,34 +961,46 @@ function CVSection({
             </div>
           )}
 
-          {/* Unmatched Skills */}
-          {extractionResult.unmatchedSkills.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <ArrowPathIcon className="h-4 w-4 text-amber-600" />
-                <span className="text-sm font-semibold text-amber-700">
-                  En attente de validation ({extractionResult.unmatchedSkills.length})
+          {(pendingUnrecognizedSkills.length > 0 || (extractionResult?.unmatchedSkills.length ?? 0) > 0) && (
+            <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/60 to-white p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 bg-amber-100/70">
+                    <ArrowPathIcon className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <span className="text-sm font-bold text-amber-800">
+                    En attente de validation
+                  </span>
+                </div>
+                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                  {pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills.length : (extractionResult?.unmatchedSkills.length ?? 0)} compétence(s)
                 </span>
               </div>
+
               <div className="flex flex-wrap gap-2">
-                {extractionResult.unmatchedSkills.map((skill, idx) => (
+                {(pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills : (extractionResult?.unmatchedSkills ?? [])).map((skill, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-700"
+                    className="inline-flex items-center rounded-full border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-700 shadow-sm"
                   >
                     {skill}
                   </span>
                 ))}
               </div>
+
               <p className="mt-2 text-xs text-slate-500">
                 Ces compétences seront examinées par un administrateur et ajoutées au référentiel si validées.
               </p>
             </div>
           )}
 
-          {extractionResult.matchedSkills.length === 0 && extractionResult.unmatchedSkills.length === 0 && (
+          {extractionResult && extractionResult.matchedSkills.length === 0 && extractionResult.unmatchedSkills.length === 0 && employeeSkills.length === 0 && pendingUnrecognizedSkills.length === 0 && (
             <p className="text-sm text-slate-500">Aucune compétence détectée dans le CV.</p>
           )}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <p className="text-sm text-slate-500">Aucun résultat d'extraction pour le moment.</p>
         </div>
       )}
     </div>
