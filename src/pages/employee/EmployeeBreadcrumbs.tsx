@@ -21,10 +21,11 @@ export function EmployeeBreadcrumbs() {
   const location = useLocation();
   const crumbs = getEmployeeBreadcrumbs(location.pathname);
   const isHome = crumbs.length === 0;
+  const compact = location.pathname.endsWith("/employee/profile");
 
   return (
     <nav
-      className="admin-breadcrumbs flex items-center gap-2 px-6 md:px-8 h-10 shrink-0 pt-1 text-sm text-slate-500"
+      className={`admin-breadcrumbs flex shrink-0 items-center gap-2 px-6 text-sm text-slate-500 md:px-8 ${compact ? "h-8 py-0" : "h-10 pt-1"}`}
       aria-label="Fil d'Ariane employé"
     >
       <Link

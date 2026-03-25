@@ -20,12 +20,127 @@ import {
   LockClosedIcon,
   SparklesIcon,
   DocumentTextIcon,
-  CloudArrowUpIcon,
   BeakerIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
 import { getAvatarColor } from "../admin/utils";
+
+// Violet Luxury styles (matching SkillsCatalog admin)
+const styles = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes cardHover {
+    to { transform: translateY(-3px); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  :root {
+    --luxury-primary: #7C3AED;
+    --luxury-secondary: #6366F1;
+    --luxury-light-bg: #f8f7ff;
+    --luxury-card: #FFFFFF;
+    --luxury-input: #FFFFFF;
+    --luxury-text: #1E293B;
+    --luxury-text-muted: #64748B;
+    --luxury-border: rgba(124, 58, 237, 0.15);
+    --luxury-success: #10B981;
+    --luxury-error: #EF4444;
+    --luxury-accent: #8B5CF6;
+  }
+
+  .luxury-animate-in {
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  .luxury-animate-in-left {
+    animation: fadeInLeft 0.6s ease-out;
+  }
+
+  .luxury-card {
+    background: var(--luxury-card);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    color: var(--luxury-text);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.06), 0 0 1px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .luxury-card:hover {
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1), 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  .luxury-input {
+    background: var(--luxury-input);
+    border: 1.5px solid rgba(124, 58, 237, 0.15);
+    color: var(--luxury-text);
+    transition: all 0.2s ease;
+  }
+
+  .luxury-input::placeholder {
+    color: var(--luxury-text-muted);
+  }
+
+  .luxury-input:focus {
+    border-color: var(--luxury-primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08), 0 2px 8px rgba(124, 58, 237, 0.08);
+    outline: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 247, 255, 0.5));
+  }
+
+  .luxury-input:hover:not(:focus) {
+    border-color: rgba(124, 58, 237, 0.3);
+  }
+
+  @keyframes aiPulse {
+    0%, 100% { opacity: 0.45; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.02); }
+  }
+
+  .profile-saas-card {
+    background: var(--luxury-card);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(124, 58, 237, 0.06);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  }
+
+  .profile-saas-card:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06), 0 16px 40px rgba(124, 58, 237, 0.08);
+  }
+
+  .profile-ai-glow {
+    animation: aiPulse 3s ease-in-out infinite;
+  }
+`;
+
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}
 
 type ProfileData = {
   phone: string | null;
@@ -55,7 +170,7 @@ type EmployeeSkillItem = {
   source: string;
 };
 
-type Section = "personal" | "security" | "cv";
+type Section = "personal" | "cv";
 
 export function EmployeeMyProfile() {
   const { keycloak } = useKeycloak();
@@ -264,114 +379,177 @@ export function EmployeeMyProfile() {
   const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
     { id: "personal", label: "Informations personnelles", icon: <UserIcon className="w-4 h-4" /> },
     { id: "cv", label: "Extraction CV", icon: <SparklesIcon className="w-4 h-4" /> },
-    { id: "security", label: "Sécurité & Mot de passe", icon: <ShieldCheckIcon className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto -mt-4 px-4 pb-0 pt-0 md:-mt-6 md:px-8 md:pb-0 md:pt-1">
-      <div className="flex flex-col lg:flex-row gap-4 max-w-5xl mx-auto">
-
-        {/* Left panel */}
-        <div className="lg:w-64 shrink-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-          {/* Avatar */}
-          <div className="flex flex-col items-center gap-2.5 px-5 pt-6 pb-5 bg-gradient-to-b from-violet-50 to-white border-b border-slate-100">
-            <div className="relative">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} className="h-[88px] w-[88px] rounded-full object-cover border-4 border-violet-100 shadow-lg" />
-              ) : (
-                <div
-                  className="flex h-[88px] w-[88px] items-center justify-center rounded-full border-4 border-violet-100 text-3xl font-bold text-white shadow-lg"
-                  style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
+    <div className="flex h-full min-h-0 flex-col overflow-hidden" style={{ background: "var(--luxury-light-bg)" }}>
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-2 px-3 py-1 md:gap-3 md:px-4 md:py-2">
+        <header className="profile-saas-card luxury-animate-in shrink-0 rounded-2xl px-3.5 py-2.5 md:px-4 md:py-3">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
+              <div className="relative shrink-0 group">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={fullName}
+                    className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-2 object-cover shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5"
+                    style={{ borderColor: "var(--luxury-primary)" }}
+                  />
+                ) : (
+                  <div
+                    className="flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-2xl border-2 text-3xl font-bold text-white shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5 sm:text-4xl"
+                    style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, borderColor: "var(--luxury-primary)" }}
+                  >
+                    {initials}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  title="Changer la photo"
+                  className="absolute bottom-2 right-2 rounded-xl p-2 backdrop-blur-md transition-all duration-300 hover:scale-105 hover:shadow-md disabled:cursor-not-allowed active:scale-95"
+                  style={{ background: "rgba(124, 58, 237, 0.12)", border: "1px solid var(--luxury-primary)" }}
                 >
-                  {initials}
+                  {uploadingAvatar ? (
+                    <ArrowPathIcon className="h-4 w-4 animate-spin" style={{ color: "var(--luxury-primary)" }} />
+                  ) : (
+                    <CameraIcon className="h-4 w-4" style={{ color: "var(--luxury-primary)" }} />
+                  )}
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              </div>
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl" style={{ color: "#1e293b" }}>
+                    {displayFirst}
+                  </h1>
+                  <h2 className="text-xl font-light sm:text-2xl md:text-3xl" style={{ color: "var(--luxury-text-muted)" }}>
+                    {displayLast}
+                  </h2>
                 </div>
-              )}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar}
-                title="Changer la photo"
-                className="absolute bottom-0.5 right-0.5 w-7 h-7 rounded-full bg-gradient-to-br from-indigo-700 to-violet-700 border-2 border-white flex items-center justify-center text-white shadow-md disabled:cursor-not-allowed"
-              >
-                {uploadingAvatar
-                  ? <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />
-                  : <CameraIcon className="w-3.5 h-3.5" />
-                }
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                <div className="flex items-center gap-2">
+                  <div className="h-0.5 w-6 rounded-full" style={{ background: "var(--luxury-primary)" }} />
+                  <p className="text-xs font-medium uppercase tracking-widest" style={{ color: "var(--luxury-text-muted)" }}>
+                    Profil Employé
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-bold text-indigo-950">{fullName}</p>
-              <p className="text-xs text-slate-400 mt-0.5">Employé</p>
-            </div>
-            <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-3 py-1">
-              <CheckCircleIcon className="w-3 h-3 text-green-600" />
-              <span className="text-xs font-semibold text-green-600">Compte actif</span>
+            <div
+              className="flex w-fit shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-sm transition-transform duration-200 hover:scale-[1.02]"
+              style={{ background: "rgba(16, 185, 129, 0.08)", borderColor: "var(--luxury-success)" }}
+            >
+              <CheckCircleIcon className="h-3 w-3 shrink-0" style={{ color: "var(--luxury-success)" }} />
+              <span className="font-semibold" style={{ color: "var(--luxury-success)" }}>
+                Compte actif
+              </span>
             </div>
           </div>
+        </header>
 
-          {/* Nav */}
-          <nav className="p-2.5 flex flex-col gap-1">
-            {SECTIONS.map((s) => {
-              const active = section === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setSection(s.id)}
-                  className={`relative flex items-center gap-2.5 w-full rounded-xl px-3.5 py-2.5 text-sm font-medium text-left transition-all whitespace-nowrap
-                    ${active ? "bg-indigo-50 text-indigo-800 font-semibold" : "text-slate-500 hover:bg-slate-50"}`}
-                >
-                  {active && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
-                  )}
-                  <span className={active ? "text-indigo-600" : "text-slate-300"}>{s.icon}</span>
-                  {s.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+        <nav
+          className="profile-saas-card luxury-animate-in flex shrink-0 gap-1 overflow-x-auto rounded-2xl p-1 md:p-1.5"
+          style={{ animationDelay: "0.05s" }}
+          aria-label="Sections du profil"
+        >
+          {SECTIONS.map((s, idx) => {
+            const active = section === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSection(s.id)}
+                style={{
+                  animation: `fadeInUp 0.6s ease-out ${idx * 0.05}s both`,
+                  background: active ? "rgba(124, 58, 237, 0.12)" : "transparent",
+                  color: active ? "var(--luxury-primary)" : "var(--luxury-text-muted)",
+                  border: active ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid transparent",
+                }}
+                className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200 hover:bg-violet-50/80 md:px-4 md:text-sm md:font-medium active:scale-[0.98]"
+              >
+                {s.icon}
+                {s.label}
+              </button>
+            );
+          })}
+        </nav>
 
-        {/* Right panel */}
-        <div className="flex-1 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          {section === "personal" && (
-            <PersonalSection
-              firstName={editedFirstName || firstName}
-              lastName={editedLastName || lastName}
-              email={email}
-              isEditing={isEditing}
-              saving={savingProfile}
-              onEditedFirstNameChange={setEditedFirstName}
-              onEditedLastNameChange={setEditedLastName}
-              onEdit={() => { setEditedFirstName(firstName); setEditedLastName(lastName); setIsEditing(true); }}
-              onSave={handleSaveProfile}
-              onCancel={handleCancelEdit}
-              extraData={extraData}
-              loadingExtra={loadingExtra}
-              onExtraUpdate={handleExtraUpdate}
-            />
-          )}
-          {section === "security" && <SecuritySection />}
-          {section === "cv" && (
-            <CVSection
-              cvFile={cvFile}
-              cvFileName={cvFileName}
-              dragOver={dragOver}
-              extracting={extracting}
-              cvInputRef={cvInputRef}
-              onDragOver={setDragOver}
-              onCvDrop={handleCvDrop}
-              onCvSelect={handleCvSelect}
-              onExtract={handleExtractSkills}
-              extractionResult={extractionResult}
-              employeeSkills={employeeSkills}
-              pendingUnrecognizedSkills={pendingUnrecognizedSkills}
-            />
-          )}
-        </div>
+        <main className="min-h-0 flex-1 overflow-hidden luxury-animate-in" style={{ animationDelay: "0.1s" }}>
+          <div className="profile-saas-card flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 md:p-4">
+              {section === "personal" && (
+                <PersonalSection
+                  firstName={editedFirstName || firstName}
+                  lastName={editedLastName || lastName}
+                  email={email}
+                  isEditing={isEditing}
+                  saving={savingProfile}
+                  onEditedFirstNameChange={setEditedFirstName}
+                  onEditedLastNameChange={setEditedLastName}
+                  onEdit={() => {
+                    setEditedFirstName(firstName);
+                    setEditedLastName(lastName);
+                    setIsEditing(true);
+                  }}
+                  onSave={handleSaveProfile}
+                  onCancel={handleCancelEdit}
+                  extraData={extraData}
+                  loadingExtra={loadingExtra}
+                  onExtraUpdate={handleExtraUpdate}
+                />
+              )}
+              {section === "cv" && (
+                <CVSection
+                  cvFile={cvFile}
+                  cvFileName={cvFileName}
+                  dragOver={dragOver}
+                  extracting={extracting}
+                  cvInputRef={cvInputRef}
+                  onDragOver={setDragOver}
+                  onCvDrop={handleCvDrop}
+                  onCvSelect={handleCvSelect}
+                  onExtract={handleExtractSkills}
+                  extractionResult={extractionResult}
+                  employeeSkills={employeeSkills}
+                  pendingUnrecognizedSkills={pendingUnrecognizedSkills}
+                />
+              )}
+            </div>
+          </div>
+        </main>
       </div>
     </div>
+  );
+}
+
+function ProfileSectionCard({
+  title,
+  description,
+  compact = false,
+  children,
+}: {
+  title?: string;
+  description?: string;
+  compact?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`profile-saas-card rounded-2xl ${compact ? "p-3 md:p-3.5" : "p-4 md:p-5"}`}>
+      {title ? (
+        <div className={`${compact ? "mb-2.5 pb-2" : "mb-4 pb-3"} border-b border-slate-200/80`}>
+          <h3 className="text-lg font-bold" style={{ color: "#1e293b" }}>
+            {title}
+          </h3>
+          {description ? (
+            <p className="mt-0.5 text-sm" style={{ color: "var(--luxury-text-muted)" }}>
+              {description}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {children}
+    </section>
   );
 }
 
@@ -388,7 +566,7 @@ function PersonalSection({
   isEditing: boolean; saving: boolean;
   onEditedFirstNameChange: (v: string) => void;
   onEditedLastNameChange: (v: string) => void;
-  onEdit: () => void; onSave: () => void; onCancel: () => void;
+  onEdit: () => void; onSave: () => Promise<void>; onCancel: () => void;
   extraData: ProfileData;
   loadingExtra: boolean;
   onExtraUpdate: (data: ProfileData) => void;
@@ -397,17 +575,16 @@ function PersonalSection({
   const [editDept, setEditDept] = useState(extraData.department ?? "");
   const [editJob, setEditJob] = useState(extraData.jobTitle ?? "");
   const [editHire, setEditHire] = useState(extraData.hireDate ?? "");
-  const [isEditingExtra, setIsEditingExtra] = useState(false);
   const [savingExtra, setSavingExtra] = useState(false);
 
   useEffect(() => {
-    if (!isEditingExtra) {
+    if (!isEditing) {
       setEditPhone(extraData.phone ?? "");
       setEditDept(extraData.department ?? "");
       setEditJob(extraData.jobTitle ?? "");
       setEditHire(extraData.hireDate ?? "");
     }
-  }, [extraData, isEditingExtra]);
+  }, [extraData, isEditing]);
 
   const handleSaveExtra = async () => {
     setSavingExtra(true);
@@ -419,7 +596,6 @@ function PersonalSection({
         hireDate: editHire || null,
       });
       onExtraUpdate(res.data);
-      setIsEditingExtra(false);
       toast.success("Informations mises à jour.");
     } catch {
       toast.error("Erreur lors de la mise à jour.");
@@ -428,181 +604,203 @@ function PersonalSection({
     }
   };
 
+  const handleSaveAll = async () => {
+    await onSave();
+    if (loadingExtra) return;
+    const next: ProfileData = {
+      phone: editPhone.trim() || null,
+      department: editDept.trim() || null,
+      jobTitle: editJob.trim() || null,
+      hireDate: editHire || null,
+    };
+    const unchanged =
+      next.phone === (extraData.phone ?? null) &&
+      next.department === (extraData.department ?? null) &&
+      next.jobTitle === (extraData.jobTitle ?? null) &&
+      next.hireDate === (extraData.hireDate ?? null);
+    if (!unchanged) {
+      await handleSaveExtra();
+    }
+  };
+
   return (
-    <div className="p-4 md:p-5 flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
+    <div className="flex flex-col gap-3 lg:gap-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-base font-bold text-indigo-950">Informations personnelles</h2>
-          <p className="text-xs text-slate-400 mt-1">
-            {isEditing ? "Modifiez vos informations puis enregistrez." : "Cliquez sur Modifier pour changer votre nom."}
+          <h2 className="mb-0.5 text-lg font-bold" style={{ color: "#1e293b" }}>
+            Informations personnelles
+          </h2>
+          <p className="text-sm" style={{ color: "var(--luxury-text-muted)" }}>
+            {isEditing ? "Modifiez votre profil et enregistrez les modifications." : "Gérez vos informations de base."}
           </p>
         </div>
         {!isEditing ? (
-          <button type="button" onClick={onEdit}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition shrink-0">
-            <PencilSquareIcon className="w-3.5 h-3.5" /> Modifier
+          <button
+            type="button"
+            onClick={onEdit}
+            style={{ background: "rgba(124, 58, 237, 0.08)", border: "1.5px solid var(--luxury-primary)" }}
+            className="flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 hover:shadow-md active:scale-[0.98]"
+          >
+            <PencilSquareIcon className="h-4 w-4" style={{ color: "var(--luxury-primary)" }} />
+            <span style={{ color: "var(--luxury-primary)" }}>Modifier</span>
           </button>
         ) : (
-          <div className="flex gap-2 shrink-0">
-            <button type="button" onClick={onCancel} disabled={saving}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">
-              <XMarkIcon className="w-3.5 h-3.5" /> Annuler
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={saving}
+              style={{ border: "1.5px solid rgba(148, 163, 184, 0.25)" }}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
+            >
+              <XMarkIcon className="h-4 w-4" />
+              Annuler
             </button>
-            <button type="button" onClick={onSave} disabled={saving}
-              className="flex items-center gap-1.5 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-md disabled:opacity-70 disabled:cursor-not-allowed transition">
-              {saving ? <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" /> : <ArrowDownTrayIcon className="w-3.5 h-3.5" />}
-              {saving ? "Enregistrement..." : "Enregistrer"}
+            <button
+              type="button"
+              onClick={() => {
+                void handleSaveAll();
+              }}
+              disabled={saving || savingExtra}
+              style={{ background: "var(--luxury-primary)" }}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white transition-all duration-200 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving || savingExtra ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <ArrowDownTrayIcon className="h-4 w-4" />}
+              {saving || savingExtra ? "Enregistrement..." : "Enregistrer"}
             </button>
           </div>
         )}
       </div>
 
-      {/* Nom / Prénom */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {isEditing ? (
-          <>
-            <EditableField label="Prénom" icon={<UserIcon className="w-4 h-4 text-indigo-600" />}
-              value={firstName} onChange={onEditedFirstNameChange} placeholder="Prénom" autoFocus />
-            <EditableField label="Nom" icon={<UserIcon className="w-4 h-4 text-indigo-600" />}
-              value={lastName} onChange={onEditedLastNameChange} placeholder="Nom" />
-          </>
-        ) : (
-          <>
-            <ReadonlyField icon={<UserIcon className="w-4 h-4 text-indigo-600" />} label="Prénom" value={firstName || "—"} />
-            <ReadonlyField icon={<UserIcon className="w-4 h-4 text-indigo-600" />} label="Nom" value={lastName || "—"} />
-          </>
-        )}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4 lg:items-start">
+        <ProfileSectionCard title="Identité & contact" compact>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {isEditing ? (
+                <>
+                  <LuxuryEditableField
+                    label="Prénom"
+                    icon={<UserIcon className="h-4 w-4" />}
+                    value={firstName}
+                    onChange={onEditedFirstNameChange}
+                    placeholder="Prénom"
+                    autoFocus
+                  />
+                  <LuxuryEditableField
+                    label="Nom"
+                    icon={<UserIcon className="h-4 w-4" />}
+                    value={lastName}
+                    onChange={onEditedLastNameChange}
+                    placeholder="Nom"
+                  />
+                </>
+              ) : (
+                <>
+                  <LuxuryReadonlyField icon={<UserIcon className="h-4 w-4" />} label="Prénom" value={firstName || "—"} />
+                  <LuxuryReadonlyField icon={<UserIcon className="h-4 w-4" />} label="Nom" value={lastName || "—"} />
+                </>
+              )}
+            </div>
+            <LuxuryReadonlyField
+              icon={<EnvelopeIcon className="h-4 w-4" />}
+              label="Adresse e-mail"
+              value={email || "—"}
+              badge={
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm"
+                  style={{ background: "rgba(16, 185, 129, 0.08)", color: "var(--luxury-success)", border: "1px solid rgba(16, 185, 129, 0.3)" }}
+                >
+                  <CheckCircleIcon className="h-3 w-3" /> Vérifié
+                </span>
+              }
+            />
+          </div>
+        </ProfileSectionCard>
+
+        <ProfileSectionCard title="Informations professionnelles" compact>
+          {loadingExtra ? (
+            <div className="flex justify-center py-10">
+              <ArrowPathIcon className="h-5 w-5 animate-spin" style={{ color: "var(--luxury-primary)" }} />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {isEditing ? (
+                  <LuxuryEditableField
+                    icon={<PhoneIcon className="h-4 w-4" />}
+                    label="Téléphone"
+                    value={editPhone}
+                    onChange={setEditPhone}
+                    placeholder="+216 20 123 456"
+                    type="tel"
+                  />
+                ) : (
+                  <LuxuryReadonlyField icon={<PhoneIcon className="h-4 w-4" />} label="Téléphone" value={extraData.phone || "—"} />
+                )}
+                {isEditing ? (
+                  <LuxuryEditableField
+                    icon={<CalendarDaysIcon className="h-4 w-4" />}
+                    label="Date d'embauche"
+                    value={editHire}
+                    onChange={setEditHire}
+                    type="date"
+                  />
+                ) : (
+                  <LuxuryReadonlyField icon={<CalendarDaysIcon className="h-4 w-4" />} label="Date d'embauche" value={extraData.hireDate || "—"} />
+                )}
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {isEditing ? (
+                  <LuxuryEditableField
+                    icon={<BuildingOffice2Icon className="h-4 w-4" />}
+                    label="Département"
+                    value={editDept}
+                    onChange={setEditDept}
+                    placeholder="ex: Ingénierie"
+                  />
+                ) : (
+                  <LuxuryReadonlyField icon={<BuildingOffice2Icon className="h-4 w-4" />} label="Département" value={extraData.department || "—"} />
+                )}
+                {isEditing ? (
+                  <LuxuryEditableField
+                    icon={<BriefcaseIcon className="h-4 w-4" />}
+                    label="Poste"
+                    value={editJob}
+                    onChange={setEditJob}
+                    placeholder="ex: Développeur"
+                  />
+                ) : (
+                  <LuxuryReadonlyField icon={<BriefcaseIcon className="h-4 w-4" />} label="Poste" value={extraData.jobTitle || "—"} />
+                )}
+              </div>
+            </div>
+          )}
+        </ProfileSectionCard>
       </div>
 
-      {/* Email */}
-      <ReadonlyField
-        icon={<EnvelopeIcon className="w-4 h-4 text-indigo-600" />}
-        label="Adresse e-mail"
-        value={email || "—"}
-        badge={
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 border border-green-200 rounded-full px-2.5 py-0.5">
-            <CheckCircleIcon className="w-3 h-3" /> Vérifié
-          </span>
-        }
-      />
-
-      {/* Informations professionnelles */}
-      <div className="border-t border-slate-100 pt-4">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Informations professionnelles</p>
-          {!loadingExtra && !isEditingExtra ? (
-            <button type="button" onClick={() => setIsEditingExtra(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition">
-              <PencilSquareIcon className="w-3 h-3" /> Modifier
-            </button>
-          ) : isEditingExtra ? (
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setIsEditingExtra(false)} disabled={savingExtra}
-                className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">
-                <XMarkIcon className="w-3 h-3" /> Annuler
-              </button>
-              <button type="button" onClick={handleSaveExtra} disabled={savingExtra}
-                className="flex items-center gap-1 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-3 py-1 text-xs font-bold text-white shadow disabled:opacity-70 disabled:cursor-not-allowed transition">
-                {savingExtra ? <ArrowPathIcon className="w-3 h-3 animate-spin" /> : <ArrowDownTrayIcon className="w-3 h-3" />}
-                {savingExtra ? "..." : "Enregistrer"}
-              </button>
-            </div>
-          ) : null}
-        </div>
-
-        {loadingExtra ? (
-          <div className="flex justify-center py-5">
-            <ArrowPathIcon className="w-5 h-5 animate-spin text-violet-700" />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {isEditingExtra ? (
-                <ExtraField icon={<PhoneIcon className="w-4 h-4 text-indigo-600" />} label="Téléphone" value={editPhone} onChange={setEditPhone} placeholder="+216 20 123 456" type="tel" />
-              ) : (
-                <ReadonlyField icon={<PhoneIcon className="w-4 h-4 text-indigo-600" />} label="Téléphone" value={extraData.phone || "—"} />
-              )}
-              {isEditingExtra ? (
-                <ExtraField icon={<CalendarDaysIcon className="w-4 h-4 text-indigo-600" />} label="Date d'embauche" value={editHire} onChange={setEditHire} type="date" />
-              ) : (
-                <ReadonlyField icon={<CalendarDaysIcon className="w-4 h-4 text-indigo-600" />} label="Date d'embauche" value={extraData.hireDate || "—"} />
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {isEditingExtra ? (
-                <ExtraField icon={<BuildingOffice2Icon className="w-4 h-4 text-indigo-600" />} label="Département" value={editDept} onChange={setEditDept} placeholder="ex: Ingénierie" />
-              ) : (
-                <ReadonlyField icon={<BuildingOffice2Icon className="w-4 h-4 text-indigo-600" />} label="Département" value={extraData.department || "—"} />
-              )}
-              {isEditingExtra ? (
-                <ExtraField icon={<BriefcaseIcon className="w-4 h-4 text-indigo-600" />} label="Poste" value={editJob} onChange={setEditJob} placeholder="ex: Développeur" />
-              ) : (
-                <ReadonlyField icon={<BriefcaseIcon className="w-4 h-4 text-indigo-600" />} label="Poste" value={extraData.jobTitle || "—"} />
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      <ProfileSectionCard compact title="Sécurité & Mot de passe" description="Modifiez votre mot de passe de connexion.">
+        <SecuritySection embedded />
+      </ProfileSectionCard>
     </div>
   );
 }
 
-/* ─── Security Section ─────────────────────────────────────────────────────── */
-
-function passwordStrength(pwd: string): { score: number; label: string; color: string; tw: string } {
-  if (!pwd) return { score: 0, label: "", color: "", tw: "bg-slate-200" };
+function passwordStrength(pwd: string): { score: number; label: string } {
+  if (!pwd) return { score: 0, label: "" };
   let score = 0;
   if (pwd.length >= 8) score++;
   if (pwd.length >= 12) score++;
   if (/[A-Z]/.test(pwd)) score++;
   if (/[0-9]/.test(pwd)) score++;
   if (/[^A-Za-z0-9]/.test(pwd)) score++;
-  if (score <= 1) return { score, label: "Très faible", color: "text-red-500", tw: "bg-red-500" };
-  if (score === 2) return { score, label: "Faible", color: "text-orange-500", tw: "bg-orange-500" };
-  if (score === 3) return { score, label: "Moyen", color: "text-yellow-500", tw: "bg-yellow-400" };
-  if (score === 4) return { score, label: "Fort", color: "text-green-500", tw: "bg-green-500" };
-  return { score, label: "Très fort", color: "text-green-700", tw: "bg-green-600" };
+  if (score <= 1) return { score, label: "Très faible" };
+  if (score === 2) return { score, label: "Faible" };
+  if (score === 3) return { score, label: "Moyen" };
+  if (score === 4) return { score, label: "Fort" };
+  return { score, label: "Très fort" };
 }
 
-function PasswordField({ id, label, value, show, onToggle, onChange, error, placeholder, autoComplete }: {
-  id: string; label: string; value: string; show: boolean;
-  onToggle: () => void; onChange: (v: string) => void;
-  error?: string; placeholder?: string; autoComplete?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-        <LockClosedIcon className="w-3 h-3 text-indigo-600" /> {label}
-      </label>
-      <div className="relative">
-        <input
-          id={id}
-          type={show ? "text" : "password"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          className={`w-full rounded-xl border px-3.5 py-2.5 pr-10 text-sm text-slate-800 outline-none transition
-            focus:border-violet-600 focus:ring-2 focus:ring-violet-100 focus:bg-white
-            ${error ? "border-red-300 bg-red-50" : "border-slate-200 bg-slate-50"}`}
-        />
-        <button type="button" onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-          {show ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-        </button>
-      </div>
-      {error && (
-        <div className="flex items-center gap-1 mt-0.5">
-          <XMarkIcon className="w-3 h-3 text-red-500" />
-          <span className="text-xs text-red-500">{error}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SecuritySection() {
+function SecuritySection({ embedded = false }: { embedded?: boolean }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -644,65 +842,100 @@ function SecuritySection() {
   }, [currentPassword, newPassword, confirmPassword]);
 
   return (
-    <div className="p-4 md:p-5 flex flex-col gap-4">
-      <div>
-        <h2 className="text-base font-bold text-indigo-950">Sécurité & Mot de passe</h2>
-        <p className="text-xs text-slate-400 mt-1">Modifiez votre mot de passe de connexion.</p>
-      </div>
+    <div className={`flex w-full flex-col gap-4 ${embedded ? "" : "mx-auto max-w-3xl"}`}>
+      {!embedded ? (
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm" style={{ background: "rgba(124, 58, 237, 0.1)" }}>
+            <ShieldCheckIcon className="h-5 w-5" style={{ color: "var(--luxury-primary)" }} />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: "#1e293b" }}>
+              Sécurité & Mot de passe
+            </h2>
+            <p className="text-sm" style={{ color: "var(--luxury-text-muted)" }}>
+              Modifiez votre mot de passe de connexion.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-        <PasswordField
-          id="sec-current" label="Mot de passe actuel"
-          value={currentPassword} show={showCurrent}
-          onToggle={() => setShowCurrent((v) => !v)}
-          onChange={setCurrentPassword}
-          error={fieldErrors.current}
-          placeholder="Votre mot de passe actuel"
-          autoComplete="current-password"
-        />
-
-        <div className="border-t border-slate-100 pt-4 flex flex-col gap-4">
-          <PasswordField
-            id="sec-new" label="Nouveau mot de passe"
-            value={newPassword} show={showNew}
-            onToggle={() => setShowNew((v) => !v)}
-            onChange={setNewPassword}
-            error={fieldErrors.newPwd}
-            placeholder="Minimum 8 caractères"
-            autoComplete="new-password"
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <LuxuryPasswordField
+            id="sec-current"
+            label="Mot de passe actuel"
+            value={currentPassword}
+            show={showCurrent}
+            onToggle={() => setShowCurrent((v) => !v)}
+            onChange={setCurrentPassword}
+            error={fieldErrors.current}
+            placeholder="Votre mot de passe actuel"
+            autoComplete="current-password"
           />
 
-          {newPassword && (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= strength.score ? strength.tw : "bg-slate-200"}`} />
-                ))}
-              </div>
-              {strength.label && <span className={`text-xs font-semibold ${strength.color}`}>{strength.label}</span>}
-            </div>
-          )}
+          <div>
+            <LuxuryPasswordField
+              id="sec-new"
+              label="Nouveau mot de passe"
+              value={newPassword}
+              show={showNew}
+              onToggle={() => setShowNew((v) => !v)}
+              onChange={setNewPassword}
+              error={fieldErrors.newPwd}
+              placeholder="Minimum 8 caractères"
+              autoComplete="new-password"
+            />
 
-          <PasswordField
-            id="sec-confirm" label="Confirmer le nouveau mot de passe"
-            value={confirmPassword} show={showConfirm}
+            {newPassword ? (
+              <div className="mt-2.5 flex flex-col gap-1.5">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="h-1 flex-1 rounded-full transition-all duration-300"
+                      style={{
+                        background:
+                          i <= strength.score
+                            ? `rgba(124, 58, 237, ${0.28 + strength.score * 0.1})`
+                            : "rgba(148, 163, 184, 0.22)",
+                      }}
+                    />
+                  ))}
+                </div>
+                {strength.label ? (
+                  <span className="text-xs font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
+                    {strength.label}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 border-t border-slate-200/80 pt-3 md:grid-cols-[1fr_auto] md:items-end">
+          <LuxuryPasswordField
+            id="sec-confirm"
+            label="Confirmer le nouveau mot de passe"
+            value={confirmPassword}
+            show={showConfirm}
             onToggle={() => setShowConfirm((v) => !v)}
             onChange={setConfirmPassword}
             error={fieldErrors.confirm}
             placeholder="Répétez le nouveau mot de passe"
             autoComplete="new-password"
           />
-        </div>
 
-        <div className="flex justify-end pt-1">
-          <button type="submit" disabled={saving}
-            className="flex items-center gap-2 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-5 py-2.5 text-sm font-bold text-white shadow-md disabled:opacity-70 disabled:cursor-not-allowed transition">
-            {saving ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <LockClosedIcon className="w-4 h-4" />}
+          <button
+            type="submit"
+            disabled={saving}
+            style={{ background: "var(--luxury-primary)" }}
+            className="flex h-fit items-center justify-center gap-2 rounded-xl px-5 py-2 text-sm font-bold text-white transition-all duration-200 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <LockClosedIcon className="h-4 w-4" />}
             {saving ? "Modification..." : "Modifier le mot de passe"}
           </button>
         </div>
       </form>
-
     </div>
   );
 }
@@ -740,84 +973,112 @@ function CVSection({
   employeeSkills: EmployeeSkillItem[];
   pendingUnrecognizedSkills: string[];
 }) {
-  const isFirstCvFlow = !cvFileName && !extractionResult;
-  const compact = !isFirstCvFlow;
-
   return (
-    <div className="p-2.5 md:p-3 flex flex-col gap-2">
-      <div
-        className={`rounded-2xl border border-violet-100 bg-white shadow-sm flex flex-col ${
-          compact ? "p-3 min-h-[260px]" : "p-5 min-h-[420px]"
-        }`}
-      >
-        <p className={`${compact ? "mb-2 text-[10px]" : "mb-3 text-xs"} font-bold uppercase tracking-widest text-violet-400`}>
-          Extraction des compétences
-        </p>
-
+    <div className="grid min-h-0 grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6 lg:items-start">
+      <div className="order-2 shrink-0 lg:order-1 lg:col-span-5">
         <div
-          className={`flex flex-col items-center rounded-xl border-2 border-dashed p-3 transition-all ${
-            dragOver
-              ? "scale-[1.01] border-violet-500 bg-violet-50"
-              : "border-violet-200 bg-slate-50/50"
-          } ${compact ? "min-h-[180px] justify-start" : "min-h-[280px] flex-1 justify-center"}`}
-          onDragOver={(e) => { e.preventDefault(); onDragOver(true); }}
+          className="profile-saas-card relative overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl p-5 transition-all duration-300 md:p-6 lg:h-[min(32rem,calc(100vh-14rem))]"
+          style={{
+            border: dragOver ? "2px dashed var(--luxury-primary)" : "1px solid rgba(148, 163, 184, 0.14)",
+            background: dragOver
+              ? "linear-gradient(145deg, rgba(124, 58, 237, 0.1) 0%, rgba(255, 255, 255, 0.95) 45%, rgba(248, 247, 255, 0.98) 100%)"
+              : "linear-gradient(145deg, rgba(124, 58, 237, 0.04) 0%, #ffffff 40%, rgba(248, 247, 255, 0.6) 100%)",
+            boxShadow: dragOver ? "0 12px 40px rgba(124, 58, 237, 0.15)" : undefined,
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            onDragOver(true);
+          }}
           onDragLeave={() => onDragOver(false)}
           onDrop={onCvDrop}
         >
-          <div className={`flex items-center justify-center border border-violet-200 bg-gradient-to-br from-violet-100 to-indigo-100 ${compact ? "h-11 w-11 rounded-xl" : "h-14 w-14 rounded-2xl"}`}>
-            <SparklesIcon className={`${compact ? "h-5 w-5" : "h-7 w-7"} text-violet-600`} />
-          </div>
-
-          <h3 className={`${compact ? "mt-2 text-sm" : "mt-3 text-base"} font-bold tracking-tight text-slate-900`}>
-            Importez votre CV
-          </h3>
-          <p className={`${compact ? "mt-1 text-xs" : "mt-1.5 text-sm"} text-center leading-relaxed text-slate-500`}>
-            Glissez-déposez votre CV (PDF ou DOCX) pour analyser vos compétences
-          </p>
-
-          {(cvFile || cvFileName) && (
-            <div className={`${compact ? "mt-2 gap-1.5 rounded-lg px-2.5 py-1 text-xs" : "mt-3 gap-2 rounded-xl px-3 py-1.5 text-sm"} flex items-center border border-violet-200 bg-violet-50 font-semibold text-violet-700`}>
-              <DocumentTextIcon className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
-              {cvFile?.name ?? cvFileName}
-            </div>
-          )}
-
-          <div className={`${compact ? "mt-2.5 gap-2" : "mt-4 gap-2.5"} flex flex-wrap justify-center`}>
-            <button
-              type="button"
-              onClick={() => cvInputRef.current?.click()}
-              className={`${compact ? "rounded-lg px-3 py-1.5 text-xs" : "rounded-xl px-4 py-2 text-sm"} border border-violet-200 bg-white font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-50`}
-            >
-              Choisir un fichier
-            </button>
-            <button
-              type="button"
-              onClick={onExtract}
-              disabled={!cvFile || extracting}
-              className={`${compact ? "gap-1.5 rounded-lg px-4 py-1.5 text-xs" : "gap-2 rounded-xl px-5 py-2 text-sm"} flex items-center bg-gradient-to-r from-violet-600 to-indigo-600 font-semibold text-white shadow-md shadow-violet-200 transition hover:-translate-y-px hover:from-violet-700 hover:to-indigo-700 hover:shadow-violet-300 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50`}
+          <div
+            className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-40 profile-ai-glow"
+            style={{ background: "radial-gradient(circle, rgba(124, 58, 237, 0.35) 0%, transparent 70%)" }}
+          />
+          <div className="relative flex min-h-full flex-col items-center justify-center px-2 py-4 text-center md:px-4 md:py-6">
+            <div className="w-full max-w-md">
+            <div
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl shadow-md transition-transform duration-300 hover:scale-105 md:mb-5 md:h-16 md:w-16"
+              style={{
+                background: extracting ? "rgba(124, 58, 237, 0.15)" : "rgba(124, 58, 237, 0.1)",
+                border: "1px solid rgba(124, 58, 237, 0.25)",
+              }}
             >
               {extracting ? (
-                <>
-                  <ArrowPathIcon className={`${compact ? "h-4 w-4" : "h-5 w-5"} animate-spin`} />
-                  Extraction en cours…
-                </>
+                <ArrowPathIcon className="h-7 w-7 animate-spin md:h-8 md:w-8" style={{ color: "var(--luxury-primary)" }} />
               ) : (
-                <>
-                  <CloudArrowUpIcon className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
-                  Extraire
-                </>
+                <SparklesIcon className="h-7 w-7 md:h-8 md:w-8" style={{ color: "var(--luxury-primary)" }} />
               )}
-            </button>
+            </div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider md:text-[13px]" style={{ color: "var(--luxury-primary)" }}>
+              Extraction assistée
+            </p>
+            <h3 className="mb-2 text-base font-bold md:text-lg" style={{ color: "#1e293b" }}>
+              Importez votre CV
+            </h3>
+            <p className="mb-5 max-w-sm text-center text-xs leading-relaxed md:mb-6 md:text-sm" style={{ color: "var(--luxury-text-muted)" }}>
+              Glissez-déposez votre CV (PDF ou DOCX) pour analyser vos compétences
+            </p>
+
+            {cvFile || cvFileName ? (
+              <div
+                className="mx-auto mb-5 flex w-full max-w-full items-center gap-3 rounded-xl px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md"
+                style={{ background: "rgba(124, 58, 237, 0.06)", border: "1px solid rgba(124, 58, 237, 0.2)" }}
+              >
+                <DocumentTextIcon className="h-5 w-5 shrink-0" style={{ color: "var(--luxury-primary)" }} />
+                <span className="truncate text-sm font-medium" style={{ color: "var(--luxury-text)" }}>
+                  {cvFile?.name ?? cvFileName}
+                </span>
+              </div>
+            ) : null}
+
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => cvInputRef.current?.click()}
+                style={{ border: "1.5px solid var(--luxury-primary)" }}
+                className="rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 hover:bg-violet-50 active:scale-[0.98]"
+              >
+                <span style={{ color: "var(--luxury-primary)" }}>Choisir un fichier</span>
+              </button>
+              <button
+                type="button"
+                onClick={onExtract}
+                disabled={!cvFile || extracting}
+                style={{ background: "var(--luxury-primary)" }}
+                className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {extracting ? (
+                  <>
+                    <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                    Extraction en cours…
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="h-5 w-5" />
+                    Extraire
+                  </>
+                )}
+              </button>
+            </div>
+            <input ref={cvInputRef} type="file" accept=".pdf,.docx" className="hidden" onChange={onCvSelect} />
           </div>
-          <input ref={cvInputRef} type="file" accept=".pdf,.docx" className="hidden" onChange={onCvSelect} />
+          </div>
         </div>
       </div>
 
-      <ExtractionResultsSection
-        extractionResult={extractionResult}
-        employeeSkills={employeeSkills}
-        pendingUnrecognizedSkills={pendingUnrecognizedSkills}
-      />
+      <div className="order-1 flex min-h-0 flex-col lg:order-2 lg:col-span-7">
+        <div className="profile-saas-card min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl lg:max-h-[min(32rem,calc(100vh-14rem))]">
+          <div className="p-4 md:p-5">
+            <ExtractionResultsSection
+              extractionResult={extractionResult}
+              employeeSkills={employeeSkills}
+              pendingUnrecognizedSkills={pendingUnrecognizedSkills}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -836,7 +1097,7 @@ function ExtractionResultsSection({
   pendingUnrecognizedSkills: string[];
 }) {
   const [skillsPage, setSkillsPage] = useState(0);
-  const SKILLS_PER_PAGE = 4;
+  const SKILLS_PER_PAGE = 6;
 
   useEffect(() => {
     const maxPage = Math.max(0, Math.ceil(employeeSkills.length / SKILLS_PER_PAGE) - 1);
@@ -847,116 +1108,138 @@ function ExtractionResultsSection({
   const pendingQuizCount = employeeSkills.filter((s) => s.status === "QUIZ_PENDING" || s.status === "EXTRACTED").length;
   const failedCount = employeeSkills.filter((s) => s.status === "FAILED").length;
   const totalSkillPages = Math.max(1, Math.ceil(employeeSkills.length / SKILLS_PER_PAGE));
-  const pagedSkills = employeeSkills.slice(
-    skillsPage * SKILLS_PER_PAGE,
-    (skillsPage + 1) * SKILLS_PER_PAGE
-  );
+  const pagedSkills = employeeSkills.slice(skillsPage * SKILLS_PER_PAGE, (skillsPage + 1) * SKILLS_PER_PAGE);
 
   return (
-    <div className="flex flex-col gap-2">
-      {(extractionResult || employeeSkills.length > 0 || pendingUnrecognizedSkills.length > 0) ? (
-        <div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-violet-400">
-            Résultat de l'extraction
-          </p>
-
-          {employeeSkills.length > 0 && (
-            <div className="mb-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/60 to-white p-3.5">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-200 bg-violet-100/70">
-                    <BeakerIcon className="h-4 w-4 text-violet-600" />
+    <div className="flex min-h-0 flex-col gap-5">
+      {extractionResult || employeeSkills.length > 0 || pendingUnrecognizedSkills.length > 0 ? (
+        <>
+          {employeeSkills.length > 0 ? (
+            <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-4 shadow-sm md:p-5">
+              <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm"
+                    style={{ background: "rgba(124, 58, 237, 0.1)", border: "1px solid rgba(124, 58, 237, 0.2)" }}
+                  >
+                    <BeakerIcon className="h-6 w-6" style={{ color: "var(--luxury-primary)" }} />
                   </div>
-                  <span className="text-sm font-bold text-violet-900">
-                    Compétences extraites ({employeeSkills.length})
-                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold leading-tight" style={{ color: "#1e293b" }}>
+                      Compétences extraites ({employeeSkills.length})
+                    </h3>
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                <div className="flex flex-wrap gap-2">
+                  <span
+                    className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm"
+                    style={{ background: "rgba(16, 185, 129, 0.1)", color: "var(--luxury-success)", border: "1px solid var(--luxury-success)" }}
+                  >
                     Validées: {validatedCount}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
-                    Quiz en attente: {pendingQuizCount}
+                  <span
+                    className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm"
+                    style={{ background: "rgba(249, 115, 22, 0.1)", color: "#C2410C", border: "1px solid rgba(249, 115, 22, 0.45)" }}
+                  >
+                    En attente: {pendingQuizCount}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
+                  <span
+                    className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm"
+                    style={{ background: "rgba(239, 68, 68, 0.1)", color: "var(--luxury-error)", border: "1px solid var(--luxury-error)" }}
+                  >
                     À repasser: {failedCount}
                   </span>
                 </div>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {pagedSkills.map((skill) => {
                   const isValidated = skill.status === "VALIDATED";
-                  const statusClass = skill.status === "VALIDATED"
-                    ? "border-green-200 bg-green-50 text-green-700"
-                    : skill.status === "FAILED"
-                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                      : "border-violet-200 bg-violet-50 text-violet-700";
-                  const statusLabel = skill.status === "VALIDATED"
-                    ? "Validée"
-                    : skill.status === "FAILED"
-                      ? "À repasser"
-                      : "Quiz en attente";
+                  const statusStyle =
+                    skill.status === "VALIDATED"
+                      ? { background: "rgba(16, 185, 129, 0.1)", color: "var(--luxury-success)", border: "1px solid var(--luxury-success)" }
+                      : skill.status === "FAILED"
+                        ? { background: "rgba(239, 68, 68, 0.1)", color: "var(--luxury-error)", border: "1px solid var(--luxury-error)" }
+                        : { background: "rgba(249, 115, 22, 0.1)", color: "#C2410C", border: "1px solid rgba(249, 115, 22, 0.45)" };
+                  const statusLabel = skill.status === "VALIDATED" ? "Validée" : skill.status === "FAILED" ? "À repasser" : "Quiz en attente";
+
                   return (
                     <div
                       key={skill.id}
-                      className="group flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-violet-200 hover:shadow-md"
+                      className="group flex cursor-default items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:border-violet-200/80 hover:shadow-md"
                     >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-900">{skill.skillName}</p>
-                        <p className="text-xs text-slate-500">{skill.categoryName} · Niveau {skill.level}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold" style={{ color: "#1e293b" }}>
+                          {skill.skillName}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "var(--luxury-text-muted)" }}>
+                          {skill.categoryName} · Niveau {skill.level}
+                        </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>
+                      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+                        <span className="inline-flex rounded-lg px-2.5 py-1 text-[10px] font-bold" style={statusStyle}>
                           {statusLabel}
                         </span>
-                        {!isValidated && (
+                        {!isValidated ? (
                           <button
                             type="button"
                             onClick={() => toast.info("Quiz bientôt disponible")}
-                            className="rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-[10px] font-semibold text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-50"
+                            style={{ background: "rgba(124, 58, 237, 0.08)", border: "1px solid var(--luxury-primary)" }}
+                            className="rounded-lg px-2.5 py-1 text-[10px] font-semibold transition-all duration-200 hover:bg-violet-100/80 active:scale-95"
                           >
-                            Passer quiz
+                            <span style={{ color: "var(--luxury-primary)" }}>Quiz</span>
                           </button>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {totalSkillPages > 1 && (
-                <div className="mt-2.5 flex items-center justify-center gap-2">
+              {totalSkillPages > 1 ? (
+                <div className="mt-4 flex items-center justify-center gap-2">
                   {Array.from({ length: totalSkillPages }).map((_, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setSkillsPage(idx)}
                       aria-label={`Aller à la page ${idx + 1}`}
-                      className={`h-2.5 w-2.5 rounded-full transition-all ${
-                        skillsPage === idx
-                          ? "scale-110 bg-violet-600"
-                          : "bg-violet-200 hover:bg-violet-300"
-                      }`}
+                      className="h-2 rounded-full transition-all duration-200 hover:opacity-90"
+                      style={{
+                        width: skillsPage === idx ? "1.25rem" : "0.5rem",
+                        background: skillsPage === idx ? "var(--luxury-primary)" : "rgba(148, 163, 184, 0.28)",
+                      }}
                     />
                   ))}
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
 
-          {(pendingUnrecognizedSkills.length > 0 || (extractionResult?.unmatchedSkills.length ?? 0) > 0) && (
-            <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/60 to-white p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
+          {pendingUnrecognizedSkills.length > 0 || (extractionResult?.unmatchedSkills.length ?? 0) > 0 ? (
+            <div
+              className="rounded-2xl border p-4 shadow-sm md:p-5"
+              style={{
+                background: "linear-gradient(135deg, rgba(249, 115, 22, 0.06) 0%, rgba(255, 255, 255, 0.95) 100%)",
+                borderColor: "rgba(249, 115, 22, 0.28)",
+              }}
+            >
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 bg-amber-100/70">
-                    <ArrowPathIcon className="h-4 w-4 text-amber-600" />
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    style={{ background: "rgba(249, 115, 22, 0.12)", border: "1px solid rgba(249, 115, 22, 0.35)" }}
+                  >
+                    <ArrowPathIcon className="h-4 w-4" style={{ color: "#EA580C" }} />
                   </div>
-                  <span className="text-sm font-bold text-amber-800">
+                  <span className="text-xs font-bold" style={{ color: "#1e293b" }}>
                     En attente de validation
                   </span>
                 </div>
-                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                <span
+                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  style={{ background: "rgba(249, 115, 22, 0.12)", color: "#C2410C", border: "1px solid rgba(249, 115, 22, 0.4)" }}
+                >
                   {pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills.length : (extractionResult?.unmatchedSkills.length ?? 0)} compétence(s)
                 </span>
               </div>
@@ -965,38 +1248,49 @@ function ExtractionResultsSection({
                 {(pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills : (extractionResult?.unmatchedSkills ?? [])).map((skill, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center rounded-full border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-700 shadow-sm"
+                    className="inline-flex items-center rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-medium shadow-sm transition-all duration-200 hover:border-orange-200/80 hover:shadow"
+                    style={{ color: "var(--luxury-text)" }}
                   >
                     {skill}
                   </span>
                 ))}
               </div>
 
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-3 text-[11px] leading-relaxed" style={{ color: "var(--luxury-text-muted)" }}>
                 Ces compétences seront examinées par un administrateur et ajoutées au référentiel si validées.
               </p>
             </div>
-          )}
-
-          {extractionResult && extractionResult.matchedSkills.length === 0 && extractionResult.unmatchedSkills.length === 0 && employeeSkills.length === 0 && pendingUnrecognizedSkills.length === 0 && (
-            <p className="text-sm text-slate-500">Aucune compétence détectée dans le CV.</p>
-          )}
-        </div>
+          ) : null}
+        </>
       ) : null}
     </div>
   );
 }
 
-/* ─── Shared field components ──────────────────────────────────────────────── */
+/* ─── Luxury Field Components ──────────────────────────────────────────────── */
 
-function EditableField({ icon, label, value, onChange, placeholder, type = "text", autoFocus }: {
-  icon: React.ReactNode; label: string; value: string;
-  onChange: (v: string) => void; placeholder?: string; type?: string; autoFocus?: boolean;
+function LuxuryEditableField({
+  icon,
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  autoFocus,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+  autoFocus?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-        {icon} {label}
+      <label className="flex items-center gap-1 text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
+        <span style={{ color: "var(--luxury-primary)" }}>{icon}</span>
+        {label}
       </label>
       <input
         type={type}
@@ -1004,44 +1298,104 @@ function EditableField({ icon, label, value, onChange, placeholder, type = "text
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full rounded-xl border border-violet-500 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none ring-2 ring-violet-100 transition focus:border-indigo-600 focus:ring-indigo-100"
+        className="luxury-input rounded-xl px-3 py-2 text-xs transition-all duration-300"
+        style={{ animation: "none" }}
       />
     </div>
   );
 }
 
-function ExtraField({ icon, label, value, onChange, placeholder, type = "text" }: {
-  icon: React.ReactNode; label: string; value: string;
-  onChange: (v: string) => void; placeholder?: string; type?: string;
+function LuxuryReadonlyField({
+  icon,
+  label,
+  value,
+  badge,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  badge?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-        {icon} {label}
+      <label className="flex items-center gap-1 text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
+        <span style={{ color: "var(--luxury-primary)" }}>{icon}</span>
+        {label}
       </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full rounded-xl border border-violet-500 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none ring-2 ring-violet-100 transition focus:border-indigo-600 focus:ring-indigo-100"
-      />
-    </div>
-  );
-}
-
-function ReadonlyField({ icon, label, value, badge }: {
-  icon: React.ReactNode; label: string; value: string; badge?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-        {icon} {label}
-      </label>
-      <div className={`flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm ${value === "—" ? "text-slate-300" : "text-slate-800 font-medium"}`}>
-        <span>{value}</span>
+      <div
+        className="flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all duration-200 hover:border-violet-200/70 hover:shadow-sm"
+        style={{
+          background: "var(--luxury-input)",
+          border: "1px solid rgba(148, 163, 184, 0.2)",
+          color: value === "—" ? "var(--luxury-text-muted)" : "var(--luxury-text)",
+        }}
+      >
+        <span className={value === "—" ? "" : "font-medium"}>{value}</span>
         {badge}
       </div>
     </div>
   );
 }
+
+function LuxuryPasswordField({
+  id,
+  label,
+  value,
+  show,
+  onToggle,
+  onChange,
+  error,
+  placeholder,
+  autoComplete,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  show: boolean;
+  onToggle: () => void;
+  onChange: (v: string) => void;
+  error?: string;
+  placeholder?: string;
+  autoComplete?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="flex items-center gap-1 text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
+        <LockClosedIcon className="w-3 h-3" style={{ color: "var(--luxury-primary)" }} />
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          className={`luxury-input w-full rounded-xl px-3 py-2 pr-9 text-xs transition-all duration-300`}
+          style={{
+            background: error ? "rgba(239, 68, 68, 0.05)" : "var(--luxury-input)",
+            borderColor: error ? "var(--luxury-error)" : "rgba(148, 163, 184, 0.2)",
+          }}
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 transition-colors duration-300"
+          style={{ color: "var(--luxury-text-muted)" }}
+        >
+          {show ? <EyeSlashIcon className="w-3 h-3" /> : <EyeIcon className="w-3 h-3" />}
+        </button>
+      </div>
+      {error && (
+        <div className="flex items-center gap-1 mt-0.5">
+          <XMarkIcon className="w-3 h-3" style={{ color: "var(--luxury-error)" }} />
+          <span className="text-xs" style={{ color: "var(--luxury-error)" }}>
+            {error}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+

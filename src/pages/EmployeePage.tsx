@@ -24,6 +24,7 @@ export default function EmployeePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
 
   const location = useLocation();
+  const isProfilePage = location.pathname.startsWith("/employee/profile");
 
   useEffect(() => {
     http
@@ -202,9 +203,15 @@ export default function EmployeePage() {
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col overflow-hidden pt-16">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pt-16">
           <EmployeeBreadcrumbs />
-          <div className="dashboard-padding">
+          <div
+            className={
+              isProfilePage
+                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
+                : "dashboard-padding"
+            }
+          >
             <Outlet context={{ employeeAvatarUrl: avatarUrl, employeeName: displayName, employeeEmail: email, currentPath: location.pathname, onAvatarUpdate: setAvatarUrl }} />
           </div>
         </main>

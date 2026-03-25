@@ -78,6 +78,20 @@ export default {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
+      keyframes: {
+        profileSection: {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        profileSkeleton: {
+          "0%, 100%": { opacity: "0.45" },
+          "50%": { opacity: "0.9" },
+        },
+      },
+      animation: {
+        "profile-section": "profileSection 0.55s ease-out both",
+        "profile-skeleton": "profileSkeleton 1.2s ease-in-out infinite",
+      },
     },
   },
   plugins: [],
