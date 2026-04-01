@@ -6,7 +6,7 @@ import type { ProjectDto } from "../../api/projectsApi";
 
 type Props = {
   onClose: () => void;
-  onSubmit: (data: { name: string; description?: string; status?: string; priority?: string; progressPercent?: number; teamSize?: number; startDate?: string; dueDate?: string; requirements?: { skillId: number; levelMin: number }[] }) => Promise<void>;
+  onSubmit: (data: { name: string; description?: string; status?: string; priority?: string; teamSize?: number; startDate?: string; dueDate?: string; requirements?: { skillId: number; levelMin: number }[] }) => Promise<void>;
   initialProject?: ProjectDto | null;
   leadAvatarUrl?: string | null;
   leadName?: string | null;
@@ -83,7 +83,6 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
   const [description, setDescription] = useState(initialProject?.description ?? "");
   const [status, setStatus] = useState(initialProject?.status ?? "DRAFT");
   const [priority, setPriority] = useState(initialProject?.priority ?? "MEDIUM");
-  const [progress, setProgress] = useState(initialProject?.progressPercent ?? 0);
   const [teamSize, setTeamSize] = useState(initialProject?.teamSize ?? 1);
   const [startDate, setStartDate] = useState(initialProject?.startDate ?? "");
   const [dueDate, setDueDate] = useState(initialProject?.dueDate ?? "");
@@ -123,7 +122,6 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
       description: description.trim() || undefined,
       status: status || "DRAFT",
       priority,
-      progressPercent: progress,
       teamSize,
       startDate: startDate || undefined,
       dueDate: dueDate || undefined,
@@ -223,12 +221,11 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
               <option value="DRAFT">Brouillon</option>
               <option value="ACTIVE">En cours</option>
               <option value="CLOSED">Clôturé</option>
-              <option value="CRITICAL">Critique</option>
             </select>
           </div>
 
-          {/* Priorité + Taille + Progression */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {/* Priorité + Taille */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">Priorité</label>
               <select
@@ -249,19 +246,6 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                 value={teamSize}
                 onChange={(e) => setTeamSize(Math.max(1, Number(e.target.value) || 1))}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">
-                Progression ({progress}%)
-              </label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={progress}
-                onChange={(e) => setProgress(Number(e.target.value) || 0)}
-                className="w-full"
               />
             </div>
           </div>

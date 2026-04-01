@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowPathIcon,
   EnvelopeIcon,
@@ -8,10 +8,6 @@ import {
   ChevronRightIcon,
   XMarkIcon,
   SparklesIcon,
-  CheckCircleIcon,
-  ArrowsRightLeftIcon,
-  XCircleIcon,
-  ClockIcon,
   BoltIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -47,14 +43,6 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: "Rejete",
 };
 
-const STATUS_PILL: Record<string, string> = {
-  ALL: "text-slate-700",
-  PENDING: "text-amber-700",
-  APPROVED: "text-emerald-700",
-  MERGED: "text-indigo-700",
-  REJECTED: "text-rose-700",
-};
-
 export function PendingSkillRequests() {
   const [page, setPage] = useState(0);
   const [data, setData] = useState<PageState | null>(null);
@@ -70,28 +58,7 @@ export function PendingSkillRequests() {
   const [categories, setCategories] = useState<SkillCategoryDto[]>([]);
   const [skills, setSkills] = useState<SkillDto[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [stats, setStats] = useState<Record<"PENDING" | "APPROVED" | "MERGED" | "REJECTED", number>>({
-    PENDING: 0,
-    APPROVED: 0,
-    MERGED: 0,
-    REJECTED: 0,
-  });
-
-  const loadStats = useCallback(() => {
-    skillsApi.getPendingSkillRequestsStats()
-      .then((res) => {
-        const payload = res.data;
-        setStats({
-          PENDING: payload?.PENDING ?? 0,
-          APPROVED: payload?.APPROVED ?? 0,
-          MERGED: payload?.MERGED ?? 0,
-          REJECTED: payload?.REJECTED ?? 0,
-        });
-      })
-      .catch(() => {
-        setStats({ PENDING: 0, APPROVED: 0, MERGED: 0, REJECTED: 0 });
-      });
-  }, []);
+  const [search, setSearch] = useState("");
 
   const loadPage = useCallback(() => {
     setLoading(true);
@@ -118,10 +85,6 @@ export function PendingSkillRequests() {
   }, [page, statusFilter]);
 
   useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
-  useEffect(() => {
     loadPage();
   }, [loadPage]);
 
@@ -139,23 +102,25 @@ export function PendingSkillRequests() {
   }, []);
 
   const refresh = () => {
-    loadStats();
     loadPage();
     toast.success("Liste actualisée");
   };
 
-  const filteredRequests = data?.content ?? [];
-  const pendingCount = stats.PENDING;
-  const approvedCount = stats.APPROVED;
-  const mergedCount = stats.MERGED;
-  const rejectedCount = stats.REJECTED;
-  const statusCount: Record<StatusFilter, number> = {
-    ALL: pendingCount + approvedCount + mergedCount + rejectedCount,
-    PENDING: pendingCount,
-    APPROVED: approvedCount,
-    MERGED: mergedCount,
-    REJECTED: rejectedCount,
-  };
+  const requests = data?.content ?? [];
+  const filteredRequests = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return requests;
+    return requests.filter((r) => {
+      const hay = [
+        r.rawSkillName ?? "",
+        r.requestedByName ?? "",
+        r.requestedByEmail ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [requests, search]);
 
   const openResolveModal = (req: PendingSkillRequestDto) => {
     setResolveModal(req);
@@ -185,7 +150,6 @@ export function PendingSkillRequests() {
       .then(() => {
         toast.success("Demande traitée avec succès");
         setResolveModal(null);
-        loadStats();
         loadPage();
       })
       .catch((err) => toast.error(getApiError(err, "Échec du traitement de la demande")))
@@ -201,185 +165,197 @@ export function PendingSkillRequests() {
         }
         .fade-up { animation: fadeUp 0.3s ease both; }
       `}</style>
-      <div className="relative min-h-0 flex-1 overflow-auto px-3 py-3 md:px-4 lg:px-6">
-        <div className="mb-3 flex flex-col gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div />
-            <button
-              type="button"
-              onClick={refresh}
-              className="inline-flex items-center gap-1.5 rounded-2xl border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-violet-700 transition hover:bg-violet-50"
-            >
-              <ArrowPathIcon className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Actualiser
-            </button>
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+            <div className="grid grid-cols-1 items-end gap-3 px-4 py-3 lg:grid-cols-[1fr_220px_auto]">
+              <div className="min-w-0">
+                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Rechercher</label>
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Rechercher…"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                />
+              </div>
 
-          <div className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4">
-            <StatCard label="En attente" value={pendingCount} icon={<ClockIcon className="h-5 w-5 text-amber-600" />} bg="bg-amber-50" />
-            <StatCard label="Approuvees" value={approvedCount} icon={<CheckCircleIcon className="h-5 w-5 text-emerald-600" />} bg="bg-emerald-50" />
-            <StatCard label="Fusionnees" value={mergedCount} icon={<ArrowsRightLeftIcon className="h-5 w-5 text-indigo-600" />} bg="bg-indigo-50" />
-            <StatCard label="Rejetees" value={rejectedCount} icon={<XCircleIcon className="h-5 w-5 text-rose-600" />} bg="bg-rose-50" />
-          </div>
-
-          <div className="mx-auto flex w-fit flex-wrap items-center gap-1 rounded-2xl border border-violet-200/60 bg-white/95 p-1.5 shadow-[0_6px_20px_rgba(139,92,246,0.08)] backdrop-blur-sm">
-            {STATUS_FILTERS.map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setStatusFilter(status)}
-                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-semibold transition-all duration-200 ${
-                  statusFilter === status
-                    ? "border-violet-500 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-200"
-                    : `border-transparent bg-transparent ${STATUS_PILL[status]} hover:border-violet-200 hover:bg-violet-50`
-                }`}
-              >
-                {STATUS_LABEL[status]}
-                <span
-                  className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    statusFilter === status
-                      ? "bg-white/20 text-white"
-                      : "bg-white text-slate-600"
-                  }`}
+              <div className="w-full">
+                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Statut</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                  className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
                 >
-                  {statusCount[status]}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+                  {STATUS_FILTERS.map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_LABEL[s]}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        {loading && (
-          <div className="space-y-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-20 animate-pulse rounded-xl border border-violet-500/10 bg-white" />
-            ))}
-          </div>
-        )}
+              <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setStatusFilter("ALL");
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  title="Réinitialiser"
+                >
+                  Réinitialiser
+                </button>
 
-        {!loading && error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
-        )}
-
-        {!loading && !error && filteredRequests.length === 0 && (
-          <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-violet-200 bg-white px-4 py-14 text-center">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
-              <QuestionMarkCircleIcon className="h-7 w-7 text-violet-300" />
+                <button
+                  type="button"
+                  onClick={refresh}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  <ArrowPathIcon className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                  Actualiser
+                </button>
+              </div>
             </div>
-            <p className="text-sm font-semibold text-slate-700">Aucune demande pour ce filtre</p>
-            <p className="mt-1 text-xs text-slate-500">Les demandes apparaitront ici apres extraction.</p>
           </div>
-        )}
 
-        {!loading && !error && filteredRequests.length > 0 && (
-          <div className="grid gap-2">
-            {filteredRequests.map((req, index) => (
-              <article
-                key={req.id}
-                className="fade-up group relative overflow-hidden rounded-xl border border-violet-500/10 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet-100"
-                style={{ animationDelay: `${index * 35}ms` }}
-              >
-                <div className={`absolute bottom-0 left-0 top-0 w-1 ${
-                  req.status === "PENDING"
-                    ? "bg-amber-400"
-                    : req.status === "APPROVED"
-                      ? "bg-emerald-400"
-                      : req.status === "MERGED"
-                        ? "bg-indigo-400"
-                        : "bg-rose-400"
-                }`} />
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50">
-                        <SparklesIcon className="h-3.5 w-3.5 text-violet-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-[13px] font-bold text-slate-900">{req.rawSkillName}</p>
-                        <p className="text-[11px] text-slate-500">Competence detectee par IA</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[req.status] ?? "border-slate-200 bg-slate-50 text-slate-700"}`}>
-                        {STATUS_LABEL[req.status] ?? req.status}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
-                        <UserIcon className="h-3.5 w-3.5 text-violet-500" />
-                        {req.requestersCount > 1 ? `${req.requestersCount} utilisateurs` : req.requestedByName}
-                      </span>
-                      {req.requestersCount <= 1 ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
-                          <EnvelopeIcon className="h-3.5 w-3.5 text-violet-500" />
-                          {req.requestedByEmail}
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setRequestersModal(req)}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
-                        >
-                          <EnvelopeIcon className="h-3.5 w-3.5 text-violet-500" />
-                          Voir les demandeurs
-                        </button>
-                      )}
-                      <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
-                        <CalendarDaysIcon className="h-3.5 w-3.5 text-violet-500" />
-                        {new Date(req.createdAt).toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="shrink-0">
-                    {req.status === "PENDING" && (
-                      <button
-                        type="button"
-                        onClick={() => openResolveModal(req)}
-                        className="inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-1.5 text-[11px] font-semibold text-white shadow-sm shadow-violet-300 transition hover:shadow-violet-400"
-                      >
-                        <BoltIcon className="h-3.5 w-3.5" />
-                        Traiter
-                      </button>
-                    )}
-                  </div>
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+            <div className="relative min-h-0 flex-1 overflow-auto px-3 py-3 md:px-4 lg:px-6">
+
+              {loading && (
+                <div className="space-y-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-20 animate-pulse rounded-xl border border-violet-500/10 bg-white" />
+                  ))}
                 </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </div>
+              )}
 
-      {!loading && !error && (data?.totalPages ?? 0) > 1 && (
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-violet-500/10 px-6 pb-3 pt-2">
-          <p className="text-sm text-slate-400">
-            Page {(data?.page ?? 0) + 1} sur {data?.totalPages ?? 1}
-            {" · "}
-            {Math.min((data?.page ?? 0) * PAGE_SIZE + 1, data?.totalElements ?? 0)}–{Math.min(((data?.page ?? 0) + 1) * PAGE_SIZE, data?.totalElements ?? 0)} sur {data?.totalElements ?? 0}
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={(data?.page ?? 0) === 0 || loading}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500 shadow-sm transition-all duration-150 hover:border-violet-300 hover:text-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-500"
-            >
-              <ChevronLeftIcon className="h-4 w-4" />
-              Précédent
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={(data?.page ?? 0) >= (data?.totalPages ?? 1) - 1 || loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(124,58,237,0.35)] transition-all duration-150 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Suivant
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
+              {!loading && error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+              )}
+
+              {!loading && !error && filteredRequests.length === 0 && (
+                <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-violet-200 bg-white px-4 py-14 text-center">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
+                    <QuestionMarkCircleIcon className="h-7 w-7 text-violet-300" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-700">Aucune demande pour ce filtre</p>
+                  <p className="mt-1 text-xs text-slate-500">Les demandes apparaitront ici apres extraction.</p>
+                </div>
+              )}
+
+              {!loading && !error && filteredRequests.length > 0 && (
+                <div className="grid gap-2">
+                  {filteredRequests.map((req, index) => (
+                    <article
+                      key={req.id}
+                      className="fade-up group relative overflow-hidden rounded-xl border border-violet-500/10 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md hover:shadow-violet-100"
+                      style={{ animationDelay: `${index * 35}ms` }}
+                    >
+                      <div className={`absolute bottom-0 left-0 top-0 w-1 ${
+                        req.status === "PENDING"
+                          ? "bg-amber-400"
+                          : req.status === "APPROVED"
+                            ? "bg-emerald-400"
+                            : req.status === "MERGED"
+                              ? "bg-indigo-400"
+                              : "bg-rose-400"
+                      }`} />
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50">
+                              <SparklesIcon className="h-3.5 w-3.5 text-violet-600" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-[13px] font-bold text-slate-900">{req.rawSkillName}</p>
+                              <p className="text-[11px] text-slate-500">Compétence détectée par IA</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[req.status] ?? "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                              {STATUS_LABEL[req.status] ?? req.status}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
+                              <UserIcon className="h-3.5 w-3.5 text-violet-500" />
+                              {req.requestersCount > 1 ? `${req.requestersCount} utilisateurs` : req.requestedByName}
+                            </span>
+                            {req.requestersCount <= 1 ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
+                                <EnvelopeIcon className="h-3.5 w-3.5 text-violet-500" />
+                                {req.requestedByEmail}
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setRequestersModal(req)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
+                              >
+                                <EnvelopeIcon className="h-3.5 w-3.5 text-violet-500" />
+                                Voir les demandeurs
+                              </button>
+                            )}
+                            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
+                              <CalendarDaysIcon className="h-3.5 w-3.5 text-violet-500" />
+                              {new Date(req.createdAt).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          {req.status === "PENDING" && (
+                            <button
+                              type="button"
+                              onClick={() => openResolveModal(req)}
+                              className="inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-1.5 text-[11px] font-semibold text-white shadow-sm shadow-violet-300 transition hover:shadow-violet-400"
+                            >
+                              <BoltIcon className="h-3.5 w-3.5" />
+                              Traiter
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {!loading && !error && (data?.totalPages ?? 0) > 1 ? (
+              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-violet-500/10 px-6 pb-3 pt-2">
+                <p className="text-sm text-slate-400">
+                  Page {(data?.page ?? 0) + 1} sur {data?.totalPages ?? 1}
+                  {" · "}
+                  {Math.min((data?.page ?? 0) * PAGE_SIZE + 1, data?.totalElements ?? 0)}–{Math.min(((data?.page ?? 0) + 1) * PAGE_SIZE, data?.totalElements ?? 0)} sur {data?.totalElements ?? 0}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={(data?.page ?? 0) === 0 || loading}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500 shadow-sm transition-all duration-150 hover:border-violet-300 hover:text-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-500"
+                  >
+                    <ChevronLeftIcon className="h-4 w-4" />
+                    Précédent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={(data?.page ?? 0) >= (data?.totalPages ?? 1) - 1 || loading}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(124,58,237,0.35)] transition-all duration-150 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Suivant
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
-      )}
+      </div>
 
       {resolveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/25 p-4 backdrop-blur-[4px]">
@@ -523,18 +499,4 @@ export function PendingSkillRequests() {
   );
 }
 
-function StatCard({ label, value, icon, bg }: { label: string; value: number; icon: React.ReactNode; bg: string }) {
-  return (
-    <div className="rounded-2xl border border-violet-200/70 bg-white/95 p-3 shadow-[0_6px_20px_rgba(139,92,246,0.08)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_26px_rgba(139,92,246,0.14)]">
-      <div className="flex items-center gap-2.5">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${bg} border border-white/60 shadow-sm`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-lg font-extrabold leading-none tracking-tight text-slate-900">{value}</p>
-          <p className="mt-0.5 text-[10px] font-medium text-slate-500">{label}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+// (KPI cards removed per UI request)

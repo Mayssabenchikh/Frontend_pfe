@@ -1,20 +1,23 @@
 import { useState } from "react";
 import { ArrowRightOnRectangleIcon, UserCircleIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import type { NavId } from "./types";
+import { getAvatarColor, getDisplayNameInitials } from "./utils";
 
 type Props = {
   displayName: string | null;
   initials: string | null;
   avatarUrl?: string | null;
+  avatarSeed?: string | null;
   onLogout: () => void;
   onNavigate: (view: NavId) => void;
   onMenuToggle: () => void;
 };
 
-export function AdminHeader({ displayName, initials, avatarUrl, onLogout, onNavigate, onMenuToggle }: Props) {
+export function AdminHeader({ displayName, initials, avatarUrl, avatarSeed, onLogout, onNavigate, onMenuToggle }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const safeName = displayName || "Administrateur";
-  const safeInitials = initials?.trim() || safeName.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "AD";
+  const safeInitials = initials?.trim() || getDisplayNameInitials(safeName) || "AD";
+  const seed = avatarSeed?.trim() || safeName;
 
   return (
     <header className="admin-header-fixed flex items-center justify-between px-4 md:px-6 bg-white border-b border-slate-100 shadow-sm z-30">
@@ -41,7 +44,12 @@ export function AdminHeader({ displayName, initials, avatarUrl, onLogout, onNavi
           {avatarUrl ? (
             <img src={avatarUrl} alt={safeName} className="w-8 h-8 rounded-full object-cover shadow shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-700 to-violet-700 flex items-center justify-center text-xs font-bold text-white shadow shrink-0">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow shrink-0"
+              style={{
+                background: `linear-gradient(135deg, ${getAvatarColor(seed)[0]}, ${getAvatarColor(seed)[1]})`,
+              }}
+            >
               {safeInitials}
             </div>
           )}

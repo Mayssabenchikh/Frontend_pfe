@@ -31,6 +31,16 @@ export function ensureArray<T>(value: T | T[] | null | undefined): T[] {
   return Array.isArray(value) ? value : [];
 }
 
+/** Initials from a display name (space-separated words). */
+export function getDisplayNameInitials(displayName: string): string {
+  return displayName
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function getAvatarColor(str: string): [string, string] {
   const palettes: [string, string][] = [
     ["#8b5cf6", "#6366f1"],

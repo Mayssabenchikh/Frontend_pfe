@@ -22,7 +22,7 @@ type FieldErrors = Partial<Record<"email" | "firstName" | "lastName" | "phone" |
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[+\d][\d\s\-().]{6,19}$/;
-const NAME_RE = /^[\p{L}\s'\-]{2,60}$/u;
+const NAME_RE = /^[\p{L}\s'-]{2,60}$/u;
 
 function validate(fields: {
   email: string; firstName: string; lastName: string;

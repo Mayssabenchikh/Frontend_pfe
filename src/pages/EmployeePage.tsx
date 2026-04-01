@@ -10,12 +10,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { http } from "../api/http";
 import { EmployeeBreadcrumbs } from "./employee/EmployeeBreadcrumbs";
+import { getAvatarColor } from "./admin/utils";
 
 export default function EmployeePage() {
   const { keycloak } = useKeycloak();
   const token = keycloak.tokenParsed as { given_name?: string; family_name?: string; email?: string; picture?: string } | undefined;
   const displayName = [token?.given_name, token?.family_name].filter(Boolean).join(" ") || token?.email || "Employé";
   const email = token?.email ?? null;
+  const avatarSeed = email || keycloak.subject || displayName;
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -158,7 +160,12 @@ export default function EmployeePage() {
                   className="w-8 h-8 rounded-full object-cover shadow shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-700 to-violet-700 flex items-center justify-center text-xs font-bold text-white shadow shrink-0">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${getAvatarColor(avatarSeed)[0]}, ${getAvatarColor(avatarSeed)[1]})`,
+                  }}
+                >
                   {displayName
                     .split(" ")
                     .map((p) => p[0])

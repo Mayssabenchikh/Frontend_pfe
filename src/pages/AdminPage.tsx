@@ -31,8 +31,11 @@ import { PendingSkillRequests } from "./admin/PendingSkillRequests";
 import { AdminProfile } from "./admin/AdminProfile";
 import { CreateUserModal } from "./admin/CreateUserModal";
 import { EditUserModal } from "./admin/EditUserModal";
+import { FiltersPanel } from "../components/FiltersPanel";
+import { ArchiveBoxIcon } from "@heroicons/react/24/outline";
 
 const USERS_API = "/api/admin/users";
+const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 
 export default function AdminPage() {
   const { keycloak } = useKeycloak();
@@ -46,6 +49,15 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserListDto[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);
+
+  const [usersFilters, setUsersFilters] = useState<{
+    search: string;
+    role: string;
+    status: "ALL" | "ACTIVE" | "INACTIVE";
+    from: string;
+    to: string;
+    order: "recent" | "oldest" | "name";
+  }>({ search: "", role: "ALL", status: "ALL", from: "", to: "", order: "recent" });
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createEmail, setCreateEmail] = useState("");
@@ -73,6 +85,13 @@ export default function AdminPage() {
   const [archivedUsers, setArchivedUsers] = useState<ArchivedUserDto[]>([]);
   const [archivedLoading, setArchivedLoading] = useState(false);
   const [archivedError, setArchivedError] = useState<string | null>(null);
+  const [archivedFilters, setArchivedFilters] = useState<{
+    search: string;
+    role: string;
+    from: string;
+    to: string;
+    order: "recent" | "oldest" | "name";
+  }>({ search: "", role: "ALL", from: "", to: "", order: "recent" });
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<ArchivedUserDto | null>(null);
@@ -85,23 +104,52 @@ export default function AdminPage() {
     inactifs: usersList.filter((u) => !u.enabled).length,
   }), [usersList]);
 
-  const loadUsers = useCallback(() => {
+  const loadUsers = useCallback((filters?: Partial<typeof usersFilters>) => {
+    const f = { ...usersFilters, ...(filters ?? {}) };
     setUsersLoading(true);
-    http.get<UserListDto[]>(USERS_API)
+    http.get<UserListDto[]>(USERS_API, {
+      params: {
+        search: f.search || undefined,
+        role: f.role !== "ALL" ? f.role : undefined,
+        enabled:
+          f.status === "ACTIVE" ? true : f.status === "INACTIVE" ? false : undefined,
+        from: f.from || undefined,
+        to: f.to || undefined,
+        order: f.order || undefined,
+      },
+    })
       .then((res) => { setUsers(ensureArray(res?.data)); setUsersError(null); })
       .catch((err) => { setUsersError(getApiError(err, MESSAGES.errorLoad)); setUsers([]); })
       .finally(() => setUsersLoading(false));
-  }, []);
+  }, [usersFilters]);
 
-  const loadArchivedUsers = useCallback(() => {
+  const loadArchivedUsers = useCallback((filters?: Partial<typeof archivedFilters>) => {
+    const f = { ...archivedFilters, ...(filters ?? {}) };
     setArchivedLoading(true);
-    http.get<ArchivedUserDto[]>(`${USERS_API}/archived`)
+    http.get<ArchivedUserDto[]>(`${USERS_API}/archived`, {
+      params: {
+        search: f.search || undefined,
+        role: f.role !== "ALL" ? f.role : undefined,
+        from: f.from || undefined,
+        to: f.to || undefined,
+        order: f.order || undefined,
+      },
+    })
       .then((res) => { setArchivedUsers(ensureArray(res?.data)); setArchivedError(null); })
       .catch((err) => { setArchivedError(getApiError(err, MESSAGES.errorLoad)); setArchivedUsers([]); })
       .finally(() => setArchivedLoading(false));
-  }, []);
+  }, [archivedFilters]);
 
-  useEffect(() => { loadUsers(); }, [loadUsers]);
+  useEffect(() => {
+    const t = setTimeout(() => loadUsers(), 250);
+    return () => clearTimeout(t);
+  }, [loadUsers, usersFilters]);
+
+  useEffect(() => {
+    if (currentView !== "archives") return;
+    const t = setTimeout(() => loadArchivedUsers(), 250);
+    return () => clearTimeout(t);
+  }, [currentView, loadArchivedUsers, archivedFilters]);
 
   const handleToggleEnabled = useCallback((u: UserListDto) => {
     setTogglingId(u.id);
@@ -268,7 +316,8 @@ export default function AdminPage() {
         <AdminHeader
           displayName={getDisplayName(token)}
           initials={getInitials(token)} avatarUrl={adminAvatarUrl}
-          onLogout={() => keycloak.logout({ redirectUri: `${window.location.origin}/` })}
+          avatarSeed={(token?.email ?? keycloak.subject ?? getDisplayName(token)) || null}
+          onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
           onNavigate={setCurrentView}
           onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
@@ -316,11 +365,87 @@ export default function AdminPage() {
 
           {currentView === "archives" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
-              <ArchivedUsersTable
-                users={archivedUsers} loading={archivedLoading} error={archivedError}
-                restoringId={restoringId} deletingId={deletingId}
-                onRestore={handleRestoreUser} onRequestDelete={setDeleteConfirmUser}
-              />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+                <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+                  <div className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-gradient-to-r from-amber-400/10 to-amber-400/5 px-4 py-3 text-amber-900 shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-400/25 bg-amber-400/20">
+                      <ArchiveBoxIcon className="h-4 w-4 text-amber-800" />
+                    </div>
+                    <p className="text-xs font-medium leading-relaxed">
+                      Les utilisateurs archivés ne peuvent plus se connecter. Vous pouvez les restaurer à tout moment ou les supprimer définitivement.
+                    </p>
+                  </div>
+                  <FiltersPanel
+                    title="Filtres"
+                    resultsLabel={`${archivedUsers.length} résultat${archivedUsers.length !== 1 ? "s" : ""}`}
+                    onReset={() => setArchivedFilters({ search: "", role: "ALL", from: "", to: "", order: "recent" })}
+                  >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                      <div className="lg:col-span-2">
+                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                          Rechercher (nom, prénom, email)
+                        </label>
+                        <input
+                          value={archivedFilters.search}
+                          onChange={(e) => setArchivedFilters((p) => ({ ...p, search: e.target.value }))}
+                          placeholder="Ex: maram khribich, maram@…"
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Rôle</label>
+                        <select
+                          value={archivedFilters.role}
+                          onChange={(e) => setArchivedFilters((p) => ({ ...p, role: e.target.value }))}
+                          className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                        >
+                          <option value="ALL">Tous les rôles</option>
+                          <option value="MANAGER">Manager</option>
+                          <option value="EMPLOYEE">Employé</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Du</label>
+                        <input
+                          type="date"
+                          value={archivedFilters.from}
+                          onChange={(e) => setArchivedFilters((p) => ({ ...p, from: e.target.value }))}
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Au</label>
+                        <input
+                          type="date"
+                          value={archivedFilters.to}
+                          onChange={(e) => setArchivedFilters((p) => ({ ...p, to: e.target.value }))}
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
+                        <select
+                          value={archivedFilters.order}
+                          onChange={(e) => setArchivedFilters((p) => ({ ...p, order: e.target.value as any }))}
+                          className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                        >
+                          <option value="recent">Plus récent</option>
+                          <option value="oldest">Plus ancien</option>
+                          <option value="name">Nom</option>
+                        </select>
+                      </div>
+                    </div>
+                  </FiltersPanel>
+
+                  <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                    <ArchivedUsersTable
+                      users={archivedUsers} loading={archivedLoading} error={archivedError}
+                      restoringId={restoringId} deletingId={deletingId}
+                      onRestore={handleRestoreUser} onRequestDelete={setDeleteConfirmUser}
+                    />
+                  </div>
+                </div>
+              </div>
             </section>
           )}
 
@@ -337,18 +462,96 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                <UsersTable
-                  users={usersList}
-                  loading={usersLoading}
-                  error={usersError}
-                  togglingId={togglingId}
-                  archivingId={archivingId}
-                  onEdit={startEdit}
-                  onView={setViewUser}
-                  onToggleEnabled={handleToggleEnabled}
-                  onArchive={handleArchiveUser}
-                />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+                <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+                  <FiltersPanel
+                    title="Filtres"
+                    resultsLabel={`${usersList.length} résultat${usersList.length !== 1 ? "s" : ""}`}
+                    onReset={() => setUsersFilters({ search: "", role: "ALL", status: "ALL", from: "", to: "", order: "recent" })}
+                  >
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
+                        <div className="lg:col-span-2">
+                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                            Rechercher (nom, prénom, email)
+                          </label>
+                          <input
+                            value={usersFilters.search}
+                            onChange={(e) => setUsersFilters((p) => ({ ...p, search: e.target.value }))}
+                            placeholder="Ex: maram khribich, maram@…"
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Statut</label>
+                          <select
+                            value={usersFilters.status}
+                            onChange={(e) => setUsersFilters((p) => ({ ...p, status: e.target.value as any }))}
+                            className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                          >
+                            <option value="ALL">Tous les statuts</option>
+                            <option value="ACTIVE">Actif</option>
+                            <option value="INACTIVE">Inactif</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Rôle</label>
+                          <select
+                            value={usersFilters.role}
+                            onChange={(e) => setUsersFilters((p) => ({ ...p, role: e.target.value }))}
+                            className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                          >
+                            <option value="ALL">Tous les rôles</option>
+                            <option value="MANAGER">Manager</option>
+                            <option value="EMPLOYEE">Employé</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Du</label>
+                          <input
+                            type="date"
+                            value={usersFilters.from}
+                            onChange={(e) => setUsersFilters((p) => ({ ...p, from: e.target.value }))}
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Au</label>
+                          <input
+                            type="date"
+                            value={usersFilters.to}
+                            onChange={(e) => setUsersFilters((p) => ({ ...p, to: e.target.value }))}
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
+                          <select
+                            value={usersFilters.order}
+                            onChange={(e) => setUsersFilters((p) => ({ ...p, order: e.target.value as any }))}
+                            className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                          >
+                            <option value="recent">Plus récent</option>
+                            <option value="oldest">Plus ancien</option>
+                            <option value="name">Nom</option>
+                          </select>
+                        </div>
+                      </div>
+                  </FiltersPanel>
+
+                  <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                    <UsersTable
+                      users={usersList}
+                      loading={usersLoading}
+                      error={usersError}
+                      togglingId={togglingId}
+                      archivingId={archivingId}
+                      onEdit={startEdit}
+                      onView={setViewUser}
+                      onToggleEnabled={handleToggleEnabled}
+                      onArchive={handleArchiveUser}
+                    />
+                  </div>
+                </div>
               </div>
             </section>
           )}

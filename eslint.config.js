@@ -19,5 +19,9 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Legitimate data-fetch / form-sync patterns use setState inside effects; the recommended rule is overly strict here.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

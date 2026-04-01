@@ -37,6 +37,8 @@ export function SkillCategories() {
   const [deleteConfirm, setDeleteConfirm] = useState<SkillCategoryDto | null>(null);
   const [blockDelete, setBlockDelete]     = useState<SkillCategoryDto | null>(null);
   const [updateConfirm, setUpdateConfirm] = useState(false);
+  const [createIconFile, setCreateIconFile] = useState<File | null>(null);
+  const [editIconFile, setEditIconFile] = useState<File | null>(null);
 
   const categories = pageData?.content ?? [];
 
@@ -64,7 +66,17 @@ export function SkillCategories() {
     const name = newName.trim(); if (!name) return;
     setSubmitLoading(true);
     skillsApi.createCategory(name)
-      .then(() => { load(); setCreateModal(false); setNewName(""); toast.success("Catégorie créée avec succès"); })
+      .then(async (res) => {
+        const created = res.data;
+        if (createIconFile && created?.id) {
+          await skillsApi.uploadCategoryIcon(created.id, createIconFile);
+        }
+        load();
+        setCreateModal(false);
+        setNewName("");
+        setCreateIconFile(null);
+        toast.success("Catégorie créée avec succès");
+      })
       .catch((err) => toast.error(getApiError(err, "Échec de la création")))
       .finally(() => setSubmitLoading(false));
   };
@@ -74,7 +86,7 @@ export function SkillCategories() {
     if (!editModal) return;
     const name = editName.trim();
     if (!name) return;
-    if (name === editModal.name) {
+    if (name === editModal.name && !editIconFile) {
       setEditModal(null);
       setEditName("");
       return;
@@ -87,8 +99,20 @@ export function SkillCategories() {
     const name = editName.trim();
     setUpdateConfirm(false);
     setSubmitLoading(true);
-    skillsApi.updateCategory(editModal.id, name)
-      .then(() => { load(); setEditModal(null); setEditName(""); toast.success("Catégorie mise à jour"); })
+    Promise.resolve()
+      .then(() => (name !== editModal.name ? skillsApi.updateCategory(editModal.id, name) : null))
+      .then(async () => {
+        if (editIconFile) {
+          await skillsApi.uploadCategoryIcon(editModal.id, editIconFile);
+        }
+      })
+      .then(() => {
+        load();
+        setEditModal(null);
+        setEditName("");
+        setEditIconFile(null);
+        toast.success("Catégorie mise à jour");
+      })
       .catch((err) => toast.error(getApiError(err, "Échec de la mise à jour")))
       .finally(() => setSubmitLoading(false));
   };
@@ -112,7 +136,7 @@ export function SkillCategories() {
       .finally(() => setDeletingId(null));
   };
 
-  const openEdit = (c: SkillCategoryDto) => { setEditModal(c); setEditName(c.name); };
+  const openEdit = (c: SkillCategoryDto) => { setEditModal(c); setEditName(c.name); setEditIconFile(null); };
 
   return (
     <>
@@ -289,6 +313,30 @@ export function SkillCategories() {
                 autoFocus
               />
             </FormField>
+            <FormField label="Icône (optionnel)">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCreateIconFile(e.target.files?.[0] ?? null)}
+                className="block w-full rounded-xl border border-violet-500/20 bg-violet-50/60 px-4 py-3 text-sm text-violet-950 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-violet-700"
+              />
+              {createIconFile ? (
+                <div className="mt-2 flex items-center gap-2">
+                  <img
+                    src={URL.createObjectURL(createIconFile)}
+                    alt=""
+                    className="h-12 w-12 rounded-2xl border border-violet-200 bg-white object-contain p-1.5 shadow-sm [image-rendering:auto] contrast-125 saturate-125"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCreateIconFile(null)}
+                    className="text-xs font-semibold text-slate-500 hover:text-violet-700"
+                  >
+                    Retirer
+                  </button>
+                </div>
+              ) : null}
+            </FormField>
             <ModalActions
               onCancel={() => setCreateModal(false)}
               submitLabel="Créer la catégorie"
@@ -314,6 +362,30 @@ export function SkillCategories() {
                 placeholder="Nom de la catégorie"
                 autoFocus
               />
+            </FormField>
+            <FormField label="Icône (optionnel)">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setEditIconFile(e.target.files?.[0] ?? null)}
+                className="block w-full rounded-xl border border-violet-500/20 bg-violet-50/60 px-4 py-3 text-sm text-violet-950 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-violet-700"
+              />
+              {editIconFile ? (
+                <div className="mt-2 flex items-center gap-2">
+                  <img
+                    src={URL.createObjectURL(editIconFile)}
+                    alt=""
+                    className="h-12 w-12 rounded-2xl border border-violet-200 bg-white object-contain p-1.5 shadow-sm [image-rendering:auto] contrast-125 saturate-125"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditIconFile(null)}
+                    className="text-xs font-semibold text-slate-500 hover:text-violet-700"
+                  >
+                    Retirer
+                  </button>
+                </div>
+              ) : null}
             </FormField>
             <ModalActions
               onCancel={() => setEditModal(null)}
@@ -372,7 +444,7 @@ interface CategoryCardProps {
 
 function CategoryCard({ category, index, isDeleting, onEdit, onDelete }: CategoryCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const iconUrl = getCategoryIconUrl(category.name);
+  const iconUrl = category.iconUrl || getCategoryIconUrl(category.name);
   const sampleSkills = category.sampleSkillNames?.length
     ? category.sampleSkillNames.join(", ")
     : getCategoryDescription(category.name);
@@ -387,9 +459,9 @@ function CategoryCard({ category, index, isDeleting, onEdit, onDelete }: Categor
       {/* En-tête : icône + titre + menu */}
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-violet-500/15 bg-violet-500/10">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-violet-500/15 bg-white shadow-sm">
             {iconUrl ? (
-              <img src={iconUrl} alt="" className="w-5 h-5 object-contain" />
+              <img src={iconUrl} alt="" className="h-8 w-8 object-contain [image-rendering:auto] contrast-125 saturate-125 drop-shadow-[0_1px_1px_rgba(0,0,0,0.12)]" />
             ) : (
               <TagIcon className="w-5 h-5 text-violet-500" />
             )}

@@ -1,5 +1,4 @@
-import type React from "react";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import {
   ModuleRegistry, AllCommunityModule,
   type ColDef, type ICellRendererParams,
@@ -9,7 +8,6 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
 import {
-  MagnifyingGlassIcon,
   PencilSquareIcon,
   ArchiveBoxIcon,
   NoSymbolIcon,
@@ -40,9 +38,6 @@ const ROLE_CLASSES: Record<string, string> = {
   EMPLOYEE: "bg-blue-50 text-blue-800 border-blue-200",
 };
 
-const statuses = ["Tous", "Actif", "Inactif"] as const;
-const roleOptions = ["Tous", "MANAGER", "EMPLOYEE"] as const;
-
 function SkeletonRow() {
   return (
     <div className="flex items-center gap-4 border-b border-slate-100 px-6 py-3.5 animate-pulse">
@@ -62,27 +57,7 @@ function SkeletonRow() {
 }
 
 export function UsersTable({ users, loading, error, togglingId, archivingId, onEdit, onView, onToggleEnabled, onArchive }: Props) {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<(typeof statuses)[number]>("Tous");
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [roleFilter, setRoleFilter] = useState<(typeof roleOptions)[number]>("Tous");
   const gridRef = useRef<AgGridReact<UserListDto> | null>(null);
-
-  const filtered = useMemo(
-    () =>
-      users.filter((u) => {
-        const fullName = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
-        const haystack = [fullName, u.email, u.role, u.department ?? "", u.jobTitle ?? ""]
-          .join(" ")
-          .toLowerCase();
-        const matchSearch = haystack.includes(search.toLowerCase());
-        const matchStatus =
-          statusFilter === "Tous" || (statusFilter === "Actif" ? u.enabled : !u.enabled);
-        const matchRole = roleFilter === "Tous" || u.role === roleFilter;
-        return matchSearch && matchStatus && matchRole;
-      }),
-    [users, search, statusFilter, roleFilter]
-  );
 
   const columnDefs = useMemo<ColDef<UserListDto>[]>(() => [
     {
@@ -201,7 +176,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
     if (loading) return;
     const t = setTimeout(() => gridRef.current?.api?.sizeColumnsToFit(), 150);
     return () => clearTimeout(t);
-  }, [loading, filtered.length]);
+  }, [loading, users.length]);
 
   if (error) {
     return (
@@ -220,57 +195,9 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
      */
     <div className="flex h-full w-full flex-col overflow-hidden">
 
-      {/* ── Barre de filtres (hauteur fixe) ── */}
-      <div className="flex w-full shrink-0 flex-wrap items-center gap-3 border-b border-violet-500/10 px-6 py-3 pb-5">
-        <div className="relative min-w-[200px] max-w-full flex-1 basis-0">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-violet-400">
-            <MagnifyingGlassIcon className="w-4 h-4" />
-          </span>
-          <input
-            type="search"
-            placeholder="Rechercher par nom, email, rôle…"
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            className={`w-full rounded-xl border bg-white py-2.5 pl-9 pr-3.5 text-sm text-violet-900 outline-none transition-all duration-150 ${
-              searchFocused ? "border-violet-600 shadow-[0_0_0_3px_rgba(109,40,217,0.12)]" : "border-violet-500/20"
-            }`}
-          />
-        </div>
-        <div className="flex shrink-0 items-center gap-2.5">
-          <select
-            value={roleFilter}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setRoleFilter(e.target.value as (typeof roleOptions)[number])
-            }
-            className="cursor-pointer rounded-xl border border-violet-500/20 bg-white px-3.5 py-2.5 text-sm text-violet-900 outline-none"
-          >
-            {roleOptions.map((r) => (
-              <option key={r} value={r}>
-                {r === "Tous" ? "Tous les rôles" : ROLE_LABELS[r] ?? r}
-              </option>
-            ))}
-          </select>
-          <select
-            value={statusFilter}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setStatusFilter(e.target.value as (typeof statuses)[number])
-            }
-            className="cursor-pointer rounded-xl border border-violet-500/20 bg-white px-3.5 py-2.5 text-sm text-violet-900 outline-none"
-          >
-            {statuses.map((s) => (
-              <option key={s} value={s}>
-                {s === "Tous" ? "Tous les statuts" : s}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       {/* ── Zone tableau (flex-1 = tout l'espace restant) ── */}
       {loading ? (
-        <div className="flex-1 overflow-auto bg-[#f8f7ff] pt-4">
+        <div className="flex-1 overflow-auto bg-transparent pt-4">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (
@@ -279,12 +206,12 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
          * la barre de filtres, sans jamais déborder du parent.
          * overflow-hidden évite tout scrollbar parasite sur ce conteneur.
          */
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
           <style>{`
             .ag-theme-quartz {
-              --ag-background-color: #f8f7ff;
+              --ag-background-color: #ffffff;
               --ag-header-background-color: rgba(109,40,217,0.06);
-              --ag-odd-row-background-color: #f8f7ff;
+              --ag-odd-row-background-color: #ffffff;
               --ag-row-hover-color: #f0f0ff;
               --ag-border-color: #e8edf5;
               --ag-header-foreground-color: #4c1d95;
@@ -336,13 +263,13 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               ref={gridRef}
               theme="legacy"
               localeText={AG_GRID_LOCALE_FR}
-              rowData={filtered}
+              rowData={users}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               onGridReady={(e) => { e.api.sizeColumnsToFit(); }}
               onGridSizeChanged={(e) => e.api.sizeColumnsToFit()}
               pagination
-              paginationPageSize={15}
+              paginationPageSize={8}
               paginationPageSizeSelector={false}
               suppressCellFocus
               rowHeight={52}
@@ -357,8 +284,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
           </div>
 
           {/* Compteur collé en bas, au-dessus de la pagination AG Grid */}
-          <div className="absolute bottom-0 right-0 z-10 border-t border-violet-500/10 bg-[#f8f7ff] px-6 py-2 text-right text-xs font-medium text-violet-600">
-            {filtered.length} utilisateur{filtered.length !== 1 ? "s" : ""} affiché{filtered.length !== 1 ? "s" : ""} sur {users.length}
+          <div className="absolute bottom-0 right-0 z-10 border-t border-violet-500/10 bg-white px-6 py-2 text-right text-xs font-medium text-violet-600">
+            {users.length} utilisateur{users.length !== 1 ? "s" : ""} affiché{users.length !== 1 ? "s" : ""} sur {users.length}
           </div>
         </div>
       )}

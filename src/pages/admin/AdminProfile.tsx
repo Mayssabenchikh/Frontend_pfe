@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { CameraIcon, ArrowPathIcon, UserIcon, EnvelopeIcon, PhoneIcon, BuildingOffice2Icon, BriefcaseIcon, CalendarDaysIcon, CheckCircleIcon, PencilSquareIcon, ArrowDownTrayIcon, XMarkIcon, EyeIcon, EyeSlashIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
+import { ADMIN_API_PATHS } from "./adminApiPaths";
 import type { TokenParsed } from "./types";
 import { getAvatarColor } from "./utils";
 
@@ -73,7 +74,7 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
 
   useEffect(() => {
     setLoadingExtra(true);
-    http.get<AdminProfileData>("/api/admin/me")
+    http.get<AdminProfileData>(ADMIN_API_PATHS.ME)
       .then((res) => setExtraData(res.data))
       .catch(() => {})
       .finally(() => setLoadingExtra(false));
@@ -97,7 +98,7 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
     if (!ln || ln.length < 2) { toast.error("Le nom doit contenir au moins 2 caractères."); return; }
     setSavingProfile(true);
     try {
-      await http.put("/api/admin/me/profile", { firstName: fn, lastName: ln });
+      await http.put(ADMIN_API_PATHS.ME_PROFILE, { firstName: fn, lastName: ln });
       setIsEditing(false);
       onProfileUpdate?.(fn, ln);
       toast.success("Profil mis à jour.");
@@ -132,7 +133,7 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await http.post<{ avatarUrl: string }>(`/api/admin/users/${adminKeycloakId}/avatar`, formData, {
+      const res = await http.post<{ avatarUrl: string }>(ADMIN_API_PATHS.userAvatar(adminKeycloakId), formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAvatarUrl(res.data.avatarUrl);
@@ -154,9 +155,16 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
               <div className="relative shrink-0 group">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={fullName} className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-2 object-cover shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5" style={{ borderColor: "var(--luxury-primary)" }} />
+                  <img
+                    src={avatarUrl}
+                    alt={fullName}
+                    className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5"
+                  />
                 ) : (
-                  <div className="flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-2xl border-2 text-3xl font-bold text-white shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5 sm:text-4xl" style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, borderColor: "var(--luxury-primary)" }}>
+                  <div
+                    className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl text-xl font-semibold text-white shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5 sm:text-2xl"
+                    style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
+                  >
                     {initials}
                   </div>
                 )}
@@ -165,18 +173,22 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
                   title="Changer la photo"
-                  className="absolute bottom-2 right-2 rounded-xl p-2 backdrop-blur-md transition-all duration-300 hover:scale-105 hover:shadow-md disabled:cursor-not-allowed active:scale-95" style={{ background: "rgba(124, 58, 237, 0.12)", border: "1px solid var(--luxury-primary)" }}
+                  className="absolute -bottom-2 -right-2 rounded-xl border border-slate-200/80 bg-white/90 p-2 shadow-md backdrop-blur transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 active:scale-95"
                 >
-                  {uploadingAvatar ? <ArrowPathIcon className="h-4 w-4 animate-spin" style={{ color: "var(--luxury-primary)" }} /> : <CameraIcon className="h-4 w-4" style={{ color: "var(--luxury-primary)" }} />}
+                  {uploadingAvatar ? (
+                    <ArrowPathIcon className="h-4 w-4 animate-spin" style={{ color: "var(--luxury-primary)" }} />
+                  ) : (
+                    <CameraIcon className="h-4 w-4" style={{ color: "var(--luxury-primary)" }} />
+                  )}
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl" style={{ color: "#1e293b" }}>
+                  <h1 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
                     {displayFirst}
                   </h1>
-                  <h2 className="text-xl font-light sm:text-2xl md:text-3xl" style={{ color: "var(--luxury-text-muted)" }}>
+                  <h2 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
                     {displayLast}
                   </h2>
                 </div>
@@ -197,7 +209,7 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
 
         <main className="min-h-0 flex-1 overflow-hidden luxury-animate-in" style={{ animationDelay: "0.1s" }}>
           <div className="profile-saas-card flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 md:p-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-3 px-3 pb-2 md:pt-4 md:px-4 md:pb-3">
               <PersonalSection
                 firstName={editedFirstName || firstName}
                 lastName={editedLastName || lastName}
@@ -256,7 +268,7 @@ function PersonalSection({
 
   const handleSaveExtra = useCallback(async () => {
     try {
-      const res = await http.put<AdminProfileData>("/api/admin/me/extra", {
+      const res = await http.put<AdminProfileData>(ADMIN_API_PATHS.ME_EXTRA, {
         phone: editPhone.trim() || null,
         department: editDept.trim() || null,
         jobTitle: editJob.trim() || null,
@@ -465,7 +477,7 @@ function SecuritySection({ embedded = false }: { embedded?: boolean }) {
 
     setSaving(true);
     try {
-      await http.post("/api/admin/me/change-password", { currentPassword, newPassword, confirmPassword });
+      await http.post(ADMIN_API_PATHS.ME_CHANGE_PASSWORD, { currentPassword, newPassword, confirmPassword });
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
       setFieldErrors({});
       toast.success("Mot de passe modifié avec succès.");

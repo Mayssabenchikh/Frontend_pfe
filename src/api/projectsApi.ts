@@ -16,7 +16,6 @@ export type ProjectDto = {
   leadName: string | null;
   leadEmail: string | null;
   priority: string | null;
-  progressPercent: number | null;
   teamSize: number | null;
   startDate: string | null;
   dueDate: string | null;
@@ -25,6 +24,7 @@ export type ProjectDto = {
 };
 
 const BASE = "/api/manager";
+const PROJECTS_ENDPOINT = `${BASE}/projects`;
 
 export type ProjectPage = {
   content: ProjectDto[];
@@ -34,15 +34,29 @@ export type ProjectPage = {
   size: number;
 };
 
+export type ProjectRequirementInput = {
+  skillId: number;
+  levelMin: number;
+};
+
+export type ProjectPayload = {
+  name: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  teamSize?: number;
+  startDate?: string;
+  dueDate?: string;
+  requirements?: ProjectRequirementInput[];
+};
+
 export const projectsApi = {
-  list: (params?: { search?: string; status?: string; priority?: string; page?: number; size?: number }) =>
-    http.get<ProjectPage>(`${BASE}/projects`, { params }),
-  get: (id: number) => http.get<ProjectDto>(`${BASE}/projects/${id}`),
-  create: (data: { name: string; description?: string; status?: string; priority?: string; progressPercent?: number; teamSize?: number; startDate?: string; dueDate?: string; requirements?: { skillId: number; levelMin: number }[] }) =>
-    http.post<ProjectDto>(`${BASE}/projects`, data),
-  update: (id: number, data: { name: string; description?: string; status?: string; priority?: string; progressPercent?: number; teamSize?: number; startDate?: string; dueDate?: string; requirements?: { skillId: number; levelMin: number }[] }) =>
-    http.put<ProjectDto>(`${BASE}/projects/${id}`, data),
-  delete: (id: number) => http.delete(`${BASE}/projects/${id}`),
-  setRequirements: (id: number, requirements: { skillId: number; levelMin: number }[]) =>
-    http.post<ProjectDto>(`${BASE}/projects/${id}/requirements`, requirements),
+  list: (params?: { search?: string; status?: string; priority?: string; from?: string; to?: string; order?: string; page?: number; size?: number }) =>
+    http.get<ProjectPage>(PROJECTS_ENDPOINT, { params }),
+  get: (id: number) => http.get<ProjectDto>(`${PROJECTS_ENDPOINT}/${id}`),
+  create: (data: ProjectPayload) => http.post<ProjectDto>(PROJECTS_ENDPOINT, data),
+  update: (id: number, data: ProjectPayload) => http.put<ProjectDto>(`${PROJECTS_ENDPOINT}/${id}`, data),
+  delete: (id: number) => http.delete(`${PROJECTS_ENDPOINT}/${id}`),
+  setRequirements: (id: number, requirements: ProjectRequirementInput[]) =>
+    http.post<ProjectDto>(`${PROJECTS_ENDPOINT}/${id}/requirements`, requirements),
 };

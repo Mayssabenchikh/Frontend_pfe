@@ -13,19 +13,52 @@ import EmployeePage from "./pages/EmployeePage";
 import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
 import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
 
+const ROOT_REDIRECT_URI = `${window.location.origin}/`;
+const UPDATE_PASSWORD_ACTION = "UPDATE_PASSWORD";
+const KC_ACTION_STATUS_KEYS = ["kc_action_status", "kc_actionStatus"] as const;
+
+function shouldLogoutAfterPasswordAction(params: URLSearchParams, isAuthenticated: boolean): boolean {
+  const statusValue = KC_ACTION_STATUS_KEYS
+    .map((key) => params.get(key))
+    .find((value) => value !== null);
+  const actionValue = params.get("kc_action");
+  const normalizedStatus = statusValue?.toLowerCase();
+  const normalizedAction = actionValue?.toUpperCase();
+
+  return (
+    Boolean(normalizedStatus) &&
+    normalizedStatus === "success" &&
+    isAuthenticated &&
+    Boolean(normalizedAction) &&
+    normalizedAction === UPDATE_PASSWORD_ACTION
+  );
+}
+
+function LoginLanding({ onLogin }: { onLogin: () => void }) {
+  return (
+    <div className="p-6 font-sans">
+      <h1 className="text-2xl font-bold">Skillify</h1>
+      <button
+        onClick={onLogin}
+        className="mt-4 rounded-lg bg-indigo-600 px-5 py-2.5 text-base font-medium text-white hover:bg-indigo-700"
+      >
+        Connexion
+      </button>
+    </div>
+  );
+}
+
 function App() {
   const { keycloak, initialized } = useKeycloak();
 
   useEffect(() => {
     if (!initialized) return;
     const params = new URLSearchParams(window.location.search);
-    const status = params.get("kc_action_status") || params.get("kc_actionStatus");
-    const action = params.get("kc_action");
 
     // Après un reset / update password via lien email,
     // on force la déconnexion pour revenir à l'écran de connexion.
-    if (status && status.toLowerCase() === "success" && keycloak.authenticated && action && action.toUpperCase() === "UPDATE_PASSWORD") {
-      keycloak.logout({ redirectUri: `${window.location.origin}/` });
+    if (shouldLogoutAfterPasswordAction(params, Boolean(keycloak.authenticated))) {
+      keycloak.logout({ redirectUri: ROOT_REDIRECT_URI });
     }
   }, [initialized, keycloak]);
 
@@ -33,8 +66,7 @@ function App() {
     return null;
   }
 
-  const handleLogin = () =>
-    keycloak.login({ redirectUri: `${window.location.origin}/` });
+  const handleLogin = () => keycloak.login({ redirectUri: ROOT_REDIRECT_URI });
 
   return (
     <BrowserRouter>
@@ -43,15 +75,7 @@ function App() {
           path="/"
           element={
             !keycloak.authenticated ? (
-              <div className="p-6 font-sans">
-                <h1 className="text-2xl font-bold">Skillify</h1>
-                <button
-                  onClick={handleLogin}
-                  className="mt-4 rounded-lg bg-indigo-600 px-5 py-2.5 text-base font-medium text-white hover:bg-indigo-700"
-                >
-                  Connexion
-                </button>
-              </div>
+              <LoginLanding onLogin={handleLogin} />
             ) : (
               <RoleRedirect />
             )

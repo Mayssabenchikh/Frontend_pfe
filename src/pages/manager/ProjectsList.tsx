@@ -1,13 +1,36 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
-import { PlusIcon, MagnifyingGlassIcon, TrashIcon, ArrowPathIcon, PencilSquareIcon, EyeIcon, XMarkIcon, EllipsisVerticalIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  PencilSquareIcon,
+  EyeIcon,
+  XMarkIcon,
+  Squares2X2Icon,
+  Bars3Icon,
+  EllipsisHorizontalIcon,
+} from "@heroicons/react/24/outline";
+import {
+  ModuleRegistry,
+  AllCommunityModule,
+  type ColDef,
+  type ICellRendererParams,
+} from "ag-grid-community";
+import { AgGridReact } from "ag-grid-react";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
+import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
 import { projectsApi, type ProjectDto, type ProjectPage } from "../../api/projectsApi";
 import { CreateProjectModal } from "./CreateProjectModal";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { useKeycloak } from "@react-keycloak/web";
 import { getPrimaryRole } from "../../auth/roles";
+import { getAvatarColor } from "../admin/utils";
+import { FiltersPanel } from "../../components/FiltersPanel";
 
 type ManagerOutletContext = {
   managerAvatarUrl: string | null;
@@ -16,10 +39,10 @@ type ManagerOutletContext = {
   currentPath: string;
 };
 
-/* ─── colonnes identiques header + rows ──────────────────────────────────── */
-const COLS = "grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_120px_110px_160px_90px_100px_44px]";
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 export function ProjectsList() {
+  const GRID_PAGE_SIZE = 12;
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
   const role = getPrimaryRole(keycloak.tokenParsed ?? undefined);
@@ -32,38 +55,56 @@ export function ProjectsList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [priorityFilter, setPriorityFilter] = useState<string>("");
-  const [page, setPage] = useState(0);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [order, setOrder] = useState<"recent" | "oldest">("recent");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [gridPage, setGridPage] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [createModal, setCreateModal] = useState(false);
   const [editProject, setEditProject] = useState<ProjectDto | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ProjectDto | null>(null);
   const [detailProject, setDetailProject] = useState<ProjectDto | null>(null);
-  const [actionsProjectId, setActionsProjectId] = useState<number | null>(null);
+  const gridRef = useRef<AgGridReact<ProjectDto> | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
+    const isGridMode = viewMode === "grid";
     projectsApi
       .list({
         search: search || undefined,
         status: statusFilter || undefined,
         priority: priorityFilter || undefined,
-        page,
-        size: 8,
+        from: from || undefined,
+        to: to || undefined,
+        order,
+        page: isGridMode ? gridPage : 0,
+        size: isGridMode ? GRID_PAGE_SIZE : 500,
       })
       .then((res) => {
         const data = res.data as ProjectPage;
         setProjects(data.content ?? []);
+        setTotalElements(data.totalElements ?? 0);
         setTotalPages(data.totalPages ?? 0);
       })
       .catch(() => {
         setProjects([]);
+        setTotalElements(0);
         setTotalPages(0);
       })
       .finally(() => setLoading(false));
-  };
+  }, [search, statusFilter, priorityFilter, from, to, order, viewMode, gridPage]);
 
-  useEffect(() => { load(); }, [search, statusFilter, priorityFilter, page]);
+  useEffect(() => {
+    setGridPage(0);
+  }, [search, statusFilter, priorityFilter, from, to, order, viewMode]);
+
+  useEffect(() => {
+    const t = setTimeout(() => load(), 250);
+    return () => clearTimeout(t);
+  }, [load]);
 
   const handleCreate = (data: { name: string; description?: string; status?: string; requirements?: { skillId: number; levelMin: number }[] }) => {
     return projectsApi.create(data)
@@ -101,19 +142,13 @@ export function ProjectsList() {
 
   const closeDetail = () => setDetailProject(null);
 
-  const total = projects.length;
-  const inProgress = projects.filter((p) => p.status === "ACTIVE").length;
-  const completed = projects.filter((p) => p.status === "CLOSED").length;
-  const critical = projects.filter((p) => p.status === "CRITICAL").length;
-
   /* ── helpers ────────────────────────────────────────────────────────────── */
   const statusLabel = (s?: string | null) =>
-    s === "ACTIVE" ? "En cours" : s === "CLOSED" ? "Terminé" : s === "CRITICAL" ? "Critique" : "Brouillon";
+    s === "ACTIVE" ? "En cours" : s === "CLOSED" ? "Terminé" : "Brouillon";
 
   const statusCls = (s?: string | null) =>
-    s === "ACTIVE" ? "bg-sky-50 text-sky-600 ring-sky-200"
+    s === "ACTIVE" ? "bg-violet-50 text-violet-700 ring-violet-200"
     : s === "CLOSED" ? "bg-emerald-50 text-emerald-600 ring-emerald-200"
-    : s === "CRITICAL" ? "bg-rose-50 text-rose-600 ring-rose-200"
     : "bg-slate-50 text-slate-600 ring-slate-200";
 
   const priorityLabel = (p?: string | null) =>
@@ -127,262 +162,579 @@ export function ProjectsList() {
   const initials = (name?: string | null, email?: string | null) =>
     (name || email || "?").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
-  const progress = (v?: number | null) => Math.max(0, Math.min(100, v ?? 0));
+  const filtered = useMemo(() => projects, [projects]);
+  const safeTotalPages = Math.max(totalPages, 1);
 
+  const columnDefs = useMemo<ColDef<ProjectDto>[]>(() => {
+    const badgeBase = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold";
+    const btnCls =
+      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/25 bg-transparent transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45";
+    const loadingSpan = <span className="text-[10px]">…</span>;
+
+    return [
+      {
+        headerName: "Projet",
+        field: "name",
+        flex: 1.8,
+        minWidth: 200,
+        cellRenderer: (params: ICellRendererParams<ProjectDto>) => {
+          const p = params.data;
+          if (!p) return null;
+          return (
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-sm font-semibold text-slate-800 truncate">{p.name}</span>
+              {p.description ? (
+                <span className="text-xs text-slate-500 truncate">{p.description}</span>
+              ) : (
+                <span className="text-xs text-slate-300">—</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        headerName: "Lead",
+        field: "leadName",
+        flex: 1.2,
+        minWidth: 180,
+        cellRenderer: (params: ICellRendererParams<ProjectDto>) => {
+          const p = params.data;
+          if (!p) return null;
+          const fullName = p.leadName || p.leadEmail || managerName || managerEmail || "Lead";
+          const seed = p.leadEmail || managerEmail || fullName;
+          const gradient = getAvatarColor(seed);
+          const avatarAlt = p.leadName || p.leadEmail || managerName || managerEmail || "";
+          return (
+            <div className="flex items-center gap-3 min-w-0">
+              {managerAvatarUrl ? (
+                <img
+                  src={managerAvatarUrl}
+                  alt={avatarAlt}
+                  className="h-8 w-8 shrink-0 rounded-full object-cover shadow-md"
+                />
+              ) : (
+                <div
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white shadow-md"
+                  style={{
+                    background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`,
+                    boxShadow: `0 2px 8px ${gradient[0]}40`,
+                  }}
+                >
+                  {initials(p.leadName ?? managerName, p.leadEmail ?? managerEmail)}
+                </div>
+              )}
+              <div className="min-w-0 flex flex-col gap-0.5">
+                <span className="text-sm font-semibold text-slate-800 truncate">
+                  {p.leadName || "—"}
+                </span>
+                {p.leadEmail ? (
+                  <span className="text-xs text-slate-500 truncate">{p.leadEmail}</span>
+                ) : (
+                  <span className="text-xs text-slate-300">—</span>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        headerName: "Statut",
+        field: "status",
+        flex: 0.7,
+        minWidth: 110,
+        cellRenderer: (params: ICellRendererParams<ProjectDto>) => (
+          <span className={`${badgeBase} ${statusCls(params.data?.status)}`}>
+            {statusLabel(params.data?.status)}
+          </span>
+        ),
+      },
+      {
+        headerName: "Priorité",
+        field: "priority",
+        flex: 0.7,
+        minWidth: 110,
+        cellRenderer: (params: ICellRendererParams<ProjectDto>) => (
+          <span className={`${badgeBase} ${priorityCls(params.data?.priority)}`}>
+            {priorityLabel(params.data?.priority)}
+          </span>
+        ),
+      },
+      {
+        headerName: "Équipe",
+        field: "teamSize",
+        flex: 0.6,
+        minWidth: 90,
+        valueFormatter: (p) => String(p.value ?? 1),
+      },
+      {
+        headerName: "Échéance",
+        field: "dueDate",
+        flex: 0.8,
+        minWidth: 120,
+        valueFormatter: (p) =>
+          p.value ? new Date(String(p.value)).toLocaleDateString("fr-FR") : "—",
+      },
+      {
+        headerName: "Actions",
+        flex: 0.9,
+        minWidth: 130,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<ProjectDto>) => {
+          const p = params.data;
+          if (!p) return null;
+          const isDel = deletingId === p.id;
+          return (
+            <div className="flex items-center justify-end gap-1">
+              <button
+                type="button"
+                title="Voir les détails"
+                onClick={() => setDetailProject(p)}
+                className={`${btnCls} text-slate-600 hover:bg-slate-100 hover:border-slate-200 hover:text-slate-900 hover:-translate-y-px hover:shadow-md`}
+              >
+                <EyeIcon className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                title="Modifier"
+                onClick={() => handleEdit(p)}
+                className={`${btnCls} text-indigo-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 hover:-translate-y-px hover:shadow-md`}
+              >
+                <PencilSquareIcon className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                title="Supprimer"
+                onClick={() => handleDeleteClick(p)}
+                disabled={isDel}
+                className={`${btnCls} text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}
+              >
+                {isDel ? loadingSpan : <TrashIcon className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          );
+        },
+      },
+    ];
+  }, [
+    deletingId,
+    handleDeleteClick,
+    handleEdit,
+    initials,
+    managerAvatarUrl,
+    managerEmail,
+    managerName,
+    priorityCls,
+    priorityLabel,
+    statusCls,
+    statusLabel,
+  ]);
+
+  const defaultColDef: ColDef = useMemo(
+    () => ({
+      resizable: true,
+      sortable: true,
+      flex: 1,
+      minWidth: 100,
+      suppressHeaderMenuButton: true,
+    }),
+    []
+  );
+
+  
   return (
-    <div className="w-full space-y-6">
-
-      {/* Titre + bouton */}
-      <div className="flex items-center justify-between gap-4">
-        <div />
-        {role === "MANAGER" && (
-          <button
-            type="button"
-            onClick={() => setCreateModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-700 to-violet-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg active:scale-[0.98] transition"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Nouveau projet
-          </button>
-        )}
-      </div>
-
-      {/* KPI cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Total", value: total, sub: "Projets au total", cls: "text-slate-400" },
-          { label: "En cours", value: inProgress, sub: "Projets actifs", cls: "text-sky-500" },
-          { label: "Terminés", value: completed, sub: "Projets clôturés", cls: "text-emerald-500" },
-          { label: "Critiques", value: critical, sub: "Priorité haute", cls: "text-rose-500" },
-        ].map(({ label, value, sub, cls }) => (
-          <div key={label} className="rounded-2xl bg-white shadow-sm border border-slate-100 px-4 py-3">
-            <p className={`text-xs font-medium uppercase tracking-wide ${cls}`}>{label}</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
-            <p className="mt-1 text-xs text-slate-500">{sub}</p>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-[#f8f7ff]">
+      <div className="shrink-0 border-b border-slate-200/80 bg-[#f8f7ff] px-6 py-4">
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <div className="inline-flex items-center rounded-2xl border border-slate-300 bg-slate-100/80 p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition ${
+                viewMode === "grid"
+                  ? "bg-violet-600 text-white shadow-[0_4px_12px_rgba(124,58,237,0.35)]"
+                  : "text-slate-600 hover:bg-white/80"
+              }`}
+            >
+              <Squares2X2Icon className="h-3.5 w-3.5" />
+              Grid
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition ${
+                viewMode === "list"
+                  ? "bg-violet-600 text-white shadow-[0_4px_12px_rgba(124,58,237,0.35)]"
+                  : "text-slate-600 hover:bg-white/80"
+              }`}
+            >
+              <Bars3Icon className="h-3.5 w-3.5" />
+              List
+            </button>
           </div>
-        ))}
-      </div>
 
-      {/* Barre de recherche + filtres */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-violet-100 bg-white px-4 py-3 shadow-sm">
-        <div className="relative flex-1 min-w-[220px]">
-          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un projet..."
-            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => { setPage(0); setStatusFilter(e.target.value); }}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
-          >
-            <option value="">Tous les statuts</option>
-            <option value="ACTIVE">En cours</option>
-            <option value="DRAFT">Brouillon</option>
-            <option value="CLOSED">Clôturé</option>
-            <option value="CRITICAL">Critique</option>
-          </select>
-          <select
-            value={priorityFilter}
-            onChange={(e) => { setPage(0); setPriorityFilter(e.target.value); }}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
-          >
-            <option value="">Toutes les priorités</option>
-            <option value="HIGH">Haute</option>
-            <option value="MEDIUM">Moyenne</option>
-            <option value="LOW">Basse</option>
-          </select>
+          {role === "MANAGER" && (
+            <button
+              type="button"
+              onClick={() => setCreateModal(true)}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-violet-300/40 bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_10px_24px_rgba(124,58,237,0.35)] transition-all duration-150 hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(124,58,237,0.45)]"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Nouveau projet
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── Tableau ────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-visible">
+      
 
-        {/* Header */}
-        <div className={`grid ${COLS} items-center gap-x-4 border-b border-slate-100 bg-slate-50/80 px-5 py-2.5 text-[10.5px] font-semibold uppercase tracking-widest text-slate-400`}>
-          <div>Projet</div>
-          <div>Lead</div>
-          <div>Statut</div>
-          <div>Priorité</div>
-          <div>Progression</div>
-          <div>Équipe</div>
-          <div>Échéance</div>
-          <div />
-        </div>
+      {/* ── Zone page (filtres + table) ── */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+          {/* ── Barre de filtres (design comme capture) ── */}
+        <FiltersPanel
+          title="Filtres"
+          resultsLabel={`${totalElements} resultat${totalElements !== 1 ? "s" : ""}`}
+          onReset={() => {
+            setSearch("");
+            setStatusFilter("");
+            setPriorityFilter("");
+            setFrom("");
+            setTo("");
+            setOrder("recent");
+          }}
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
+            <div className="lg:col-span-2">
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Rechercher</label>
+              <div className="relative mt-1">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <MagnifyingGlassIcon className="w-4 h-4" />
+                </span>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Projet, description…"
+                  className="w-full rounded-xl border border-slate-300/80 bg-white py-2.5 pl-9 pr-3.5 text-sm text-slate-800 shadow-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                />
+              </div>
+            </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex items-center gap-2 px-5 py-6 text-sm text-slate-500">
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Statut</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="mt-1 w-full cursor-pointer rounded-xl border border-slate-300/80 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              >
+                <option value="">Tous les statuts</option>
+                <option value="ACTIVE">En cours</option>
+                <option value="DRAFT">Brouillon</option>
+                <option value="CLOSED">Clôturé</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Priorite</label>
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="mt-1 w-full cursor-pointer rounded-xl border border-slate-300/80 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              >
+                <option value="">Toutes les priorités</option>
+                <option value="HIGH">Haute</option>
+                <option value="MEDIUM">Moyenne</option>
+                <option value="LOW">Basse</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Du</label>
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-300/80 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Au</label>
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-300/80 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Ordre</label>
+              <select
+                value={order}
+                onChange={(e) => setOrder(e.target.value as any)}
+                className="mt-1 w-full cursor-pointer rounded-xl border border-slate-300/80 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              >
+                <option value="recent">Plus récent</option>
+                <option value="oldest">Plus ancien</option>
+              </select>
+            </div>
+          </div>
+        </FiltersPanel>
+
+        {/* ── Tableau AG Grid / Cards Grid ────────────────────────────────── */}
+        {loading ? (
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white px-5 py-6 text-sm text-slate-500 shadow-sm">
             <ArrowPathIcon className="h-5 w-5 animate-spin" />
             Chargement des projets…
           </div>
-        )}
+        ) : viewMode === "list" ? (
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+            <style>{`
+              .ag-theme-quartz {
+                --ag-background-color: #ffffff;
+                --ag-header-background-color: #f8fafc;
+                --ag-odd-row-background-color: #ffffff;
+                --ag-row-hover-color: #f1f5f9;
+                --ag-border-color: #e2e8f0;
+                --ag-header-foreground-color: #334155;
+                --ag-foreground-color: #0f172a;
+                --ag-font-size: 14px;
+                --ag-cell-horizontal-padding: 16px;
+                --ag-row-height: 56px;
+                --ag-header-height: 42px;
+              }
+              .ag-theme-quartz .ag-header-cell-label {
+                font-size: 10.5px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: #334155;
+              }
+              .ag-theme-quartz .ag-row { border-bottom: 1px solid #f1f5f9; }
+              .ag-theme-quartz .ag-cell {
+                display: flex !important;
+                align-items: center !important;
+                line-height: normal !important;
+              }
+              .ag-theme-quartz .ag-cell-wrapper {
+                width: 100%;
+                display: flex;
+                align-items: center;
+              }
+              .ag-theme-quartz .ag-paging-panel {
+                border-top: 1px solid #e2e8f0;
+                background: #f8fafc;
+                color: #475569;
+                font-size: 12px;
+                font-weight: 500;
+              }
+            `}</style>
 
-        {/* Empty */}
-        {!loading && projects.length === 0 && (
-          <div className="px-5 py-6 text-sm text-slate-400">
-            Aucun projet. Créez-en un pour commencer.
+            <div className="ag-theme-quartz absolute inset-0">
+              <AgGridReact<ProjectDto>
+                ref={gridRef}
+                theme="legacy"
+                localeText={AG_GRID_LOCALE_FR}
+                rowData={filtered}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                onGridReady={(e) => e.api.sizeColumnsToFit()}
+                onGridSizeChanged={(e) => e.api.sizeColumnsToFit()}
+                pagination
+                paginationPageSize={8}
+                paginationPageSizeSelector={false}
+                suppressCellFocus
+                rowHeight={56}
+                headerHeight={42}
+                noRowsOverlayComponent={() => (
+                  <div className="flex flex-col items-center gap-3 py-20">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 text-3xl">
+                      📁
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <p className="text-sm font-bold text-slate-800">Aucun projet</p>
+                      <p className="text-xs text-slate-500">
+                        {search || statusFilter || priorityFilter ? "Aucun résultat pour ces filtres" : "Créez un projet pour commencer"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              />
+            </div>
+
           </div>
-        )}
-
-        {/* Rows */}
-        {!loading && projects.length > 0 && (
-          <div className="divide-y divide-slate-100">
-            {projects.map((p) => (
-              <div
-                key={p.id}
-                className={`grid ${COLS} items-center gap-x-4 px-5 py-3 hover:bg-violet-50/60 transition-colors min-h-[56px]`}
-              >
-                {/* Projet */}
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900 leading-tight">{p.name}</p>
-                  {p.description && (
-                    <p className="truncate text-[11px] text-slate-400 mt-0.5 leading-tight">{p.description}</p>
-                  )}
+        ) : (
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+            {filtered.length === 0 ? (
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-5 py-10 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 text-3xl">
+                  📁
                 </div>
-
-                {/* Lead */}
-                <div className="min-w-0 flex items-center gap-2">
-                  {managerAvatarUrl ? (
-                    <img
-                      src={managerAvatarUrl}
-                      alt={p.leadName || p.leadEmail || managerName || managerEmail || ""}
-                      className="h-7 w-7 flex-shrink-0 rounded-full object-cover ring-1 ring-slate-200"
-                    />
-                  ) : (
-                    <div className="h-7 w-7 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-[10px] font-semibold text-white ring-1 ring-indigo-200">
-                      {initials(p.leadName ?? managerName, p.leadEmail ?? managerEmail)}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-slate-700 leading-tight">{p.leadName || "—"}</p>
-                    {p.leadEmail && (
-                      <p className="truncate text-[10px] text-slate-400 leading-tight">{p.leadEmail}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Statut */}
-                <div>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${statusCls(p.status)}`}>
-                    {statusLabel(p.status)}
-                  </span>
-                </div>
-
-                {/* Priorité */}
-                <div>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${priorityCls(p.priority)}`}>
-                    {priorityLabel(p.priority)}
-                  </span>
-                </div>
-
-                {/* Progression */}
-                <div className="flex items-center gap-2.5">
-                  <div className="relative h-1.5 flex-1 max-w-[96px] rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 transition-all"
-                      style={{ width: `${progress(p.progressPercent)}%` }}
-                    />
-                  </div>
-                  <span className="w-8 text-right text-[11px] tabular-nums text-slate-500">
-                    {progress(p.progressPercent)}%
-                  </span>
-                </div>
-
-                {/* Équipe */}
-                <div className="text-xs text-slate-600 tabular-nums">
-                  {p.teamSize ?? 1} <span className="text-slate-400">membre{(p.teamSize ?? 1) > 1 ? "s" : ""}</span>
-                </div>
-
-                {/* Échéance */}
-                <div className="text-xs text-slate-500 tabular-nums">
-                  {p.dueDate ? new Date(p.dueDate).toLocaleDateString("fr-FR") : "—"}
-                </div>
-
-                {/* Actions */}
-                <div className="relative flex justify-end">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActionsProjectId((cur) => (cur === p.id ? null : p.id));
-                    }}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-violet-600 transition focus:outline-none"
-                    title="Actions"
-                  >
-                    <EllipsisVerticalIcon className="h-4 w-4" />
-                  </button>
-
-                  {actionsProjectId === p.id && (
-                    <div className="absolute right-0 top-9 z-[60] min-w-[160px] rounded-2xl border border-slate-100 bg-white shadow-xl py-1.5">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setDetailProject(p); setActionsProjectId(null); }}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
-                      >
-                        <EyeIcon className="h-4 w-4 text-slate-400" />
-                        Voir les détails
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); handleEdit(p); setActionsProjectId(null); }}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
-                      >
-                        <PencilSquareIcon className="h-4 w-4 text-slate-400" />
-                        Modifier
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(p); setActionsProjectId(null); }}
-                        disabled={deletingId === p.id}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
-                      >
-                        {deletingId === p.id
-                          ? <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                          : <TrashIcon className="h-4 w-4 text-red-400" />}
-                        Supprimer
-                      </button>
-                    </div>
-                  )}
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-slate-800">Aucun projet</p>
+                  <p className="text-xs text-slate-500">
+                    {search || statusFilter || priorityFilter ? "Aucun résultat pour ces filtres" : "Créez un projet pour commencer"}
+                  </p>
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
+                  {filtered.map((p) => {
+                    const leadFullName = p.leadName || p.leadEmail || managerName || managerEmail || "Lead";
+                    const avatarSeed = p.leadEmail || managerEmail || leadFullName;
+                    const gradient = getAvatarColor(avatarSeed);
+                    const isDel = deletingId === p.id;
+
+                    return (
+                      <article
+                        key={p.id}
+                        className="group flex min-h-[390px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_5px_16px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-[0_12px_20px_rgba(15,23,42,0.1)]"
+                      >
+                        <div className="mb-4 flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="truncate text-sm font-semibold text-slate-800">{p.name}</h3>
+                            <div className="mt-1.5 flex items-center gap-1.5">
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${statusCls(p.status)}`}>
+                                {statusLabel(p.status)}
+                              </span>
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${priorityCls(p.priority)}`}>
+                                {priorityLabel(p.priority)}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            title="Voir les détails"
+                            onClick={() => setDetailProject(p)}
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <EllipsisHorizontalIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[10px]">
+                            <div>
+                              <p className="text-slate-400">Equipe</p>
+                              <p className="font-semibold text-slate-700 text-[11px]">{p.teamSize ?? 1} membre(s)</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-400">Competences</p>
+                              <p className="font-semibold text-slate-700 text-[11px]">{p.requirements?.length ?? 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-400">Debut</p>
+                              <p className="font-semibold text-slate-700 text-[11px] truncate">
+                                {p.startDate
+                                  ? new Date(p.startDate).toLocaleDateString("fr-FR")
+                                  : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-slate-400">Echeance</p>
+                              <p className="font-semibold text-slate-700 text-[11px] truncate">
+                                {p.dueDate
+                                  ? new Date(p.dueDate).toLocaleDateString("fr-FR")
+                                  : "—"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="mb-4 line-clamp-3 text-xs leading-relaxed text-slate-500">
+                          {p.description || "Aucune description fournie pour ce projet."}
+                        </p>
+
+                        <div className="mb-4 flex items-center gap-2.5 border-t border-slate-100 pt-3.5">
+                          {managerAvatarUrl ? (
+                            <img
+                              src={managerAvatarUrl}
+                              alt={leadFullName}
+                              className="h-7 w-7 shrink-0 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                              style={{
+                                background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`,
+                                boxShadow: `0 2px 7px ${gradient[0]}40`,
+                              }}
+                            >
+                              {initials(p.leadName ?? managerName, p.leadEmail ?? managerEmail)}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-medium text-slate-700">{p.leadName || "—"}</p>
+                            <p className="truncate text-[11px] text-slate-400">{p.leadEmail || "Lead"}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-end gap-1.5 border-t border-slate-100 pt-3">
+                          <button
+                            type="button"
+                            title="Voir les détails"
+                            onClick={() => setDetailProject(p)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100"
+                          >
+                            <EyeIcon className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Modifier"
+                            onClick={() => handleEdit(p)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-200 text-indigo-700 transition hover:bg-indigo-50"
+                          >
+                            <PencilSquareIcon className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Supprimer"
+                            onClick={() => handleDeleteClick(p)}
+                            disabled={isDel}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45"
+                          >
+                            {isDel ? <span className="text-[10px]">…</span> : <TrashIcon className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="shrink-0 border-t border-slate-200/90 bg-white px-5 py-2.5">
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <p className="text-xs text-slate-500">
+                  Page {Math.min(gridPage + 1, safeTotalPages)} sur {safeTotalPages}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGridPage((prev) => Math.max(prev - 1, 0))}
+                    disabled={gridPage <= 0 || loading || totalPages <= 1}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    Precedent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGridPage((prev) => (prev + 1 < safeTotalPages ? prev + 1 : prev))}
+                    disabled={loading || gridPage + 1 >= safeTotalPages || totalPages <= 1}
+                    className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
-      </div>
-
-      {/* Overlay fermeture menu */}
-      {actionsProjectId !== null && (
-        <div className="fixed inset-0 z-[40]" onClick={() => setActionsProjectId(null)} />
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 disabled:opacity-40"
-          >
-            Précédent
-          </button>
-          <span className="text-xs text-slate-500">Page {page + 1} / {totalPages}</span>
-          <button
-            type="button"
-            disabled={page + 1 >= totalPages}
-            onClick={() => setPage((p) => (p + 1 < totalPages ? p + 1 : p))}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 disabled:opacity-40"
-          >
-            Suivant
-          </button>
         </div>
-      )}
+      </div>
 
       {/* Modals */}
       {createModal && (
@@ -470,19 +822,6 @@ export function ProjectsList() {
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Équipe</p>
                     <p className="mt-1 text-slate-900">{detailProject.teamSize ?? 1} membre(s)</p>
-                  </div>
-                </div>
-
-                <div className="mb-5">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-                    <span>Progression</span>
-                    <span>{progress(detailProject.progressPercent)}%</span>
-                  </div>
-                  <div className="relative h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600"
-                      style={{ width: `${progress(detailProject.progressPercent)}%` }}
-                    />
                   </div>
                 </div>
 

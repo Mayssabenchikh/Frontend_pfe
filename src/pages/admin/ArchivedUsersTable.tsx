@@ -1,5 +1,4 @@
-import type React from "react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   ModuleRegistry, AllCommunityModule,
   type ColDef, type ICellRendererParams,
@@ -8,7 +7,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
-import { MagnifyingGlassIcon, ArrowPathIcon, TrashIcon, ArchiveBoxIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 import type { ArchivedUserDto } from "./types";
 import { getAvatarColor } from "./utils";
@@ -136,16 +135,7 @@ const AG_THEME = `
 `;
 
 export function ArchivedUsersTable({ users, loading, error, restoringId, deletingId, onRestore, onRequestDelete }: Props) {
-  const [search, setSearch] = useState("");
-
-  const filtered = useMemo(() =>
-    users.filter((u) => {
-      const fullName = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
-      const haystack = [fullName, u.email, u.role, u.department ?? "", u.jobTitle ?? ""].join(" ").toLowerCase();
-      return haystack.includes(search.toLowerCase());
-    }),
-    [users, search]
-  );
+  const filtered = useMemo(() => users, [users]);
 
   const columnDefs = useMemo<ColDef<ArchivedUserDto>[]>(() => [
     {
@@ -282,44 +272,14 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
     <div className="flex flex-col flex-1 overflow-hidden">
       <style>{AG_THEME}</style>
 
-      {/* Top banner */}
-      <div className="flex items-center gap-3 border-b border-amber-400/30 bg-gradient-to-r from-amber-400/10 to-amber-400/5 px-6 py-3">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/20">
-          <ArchiveBoxIcon className="w-3.5 h-3.5 text-amber-800" />
-        </div>
-        <span className="text-xs font-medium text-amber-900">
-          Les utilisateurs archivés ne peuvent plus se connecter.
-          Vous pouvez les restaurer à tout moment ou les supprimer définitivement.
-        </span>
-      </div>
-
-      {/* Search bar */}
-      <div className="flex items-center gap-3 border-b border-violet-500/10 px-6 py-3 pb-5">
-        <div className="relative max-w-sm flex-1">
-          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400" />
-          <input
-            type="search"
-            placeholder="Rechercher dans les archives…"
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-violet-500/20 bg-white py-2.5 pl-9 pr-4 text-sm text-violet-900 outline-none transition-all duration-150 focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
-          />
-        </div>
-
-        {/* Count badge */}
-        <span className="ml-auto rounded-full border border-violet-500/15 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-800">
-          {filtered.length} archivé{filtered.length !== 1 ? "s" : ""}
-        </span>
-      </div>
-
       {/* Content */}
       {loading ? (
-        <div className="flex-1 bg-[#f8f7ff] px-6 pt-4">
+        <div className="flex-1 bg-transparent pt-3">
           {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (
-        <div className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 pt-4">
-          <div className="ag-theme-quartz ag-theme-archived flex-1 w-full overflow-hidden">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+          <div className="ag-theme-quartz ag-theme-archived absolute inset-0 w-full overflow-hidden">
             <AgGridReact<ArchivedUserDto>
               theme="legacy"
               localeText={AG_GRID_LOCALE_FR}
@@ -327,7 +287,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               pagination
-              paginationPageSize={15}
+              paginationPageSize={8}
               paginationPageSizeSelector={false}
               suppressCellFocus
               rowHeight={56}
@@ -341,7 +301,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
                   <div className="flex flex-col items-center gap-1">
                     <p className="text-sm font-bold text-violet-900">Aucun utilisateur archivé</p>
                     <p className="text-xs text-violet-400">
-                      {search ? "Aucun résultat pour cette recherche" : "Les utilisateurs archivés apparaîtront ici"}
+                      Les utilisateurs archivés apparaîtront ici
                     </p>
                   </div>
                 </div>

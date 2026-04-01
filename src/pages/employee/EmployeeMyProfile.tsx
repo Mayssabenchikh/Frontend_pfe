@@ -137,9 +137,13 @@ const styles = `
 `;
 
 if (typeof document !== "undefined") {
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = styles;
-  document.head.appendChild(styleSheet);
+  const STYLE_ELEMENT_ID = "employee-my-profile-luxury-styles";
+  if (!document.getElementById(STYLE_ELEMENT_ID)) {
+    const styleSheet = document.createElement("style");
+    styleSheet.id = STYLE_ELEMENT_ID;
+    styleSheet.textContent = styles;
+    document.head.appendChild(styleSheet);
+  }
 }
 
 type ProfileData = {
@@ -171,6 +175,37 @@ type EmployeeSkillItem = {
 };
 
 type Section = "personal" | "cv";
+type CvMetadata = { fileName: string | null; cvUrl: string | null; uploadedAt: string | null };
+type ExtractionResult = {
+  matchedSkills: { skillName: string; categoryName: string }[];
+  unmatchedSkills: string[];
+  pendingRequestsCreated: number;
+};
+
+const EMPLOYEE_PROFILE_ENDPOINT = "/api/employee/me";
+const EMPLOYEE_CV_ENDPOINT = "/api/employee/me/cv";
+const EMPLOYEE_SKILLS_ENDPOINT = "/api/employee/me/skills";
+const EMPLOYEE_PENDING_SKILLS_ENDPOINT = "/api/employee/me/pending-skills";
+const EMPLOYEE_CV_EXTRACT_ENDPOINT = "/api/employee/me/cv/extract";
+const EMPLOYEE_AVATAR_ENDPOINT = "/api/employee/me/avatar";
+const EMPLOYEE_PROFILE_UPDATE_ENDPOINT = "/api/employee/me/profile";
+
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
+const DEFAULT_CV_FILE_NAME = "cv.pdf";
+const INITIAL_PROFILE_DATA: ProfileData = {
+  phone: null,
+  department: null,
+  jobTitle: null,
+  hireDate: null,
+};
+
+function normalizeCvFilename(file: File): string {
+  return file.name || DEFAULT_CV_FILE_NAME;
+}
+
+function isAcceptedCvFile(file: File): boolean {
+  return file.type === "application/pdf" || file.name.endsWith(".pdf") || file.name.endsWith(".docx");
+}
 
 export function EmployeeMyProfile() {
   const { keycloak } = useKeycloak();
@@ -188,12 +223,12 @@ export function EmployeeMyProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const [extraData, setExtraData] = useState<ProfileData>({ phone: null, department: null, jobTitle: null, hireDate: null });
+  const [extraData, setExtraData] = useState<ProfileData>(INITIAL_PROFILE_DATA);
   const [loadingExtra, setLoadingExtra] = useState(true);
 
   useEffect(() => {
     setLoadingExtra(true);
-    http.get<ProfileData>("/api/employee/me")
+    http.get<ProfileData>(EMPLOYEE_PROFILE_ENDPOINT)
       .then((res) => setExtraData(res.data))
       .catch(() => {})
       .finally(() => setLoadingExtra(false));
@@ -218,7 +253,7 @@ export function EmployeeMyProfile() {
   const cvInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    http.get<{ avatarUrl?: string }>("/api/employee/me")
+    http.get<{ avatarUrl?: string }>(EMPLOYEE_PROFILE_ENDPOINT)
       .then((res) => {
         if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl);
       })
@@ -232,7 +267,7 @@ export function EmployeeMyProfile() {
     if (!ln || ln.length < 2) { toast.error("Le nom doit contenir au moins 2 caractères."); return; }
     setSavingProfile(true);
     try {
-      await http.put("/api/employee/me/profile", { firstName: fn, lastName: ln });
+      await http.put(EMPLOYEE_PROFILE_UPDATE_ENDPOINT, { firstName: fn, lastName: ln });
       setIsEditing(false);
       toast.success("Profil mis à jour.");
     } catch {
@@ -256,7 +291,7 @@ export function EmployeeMyProfile() {
     const file = e.target.files?.[0];
     if (!file || !employeeKeycloakId) return;
     if (!file.type.startsWith("image/")) { toast.error("Veuillez sélectionner une image."); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("L'image ne doit pas dépasser 5 Mo."); return; }
+    if (file.size > MAX_AVATAR_SIZE_BYTES) { toast.error("L'image ne doit pas dépasser 5 Mo."); return; }
 
     const reader = new FileReader();
     reader.onload = (ev) => setAvatarUrl(ev.target?.result as string);
@@ -266,7 +301,7 @@ export function EmployeeMyProfile() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await http.post<{ avatarUrl: string }>("/api/employee/me/avatar", formData, {
+      const res = await http.post<{ avatarUrl: string }>(EMPLOYEE_AVATAR_ENDPOINT, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAvatarUrl(res.data.avatarUrl);
@@ -281,17 +316,13 @@ export function EmployeeMyProfile() {
   }, [employeeKeycloakId, token?.picture, onAvatarUpdate]);
 
   // CV extraction result
-  const [extractionResult, setExtractionResult] = useState<{
-    matchedSkills: { skillName: string; categoryName: string }[];
-    unmatchedSkills: string[];
-    pendingRequestsCreated: number;
-  } | null>(null);
+  const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
   const [employeeSkills, setEmployeeSkills] = useState<EmployeeSkillItem[]>([]);
   const [pendingUnrecognizedSkills, setPendingUnrecognizedSkills] = useState<string[]>([]);
 
   useEffect(() => {
     if (!employeeKeycloakId) return;
-    http.get<{ fileName: string | null; cvUrl: string | null; uploadedAt: string | null }>("/api/employee/me/cv")
+    http.get<CvMetadata>(EMPLOYEE_CV_ENDPOINT)
       .then((res) => {
         setCvFileName(res.data?.fileName ?? null);
       })
@@ -299,7 +330,7 @@ export function EmployeeMyProfile() {
   }, [employeeKeycloakId]);
 
   const loadEmployeeSkills = useCallback(() => {
-    http.get<EmployeeSkillItem[]>("/api/employee/me/skills")
+    http.get<EmployeeSkillItem[]>(EMPLOYEE_SKILLS_ENDPOINT)
       .then((res) => setEmployeeSkills(res.data ?? []))
       .catch(() => setEmployeeSkills([]));
   }, []);
@@ -309,7 +340,7 @@ export function EmployeeMyProfile() {
   }, [loadEmployeeSkills]);
 
   const loadPendingUnrecognizedSkills = useCallback(() => {
-    http.get<string[]>("/api/employee/me/pending-skills")
+    http.get<string[]>(EMPLOYEE_PENDING_SKILLS_ENDPOINT)
       .then((res) => setPendingUnrecognizedSkills(res.data ?? []))
       .catch(() => setPendingUnrecognizedSkills([]));
   }, []);
@@ -323,9 +354,9 @@ export function EmployeeMyProfile() {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && (file.type === "application/pdf" || file.name.endsWith(".pdf") || file.name.endsWith(".docx"))) {
+    if (file && isAcceptedCvFile(file)) {
       setCvFile(file);
-      setCvFileName(file.name);
+      setCvFileName(normalizeCvFilename(file));
       setExtractionResult(null);
     } else {
       toast.error("Veuillez déposer un fichier PDF ou DOCX.");
@@ -336,7 +367,7 @@ export function EmployeeMyProfile() {
     const file = e.target.files?.[0];
     if (file) {
       setCvFile(file);
-      setCvFileName(file.name);
+      setCvFileName(normalizeCvFilename(file));
       setExtractionResult(null);
     }
   };
@@ -350,11 +381,7 @@ export function EmployeeMyProfile() {
     form.append("file", cvFile);
 
     try {
-      const res = await http.post<{
-        matchedSkills: { skillName: string; categoryName: string }[];
-        unmatchedSkills: string[];
-        pendingRequestsCreated: number;
-      }>("/api/employee/me/cv/extract", form, {
+      const res = await http.post<ExtractionResult>(EMPLOYEE_CV_EXTRACT_ENDPOINT, form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setExtractionResult(res.data);
@@ -366,7 +393,7 @@ export function EmployeeMyProfile() {
       if (unmatched > 0) {
         toast.info(`${unmatched} compétence(s) non reconnue(s) envoyée(s) à l'administrateur.`);
       }
-      setCvFileName(cvFile.name);
+      setCvFileName(normalizeCvFilename(cvFile));
       loadEmployeeSkills();
       loadPendingUnrecognizedSkills();
     } catch {
@@ -392,13 +419,12 @@ export function EmployeeMyProfile() {
                   <img
                     src={avatarUrl}
                     alt={fullName}
-                    className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-2 object-cover shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5"
-                    style={{ borderColor: "var(--luxury-primary)" }}
+                    className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5"
                   />
                 ) : (
                   <div
-                    className="flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-2xl border-2 text-3xl font-bold text-white shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5 sm:text-4xl"
-                    style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, borderColor: "var(--luxury-primary)" }}
+                    className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl text-xl font-semibold text-white shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5 sm:text-2xl"
+                    style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
                   >
                     {initials}
                   </div>
@@ -408,8 +434,7 @@ export function EmployeeMyProfile() {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
                   title="Changer la photo"
-                  className="absolute bottom-2 right-2 rounded-xl p-2 backdrop-blur-md transition-all duration-300 hover:scale-105 hover:shadow-md disabled:cursor-not-allowed active:scale-95"
-                  style={{ background: "rgba(124, 58, 237, 0.12)", border: "1px solid var(--luxury-primary)" }}
+                  className="absolute -bottom-2 -right-2 rounded-xl border border-slate-200/80 bg-white/90 p-2 shadow-md backdrop-blur transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 active:scale-95"
                 >
                   {uploadingAvatar ? (
                     <ArrowPathIcon className="h-4 w-4 animate-spin" style={{ color: "var(--luxury-primary)" }} />
@@ -421,10 +446,10 @@ export function EmployeeMyProfile() {
               </div>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl" style={{ color: "#1e293b" }}>
+                  <h1 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
                     {displayFirst}
                   </h1>
-                  <h2 className="text-xl font-light sm:text-2xl md:text-3xl" style={{ color: "var(--luxury-text-muted)" }}>
+                  <h2 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
                     {displayLast}
                   </h2>
                 </div>
@@ -503,6 +528,7 @@ export function EmployeeMyProfile() {
                 <CVSection
                   cvFile={cvFile}
                   cvFileName={cvFileName}
+
                   dragOver={dragOver}
                   extracting={extracting}
                   cvInputRef={cvInputRef}
@@ -945,6 +971,7 @@ function SecuritySection({ embedded = false }: { embedded?: boolean }) {
 function CVSection({
   cvFile,
   cvFileName,
+
   dragOver,
   extracting,
   cvInputRef,
@@ -958,6 +985,7 @@ function CVSection({
 }: {
   cvFile: File | null;
   cvFileName: string | null;
+
   dragOver: boolean;
   extracting: boolean;
   cvInputRef: React.RefObject<HTMLInputElement | null>;
@@ -973,9 +1001,54 @@ function CVSection({
   employeeSkills: EmployeeSkillItem[];
   pendingUnrecognizedSkills: string[];
 }) {
+  const handleDownloadCv = useCallback(async () => {
+    try {
+      const fileName = cvFile?.name ?? cvFileName ?? "cv.pdf";
+      const res = await http.get("/api/employee/me/cv/download", { responseType: "blob" });
+      const blob = new Blob([res.data], { type: res.headers?.["content-type"] || "application/octet-stream" });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      // `responseType: "blob"` means backend JSON errors arrive as a Blob.
+      try {
+        const data = err?.response?.data;
+        if (data instanceof Blob) {
+          const text = await data.text();
+          const parsed = JSON.parse(text);
+          const msg = parsed?.error || parsed?.message;
+          if (msg) {
+            toast.error(String(msg));
+            return;
+          }
+        } else {
+          const msg = data?.error || data?.message;
+          if (msg) {
+            toast.error(String(msg));
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      toast.error("Impossible de télécharger le CV.");
+    }
+  }, [cvFile?.name, cvFileName]);
+
+  const hasRightPanel =
+    Boolean(extractionResult) || employeeSkills.length > 0 || pendingUnrecognizedSkills.length > 0;
+
   return (
-    <div className="grid min-h-0 grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6 lg:items-start">
-      <div className="order-2 shrink-0 lg:order-1 lg:col-span-5">
+    <div
+      className={`grid min-h-0 grid-cols-1 gap-5 ${hasRightPanel ? "lg:grid-cols-12 lg:gap-6 lg:items-start" : ""}`}
+    >
+      <div className={`order-2 shrink-0 ${hasRightPanel ? "lg:order-1 lg:col-span-5" : ""}`}>
         <div
           className="profile-saas-card relative overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl p-5 transition-all duration-300 md:p-6 lg:h-[min(32rem,calc(100vh-14rem))]"
           style={{
@@ -1027,9 +1100,27 @@ function CVSection({
                 style={{ background: "rgba(124, 58, 237, 0.06)", border: "1px solid rgba(124, 58, 237, 0.2)" }}
               >
                 <DocumentTextIcon className="h-5 w-5 shrink-0" style={{ color: "var(--luxury-primary)" }} />
-                <span className="truncate text-sm font-medium" style={{ color: "var(--luxury-text)" }}>
-                  {cvFile?.name ?? cvFileName}
-                </span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadCv}
+                    className="min-w-0 flex-1 truncate text-left text-sm font-medium underline decoration-transparent transition-colors hover:decoration-inherit disabled:cursor-not-allowed disabled:opacity-70"
+                    style={{ color: "var(--luxury-text)" }}
+                    title="Télécharger"
+                    disabled={!cvFileName && !cvFile}
+                  >
+                    {cvFile?.name ?? cvFileName}
+                  </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadCv}
+                  className="shrink-0 rounded-lg p-2 transition-colors hover:bg-violet-50 disabled:opacity-60"
+                  style={{ color: "var(--luxury-primary)" }}
+                  title="Télécharger"
+                  disabled={!cvFileName && !cvFile}
+                >
+                  <ArrowDownTrayIcon className="h-5 w-5" />
+                </button>
               </div>
             ) : null}
 
@@ -1068,17 +1159,19 @@ function CVSection({
         </div>
       </div>
 
-      <div className="order-1 flex min-h-0 flex-col lg:order-2 lg:col-span-7">
-        <div className="profile-saas-card min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl lg:max-h-[min(32rem,calc(100vh-14rem))]">
-          <div className="p-4 md:p-5">
-            <ExtractionResultsSection
-              extractionResult={extractionResult}
-              employeeSkills={employeeSkills}
-              pendingUnrecognizedSkills={pendingUnrecognizedSkills}
-            />
+      {hasRightPanel ? (
+        <div className="order-1 flex min-h-0 flex-col lg:order-2 lg:col-span-7">
+          <div className="profile-saas-card min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl lg:max-h-[min(32rem,calc(100vh-14rem))]">
+            <div className="p-4 md:p-5">
+              <ExtractionResultsSection
+                extractionResult={extractionResult}
+                employeeSkills={employeeSkills}
+                pendingUnrecognizedSkills={pendingUnrecognizedSkills}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

@@ -9,12 +9,27 @@ import type {
 } from "../pages/admin/types";
 
 const BASE = "/api/admin";
+const DEFAULT_PAGE = 0;
+const DEFAULT_PAGE_SIZE = 20;
+
+type PaginationOptions = { page?: number; size?: number; search?: string };
+type PendingStatus = "PENDING" | "APPROVED" | "MERGED" | "REJECTED";
+
+function buildPaginationParams(opts?: PaginationOptions): Record<string, string | number> {
+  const params: Record<string, string | number> = {
+    page: opts?.page ?? DEFAULT_PAGE,
+    size: opts?.size ?? DEFAULT_PAGE_SIZE,
+  };
+  if (opts?.search && opts.search.trim()) {
+    params.search = opts.search.trim();
+  }
+  return params;
+}
 
 export const skillsApi = {
   listCategories: () => http.get<SkillCategoryDto[]>(`${BASE}/skill-categories`),
-  listCategoriesPaginated: (opts?: { page?: number; size?: number; search?: string }) => {
-    const params: Record<string, string | number> = { page: opts?.page ?? 0, size: opts?.size ?? 20 };
-    if (opts?.search && opts.search.trim()) params.search = opts.search.trim();
+  listCategoriesPaginated: (opts?: PaginationOptions) => {
+    const params = buildPaginationParams(opts);
     return http.get<SkillCategoryPageDto>(`${BASE}/skill-categories`, { params });
   },
   createCategory: (name: string) =>
@@ -23,15 +38,21 @@ export const skillsApi = {
     http.put<SkillCategoryDto>(`${BASE}/skill-categories/${id}`, { name }),
   deleteCategory: (id: number) =>
     http.delete(`${BASE}/skill-categories/${id}`),
+  uploadCategoryIcon: (id: number, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return http.post<SkillCategoryDto>(`${BASE}/skill-categories/${id}/icon`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 
   listSkills: (categoryId?: number) => {
     const params = categoryId ? { categoryId } : {};
     return http.get<SkillDto[]>(`${BASE}/skills`, { params });
   },
   listSkillsPaginated: (opts?: { categoryId?: number; page?: number; size?: number; search?: string }) => {
-    const params: Record<string, string | number> = { page: opts?.page ?? 0, size: opts?.size ?? 20 };
+    const params = buildPaginationParams(opts);
     if (opts?.categoryId != null) params.categoryId = opts.categoryId;
-    if (opts?.search && opts.search.trim()) params.search = opts.search.trim();
     return http.get<SkillPageDto>(`${BASE}/skills`, { params });
   },
   getSkill: (id: number) => http.get<SkillDto>(`${BASE}/skills/${id}`),
@@ -40,12 +61,19 @@ export const skillsApi = {
   updateSkill: (id: number, data: { name: string; categoryId: number; levelMin: number; levelMax: number }) =>
     http.put<SkillDto>(`${BASE}/skills/${id}`, data),
   deleteSkill: (id: number) => http.delete(`${BASE}/skills/${id}`),
+  uploadSkillIcon: (id: number, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return http.post<SkillDto>(`${BASE}/skills/${id}/icon`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
   addSynonym: (skillId: number, alias: string) =>
     http.post(`${BASE}/skills/${skillId}/synonyms`, { alias }),
   removeSynonym: (skillId: number, alias: string) =>
     http.delete(`${BASE}/skills/${skillId}/synonyms`, { params: { alias } }),
-  listPendingSkillRequests: (opts?: { page?: number; size?: number; status?: "PENDING" | "APPROVED" | "MERGED" | "REJECTED" }) => {
-    const params: Record<string, string | number> = { page: opts?.page ?? 0, size: opts?.size ?? 20 };
+  listPendingSkillRequests: (opts?: { page?: number; size?: number; status?: PendingStatus }) => {
+    const params = buildPaginationParams(opts);
     if (opts?.status) params.status = opts.status;
     return http.get<PendingSkillRequestPageDto>(`${BASE}/pending-skills`, { params });
   },
@@ -54,7 +82,7 @@ export const skillsApi = {
   getPendingSkillRequestsCount: () =>
     http.get<{ count: number }>(`${BASE}/pending-skills/count`),
   getPendingSkillRequestsStats: () =>
-    http.get<Record<"PENDING" | "APPROVED" | "MERGED" | "REJECTED", number>>(`${BASE}/pending-skills/stats`),
+    http.get<Record<PendingStatus, number>>(`${BASE}/pending-skills/stats`),
   resolvePendingSkillRequest: (
     id: number,
     data: { action: "APPROVE" | "MERGE" | "REJECT"; categoryId?: number; existingSkillId?: number; adminNotes?: string }

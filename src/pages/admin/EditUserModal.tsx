@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import type { AdminRole, UserListDto } from "./types";
 import { ROLE_OPTIONS, MESSAGES } from "./constants";
 import { XMarkIcon, ExclamationCircleIcon, CameraIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { ADMIN_API_PATHS } from "./adminApiPaths";
 import { getAvatarColor } from "./utils";
 import { http } from "../../api/http";
 import { toast } from "sonner";
@@ -23,7 +24,7 @@ type FieldErrors = Partial<Record<"email" | "firstName" | "lastName" | "phone" |
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[+\d][\d\s\-().]{6,19}$/;
-const NAME_RE = /^[\p{L}\s'\-]{2,60}$/u;
+const NAME_RE = /^[\p{L}\s'-]{2,60}$/u;
 
 function validate(fields: {
   email: string; firstName: string; lastName: string;
@@ -115,7 +116,7 @@ export function EditUserModal({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await http.post<{ avatarUrl: string }>(`/api/admin/users/${_user.id}/avatar`, formData, {
+      const res = await http.post<{ avatarUrl: string }>(ADMIN_API_PATHS.userAvatar(_user.id), formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAvatarPreview(res.data.avatarUrl);

@@ -28,7 +28,7 @@ export type ArchivedUserDto = {
 
 export type NavId = "dashboard" | "users" | "archives" | "skills" | "skillRequests" | "skillCategories" | "profile";
 
-export type SkillCategoryDto = { id: number; name: string; skillsCount?: number; sampleSkillNames?: string[] };
+export type SkillCategoryDto = { id: number; name: string; iconUrl?: string | null; skillsCount?: number; sampleSkillNames?: string[] };
 export type SkillCategoryPageDto = {
   content: SkillCategoryDto[];
   totalElements: number;
@@ -50,6 +50,7 @@ export type SkillPageDto = {
 export type SkillDto = {
   id: number;
   name: string;
+  iconUrl?: string | null;
   categoryId: number;
   categoryName: string;
   levelMin: number;

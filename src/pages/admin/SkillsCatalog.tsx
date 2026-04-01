@@ -51,6 +51,8 @@ export function SkillsCatalog() {
   const [editModal, setEditModal]           = useState<SkillDto | null>(null);
   const [form, setForm]                     = useState<FormState>({ name: "", categoryId: 0, levelMin: 1, levelMax: 5 });
   const [submitLoading, setSubmitLoading]   = useState(false);
+  const [createIconFile, setCreateIconFile] = useState<File | null>(null);
+  const [editIconFile, setEditIconFile] = useState<File | null>(null);
   const [deletingId, setDeletingId]         = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm]   = useState<SkillDto | null>(null);
   const [updateConfirm, setUpdateConfirm]   = useState(false);
@@ -103,7 +105,17 @@ export function SkillsCatalog() {
     if (!name || !form.categoryId) return;
     setSubmitLoading(true);
     skillsApi.createSkill({ name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax })
-      .then(() => { loadSkills(); setCreateModal(false); resetForm(); toast.success("Compétence créée"); })
+      .then(async (res) => {
+        const created = res.data;
+        if (createIconFile && created?.id) {
+          await skillsApi.uploadSkillIcon(created.id, createIconFile);
+        }
+        loadSkills();
+        setCreateModal(false);
+        resetForm();
+        setCreateIconFile(null);
+        toast.success("Compétence créée");
+      })
       .catch((err) => toast.error(getApiError(err, "Échec de la création")))
       .finally(() => setSubmitLoading(false));
   };
@@ -114,7 +126,7 @@ export function SkillsCatalog() {
     const name = form.name.trim();
     if (!name || !form.categoryId) return;
     const unchanged = name === editModal.name && form.categoryId === editModal.categoryId && form.levelMin === editModal.levelMin && form.levelMax === editModal.levelMax;
-    if (unchanged) {
+    if (unchanged && !editIconFile) {
       setEditModal(null);
       resetForm();
       return;
@@ -127,8 +139,23 @@ export function SkillsCatalog() {
     const name = form.name.trim();
     setUpdateConfirm(false);
     setSubmitLoading(true);
-    skillsApi.updateSkill(editModal.id, { name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax })
-      .then(() => { loadSkills(); setEditModal(null); resetForm(); toast.success("Compétence mise à jour"); })
+    Promise.resolve()
+      .then(() => {
+        const changed = !(name === editModal.name && form.categoryId === editModal.categoryId && form.levelMin === editModal.levelMin && form.levelMax === editModal.levelMax);
+        return changed ? skillsApi.updateSkill(editModal.id, { name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax }) : null;
+      })
+      .then(async () => {
+        if (editIconFile) {
+          await skillsApi.uploadSkillIcon(editModal.id, editIconFile);
+        }
+      })
+      .then(() => {
+        loadSkills();
+        setEditModal(null);
+        resetForm();
+        setEditIconFile(null);
+        toast.success("Compétence mise à jour");
+      })
       .catch((err) => toast.error(getApiError(err, "Échec de la mise à jour")))
       .finally(() => setSubmitLoading(false));
   };
@@ -151,11 +178,13 @@ export function SkillsCatalog() {
   const openEdit = (s: SkillDto) => {
     setEditModal(s);
     setForm({ name: s.name, categoryId: s.categoryId, levelMin: s.levelMin, levelMax: s.levelMax });
+    setEditIconFile(null);
   };
 
   const openCreate = () => {
     resetForm();
     if (categories.length) setForm((f) => ({ ...f, categoryId: categories[0].id }));
+    setCreateIconFile(null);
     setCreateModal(true);
   };
 
@@ -412,6 +441,8 @@ export function SkillsCatalog() {
           categories={categories}
           form={form}
           setForm={setForm}
+          iconFile={createIconFile}
+          setIconFile={setCreateIconFile}
           onSubmit={handleCreate}
           onClose={() => setCreateModal(false)}
           submitLoading={submitLoading}
@@ -423,6 +454,8 @@ export function SkillsCatalog() {
           categories={categories}
           form={form}
           setForm={setForm}
+          iconFile={editIconFile}
+          setIconFile={setEditIconFile}
           onSubmit={handleUpdateClick}
           onClose={() => setEditModal(null)}
           submitLoading={submitLoading}
@@ -600,6 +633,7 @@ interface SkillCardProps {
 }
 
 function SkillCard({ skill, index, isDeleting, onManageSynonyms, onEdit, onDelete }: SkillCardProps) {
+  const iconUrl = skill.iconUrl || getSkillIconUrl(skill.name);
   return (
     <div
       className="fade-up group relative flex h-[132px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-[12px] transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.01] group-hover:bg-white/98 group-hover:shadow-[0_12px_40px_-8px_rgba(99,102,241,0.2),0_0_0_1px_rgba(139,92,246,0.08)]"
@@ -611,9 +645,9 @@ function SkillCard({ skill, index, isDeleting, onManageSynonyms, onEdit, onDelet
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 p-2.5">
         {/* Ligne 1 : icône + nom à droite */}
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-violet-500/15 bg-gradient-to-br from-violet-500/10 to-indigo-500/[0.06] shadow-sm transition-transform duration-200 group-hover:scale-105">
-            {getSkillIconUrl(skill.name) ? (
-              <img src={getSkillIconUrl(skill.name)!} alt="" className="w-7 h-7 object-contain" />
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-violet-500/15 bg-white shadow-sm transition-transform duration-200 group-hover:scale-105">
+            {iconUrl ? (
+              <img src={iconUrl} alt="" className="h-8 w-8 object-contain [image-rendering:auto] contrast-125 saturate-125 drop-shadow-[0_1px_1px_rgba(0,0,0,0.12)]" />
             ) : (
               <BoltIcon className="w-6 h-6 text-violet-500" />
             )}
@@ -724,12 +758,14 @@ interface SkillFormModalProps {
   categories: SkillCategoryDto[];
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
+  iconFile: File | null;
+  setIconFile: React.Dispatch<React.SetStateAction<File | null>>;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
   submitLoading: boolean;
 }
 
-function SkillFormModal({ title, categories, form, setForm, onSubmit, onClose, submitLoading }: SkillFormModalProps) {
+function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFile, onSubmit, onClose, submitLoading }: SkillFormModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/10 p-4 backdrop-blur-[10px]">
       <div className="absolute inset-0" onClick={onClose} />
@@ -807,6 +843,34 @@ function SkillFormModal({ title, categories, form, setForm, onSubmit, onClose, s
                 onChange={(e) => setForm((f) => ({ ...f, levelMax: Math.max(1, Math.min(10, Number(e.target.value) || 1)) }))}
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">
+              Icône (optionnel)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setIconFile(e.target.files?.[0] ?? null)}
+              className="block w-full rounded-xl border border-violet-500/20 bg-violet-50/60 px-4 py-2.5 text-sm text-violet-950 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-violet-700"
+            />
+            {iconFile ? (
+              <div className="mt-2 flex items-center gap-2">
+                <img
+                  src={URL.createObjectURL(iconFile)}
+                  alt=""
+                  className="h-12 w-12 rounded-2xl border border-violet-200 bg-white object-contain p-1.5 shadow-sm [image-rendering:auto] contrast-125 saturate-125"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIconFile(null)}
+                  className="text-xs font-semibold text-slate-500 hover:text-violet-700"
+                >
+                  Retirer
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-1">
