@@ -317,6 +317,7 @@ export default function AdminPage() {
           displayName={getDisplayName(token)}
           initials={getInitials(token)} avatarUrl={adminAvatarUrl}
           avatarSeed={(token?.email ?? keycloak.subject ?? getDisplayName(token)) || null}
+          roleLabel={roleLabel}
           onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
           onNavigate={setCurrentView}
           onMenuToggle={() => setSidebarOpen((o) => !o)}

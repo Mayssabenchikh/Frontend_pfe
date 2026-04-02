@@ -118,10 +118,6 @@ export function SkillCategories() {
   };
 
   const handleDeleteClick = (c: SkillCategoryDto) => {
-    if ((c.skillsCount ?? 0) > 0) {
-      setBlockDelete(c);
-      return;
-    }
     setDeleteConfirm(c);
   };
 
@@ -131,7 +127,16 @@ export function SkillCategories() {
     setDeleteConfirm(null);
     setDeletingId(c.id);
     skillsApi.deleteCategory(c.id)
-      .then(() => { load(); toast.success("Catégorie supprimée"); })
+      .then(() => {
+        load();
+        if ((c.skillsCount ?? 0) > 0) {
+          toast.success("Catégorie supprimée", {
+            description: "Les compétences de cette catégorie (et leurs affectations) ont été supprimées automatiquement.",
+          });
+        } else {
+          toast.success("Catégorie supprimée");
+        }
+      })
       .catch((err) => toast.error(getApiError(err, "Échec de la suppression")))
       .finally(() => setDeletingId(null));
   };
@@ -409,7 +414,11 @@ export function SkillCategories() {
       <ConfirmModal
         open={!!deleteConfirm}
         title="Confirmer la suppression"
-        message={deleteConfirm ? `Supprimer la catégorie « ${deleteConfirm.name} » ?` : ""}
+        message={deleteConfirm
+          ? (deleteConfirm.skillsCount ?? 0) > 0
+            ? `Supprimer la catégorie « ${deleteConfirm.name} » ? Cette action supprimera aussi ${deleteConfirm.skillsCount ?? 0} compétence(s) de cette catégorie et leurs affectations (employés/projets).`
+            : `Supprimer la catégorie « ${deleteConfirm.name} » ?`
+          : ""}
         confirmLabel="Supprimer"
         variant="danger"
         loading={deletingId !== null}

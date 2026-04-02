@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { useKeycloak } from "@react-keycloak/web";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RoleRedirect from "./components/RoleRedirect";
@@ -12,6 +12,10 @@ import { ManagerProfile } from "./pages/manager/ManagerProfile";
 import EmployeePage from "./pages/EmployeePage";
 import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
 import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
+
+const EmployeeQuiz = lazy(() =>
+  import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
+);
 
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 const UPDATE_PASSWORD_ACTION = "UPDATE_PASSWORD";
@@ -70,6 +74,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Suspense fallback={<div className="p-6 text-sm text-slate-500">Chargement de l'interface...</div>}>
       <Routes>
         <Route
           path="/"
@@ -112,10 +117,12 @@ function App() {
           }
         >
           <Route index element={<EmployeeDashboard />} />
+          <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="profile" element={<EmployeeMyProfile />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

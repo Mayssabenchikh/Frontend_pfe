@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
-import { createPortal } from "react-dom";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   TrashIcon,
   ArrowPathIcon,
-  PencilSquareIcon,
-  EyeIcon,
-  XMarkIcon,
   Squares2X2Icon,
   Bars3Icon,
-  EllipsisHorizontalIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import {
   ModuleRegistry,
@@ -63,10 +59,8 @@ export function ProjectsList() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [createModal, setCreateModal] = useState(false);
-  const [editProject, setEditProject] = useState<ProjectDto | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ProjectDto | null>(null);
-  const [detailProject, setDetailProject] = useState<ProjectDto | null>(null);
   const gridRef = useRef<AgGridReact<ProjectDto> | null>(null);
 
   const load = useCallback(() => {
@@ -116,17 +110,6 @@ export function ProjectsList() {
       });
   };
 
-  const handleEdit = (p: ProjectDto) => setEditProject(p);
-
-  const handleUpdate = (data: { name: string; description?: string; status?: string; requirements?: { skillId: number; levelMin: number }[] }) => {
-    if (!editProject) return Promise.resolve();
-    return projectsApi.update(editProject.id, data).then((res) => {
-      toast.success("Projet mis à jour");
-      setEditProject(null);
-      setProjects((prev) => prev.map((proj) => (proj.id === res.data.id ? res.data : proj)));
-    });
-  };
-
   const handleDeleteClick = (p: ProjectDto) => setDeleteConfirm(p);
 
   const confirmDelete = () => {
@@ -139,8 +122,6 @@ export function ProjectsList() {
       .catch((err) => toast.error(err.response?.data?.error ?? "Erreur"))
       .finally(() => setDeletingId(null));
   };
-
-  const closeDetail = () => setDetailProject(null);
 
   /* ── helpers ────────────────────────────────────────────────────────────── */
   const statusLabel = (s?: string | null) =>
@@ -167,8 +148,6 @@ export function ProjectsList() {
 
   const columnDefs = useMemo<ColDef<ProjectDto>[]>(() => {
     const badgeBase = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold";
-    const btnCls =
-      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/25 bg-transparent transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45";
     const loadingSpan = <span className="text-[10px]">…</span>;
 
     return [
@@ -285,31 +264,37 @@ export function ProjectsList() {
           if (!p) return null;
           const isDel = deletingId === p.id;
           return (
-            <div className="flex items-center justify-end gap-1">
+            <div className="flex w-full items-center justify-start gap-2">
               <button
                 type="button"
-                title="Voir les détails"
-                onClick={() => setDetailProject(p)}
-                className={`${btnCls} text-slate-600 hover:bg-slate-100 hover:border-slate-200 hover:text-slate-900 hover:-translate-y-px hover:shadow-md`}
+                title="Voir détails"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/manager/projects/${p.id}`);
+                }}
+                className="inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-violet-500/25 bg-transparent px-3 text-xs font-semibold text-violet-700 transition-all duration-150 hover:-translate-y-px hover:border-violet-200 hover:bg-violet-50 hover:shadow-md"
               >
-                <EyeIcon className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                title="Modifier"
-                onClick={() => handleEdit(p)}
-                className={`${btnCls} text-indigo-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 hover:-translate-y-px hover:shadow-md`}
-              >
-                <PencilSquareIcon className="w-3.5 h-3.5" />
+                <EyeIcon className="h-3.5 w-3.5" />
+                <span>Détails</span>
               </button>
               <button
                 type="button"
                 title="Supprimer"
-                onClick={() => handleDeleteClick(p)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(p);
+                }}
                 disabled={isDel}
-                className={`${btnCls} text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}
+                className={`inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-violet-500/25 bg-transparent px-3 text-xs font-semibold text-red-600 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}
               >
-                {isDel ? loadingSpan : <TrashIcon className="w-3.5 h-3.5" />}
+                {isDel ? (
+                  loadingSpan
+                ) : (
+                  <>
+                    <TrashIcon className="h-3.5 w-3.5" />
+                    <span>Supprimer</span>
+                  </>
+                )}
               </button>
             </div>
           );
@@ -319,7 +304,6 @@ export function ProjectsList() {
   }, [
     deletingId,
     handleDeleteClick,
-    handleEdit,
     initials,
     managerAvatarUrl,
     managerEmail,
@@ -494,11 +478,11 @@ export function ProjectsList() {
             <style>{`
               .ag-theme-quartz {
                 --ag-background-color: #ffffff;
-                --ag-header-background-color: #f8fafc;
+                --ag-header-background-color: rgba(109,40,217,0.06);
                 --ag-odd-row-background-color: #ffffff;
-                --ag-row-hover-color: #f1f5f9;
-                --ag-border-color: #e2e8f0;
-                --ag-header-foreground-color: #334155;
+                --ag-row-hover-color: #f0f0ff;
+                --ag-border-color: #e8edf5;
+                --ag-header-foreground-color: #4c1d95;
                 --ag-foreground-color: #0f172a;
                 --ag-font-size: 14px;
                 --ag-cell-horizontal-padding: 16px;
@@ -510,9 +494,9 @@ export function ProjectsList() {
                 font-weight: 700;
                 text-transform: uppercase;
                 letter-spacing: 0.08em;
-                color: #334155;
+                color: #5b21b6;
               }
-              .ag-theme-quartz .ag-row { border-bottom: 1px solid #f1f5f9; }
+              .ag-theme-quartz .ag-row { border-bottom: 1px solid #ede9fe; }
               .ag-theme-quartz .ag-cell {
                 display: flex !important;
                 align-items: center !important;
@@ -524,9 +508,9 @@ export function ProjectsList() {
                 align-items: center;
               }
               .ag-theme-quartz .ag-paging-panel {
-                border-top: 1px solid #e2e8f0;
-                background: #f8fafc;
-                color: #475569;
+                border-top: 1px solid rgba(109,40,217,0.12);
+                background: rgba(109,40,217,0.04);
+                color: #5b21b6;
                 font-size: 12px;
                 font-weight: 500;
               }
@@ -542,6 +526,10 @@ export function ProjectsList() {
                 defaultColDef={defaultColDef}
                 onGridReady={(e) => e.api.sizeColumnsToFit()}
                 onGridSizeChanged={(e) => e.api.sizeColumnsToFit()}
+                onRowClicked={(e) => {
+                  const p = e.data;
+                  if (p?.id != null) navigate(`/manager/projects/${p.id}`);
+                }}
                 pagination
                 paginationPageSize={8}
                 paginationPageSizeSelector={false}
@@ -591,7 +579,16 @@ export function ProjectsList() {
                     return (
                       <article
                         key={p.id}
-                        className="group flex min-h-[390px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_5px_16px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-[0_12px_20px_rgba(15,23,42,0.1)]"
+                        onClick={() => navigate(`/manager/projects/${p.id}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigate(`/manager/projects/${p.id}`);
+                          }
+                        }}
+                        className="group flex min-h-[390px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_5px_16px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-[0_12px_20px_rgba(15,23,42,0.1)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                       >
                         <div className="mb-4 flex items-start justify-between gap-2">
                           <div className="min-w-0">
@@ -605,14 +602,6 @@ export function ProjectsList() {
                               </span>
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            title="Voir les détails"
-                            onClick={() => setDetailProject(p)}
-                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                          >
-                            <EllipsisHorizontalIcon className="h-4 w-4" />
-                          </button>
                         </div>
 
                         <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
@@ -675,24 +664,11 @@ export function ProjectsList() {
                         <div className="mt-auto flex items-center justify-end gap-1.5 border-t border-slate-100 pt-3">
                           <button
                             type="button"
-                            title="Voir les détails"
-                            onClick={() => setDetailProject(p)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100"
-                          >
-                            <EyeIcon className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            title="Modifier"
-                            onClick={() => handleEdit(p)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-200 text-indigo-700 transition hover:bg-indigo-50"
-                          >
-                            <PencilSquareIcon className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
                             title="Supprimer"
-                            onClick={() => handleDeleteClick(p)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(p);
+                            }}
                             disabled={isDel}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45"
                           >
@@ -746,16 +722,6 @@ export function ProjectsList() {
           leadEmail={managerEmail}
         />
       )}
-      {editProject && (
-        <CreateProjectModal
-          initialProject={editProject}
-          onClose={() => setEditProject(null)}
-          onSubmit={handleUpdate}
-          leadAvatarUrl={managerAvatarUrl}
-          leadName={managerName}
-          leadEmail={managerEmail}
-        />
-      )}
 
       <ConfirmModal
         open={!!deleteConfirm}
@@ -767,116 +733,6 @@ export function ProjectsList() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteConfirm(null)}
       />
-
-      {/* Popup détails */}
-      {detailProject &&
-        (typeof document === "undefined"
-          ? <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/40 px-4"><div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl p-6" /></div>
-          : createPortal(
-            <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/40 px-4">
-              <div className="w-full max-w-xl rounded-3xl bg-white shadow-2xl p-5">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="min-w-0">
-                    <h2 className="text-base font-semibold text-slate-900 truncate">{detailProject.name}</h2>
-                    {detailProject.description && (
-                      <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">{detailProject.description}</p>
-                    )}
-                  </div>
-                  <button type="button" onClick={closeDetail}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition"
-                    aria-label="Fermer">
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5 text-sm">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Lead</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      {managerAvatarUrl ? (
-                        <img src={managerAvatarUrl} alt={detailProject.leadName || managerName || ""} className="h-7 w-7 rounded-full object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0">
-                          {initials(detailProject.leadName ?? managerName, detailProject.leadEmail ?? managerEmail)}
-                        </div>
-                      )}
-                      <span className="text-slate-900 truncate">{detailProject.leadName || "—"}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Priorité</p>
-                    <p className="mt-1">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${priorityCls(detailProject.priority)}`}>
-                        {priorityLabel(detailProject.priority)}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Statut</p>
-                    <p className="mt-1">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${statusCls(detailProject.status)}`}>
-                        {statusLabel(detailProject.status)}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Équipe</p>
-                    <p className="mt-1 text-slate-900">{detailProject.teamSize ?? 1} membre(s)</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-5">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Début</p>
-                    <p className="mt-1 text-slate-900">
-                      {detailProject.startDate
-                        ? new Date(detailProject.startDate).toLocaleDateString("fr-FR", { year: "numeric", month: "short" })
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Échéance</p>
-                    <p className="mt-1 text-slate-900">
-                      {detailProject.dueDate
-                        ? new Date(detailProject.dueDate).toLocaleDateString("fr-FR", { year: "numeric", month: "short", day: "2-digit" })
-                        : "—"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
-                    Compétences requises
-                  </p>
-                  {!detailProject.requirements || detailProject.requirements.length === 0 ? (
-                    <p className="text-xs text-slate-400">
-                      Aucune compétence requise définie pour ce projet.
-                    </p>
-                  ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                      {detailProject.requirements.map((r) => (
-                        <div
-                          key={r.id}
-                          className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs"
-                        >
-                          <div className="min-w-0">
-                            <p className="font-semibold text-slate-900 truncate">{r.skillName}</p>
-                            <p className="text-[11px] text-slate-400 truncate">
-                              {r.categoryName || "—"}
-                            </p>
-                          </div>
-                          <div className="ml-3 text-[11px] font-medium text-slate-600 whitespace-nowrap">
-                            Niveau min&nbsp;: {r.levelMin}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>,
-            document.body,
-          ))}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { skillsApi } from "../../api/skillsApi";
 import type { SkillDto } from "../admin/types";
@@ -91,6 +91,45 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
     initialProject?.requirements?.map((r) => ({ skillId: r.skillId, levelMin: r.levelMin })) ?? []
   );
   const [loading, setLoading] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
+
+  const createdAtISO = useMemo(() => {
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const raw = initialProject?.createdAt ? String(initialProject.createdAt) : "";
+    const datePart = raw ? raw.slice(0, 10) : "";
+    return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : todayISO;
+  }, [initialProject?.createdAt]);
+
+  const minDueDateISO = useMemo(() => {
+    if (!startDate) return "";
+    const d = new Date(startDate);
+    if (Number.isNaN(d.getTime())) return "";
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  }, [startDate]);
+
+  const validateDates = (s?: string, d?: string) => {
+    const start = s ? new Date(s) : null;
+    const due = d ? new Date(d) : null;
+    const created = new Date(createdAtISO);
+
+    if (start && Number.isNaN(start.getTime())) return "La date de début est invalide.";
+    if (due && Number.isNaN(due.getTime())) return "La date de fin est invalide.";
+
+    if (start && start < created) {
+      return `La date de début doit être ≥ la date de création (${createdAtISO}).`;
+    }
+
+    if (due && !start) {
+      return "Veuillez d’abord renseigner la date de début avant la date de fin.";
+    }
+
+    if (start && due && !(due > start)) {
+      return "La date de fin doit être strictement supérieure à la date de début (au moins +1 jour).";
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     skillsApi.listSkills().then((r) => setSkills(r.data ?? [])).catch(() => {});
@@ -116,6 +155,9 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+    const err = validateDates(startDate || undefined, dueDate || undefined);
+    setDateError(err);
+    if (err) return;
     setLoading(true);
     onSubmit({
       name: name.trim(),
@@ -257,7 +299,12 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
               <input
                 type="date"
                 value={startDate || ""}
-                onChange={(e) => setStartDate(e.target.value)}
+                min={createdAtISO}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setStartDate(next);
+                  setDateError(validateDates(next || undefined, dueDate || undefined));
+                }}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
               />
             </div>
@@ -266,11 +313,21 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
               <input
                 type="date"
                 value={dueDate || ""}
-                onChange={(e) => setDueDate(e.target.value)}
+                min={minDueDateISO || undefined}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setDueDate(next);
+                  setDateError(validateDates(startDate || undefined, next || undefined));
+                }}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
               />
             </div>
           </div>
+          {dateError && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+              {dateError}
+            </div>
+          )}
 
           {/* ── COMPÉTENCES REQUISES ── */}
           <div>
@@ -406,7 +463,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
             </button>
             <button
               type="submit"
-              disabled={loading || !name.trim()}
+              disabled={loading || !name.trim() || !!dateError}
               className="rounded-xl bg-gradient-to-r from-indigo-700 to-violet-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md disabled:opacity-60"
             >
               {loading ? (isEdit ? "Enregistrement..." : "Création...") : isEdit ? "Enregistrer" : "Créer"}

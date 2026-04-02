@@ -43,6 +43,39 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: "Rejete",
 };
 
+function normalizeKey(raw: string) {
+  const s0 = (raw ?? "").trim().toLowerCase();
+  if (!s0) return "";
+  const noAccents = s0.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const spaced = noAccents
+    .replace(/[\s\u00A0]+/g, " ")
+    .replace(/["'`.,;:()\[\]{}\\/|_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return spaced;
+}
+
+function findCatalogCollision(
+  proposedName: string,
+  allSkills: SkillDto[],
+  opts?: { allowSkillId?: number }
+): { type: "skillName" | "synonym"; skill: SkillDto; alias?: string } | null {
+  const key = normalizeKey(proposedName);
+  if (!key) return null;
+  const allowId = opts?.allowSkillId;
+  for (const s of allSkills) {
+    if (allowId != null && s.id === allowId) continue;
+    if (normalizeKey(s.name) === key) return { type: "skillName", skill: s };
+  }
+  for (const s of allSkills) {
+    if (allowId != null && s.id === allowId) continue;
+    for (const a of s.synonyms ?? []) {
+      if (normalizeKey(a) === key) return { type: "synonym", skill: s, alias: a };
+    }
+  }
+  return null;
+}
+
 export function PendingSkillRequests() {
   const [page, setPage] = useState(0);
   const [data, setData] = useState<PageState | null>(null);
@@ -140,6 +173,32 @@ export function PendingSkillRequests() {
       toast.error("Sélectionnez une compétence existante");
       return;
     }
+
+    // UX pre-check: avoid approving/merging if the raw name already exists (name/synonym)
+    if (resolveAction === "APPROVE") {
+      const hit = findCatalogCollision(resolveModal.rawSkillName, skills);
+      if (hit) {
+        if (hit.type === "skillName") {
+          toast.error(`Doublon: « ${resolveModal.rawSkillName} » existe déjà (catégorie: ${hit.skill.categoryName}). Utilisez MERGE.`);
+        } else {
+          toast.error(`Doublon: « ${resolveModal.rawSkillName} » correspond déjà au synonyme « ${hit.alias} » de « ${hit.skill.name} » (catégorie: ${hit.skill.categoryName}). Utilisez MERGE.`);
+        }
+        return;
+      }
+    }
+    if (resolveAction === "MERGE" && resolveSkillId) {
+      const allowId = Number(resolveSkillId);
+      const hit = findCatalogCollision(resolveModal.rawSkillName, skills, { allowSkillId: allowId });
+      if (hit) {
+        if (hit.type === "skillName") {
+          toast.error(`Doublon: « ${resolveModal.rawSkillName} » existe déjà comme compétence (« ${hit.skill.name} », catégorie: ${hit.skill.categoryName}).`);
+        } else {
+          toast.error(`Doublon: « ${resolveModal.rawSkillName} » est déjà utilisé comme synonyme de « ${hit.skill.name} » (catégorie: ${hit.skill.categoryName}).`);
+        }
+        return;
+      }
+    }
+
     setResolveLoading(true);
     skillsApi.resolvePendingSkillRequest(resolveModal.id, {
       action: resolveAction,
@@ -150,7 +209,11 @@ export function PendingSkillRequests() {
       .then(() => {
         toast.success("Demande traitée avec succès");
         setResolveModal(null);
+        // refresh requests + catalog (names/synonyms may change after APPROVE/MERGE)
         loadPage();
+        skillsApi.listSkills()
+          .then((res) => setSkills(res.data ?? []))
+          .catch(() => {});
       })
       .catch((err) => toast.error(getApiError(err, "Échec du traitement de la demande")))
       .finally(() => setResolveLoading(false));
@@ -304,6 +367,35 @@ export function PendingSkillRequests() {
                               })}
                             </span>
                           </div>
+                          {(req.adminNotes || req.resolvedAt) && req.status !== "PENDING" ? (
+                            <div className="mt-2 overflow-hidden rounded-xl border border-violet-200/70 bg-gradient-to-r from-violet-50/70 to-indigo-50/60 shadow-sm">
+                              <div className="flex items-center justify-between border-b border-violet-200/50 px-3 py-1.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-700">
+                                  Détails de traitement
+                                </span>
+                                <span className="rounded-full border border-violet-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-violet-600">
+                                  {req.status === "APPROVED" ? "Approuvée" : req.status === "MERGED" ? "Fusionnée" : "Rejetée"}
+                                </span>
+                              </div>
+
+                              <div className="space-y-1.5 px-3 py-2">
+                                {req.adminNotes ? (
+                                  <p className="text-[11px] leading-relaxed text-slate-700">
+                                    <span className="font-semibold text-slate-800">Note: </span>
+                                    {req.adminNotes}
+                                  </p>
+                                ) : (
+                                  <p className="text-[11px] italic text-slate-500">Aucune note fournie.</p>
+                                )}
+
+                                {req.resolvedAt ? (
+                                  <p className="inline-flex items-center rounded-md border border-white/70 bg-white/80 px-2 py-1 text-[10px] font-medium text-slate-600">
+                                    Traité le {new Date(req.resolvedAt).toLocaleString("fr-FR")}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                         <div className="shrink-0">
                           {req.status === "PENDING" && (

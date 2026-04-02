@@ -25,7 +25,7 @@ const NAV: NavItem[] = [
 
 export function AdminSidebar({ currentView, onNavChange, mobileOpen, collapsed = false, onToggleCollapse }: Props) {
   return (
-    <aside className={`admin-sidebar bg-white border-r border-slate-100 h-screen flex flex-col shadow-sm${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
+    <aside className={`admin-sidebar bg-white border-r border-slate-100 flex flex-col shadow-sm${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
       {/* Header: logo + flèche (ou flèche seule centrée si collapsed) */}
       <div className={`h-16 flex items-center shrink-0 admin-sidebar-header border-b border-slate-100
         ${collapsed ? "justify-center px-0" : "justify-between px-3"}`}
@@ -52,7 +52,7 @@ export function AdminSidebar({ currentView, onNavChange, mobileOpen, collapsed =
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-5 flex flex-col gap-0.5">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-5 flex flex-col gap-0.5">
         {NAV.map((item) => {
           const active = currentView === item.id;
           return (

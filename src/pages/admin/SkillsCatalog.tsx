@@ -30,6 +30,40 @@ import { ConfirmModal } from "../../components/ConfirmModal";
 ───────────────────────────────────────────── */
 type FormState = { name: string; categoryId: number; levelMin: number; levelMax: number };
 
+function normalizeKey(raw: string) {
+  const s0 = (raw ?? "").trim().toLowerCase();
+  if (!s0) return "";
+  const noAccents = s0.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const spaced = noAccents
+    .replace(/[\s\u00A0]+/g, " ")
+    .replace(/["'`.,;:()\[\]{}\\/|_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return spaced;
+}
+
+function findSkillCollision(
+  proposedName: string,
+  allSkills: SkillDto[],
+  opts?: { excludeSkillId?: number }
+): { type: "skillName" | "synonym"; skill: SkillDto; alias?: string } | null {
+  const key = normalizeKey(proposedName);
+  if (!key) return null;
+  const excludeId = opts?.excludeSkillId;
+
+  for (const s of allSkills) {
+    if (excludeId != null && s.id === excludeId) continue;
+    if (normalizeKey(s.name) === key) return { type: "skillName", skill: s };
+  }
+  for (const s of allSkills) {
+    if (excludeId != null && s.id === excludeId) continue;
+    for (const a of s.synonyms ?? []) {
+      if (normalizeKey(a) === key) return { type: "synonym", skill: s, alias: a };
+    }
+  }
+  return null;
+}
+
 /* ─────────────────────────────────────────────
    Constants
 ───────────────────────────────────────────── */
@@ -104,7 +138,18 @@ export function SkillsCatalog() {
     const name = form.name.trim();
     if (!name || !form.categoryId) return;
     setSubmitLoading(true);
-    skillsApi.createSkill({ name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax })
+    skillsApi.listSkills()
+      .then((r) => {
+        const all = r.data ?? [];
+        const hit = findSkillCollision(name, all);
+        if (hit) {
+          if (hit.type === "skillName") {
+            throw new Error(`Doublon: « ${name} » existe déjà (catégorie: ${hit.skill.categoryName}).`);
+          }
+          throw new Error(`Doublon: « ${name} » correspond déjà au synonyme « ${hit.alias} » de « ${hit.skill.name} » (catégorie: ${hit.skill.categoryName}).`);
+        }
+        return skillsApi.createSkill({ name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax });
+      })
       .then(async (res) => {
         const created = res.data;
         if (createIconFile && created?.id) {
@@ -140,6 +185,17 @@ export function SkillsCatalog() {
     setUpdateConfirm(false);
     setSubmitLoading(true);
     Promise.resolve()
+      .then(() => skillsApi.listSkills())
+      .then((r) => {
+        const all = r.data ?? [];
+        const hit = findSkillCollision(name, all, { excludeSkillId: editModal.id });
+        if (hit) {
+          if (hit.type === "skillName") {
+            throw new Error(`Doublon: « ${name} » existe déjà (catégorie: ${hit.skill.categoryName}).`);
+          }
+          throw new Error(`Doublon: « ${name} » correspond déjà au synonyme « ${hit.alias} » de « ${hit.skill.name} » (catégorie: ${hit.skill.categoryName}).`);
+        }
+      })
       .then(() => {
         const changed = !(name === editModal.name && form.categoryId === editModal.categoryId && form.levelMin === editModal.levelMin && form.levelMax === editModal.levelMax);
         return changed ? skillsApi.updateSkill(editModal.id, { name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax }) : null;
@@ -242,11 +298,47 @@ export function SkillsCatalog() {
         .finally(() => setSynonymSubmitLoading(false));
 
     if (!editingSynonymAlias) {
-      addFlow();
+      skillsApi.listSkills()
+        .then((r) => {
+          const all = r.data ?? [];
+          const key = normalizeKey(alias);
+          const nameHit = all.find((s) => s.id !== synonymModalSkill.id && normalizeKey(s.name) === key);
+          if (nameHit) {
+            throw new Error(`Doublon: « ${alias} » est déjà le nom de « ${nameHit.name} » (catégorie: ${nameHit.categoryName}).`);
+          }
+          const synHit = all
+            .filter((s) => s.id !== synonymModalSkill.id)
+            .flatMap((s) => (s.synonyms ?? []).map((a) => ({ skill: s, alias: a })))
+            .find((x) => normalizeKey(x.alias) === key);
+          if (synHit) {
+            throw new Error(`Doublon: « ${alias} » est déjà utilisé comme synonyme de « ${synHit.skill.name} » (catégorie: ${synHit.skill.categoryName}).`);
+          }
+          return addFlow();
+        })
+        .catch((err) => {
+          toast.error(getApiError(err, "Échec de l'ajout du synonyme"));
+          setSynonymSubmitLoading(false);
+        });
       return;
     }
 
-    skillsApi.removeSynonym(synonymModalSkill.id, editingSynonymAlias)
+    skillsApi.listSkills()
+      .then((r) => {
+        const all = r.data ?? [];
+        const key = normalizeKey(alias);
+        const nameHit = all.find((s) => s.id !== synonymModalSkill.id && normalizeKey(s.name) === key);
+        if (nameHit) {
+          throw new Error(`Doublon: « ${alias} » est déjà le nom de « ${nameHit.name} » (catégorie: ${nameHit.categoryName}).`);
+        }
+        const synHit = all
+          .filter((s) => s.id !== synonymModalSkill.id)
+          .flatMap((s) => (s.synonyms ?? []).map((a) => ({ skill: s, alias: a })))
+          .find((x) => normalizeKey(x.alias) === key);
+        if (synHit) {
+          throw new Error(`Doublon: « ${alias} » est déjà utilisé comme synonyme de « ${synHit.skill.name} » (catégorie: ${synHit.skill.categoryName}).`);
+        }
+      })
+      .then(() => skillsApi.removeSynonym(synonymModalSkill.id, editingSynonymAlias))
       .then(() => addFlow())
       .catch((err) => {
         toast.error(getApiError(err, "Échec de la modification du synonyme"));
