@@ -66,13 +66,6 @@ function formatTime(total: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function formatAveragePace(total: number) {
-  const safe = Math.max(0, total);
-  const minutes = Math.floor(safe / 60);
-  const seconds = safe % 60;
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
-}
-
 function getRemainingSeconds(expiresAt?: string | null) {
   if (!expiresAt) return 0;
   const ms = new Date(expiresAt).getTime() - Date.now();
@@ -227,10 +220,7 @@ export function EmployeeQuiz() {
     [selectedSkill],
   );
 
-  const setupLevelBadge = useMemo(() => {
-    if (!setupPrimarySkill) return "Statut actuel : Inconnu";
-    return `Statut actuel : ${statusToFrench(setupPrimarySkill.status)}`;
-  }, [setupPrimarySkill]);
+  
 
   const questions = startData?.quiz?.questions ?? [];
   const answeredCount = useMemo(
@@ -238,10 +228,9 @@ export function EmployeeQuiz() {
     [questions, answers],
   );
   const currentQuestion = questions[activeQuestion];
+  const isLastQuestion = activeQuestion === questions.length - 1;
+  const hasCurrentAnswer = currentQuestion ? Boolean(answers[currentQuestion.id]) : false;
   const isUrgent = remainingSeconds <= 120;
-  const elapsedSeconds = Math.max(0, (startData?.timeLimitSeconds ?? TIME_LIMIT_SECONDS) - remainingSeconds);
-  const averageSecondsPerAnswer = answeredCount > 0 ? Math.round(elapsedSeconds / answeredCount) : 0;
-  const averageTimeLabel = answeredCount > 0 ? formatAveragePace(averageSecondsPerAnswer) : "0m 00s";
   const unansweredCount = Math.max(questions.length - answeredCount, 0);
   const currentCorrectAnswers = result?.result?.correctAnswers ?? 0;
   const reviewCount = result?.result ? Math.max(answeredCount - currentCorrectAnswers, 0) : unansweredCount;
@@ -416,6 +405,13 @@ export function EmployeeQuiz() {
         }
       }
 
+      if (event.key === "Enter") {
+        if (activeQuestion >= questions.length - 1 || !answers[currentQuestion.id]) return;
+        event.preventDefault();
+        setActiveQuestion((v) => Math.min(questions.length - 1, v + 1));
+        return;
+      }
+
       const pressed = event.key.toUpperCase();
       if (pressed !== "A" && pressed !== "B" && pressed !== "C" && pressed !== "D") return;
 
@@ -428,7 +424,7 @@ export function EmployeeQuiz() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [phase, currentQuestion]);
+  }, [phase, currentQuestion, activeQuestion, questions.length, answers]);
 
   async function syncSkillStatusAfterQuiz(
     quizResult: AttemptResultResponse,
@@ -589,10 +585,7 @@ export function EmployeeQuiz() {
           <div className="quiz-enter quiz-enter-delay-1">
             <div className="flex flex-wrap items-center gap-2.5">
                 <h2 className="text-3xl font-bold tracking-tight text-slate-900">Quiz de positionnement</h2>
-              <span className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-                {setupLevelBadge}
-              </span>
-            </div>
+                         </div>
               <p className="text-sm text-slate-600">
               Passez un quiz par compétence pour déterminer précisément votre niveau technique actuel.
             </p>
@@ -881,11 +874,17 @@ export function EmployeeQuiz() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveQuestion((v) => Math.min(questions.length - 1, v + 1))}
-                    disabled={activeQuestion === questions.length - 1 || !answers[currentQuestion.id]}
+                    onClick={() => {
+                      if (isLastQuestion) {
+                        void handleSubmit();
+                        return;
+                      }
+                      setActiveQuestion((v) => Math.min(questions.length - 1, v + 1));
+                    }}
+                    disabled={submitting || (!isLastQuestion && !hasCurrentAnswer)}
                     className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Suivant
+                    {isLastQuestion ? "Soumettre" : "Suivant"}
                   </button>
                 </div>
               </div>
@@ -898,22 +897,12 @@ export function EmployeeQuiz() {
                 <h3 className="text-2xl font-semibold text-slate-900">Aperçu global</h3>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-4 space-y-4">
                 <div className="rounded-2xl bg-slate-50 p-3">
                   <p className="text-3xl font-bold text-slate-900">{startData.level <= 0 ? "-" : startData.level}</p>
                   <p className="mt-1 text-sm font-medium text-slate-500">Niveau estimé</p>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-3">
-                  <p className="text-lg font-bold text-slate-900">{averageTimeLabel}</p>
-                  <p className="mt-1 text-sm font-medium text-slate-500">Par question</p>
-                </div>
-              </div>
-            </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-2xl font-semibold text-slate-900">Avancement</h3>
-
-              <div className="mt-4 space-y-4">
                 <div className="flex items-center justify-between text-sm font-medium text-slate-700">
                   <span>Réponses données</span>
                   <span className="font-semibold text-slate-900">{answeredCount} / {questions.length}</span>
@@ -924,10 +913,6 @@ export function EmployeeQuiz() {
                   <span className="font-semibold text-slate-900">{reviewCount}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-sm font-medium text-slate-700">
-                  <span>Temps moyen</span>
-                  <span className="font-semibold text-slate-900">{averageTimeLabel}</span>
-                </div>
               </div>
             </div>
 
