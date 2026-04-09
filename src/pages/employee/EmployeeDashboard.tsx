@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { AcademicCapIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { http } from "../../api/http";
-import { Link } from "react-router-dom";
 
 type EmployeeSkillDto = {
   id: number;
@@ -11,6 +10,7 @@ type EmployeeSkillDto = {
   level: number;
   status: string;
   source: string;
+  quizNextAllowedAt?: string | null;
 };
 
 export function EmployeeDashboard() {
@@ -91,20 +91,6 @@ export function EmployeeDashboard() {
             </div>
           </div>
         ))}
-      </div>
-      <div className="rounded-2xl border border-violet-200/70 bg-gradient-to-r from-white via-violet-50 to-blue-50 p-5 shadow-md">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-violet-700">Assessment center</p>
-            <p className="mt-1 text-sm text-slate-600">Passez votre quiz professionnel et suivez votre progression par niveau.</p>
-          </div>
-          <Link
-            to="/employee/quiz"
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-400/30 transition hover:from-violet-500 hover:to-blue-500"
-          >
-            Ouvrir le quiz
-          </Link>
-        </div>
       </div>
     </div>
   );

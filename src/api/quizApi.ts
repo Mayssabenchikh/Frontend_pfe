@@ -1,16 +1,20 @@
+import axios from "axios";
 import { http } from "./http";
 
 export type EmployeeSkillDto = {
   id: number;
   skillId: number;
   skillName: string;
+  iconUrl?: string | null;
   categoryName: string;
   level: number;
   status: string;
   source: string;
+  /** ISO local datetime ; present tant que le delai apres un echec n'est pas ecoule */
+  quizNextAllowedAt?: string | null;
 };
 
-export type QuizMode = "placement" | "official";
+export type QuizKind = "initial" | "progression";
 
 export type QuizQuestion = {
   id: string;
@@ -20,16 +24,27 @@ export type QuizQuestion = {
   options: Array<{ key: string; text: string }>;
 };
 
+export type QuizStartRequest = {
+  skillId: number;
+  skillName: string;
+  level: number;
+  skillStatus?: string;
+  quizKind?: QuizKind;
+  questionCount: number;
+  timeLimitSeconds: number;
+};
+
 export type QuizStartResponse = {
   attemptId: number;
   quizTemplateId: number | null;
-  mode: QuizMode;
+  quizKind: QuizKind;
   level: number;
   startedAt: string;
   expiresAt: string;
   timeLimitSeconds: number;
   quiz: {
     quizMeta?: Record<string, unknown>;
+    skillName?: string;
     questions: QuizQuestion[];
   };
 };
@@ -51,7 +66,7 @@ export type AttemptResultResponse = {
   passed: boolean;
   submittedAt: string;
   nextAllowedAt?: string | null;
-  feedbackStatus: "PENDING" | "READY" | "FAILED";
+  feedbackStatus: "PENDING" | "GENERATING" | "READY" | "FAILED";
   result: {
     totalQuestions: number;
     correctAnswers: number;
@@ -68,7 +83,6 @@ export type AttemptResultResponse = {
     perQuestion?: Array<{
       questionId: string;
       explanation: string;
-      recommendation: string;
     }>;
     overallFeedback?: {
       summary?: string;
@@ -79,20 +93,113 @@ export type AttemptResultResponse = {
   };
 };
 
+export type QuizSkillStatusSyncRequest = {
+  skillId: number;
+  passed: boolean;
+  level?: number | null;
+  nextAllowedAt?: string | null;
+  quizKind?: QuizKind;
+};
+
 type AnswerItem = { questionId: string; answerKey: string };
+type ApiResponse<T> = Promise<{ data: T }>;
+
+const quizAttemptHttp = axios.create({
+  baseURL: import.meta.env.VITE_COMPETENCE_QUIZ_API_URL || "http://127.0.0.1:8002",
+});
+
+const ATTEMPT_BASE_PATHS = ["/api/quiz/attempts", "/api/q_attempts"] as const;
+let detectedAttemptBasePath: (typeof ATTEMPT_BASE_PATHS)[number] | null = null;
+
+type AttemptPathOptions = {
+  retryOnNotFound?: boolean;
+};
+
+async function withAttemptBasePath<T>(
+  request: (basePath: (typeof ATTEMPT_BASE_PATHS)[number]) => Promise<{ data: T }>,
+  options?: AttemptPathOptions,
+): Promise<{ data: T }> {
+  const retryOnNotFound = options?.retryOnNotFound ?? true;
+
+  if (detectedAttemptBasePath) {
+    try {
+      return await request(detectedAttemptBasePath);
+    } catch (error: any) {
+      if (error?.response?.status !== 404) {
+        throw error;
+      }
+      if (!retryOnNotFound) {
+        throw error;
+      }
+      // Reset cached path and probe all known paths again.
+      detectedAttemptBasePath = null;
+    }
+  }
+
+  let lastError: any;
+  for (const basePath of ATTEMPT_BASE_PATHS) {
+    try {
+      const response = await request(basePath);
+      detectedAttemptBasePath = basePath;
+      return response;
+    } catch (error: any) {
+      lastError = error;
+      if (error?.response?.status !== 404) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+function wrapData<T>(data: T): { data: T } {
+  return { data };
+}
 
 export const quizApi = {
-  listEmployeeSkills: () => http.get<EmployeeSkillDto[]>("/api/employee/me/skills"),
-  startQuiz: (payload: {
-    skillId: number;
-    mode: QuizMode;
-    questionCount: number;
-    timeLimitSeconds: number;
-  }) => http.post<QuizStartResponse>("/api/employee/quizzes/start", payload),
-  saveAnswers: (attemptId: number, answers: AnswerItem[]) =>
-    http.patch<{ saved: boolean }>(`/api/employee/quizzes/${attemptId}/answers`, { answers }),
-  submit: (attemptId: number, answers: AnswerItem[]) =>
-    http.post<SubmitResponse>(`/api/employee/quizzes/${attemptId}/submit`, { answers }),
-  result: (attemptId: number) =>
-    http.get<AttemptResultResponse>(`/api/employee/quizzes/${attemptId}/result`),
+  listEmployeeSkills: async (): ApiResponse<EmployeeSkillDto[]> => {
+    const res = await http.get<EmployeeSkillDto[]>("/api/employee/me/skills");
+    return wrapData(Array.isArray(res.data) ? res.data : []);
+  },
+
+  startQuiz: async (payload: QuizStartRequest): ApiResponse<QuizStartResponse> => {
+    const res = await withAttemptBasePath((basePath) =>
+      quizAttemptHttp.post<QuizStartResponse>(`${basePath}/start`, payload),
+    );
+    return wrapData(res.data);
+  },
+
+  saveAnswers: async (attemptId: number, answers: AnswerItem[]): ApiResponse<{ saved: boolean }> => {
+    const res = await withAttemptBasePath((basePath) =>
+      quizAttemptHttp.post<{ saved: boolean }>(`${basePath}/${attemptId}/answers`, {
+        answers,
+      }),
+      { retryOnNotFound: false },
+    );
+    return wrapData(res.data);
+  },
+
+  submit: async (attemptId: number, answers: AnswerItem[]): ApiResponse<SubmitResponse> => {
+    const res = await withAttemptBasePath((basePath) =>
+      quizAttemptHttp.post<SubmitResponse>(`${basePath}/${attemptId}/submit`, {
+        answers,
+      }),
+      { retryOnNotFound: false },
+    );
+    return wrapData(res.data);
+  },
+
+  result: async (attemptId: number): ApiResponse<AttemptResultResponse> => {
+    const res = await withAttemptBasePath((basePath) =>
+      quizAttemptHttp.get<AttemptResultResponse>(`${basePath}/${attemptId}/result`),
+      { retryOnNotFound: false },
+    );
+    return wrapData(res.data);
+  },
+
+  syncSkillStatus: async (payload: QuizSkillStatusSyncRequest): ApiResponse<EmployeeSkillDto> => {
+    const res = await http.post<EmployeeSkillDto>("/api/employee/quiz/status", payload);
+    return wrapData(res.data);
+  },
 };
