@@ -25,9 +25,9 @@ const NAV: NavItem[] = [
 
 export function AdminSidebar({ currentView, onNavChange, mobileOpen, collapsed = false, onToggleCollapse }: Props) {
   return (
-    <aside className={`admin-sidebar bg-white border-r border-slate-100 flex flex-col shadow-sm${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
+    <aside className={`admin-sidebar flex flex-col${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
       {/* Header: logo + flèche (ou flèche seule centrée si collapsed) */}
-      <div className={`h-16 flex items-center shrink-0 admin-sidebar-header border-b border-slate-100
+      <div className={`h-16 flex items-center shrink-0 admin-sidebar-header
         ${collapsed ? "justify-center px-0" : "justify-between px-3"}`}
       >
         <div className="admin-sidebar-logo flex items-center justify-center overflow-hidden min-w-0 flex-1">

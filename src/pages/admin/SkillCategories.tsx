@@ -15,6 +15,7 @@ import { getApiError } from "./utils";
 import { getCategoryIconUrl, getCategoryDescription } from "./skillIcons";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { AlertModal } from "../../components/AlertModal";
+import { AlertBanner } from "../../components/AlertBanner";
 
 /* ─────────────────────────────────────────────
    Main Component
@@ -214,12 +215,7 @@ export function SkillCategories() {
 
           {/* Error */}
           {error && (
-            <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-4 text-sm text-red-600">
-              <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-red-100">
-                <XMarkIcon className="w-3 h-3 text-red-500" />
-              </div>
-              {error}
-            </div>
+            <AlertBanner message={error} />
           )}
 
           {/* Empty state */}
@@ -542,7 +538,7 @@ interface ModalProps {
 
 function Modal({ title, subtitle, icon, onClose, children }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/10 p-4 backdrop-blur-[10px]">
+    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/20 bg-white/[0.97] shadow-[0_32px_80px_rgba(109,40,217,0.2),0_8px_32px_rgba(109,40,217,0.1),inset_0_0_0_1px_rgba(255,255,255,0.8)] backdrop-blur-[32px]">

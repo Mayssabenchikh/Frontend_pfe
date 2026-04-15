@@ -49,13 +49,13 @@ export default function EmployeePage() {
 
       {/* Sidebar employee avec le même style que manager/admin */}
       <aside
-        className={`admin-sidebar bg-white border-r border-slate-100 flex flex-col shadow-sm${
+        className={`admin-sidebar flex flex-col${
           sidebarOpen ? " open" : ""
         }${sidebarCollapsed ? " collapsed" : ""}`}
       >
         {/* Header sidebar : logo + flèche */}
         <div
-          className={`h-16 flex items-center shrink-0 admin-sidebar-header border-b border-slate-100 ${
+          className={`h-16 flex items-center shrink-0 admin-sidebar-header ${
             sidebarCollapsed ? "justify-center px-0" : "justify-between px-3"
           }`}
         >

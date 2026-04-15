@@ -14,6 +14,50 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
     return [{ label: "Projets", to: "/manager/projects" }];
   }
 
+  // /manager/quiz
+  if (parts[1] === "quiz") {
+    return [{ label: "Quiz" }];
+  }
+
+  // /manager/matching (hub)
+  if (parts[1] === "matching" && parts.length === 2) {
+    return [{ label: "Correspondances" }];
+  }
+
+  // /manager/matching/:id/matches | /manager/matching/:id/team
+  if (parts[1] === "matching" && parts.length >= 4) {
+    const sub = parts[3];
+    if (sub === "matches") {
+      return [
+        { label: "Correspondances", to: "/manager/matching" },
+        { label: "Classement" },
+      ];
+    }
+    if (sub === "team") {
+      return [
+        { label: "Correspondances", to: "/manager/matching" },
+        { label: "Équipe" },
+      ];
+    }
+  }
+
+  // Anciennes URLs (redirigées)
+  if (parts[1] === "projects" && parts.length >= 4) {
+    const sub = parts[3];
+    if (sub === "matches") {
+      return [
+        { label: "Correspondances", to: "/manager/matching" },
+        { label: "Classement" },
+      ];
+    }
+    if (sub === "team") {
+      return [
+        { label: "Correspondances", to: "/manager/matching" },
+        { label: "Équipe" },
+      ];
+    }
+  }
+
   // /manager/projects/:id
   if (parts[1] === "projects" && parts.length >= 3) {
     return [

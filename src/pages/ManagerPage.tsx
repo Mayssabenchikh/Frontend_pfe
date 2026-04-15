@@ -5,7 +5,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   Squares2X2Icon,
+  ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
+  ChartBarSquareIcon,
 } from "@heroicons/react/24/outline";
 import { http } from "../api/http";
 import { ManagerBreadcrumbs } from "./manager/ManagerBreadcrumbs";
@@ -27,7 +29,11 @@ export default function ManagerPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
 
   const location = useLocation();
-  const isFullBleed = location.pathname.startsWith("/manager/projects");
+  const isTalentRoute = /^\/manager\/matching(\/|$)/.test(location.pathname);
+  const isFullBleed =
+    location.pathname.startsWith("/manager/projects") ||
+    location.pathname.startsWith("/manager/quiz") ||
+    isTalentRoute;
 
   useEffect(() => {
     http
@@ -42,7 +48,7 @@ export default function ManagerPage() {
 
   return (
     <div
-      className="admin-layout bg-gradient-to-br from-violet-50/80 via-slate-50 to-white"
+      className="admin-layout"
       data-sidebar-collapsed={sidebarCollapsed || undefined}
     >
       {/* Backdrop mobile (même comportement que l'admin) */}
@@ -53,15 +59,15 @@ export default function ManagerPage() {
 
       {/* Sidebar manager avec le même style que l'admin */}
       <aside
-        className={`admin-sidebar flex flex-col border-r border-violet-100/70 bg-white/80 shadow-lg shadow-violet-100/40 backdrop-blur-xl transition-all duration-200 ease-in-out ${
+        className={`admin-sidebar flex flex-col ${
           sidebarOpen ? " open" : ""
         }${sidebarCollapsed ? " collapsed" : ""}`}
       >
         {/* Header sidebar : logo + flèche */}
         <div
-          className={`admin-sidebar-header h-16 shrink-0 border-b border-violet-100/70 ${
+          className={`admin-sidebar-header h-16 shrink-0 ${
             sidebarCollapsed ? "justify-center px-0" : "justify-between px-3"
-          } flex items-center bg-white/70 backdrop-blur`}
+          } flex items-center`}
         >
           <div className="admin-sidebar-logo flex items-center justify-center overflow-hidden min-w-0 flex-1">
             <img src="/logo.png" alt="Logo" className="h-9 w-auto object-contain" />
@@ -80,7 +86,7 @@ export default function ManagerPage() {
           </button>
         </div>
 
-        {/* Navigation manager : tableau de bord + projets */}
+        {/* Navigation manager : tableau de bord + quiz + projets + correspondances */}
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-2.5 py-5">
           <NavLink
             to="/manager"
@@ -109,6 +115,31 @@ export default function ManagerPage() {
           </NavLink>
 
           <NavLink
+            to="/manager/quiz"
+            className={({ isActive }) =>
+              [
+                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
+                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
+                isActive
+                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
+                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
+              ].join(" ")
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {!sidebarCollapsed && isActive && (
+                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
+                )}
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center ${isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"}`}>
+                  <ClipboardDocumentCheckIcon className="h-5 w-5" />
+                </span>
+                {!sidebarCollapsed && <span className="truncate">Quiz</span>}
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
             to="/manager/projects"
             className={({ isActive }) =>
               [
@@ -132,6 +163,33 @@ export default function ManagerPage() {
                 {!sidebarCollapsed && <span className="truncate">Projets</span>}
               </>
             }
+          </NavLink>
+
+          <NavLink
+            to="/manager/matching"
+            className={() =>
+              [
+                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
+                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
+                isTalentRoute
+                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
+                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
+              ].join(" ")
+            }
+          >
+            {() => (
+              <>
+                {!sidebarCollapsed && isTalentRoute && (
+                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
+                )}
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${isTalentRoute ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"}`}
+                >
+                  <ChartBarSquareIcon className="h-5 w-5" />
+                </span>
+                {!sidebarCollapsed && <span className="truncate">Correspondances</span>}
+              </>
+            )}
           </NavLink>
         </nav>
       </aside>

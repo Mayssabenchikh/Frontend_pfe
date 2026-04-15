@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { skillsApi } from "../../api/skillsApi";
 import type { PendingSkillRequestDto, SkillCategoryDto, SkillDto } from "./types";
 import { getApiError } from "./utils";
+import { AlertBanner } from "../../components/AlertBanner";
 
 const PAGE_SIZE = 5;
 
@@ -38,9 +39,16 @@ const STATUS_BADGE: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   ALL: "Tous les statuts",
   PENDING: "En attente",
-  APPROVED: "Approuve",
-  MERGED: "Fusionne",
-  REJECTED: "Rejete",
+  APPROVED: "Approuvée",
+  MERGED: "Fusionnée",
+  REJECTED: "Rejetée",
+};
+
+type MergeSuggestion = {
+  skillId: number;
+  confidence: number;
+  reason: string;
+  source: "ai" | "local";
 };
 
 function normalizeKey(raw: string) {
@@ -88,6 +96,8 @@ export function PendingSkillRequests() {
   const [resolveSkillId, setResolveSkillId] = useState<number | "">("");
   const [resolveNotes, setResolveNotes] = useState("");
   const [resolveLoading, setResolveLoading] = useState(false);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [mergeSuggestion, setMergeSuggestion] = useState<MergeSuggestion | null>(null);
   const [categories, setCategories] = useState<SkillCategoryDto[]>([]);
   const [skills, setSkills] = useState<SkillDto[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -140,6 +150,14 @@ export function PendingSkillRequests() {
   };
 
   const requests = data?.content ?? [];
+  const mergeSkills = useMemo(() => {
+    if (!skills.length) return [];
+    if (!mergeSuggestion?.skillId) return [];
+    const suggested = skills.find((s) => s.id === mergeSuggestion.skillId);
+    if (!suggested) return [];
+    return [suggested];
+  }, [skills, mergeSuggestion]);
+
   const filteredRequests = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return requests;
@@ -161,7 +179,92 @@ export function PendingSkillRequests() {
     setResolveCategoryId(categories[0]?.id ?? "");
     setResolveSkillId("");
     setResolveNotes("");
+    setMergeSuggestion(null);
   };
+
+  const findLocalSuggestion = useCallback((rawSkillName: string): MergeSuggestion | null => {
+    const key = normalizeKey(rawSkillName);
+    if (!key) return null;
+
+    for (const skill of skills) {
+      if (normalizeKey(skill.name) === key) {
+        return {
+          skillId: skill.id,
+          confidence: 0.99,
+          reason: "Correspondance exacte avec une compétence existante",
+          source: "local",
+        };
+      }
+      const alias = skill.synonyms?.find((a) => normalizeKey(a) === key);
+      if (alias) {
+        return {
+          skillId: skill.id,
+          confidence: 0.97,
+          reason: `Correspondance exacte avec le synonyme « ${alias} »`,
+          source: "local",
+        };
+      }
+    }
+
+    const tokens = key
+      .split(" ")
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 2);
+    if (!tokens.length) return null;
+    let best: { skill: SkillDto; score: number } | null = null;
+    for (const skill of skills) {
+      const pool = [skill.name, ...(skill.synonyms ?? [])]
+        .map((v) => normalizeKey(v))
+        .join(" ");
+      if (!pool) continue;
+      const overlap = tokens.filter((t) => pool.includes(t)).length;
+      const score = tokens.length === 0 ? 0 : overlap / tokens.length;
+      if (!best || score > best.score) {
+        best = { skill, score };
+      }
+    }
+    if (!best || best.score < 0.4) return null;
+    return {
+      skillId: best.skill.id,
+      confidence: Number(best.score.toFixed(2)),
+      reason: "Suggestion locale basée sur similarité de termes",
+      source: "local",
+    };
+  }, [skills]);
+
+  const loadMergeSuggestion = useCallback(async (req: PendingSkillRequestDto) => {
+    const local = findLocalSuggestion(req.rawSkillName);
+    if (local) {
+      setMergeSuggestion(local);
+      setResolveSkillId(local.skillId);
+      setResolveAction("MERGE");
+    }
+
+    setSuggestionLoading(true);
+    try {
+      const res = await skillsApi.suggestMergeForPendingSkillRequest(req.id);
+      const payload = res.data;
+      if (!payload?.suggestedSkillId) return;
+      const reason = payload.reason?.trim() || "Suggestion IA basée sur similarité sémantique";
+      setMergeSuggestion({
+        skillId: payload.suggestedSkillId,
+        confidence: Number(payload.confidence ?? 0),
+        reason,
+        source: "ai",
+      });
+      setResolveSkillId(payload.suggestedSkillId);
+      setResolveAction("MERGE");
+    } catch {
+      // Fallback silencieux vers la suggestion locale.
+    } finally {
+      setSuggestionLoading(false);
+    }
+  }, [findLocalSuggestion]);
+
+  useEffect(() => {
+    if (!resolveModal) return;
+    void loadMergeSuggestion(resolveModal);
+  }, [resolveModal, loadMergeSuggestion]);
 
   const submitResolve = () => {
     if (!resolveModal) return;
@@ -170,25 +273,23 @@ export function PendingSkillRequests() {
       return;
     }
     if (resolveAction === "MERGE" && !resolveSkillId) {
-      toast.error("Sélectionnez une compétence existante");
+      toast.error("Sélectionnez une compétence cible pour fusionner");
       return;
     }
-
-    // UX pre-check: avoid approving/merging if the raw name already exists (name/synonym)
+    // UX pre-check: avoid approving if the raw name already exists (name/synonym)
     if (resolveAction === "APPROVE") {
       const hit = findCatalogCollision(resolveModal.rawSkillName, skills);
       if (hit) {
         if (hit.type === "skillName") {
-          toast.error(`Doublon: « ${resolveModal.rawSkillName} » existe déjà (catégorie: ${hit.skill.categoryName}). Utilisez MERGE.`);
+          toast.error(`Doublon: « ${resolveModal.rawSkillName} » existe déjà (catégorie: ${hit.skill.categoryName}).`);
         } else {
-          toast.error(`Doublon: « ${resolveModal.rawSkillName} » correspond déjà au synonyme « ${hit.alias} » de « ${hit.skill.name} » (catégorie: ${hit.skill.categoryName}). Utilisez MERGE.`);
+          toast.error(`Doublon: « ${resolveModal.rawSkillName} » correspond déjà au synonyme « ${hit.alias} » de « ${hit.skill.name} » (catégorie: ${hit.skill.categoryName}).`);
         }
         return;
       }
     }
-    if (resolveAction === "MERGE" && resolveSkillId) {
-      const allowId = Number(resolveSkillId);
-      const hit = findCatalogCollision(resolveModal.rawSkillName, skills, { allowSkillId: allowId });
+    if (resolveAction === "MERGE") {
+      const hit = findCatalogCollision(resolveModal.rawSkillName, skills, { allowSkillId: Number(resolveSkillId) });
       if (hit) {
         if (hit.type === "skillName") {
           toast.error(`Doublon: « ${resolveModal.rawSkillName} » existe déjà comme compétence (« ${hit.skill.name} », catégorie: ${hit.skill.categoryName}).`);
@@ -209,7 +310,7 @@ export function PendingSkillRequests() {
       .then(() => {
         toast.success("Demande traitée avec succès");
         setResolveModal(null);
-        // refresh requests + catalog (names/synonyms may change after APPROVE/MERGE)
+        // refresh requests + catalog (names/synonyms may change after APPROVE)
         loadPage();
         skillsApi.listSkills()
           .then((res) => setSkills(res.data ?? []))
@@ -218,6 +319,10 @@ export function PendingSkillRequests() {
       .catch((err) => toast.error(getApiError(err, "Échec du traitement de la demande")))
       .finally(() => setResolveLoading(false));
   };
+
+  const isConfirmDisabled =
+    resolveLoading ||
+    (resolveAction === "MERGE" && !resolveSkillId);
 
   return (
     <section className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
@@ -294,7 +399,7 @@ export function PendingSkillRequests() {
               )}
 
               {!loading && error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+                <AlertBanner message={error} />
               )}
 
               {!loading && !error && filteredRequests.length === 0 && (
@@ -320,9 +425,7 @@ export function PendingSkillRequests() {
                           ? "bg-amber-400"
                           : req.status === "APPROVED"
                             ? "bg-emerald-400"
-                            : req.status === "MERGED"
-                              ? "bg-indigo-400"
-                              : "bg-rose-400"
+                            : "bg-rose-400"
                       }`} />
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <div className="min-w-0 flex-1">
@@ -450,7 +553,7 @@ export function PendingSkillRequests() {
       </div>
 
       {resolveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/25 p-4 backdrop-blur-[4px]">
+        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0" onClick={() => !resolveLoading && setResolveModal(null)} />
           <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50 px-5 py-3">
@@ -476,11 +579,41 @@ export function PendingSkillRequests() {
                   onChange={(e) => setResolveAction(e.target.value as "APPROVE" | "MERGE" | "REJECT")}
                   className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
                 >
-                  <option value="APPROVE">APPROVE (créer nouvelle compétence)</option>
-                  <option value="MERGE">MERGE (fusionner avec une compétence existante)</option>
-                  <option value="REJECT">REJECT (rejeter)</option>
+                  <option value="APPROVE">Créer nouvelle compétence</option>
+                  <option value="MERGE">Fusionner avec une compétence existante</option>
+                  <option value="REJECT">Rejeter la demande</option>
                 </select>
               </div>
+
+              {resolveAction === "MERGE" && (
+                <div className="rounded-xl border border-violet-100 bg-violet-50/40 px-3 py-2 text-xs text-slate-700">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-violet-700">
+                      {mergeSuggestion
+                        ? `Suggestion ${mergeSuggestion.source === "ai" ? "IA" : "auto"} appliquée à la liste`
+                        : "Aucune suggestion fiable, sélection manuelle"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!resolveModal || suggestionLoading) return;
+                        void loadMergeSuggestion(resolveModal);
+                      }}
+                      disabled={suggestionLoading || !resolveModal}
+                      className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-white px-2 py-1 text-[11px] font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {suggestionLoading ? (
+                        <>
+                          <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-violet-600" />
+                          Suggestions...
+                        </>
+                      ) : (
+                        "Refaire la suggestion"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {resolveAction === "APPROVE" && (
                 <div>
@@ -500,16 +633,19 @@ export function PendingSkillRequests() {
 
               {resolveAction === "MERGE" && (
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">Compétence existante</label>
+                  <label className="mb-1 block text-xs font-semibold text-slate-600">Compétence cible</label>
                   <select
                     value={resolveSkillId}
                     onChange={(e) => setResolveSkillId(e.target.value ? Number(e.target.value) : "")}
+                    disabled={!mergeSuggestion}
                     className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
                   >
-                    <option value="">Sélectionner une compétence</option>
-                    {skills.map((skill) => (
+                    <option value="">
+                      {mergeSuggestion ? "Sélectionner la suggestion" : "Aucune suggestion disponible"}
+                    </option>
+                    {mergeSkills.map((skill) => (
                       <option key={skill.id} value={skill.id}>
-                        {skill.name} - {skill.categoryName}
+                        ⭐ Suggestion - {skill.name} - {skill.categoryName}
                       </option>
                     ))}
                   </select>
@@ -540,7 +676,7 @@ export function PendingSkillRequests() {
               <button
                 type="button"
                 onClick={submitResolve}
-                disabled={resolveLoading}
+                disabled={isConfirmDisabled}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {resolveLoading && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
@@ -552,7 +688,7 @@ export function PendingSkillRequests() {
       )}
 
       {requestersModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/25 p-4 backdrop-blur-[4px]">
+        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0" onClick={() => setRequestersModal(null)} />
           <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50 px-5 py-3.5">

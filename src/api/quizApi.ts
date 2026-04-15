@@ -8,6 +8,8 @@ export type EmployeeSkillDto = {
   iconUrl?: string | null;
   categoryName: string;
   level: number;
+  validatedLevel?: number;
+  targetLevel?: number;
   status: string;
   source: string;
   /** ISO local datetime ; present tant que le delai apres un echec n'est pas ecoule */

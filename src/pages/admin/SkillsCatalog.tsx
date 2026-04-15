@@ -24,6 +24,7 @@ import type { SkillDto, SkillCategoryDto } from "./types";
 import { getApiError } from "./utils";
 import { getSkillIconUrl } from "./skillIcons";
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { AlertBanner } from "../../components/AlertBanner";
 
 /* ─────────────────────────────────────────────
    Types
@@ -458,12 +459,7 @@ export function SkillsCatalog() {
 
           {/* Error */}
           {error && (
-            <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-4 text-sm text-red-600">
-              <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-red-100">
-                <XMarkIcon className="w-3 h-3 text-red-500" />
-              </div>
-              {error}
-            </div>
+            <AlertBanner message={error} />
           )}
 
           {/* Empty skills */}
@@ -577,7 +573,7 @@ export function SkillsCatalog() {
       />
 
       {synonymModalSkill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/20 p-4 backdrop-blur-[6px]">
+        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0" onClick={() => setSynonymModalSkill(null)} />
           <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-500/20 bg-white shadow-[0_30px_80px_rgba(76,29,149,0.22)]">
             <div className="flex items-center justify-between border-b border-violet-500/10 bg-gradient-to-br from-violet-50 to-indigo-50 px-6 py-4">
@@ -859,7 +855,7 @@ interface SkillFormModalProps {
 
 function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFile, onSubmit, onClose, submitLoading }: SkillFormModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/10 p-4 backdrop-blur-[10px]">
+    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/20 bg-white/[0.97] shadow-[0_32px_80px_rgba(109,40,217,0.18),0_8px_32px_rgba(109,40,217,0.1)] backdrop-blur-[32px]">

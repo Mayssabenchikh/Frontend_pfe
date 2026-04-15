@@ -9,6 +9,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { quizApi, type AttemptResultResponse, type EmployeeSkillDto, type QuizStartResponse } from "../../api/quizApi.ts";
 import { getSkillIconUrl } from "../admin/skillIcons";
+import { AlertBanner } from "../../components/AlertBanner";
+import { AlertModal } from "../../components/AlertModal";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 type QuizPhase = "setup" | "in_progress" | "submitted";
 
@@ -110,16 +113,49 @@ function statusToFrench(status?: string | null): string {
   return raw || "Inconnu";
 }
 
-function formatSkillLevelLabel(level?: number | null, status?: string | null): string {
+function formatSkillLevelLabel(
+  level?: number | null,
+  status?: string | null,
+  validatedLevel?: number | null,
+  targetLevel?: number | null,
+): string {
   const numericLevel = Number.isFinite(level) ? Number(level) : 0;
+  const validated = Number.isFinite(validatedLevel) ? Number(validatedLevel) : 0;
+  const target = Number.isFinite(targetLevel) ? Number(targetLevel) : numericLevel;
   const rawStatus = String(status ?? "").toUpperCase();
   if (rawStatus === "EXTRACTED") {
     return "Niveau non évalué";
+  }
+  if (rawStatus === "QUIZ_PENDING") {
+    if (validated > 0) {
+      return `Validé L${validated} · Cible L${Math.max(validated, target)} (en attente)`;
+    }
+    return `Niveau cible L${Math.max(1, target)} (en attente de validation)`;
   }
   if (numericLevel <= 0) {
     return "Niveau en attente";
   }
   return `Expertise Niveau ${numericLevel}`;
+}
+
+function levelUsedForQuizStart(skill?: EmployeeSkillDto | null): number {
+  if (!skill) return 1;
+  const status = String(skill.status ?? "").toUpperCase();
+  const validated = Number(skill.validatedLevel ?? 0) || 0;
+  const target = Number(skill.targetLevel ?? skill.level ?? 0) || 0;
+  if (status === "EXTRACTED" || status === "QUIZ_PENDING") {
+    return Math.max(1, target || 1);
+  }
+  return Math.max(1, validated || target || 1);
+}
+
+function quizKindForSkill(skill?: EmployeeSkillDto | null): QuizStartResponse["quizKind"] | undefined {
+  if (!skill) return undefined;
+  const status = String(skill.status ?? "").toUpperCase();
+  if (status === "EXTRACTED" || status === "QUIZ_PENDING") {
+    return "initial";
+  }
+  return "progression";
 }
 
 export function EmployeeQuiz() {
@@ -136,7 +172,9 @@ export function EmployeeQuiz() {
   const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0);
   const [openedReviewQuestionId, setOpenedReviewQuestionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cooldownAlertMessage, setCooldownAlertMessage] = useState<string | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [quitConfirmOpen, setQuitConfirmOpen] = useState(false);
   const submitLockRef = useRef(false);
 
   useEffect(() => {
@@ -308,10 +346,8 @@ export function EmployeeQuiz() {
   async function startQuiz() {
     if (!selectedSkillId || starting) return;
     if (quizCooldownActive && selectedSkill?.quizNextAllowedAt) {
-      window.alert(
+      setCooldownAlertMessage(
         [
-          "Quiz temporairement indisponible pour cette compétence.",
-          "",
           `Prochaine tentative autorisée après le ${formatFrenchDateTime(selectedSkill.quizNextAllowedAt)}.`,
           "",
           `Après un score inférieur à 70 %, un délai de ${QUIZ_FAIL_COOLDOWN_DAYS} jours est obligatoire avant une nouvelle tentative.`,
@@ -327,8 +363,9 @@ export function EmployeeQuiz() {
       const res = await quizApi.startQuiz({
         skillId: selectedSkillId,
         skillName: selectedSkill?.skillName || "Compétence",
-        level: Math.max(1, selectedSkill?.level || 1),
+        level: levelUsedForQuizStart(selectedSkill),
         skillStatus: selectedSkill?.status,
+        quizKind: quizKindForSkill(selectedSkill),
         questionCount: QUESTION_COUNT,
         timeLimitSeconds: TIME_LIMIT_SECONDS,
       });
@@ -351,21 +388,17 @@ export function EmployeeQuiz() {
       const message = mapQuizStartError(status, parsed.code, rawMessage);
       if (status === 409) {
         const cooldownConflict = /cooldown|nextAllowedAt|prochaine tentative|15 jours/i.test(String(rawMessage));
-        window.alert(
+        setCooldownAlertMessage(
           cooldownConflict
             ? [
-                "Quiz temporairement indisponible pour cette compétence.",
-                "",
                 rawMessage,
                 "",
                 `Après un score inférieur à 70 %, un délai de ${QUIZ_FAIL_COOLDOWN_DAYS} jours est obligatoire avant une nouvelle tentative.`,
               ].join("\n")
-            : [
-                "Quiz temporairement indisponible pour cette compétence.",
-                "",
-                rawMessage,
-              ].join("\n"),
+            : rawMessage,
         );
+        setError(null);
+        return;
       }
       setError(message);
     } finally {
@@ -547,6 +580,20 @@ export function EmployeeQuiz() {
     }
   }
 
+  function quitInProgressQuiz() {
+    setQuitConfirmOpen(false);
+    setPhase("setup");
+    setStartData(null);
+    setResult(null);
+    setAnswers({});
+    setActiveQuestion(0);
+    setOpenedReviewQuestionId(null);
+    setRemainingSeconds(0);
+    setError(null);
+    setSubmitting(false);
+    submitLockRef.current = false;
+  }
+
   function statusBadge(status: string) {
     const raw = String(status ?? "").toUpperCase();
     const label = statusToFrench(raw);
@@ -575,9 +622,7 @@ export function EmployeeQuiz() {
         ].join(" ")}
       >
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200/50">
-          {error}
-        </div>
+        <AlertBanner message={error} />
       )}
 
       {phase === "setup" && (
@@ -615,7 +660,14 @@ export function EmployeeQuiz() {
                       </div>
                       <div>
                         <p className="text-2xl font-semibold text-slate-900">{setupPrimarySkill.skillName}</p>
-                        <p className="text-sm text-slate-500">{formatSkillLevelLabel(setupPrimarySkill.level, setupPrimarySkill.status)}</p>
+                        <p className="text-sm text-slate-500">
+                          {formatSkillLevelLabel(
+                            setupPrimarySkill.level,
+                            setupPrimarySkill.status,
+                            setupPrimarySkill.validatedLevel,
+                            setupPrimarySkill.targetLevel,
+                          )}
+                        </p>
                       </div>
                     </div>
                     {(() => {
@@ -725,7 +777,9 @@ export function EmployeeQuiz() {
                           </div>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-slate-800">{s.skillName}</p>
-                            <p className="text-xs text-slate-500">{formatSkillLevelLabel(s.level, s.status)}</p>
+                            <p className="text-xs text-slate-500">
+                              {formatSkillLevelLabel(s.level, s.status, s.validatedLevel, s.targetLevel)}
+                            </p>
                           </div>
                         </div>
                         <ChevronDownIcon
@@ -804,6 +858,16 @@ export function EmployeeQuiz() {
                   <p className="text-4xl font-bold leading-none text-slate-900">{formatTime(remainingSeconds)}</p>
                   <p className="mt-2 text-sm font-medium text-slate-500">Temps restant</p>
                 </div>
+              </div>
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setQuitConfirmOpen(true)}
+                  disabled={submitting}
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                >
+                  Quitter le quiz
+                </button>
               </div>
             </div>
 
@@ -1132,6 +1196,23 @@ export function EmployeeQuiz() {
         </section>
       )}
       </div>
+      <AlertModal
+        open={Boolean(cooldownAlertMessage)}
+        title="Quiz temporairement indisponible"
+        message={<span className="whitespace-pre-line">{cooldownAlertMessage}</span>}
+        onClose={() => setCooldownAlertMessage(null)}
+      />
+      <ConfirmModal
+        open={quitConfirmOpen}
+        title="Quitter le quiz en cours ?"
+        message="Votre tentative en cours sera abandonnée et vos réponses non soumises ne seront pas prises en compte."
+        confirmLabel="Quitter"
+        cancelLabel="Rester"
+        variant="danger"
+        loading={false}
+        onConfirm={quitInProgressQuiz}
+        onCancel={() => setQuitConfirmOpen(false)}
+      />
     </div>
   );
 } 

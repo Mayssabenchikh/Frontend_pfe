@@ -14,6 +14,12 @@ const DEFAULT_PAGE_SIZE = 20;
 
 type PaginationOptions = { page?: number; size?: number; search?: string };
 type PendingStatus = "PENDING" | "APPROVED" | "MERGED" | "REJECTED";
+export type PendingMergeSuggestionDto = {
+  suggestedSkillId: number | null;
+  confidence: number;
+  reason?: string | null;
+  alternatives?: Array<{ skillId: number; confidence: number; reason?: string | null }>;
+};
 
 function buildPaginationParams(opts?: PaginationOptions): Record<string, string | number> {
   const params: Record<string, string | number> = {
@@ -83,6 +89,8 @@ export const skillsApi = {
     http.get<{ count: number }>(`${BASE}/pending-skills/count`),
   getPendingSkillRequestsStats: () =>
     http.get<Record<PendingStatus, number>>(`${BASE}/pending-skills/stats`),
+  suggestMergeForPendingSkillRequest: (id: number) =>
+    http.post<PendingMergeSuggestionDto>(`${BASE}/pending-skills/${id}/suggest-merge`, {}),
   resolvePendingSkillRequest: (
     id: number,
     data: { action: "APPROVE" | "MERGE" | "REJECT"; categoryId?: number; existingSkillId?: number; adminNotes?: string }

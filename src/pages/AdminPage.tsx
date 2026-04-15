@@ -584,7 +584,7 @@ export default function AdminPage() {
       {viewUser && (
         <div
           onClick={() => setViewUser(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
+          className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
         >

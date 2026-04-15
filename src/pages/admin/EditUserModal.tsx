@@ -166,7 +166,7 @@ export function EditUserModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-indigo-950/30 backdrop-blur-sm"
+      className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog" aria-modal="true"
     >
       <div

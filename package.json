@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@ag-grid-community/locale": "^35.1.0",
+    "@fortawesome/free-regular-svg-icons": "^7.2.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.3.0",
     "@heroicons/react": "^2.2.0",
     "@react-keycloak/web": "^3.4.0",
     "ag-grid-community": "^35.1.0",

@@ -148,7 +148,6 @@ export function ProjectsList() {
 
   const columnDefs = useMemo<ColDef<ProjectDto>[]>(() => {
     const badgeBase = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold";
-    const loadingSpan = <span className="text-[10px]">…</span>;
 
     return [
       {
@@ -255,8 +254,8 @@ export function ProjectsList() {
       },
       {
         headerName: "Actions",
-        flex: 0.9,
-        minWidth: 130,
+        flex: 1.2,
+        minWidth: 210,
         sortable: false,
         filter: false,
         cellRenderer: (params: ICellRendererParams<ProjectDto>) => {
@@ -268,6 +267,7 @@ export function ProjectsList() {
               <button
                 type="button"
                 title="Voir détails"
+                data-no-row-nav="true"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/manager/projects/${p.id}`);
@@ -280,15 +280,19 @@ export function ProjectsList() {
               <button
                 type="button"
                 title="Supprimer"
+                data-no-row-nav="true"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteClick(p);
                 }}
                 disabled={isDel}
-                className={`inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-violet-500/25 bg-transparent px-3 text-xs font-semibold text-red-600 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}
+                className={`inline-flex h-8 min-w-[92px] items-center justify-center gap-2 rounded-xl border border-violet-500/25 bg-transparent px-3 text-xs font-semibold text-red-600 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}
               >
                 {isDel ? (
-                  loadingSpan
+                  <>
+                    <TrashIcon className="h-3.5 w-3.5 opacity-70" />
+                    <span>Supprimer</span>
+                  </>
                 ) : (
                   <>
                     <TrashIcon className="h-3.5 w-3.5" />
@@ -527,6 +531,10 @@ export function ProjectsList() {
                 onGridReady={(e) => e.api.sizeColumnsToFit()}
                 onGridSizeChanged={(e) => e.api.sizeColumnsToFit()}
                 onRowClicked={(e) => {
+                  const clickTarget = e.event?.target as HTMLElement | null;
+                  if (clickTarget?.closest('[data-no-row-nav="true"],button,a,input,select,textarea')) {
+                    return;
+                  }
                   const p = e.data;
                   if (p?.id != null) navigate(`/manager/projects/${p.id}`);
                 }}

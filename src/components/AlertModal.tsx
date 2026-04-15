@@ -20,9 +20,9 @@ export function AlertModal({
 }: Props) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-900/10 p-4 backdrop-blur-[10px]">
+    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
-      <div className="relative w-full max-w-md rounded-3xl overflow-hidden border border-violet-500/20 bg-white/[0.97] px-7 py-6 shadow-[0_32px_80px_rgba(109,40,217,0.2)]">
+      <div className="relative w-full max-w-md rounded-3xl overflow-hidden border border-violet-500/16 bg-white/[0.9] px-7 py-6 shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/15">
             <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />

@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { useKeycloak } from "@react-keycloak/web";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import RoleRedirect from "./components/RoleRedirect";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminPage from "./pages/AdminPage";
@@ -8,6 +8,9 @@ import ManagerPage from "./pages/ManagerPage";
 import { ManagerDashboard } from "./pages/manager/ManagerDashboard";
 import { ProjectsList } from "./pages/manager/ProjectsList";
 import { ProjectDetail } from "./pages/manager/ProjectDetail";
+import { ProjectMatchesPage } from "./pages/manager/ProjectMatchesPage";
+import { ProjectTeamPage } from "./pages/manager/ProjectTeamPage";
+import { ManagerMatchingHub } from "./pages/manager/ManagerMatchingHub";
 import { ManagerProfile } from "./pages/manager/ManagerProfile";
 import EmployeePage from "./pages/EmployeePage";
 import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
@@ -36,6 +39,16 @@ function shouldLogoutAfterPasswordAction(params: URLSearchParams, isAuthenticate
     Boolean(normalizedAction) &&
     normalizedAction === UPDATE_PASSWORD_ACTION
   );
+}
+
+function RedirectProjectMatchesToTalent() {
+  const { id } = useParams();
+  return <Navigate to={`/manager/matching/${id}/matches`} replace />;
+}
+
+function RedirectProjectTeamToTalent() {
+  const { id } = useParams();
+  return <Navigate to={`/manager/matching/${id}/team`} replace />;
 }
 
 function LoginLanding({ onLogin }: { onLogin: () => void }) {
@@ -104,7 +117,13 @@ function App() {
           }
         >
           <Route index element={<ManagerDashboard />} />
+          <Route path="quiz" element={<EmployeeQuiz />} />
+          <Route path="matching/:id/matches" element={<ProjectMatchesPage />} />
+          <Route path="matching/:id/team" element={<ProjectTeamPage />} />
+          <Route path="matching" element={<ManagerMatchingHub />} />
           <Route path="projects" element={<ProjectsList />} />
+          <Route path="projects/:id/matches" element={<RedirectProjectMatchesToTalent />} />
+          <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="profile" element={<ManagerProfile />} />
         </Route>

@@ -6,11 +6,25 @@
 
 @layer base {
   * { box-sizing: border-box; }
+  :root {
+    --app-bg: radial-gradient(circle at 16% -10%, rgba(167, 139, 250, 0.1), transparent 40%),
+      radial-gradient(circle at 84% 4%, rgba(129, 140, 248, 0.07), transparent 36%),
+      linear-gradient(180deg, #f9f9ff 0%, #f8fafc 54%, #f6f8ff 100%);
+    --glass-bg: rgba(255, 255, 255, 0.56);
+    --glass-bg-strong: rgba(255, 255, 255, 0.66);
+    --glass-border: rgba(226, 232, 240, 0.62);
+    --glass-shadow: 0 6px 20px rgba(99, 102, 241, 0.06);
+  }
   body {
     font-family: "Inter", -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
-    background: #f8fafc;
+    background: var(--app-bg);
     color: #1e293b;
+    min-height: 100vh;
+  }
+  html {
+    /* Evite les décalages horizontaux quand un modal s'ouvre */
+    scrollbar-gutter: stable;
   }
 }
 
@@ -113,15 +127,22 @@
 .sidebar-backdrop {
   display: none;
   position: fixed; inset: 0; z-index: 29;
-  background: rgba(15,23,42,0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(30, 41, 59, 0.16);
+  backdrop-filter: blur(5px);
+}
+
+/* Unified modal backdrop across the app */
+.app-modal-backdrop {
+  background: rgba(30, 41, 59, 0.16);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 /* Admin layout root */
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background: #f8f7ff;
+  background: var(--app-bg);
 }
 
 /* Sidebar */
@@ -134,7 +155,16 @@
   height: 100dvh;
   overflow-x: hidden;
   overflow-y: hidden;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   transition: width 0.28s cubic-bezier(0.4,0,0.2,1), min-width 0.28s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+.admin-sidebar-header {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(7px);
+  border-bottom: 1px solid var(--glass-border);
 }
 .admin-sidebar nav {
   overflow-x: hidden;
@@ -174,10 +204,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #e8edf5;
-  box-shadow: 0 1px 12px rgba(67,56,202,0.08);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 2px 16px rgba(99, 102, 241, 0.08);
   transition: left 0.28s cubic-bezier(0.4,0,0.2,1);
 }
 .admin-layout[data-sidebar-collapsed] .admin-header-fixed {
