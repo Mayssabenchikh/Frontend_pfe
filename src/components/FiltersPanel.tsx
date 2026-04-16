@@ -1,6 +1,6 @@
 import type React from "react";
 import { useId, useState } from "react";
-import { FunnelIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon } from "../icons/heroicons/outline";
 
 type Props = {
   title?: string;

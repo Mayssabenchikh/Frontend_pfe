@@ -26,7 +26,16 @@ export type ArchivedUserDto = {
   avatarUrl?: string | null;
 };
 
-export type NavId = "dashboard" | "users" | "archives" | "skills" | "skillRequests" | "skillCategories" | "profile";
+export type NavId =
+  | "dashboard"
+  | "users"
+  | "archives"
+  | "projects"
+  | "skills"
+  | "skillRequests"
+  | "skillCategories"
+  | "assignments"
+  | "profile";
 
 export type SkillCategoryDto = { id: number; name: string; iconUrl?: string | null; skillsCount?: number; sampleSkillNames?: string[] };
 export type SkillCategoryPageDto = {

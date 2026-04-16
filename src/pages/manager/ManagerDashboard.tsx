@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ClipboardDocumentListIcon, PlayCircleIcon, CheckCircleIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { ClipboardDocumentListIcon, PlayCircleIcon, CheckCircleIcon, PencilSquareIcon } from "../../icons/heroicons/outline";
 import { projectsApi, type ProjectDto, type ProjectPage } from "../../api/projectsApi";
 
 export function ManagerDashboard() {

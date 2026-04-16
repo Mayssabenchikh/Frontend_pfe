@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import type { AdminRole } from "./types";
 import { ROLE_OPTIONS, MESSAGES } from "./constants";
-import { XMarkIcon, ExclamationCircleIcon, CameraIcon, UserCircleIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ExclamationCircleIcon, CameraIcon, UserCircleIcon, ArrowPathIcon } from "../../icons/heroicons/outline";
 import { getAvatarColor } from "./utils";
 import { toast } from "sonner";
 

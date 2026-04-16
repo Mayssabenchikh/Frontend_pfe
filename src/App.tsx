@@ -8,13 +8,16 @@ import ManagerPage from "./pages/ManagerPage";
 import { ManagerDashboard } from "./pages/manager/ManagerDashboard";
 import { ProjectsList } from "./pages/manager/ProjectsList";
 import { ProjectDetail } from "./pages/manager/ProjectDetail";
-import { ProjectMatchesPage } from "./pages/manager/ProjectMatchesPage";
-import { ProjectTeamPage } from "./pages/manager/ProjectTeamPage";
 import { ManagerMatchingHub } from "./pages/manager/ManagerMatchingHub";
+import { ProjectTalentWorkspace } from "./pages/manager/ProjectTalentWorkspace";
 import { ManagerProfile } from "./pages/manager/ManagerProfile";
+import { ManagerAssignmentsHistory } from "./pages/manager/ManagerAssignmentsHistory";
 import EmployeePage from "./pages/EmployeePage";
 import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
 import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
+import { EmployeeAssignments } from "./pages/employee/EmployeeAssignments";
+import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
+import { EmployeeProjectDetail } from "./pages/employee/EmployeeProjectDetail";
 
 const EmployeeQuiz = lazy(() =>
   import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
@@ -43,12 +46,12 @@ function shouldLogoutAfterPasswordAction(params: URLSearchParams, isAuthenticate
 
 function RedirectProjectMatchesToTalent() {
   const { id } = useParams();
-  return <Navigate to={`/manager/matching/${id}/matches`} replace />;
+  return <Navigate to={`/manager/matching/${id}/workspace`} replace />;
 }
 
 function RedirectProjectTeamToTalent() {
   const { id } = useParams();
-  return <Navigate to={`/manager/matching/${id}/team`} replace />;
+  return <Navigate to={`/manager/matching/${id}/workspace`} replace />;
 }
 
 function LoginLanding({ onLogin }: { onLogin: () => void }) {
@@ -118,10 +121,12 @@ function App() {
         >
           <Route index element={<ManagerDashboard />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
-          <Route path="matching/:id/matches" element={<ProjectMatchesPage />} />
-          <Route path="matching/:id/team" element={<ProjectTeamPage />} />
+          <Route path="matching/:id/workspace" element={<ProjectTalentWorkspace />} />
+          <Route path="matching/:id/matches" element={<Navigate to="../workspace" replace />} />
+          <Route path="matching/:id/team" element={<Navigate to="../workspace" replace />} />
           <Route path="matching" element={<ManagerMatchingHub />} />
           <Route path="projects" element={<ProjectsList />} />
+          <Route path="assignments" element={<ManagerAssignmentsHistory />} />
           <Route path="projects/:id/matches" element={<RedirectProjectMatchesToTalent />} />
           <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
@@ -137,6 +142,9 @@ function App() {
         >
           <Route index element={<EmployeeDashboard />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
+          <Route path="assignments" element={<EmployeeAssignments />} />
+          <Route path="projects" element={<EmployeeProjects />} />
+          <Route path="projects/:id" element={<EmployeeProjectDetail />} />
           <Route path="profile" element={<EmployeeMyProfile />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

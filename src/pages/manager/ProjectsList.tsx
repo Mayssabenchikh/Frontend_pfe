@@ -9,7 +9,7 @@ import {
   Squares2X2Icon,
   Bars3Icon,
   EyeIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import {
   ModuleRegistry,
   AllCommunityModule,
@@ -27,6 +27,7 @@ import { useKeycloak } from "@react-keycloak/web";
 import { getPrimaryRole } from "../../auth/roles";
 import { getAvatarColor } from "../admin/utils";
 import { FiltersPanel } from "../../components/FiltersPanel";
+import { PROJECTS_AG_THEME } from "../../components/projectsAgTheme";
 
 type ManagerOutletContext = {
   managerAvatarUrl: string | null;
@@ -263,7 +264,7 @@ export function ProjectsList() {
           if (!p) return null;
           const isDel = deletingId === p.id;
           return (
-            <div className="flex w-full items-center justify-start gap-2">
+            <div className="flex w-full items-center justify-center gap-2">
               <button
                 type="button"
                 title="Voir détails"
@@ -479,48 +480,9 @@ export function ProjectsList() {
           </div>
         ) : viewMode === "list" ? (
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
-            <style>{`
-              .ag-theme-quartz {
-                --ag-background-color: #ffffff;
-                --ag-header-background-color: rgba(109,40,217,0.06);
-                --ag-odd-row-background-color: #ffffff;
-                --ag-row-hover-color: #f0f0ff;
-                --ag-border-color: #e8edf5;
-                --ag-header-foreground-color: #4c1d95;
-                --ag-foreground-color: #0f172a;
-                --ag-font-size: 14px;
-                --ag-cell-horizontal-padding: 16px;
-                --ag-row-height: 56px;
-                --ag-header-height: 42px;
-              }
-              .ag-theme-quartz .ag-header-cell-label {
-                font-size: 10.5px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
-                color: #5b21b6;
-              }
-              .ag-theme-quartz .ag-row { border-bottom: 1px solid #ede9fe; }
-              .ag-theme-quartz .ag-cell {
-                display: flex !important;
-                align-items: center !important;
-                line-height: normal !important;
-              }
-              .ag-theme-quartz .ag-cell-wrapper {
-                width: 100%;
-                display: flex;
-                align-items: center;
-              }
-              .ag-theme-quartz .ag-paging-panel {
-                border-top: 1px solid rgba(109,40,217,0.12);
-                background: rgba(109,40,217,0.04);
-                color: #5b21b6;
-                font-size: 12px;
-                font-weight: 500;
-              }
-            `}</style>
+            <style>{PROJECTS_AG_THEME}</style>
 
-            <div className="ag-theme-quartz absolute inset-0">
+            <div className="ag-theme-quartz ag-theme-projects absolute inset-0">
               <AgGridReact<ProjectDto>
                 ref={gridRef}
                 theme="legacy"

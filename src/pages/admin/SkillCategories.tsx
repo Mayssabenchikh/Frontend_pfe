@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowPathIcon, TagIcon, XMarkIcon, SparklesIcon, MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowPathIcon, TagIcon, XMarkIcon, SparklesIcon, MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon } from "../../icons/heroicons/outline";
 import { skillsApi } from "../../api/skillsApi";
 import type { SkillCategoryDto } from "./types";
 import { getApiError } from "./utils";

@@ -3,13 +3,12 @@ import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import {
   ArrowLeftIcon,
   CalendarDaysIcon,
-  ChatBubbleLeftRightIcon,
   PencilSquareIcon,
   PlusIcon,
   UserCircleIcon,
   XMarkIcon,
   SparklesIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import { toast } from "sonner";
 import { projectsApi, type ProjectDto } from "../../api/projectsApi";
 import { skillsApi } from "../../api/skillsApi";
@@ -298,7 +297,7 @@ export function ProjectDetail() {
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
 
         {/* ── Topbar ── */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 shadow-sm backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-1">
           <button
             type="button"
             onClick={() => navigate("/manager/projects")}
@@ -793,26 +792,6 @@ export function ProjectDetail() {
               </div>
             </article>
 
-            {/* Chat card */}
-            <article className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-violet-50">
-                  <ChatBubbleLeftRightIcon className="h-4 w-4 text-violet-600" />
-                </span>
-                <h3 className="text-base font-semibold text-slate-800">
-                  Message de groupe
-                </h3>
-              </div>
-
-              <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-violet-200 bg-gradient-to-br from-blue-50/60 to-violet-50/60 px-4 py-6 text-center">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-violet-600">
-                  <ChatBubbleLeftRightIcon className="h-5 w-5 text-white" />
-                </div>
-                <p className="text-xs leading-5 text-slate-500">
-                  La section chat de groupe sera disponible prochainement.
-                </p>
-              </div>
-            </article>
           </aside>
         </div>
       </div>

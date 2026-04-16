@@ -1,4 +1,5 @@
 import { http } from "./http";
+import type { AssignmentDto } from "./assignmentsApi";
 
 export type ProjectRequirementDto = {
   id: number;
@@ -25,6 +26,7 @@ export type ProjectDto = {
 
 const BASE = "/api/manager";
 const PROJECTS_ENDPOINT = `${BASE}/projects`;
+const EMPLOYEE_PROJECTS_ENDPOINT = `/api/employee/projects`;
 
 export type ProjectPage = {
   content: ProjectDto[];
@@ -59,4 +61,11 @@ export const projectsApi = {
   delete: (id: number) => http.delete(`${PROJECTS_ENDPOINT}/${id}`),
   setRequirements: (id: number, requirements: ProjectRequirementInput[]) =>
     http.post<ProjectDto>(`${PROJECTS_ENDPOINT}/${id}/requirements`, requirements),
+};
+
+export const employeeProjectsApi = {
+  list: (params?: { search?: string; status?: string; priority?: string; from?: string; to?: string; order?: string; page?: number; size?: number }) =>
+    http.get<ProjectPage>(EMPLOYEE_PROJECTS_ENDPOINT, { params }),
+  get: (id: number) => http.get<ProjectDto>(`${EMPLOYEE_PROJECTS_ENDPOINT}/${id}`),
+  team: (id: number) => http.get<AssignmentDto[]>(`${EMPLOYEE_PROJECTS_ENDPOINT}/${id}/team`),
 };

@@ -1,6 +1,5 @@
-import { useEffect, useId, useState } from "react";
-import { XMarkIcon, SparklesIcon } from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useId, useMemo, useState } from "react";
+import { XMarkIcon, SparklesIcon } from "../../icons/heroicons/outline";
 import {
   matchingApi,
   type EmployeeMatchRowDto,
@@ -9,25 +8,30 @@ import {
   type ImprovementSuggestionDto,
   type QuizSuggestionDto,
 } from "../../api/matchingApi";
+import { assignmentsApi, type AssignmentDto } from "../../api/assignmentsApi";
 import { ExplanationBox } from "../../components/matching/ExplanationBox";
 import { GapList } from "../../components/matching/GapList";
 import { RecommendationList } from "../../components/matching/RecommendationList";
 import { SkillBadge } from "../../components/matching/SkillBadge";
 import { avatarGradient, avatarInitials, toPercent, toPercentNumber } from "../../components/matching/matchingVisuals";
+import { ReasonModal } from "../../components/ReasonModal";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   projectId: number;
+  projectTeamSize: number | null;
   row: EmployeeMatchRowDto | null;
+  assignments: AssignmentDto[];
+  onAssignmentsChange: (next: AssignmentDto[]) => void;
 };
 
-export function EmployeeMatchDrawer({ open, onClose, projectId, row }: Props) {
-  const navigate = useNavigate();
+export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize, row, assignments, onAssignmentsChange }: Props) {
   const titleId = useId();
   const [gapsLoading, setGapsLoading] = useState(false);
   const [recoLoading, setRecoLoading] = useState(false);
   const [explainLoading, setExplainLoading] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
   const [gaps, setGaps] = useState<GapSkillDto[]>([]);
   const [reco, setReco] = useState<{ quizzes: QuizSuggestionDto[]; improvements: ImprovementSuggestionDto[] }>({
     quizzes: [],
@@ -36,6 +40,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, row }: Props) {
   const [aiNarrative, setAiNarrative] = useState<string | null>(null);
   const [explain, setExplain] = useState<ExplainResponseDto | null>(null);
   const [withAiReco, setWithAiReco] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   const topSkills =
     row?.breakdown.requirements
@@ -46,6 +51,20 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, row }: Props) {
   const avatarSeed = row?.email || row?.employee_keycloak_id || row?.display_name || "employee";
   const avatar = avatarGradient(avatarSeed);
   const initials = avatarInitials(row?.display_name, row?.email);
+
+  const activeAssignment = useMemo(() => {
+    if (!row) return null;
+    const items = assignments.filter(
+      (a) => a.projectId === projectId && a.employeeKeycloakId === row.employee_keycloak_id && (a.status === "PENDING" || a.status === "ACCEPTED"),
+    );
+    return items[0] ?? null;
+  }, [assignments, projectId, row]);
+
+  const isProjectFull = useMemo(() => {
+    const capacity = Math.max(1, projectTeamSize ?? 1);
+    const acceptedCount = assignments.filter((a) => a.projectId === projectId && a.status === "ACCEPTED").length;
+    return acceptedCount >= capacity;
+  }, [assignments, projectId, projectTeamSize]);
 
   useEffect(() => {
     if (!open || !row) return;
@@ -105,6 +124,36 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, row }: Props) {
   };
 
   if (!open) return null;
+
+  const handleInvite = async () => {
+    if (!row) return;
+    setAssignLoading(true);
+    try {
+      await assignmentsApi.invite(projectId, row.employee_keycloak_id);
+      const res = await assignmentsApi.listProjectAssignments(projectId);
+      onAssignmentsChange(Array.isArray(res.data) ? res.data : []);
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!activeAssignment) return;
+    setRemoveOpen(true);
+  };
+
+  const confirmRemove = async (reason: string) => {
+    if (!activeAssignment) return;
+    setAssignLoading(true);
+    try {
+      await assignmentsApi.remove(activeAssignment.id, String(reason).trim());
+      const res = await assignmentsApi.listProjectAssignments(projectId);
+      onAssignmentsChange(Array.isArray(res.data) ? res.data : []);
+    } finally {
+      setAssignLoading(false);
+      setRemoveOpen(false);
+    }
+  };
 
   return (
     <>
@@ -249,20 +298,40 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, row }: Props) {
         </div>
 
         <footer className="flex shrink-0 items-center border-t border-slate-100 px-5 py-4">
-          <button
-            type="button"
-            disabled={!row}
-            onClick={() => {
-              if (!row) return;
-              onClose();
-              navigate(`/manager/matching/${projectId}/team`);
-            }}
-            className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(109,40,217,0.24)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Assigner au projet
-          </button>
+          {!row ? null : activeAssignment ? (
+            <button
+              type="button"
+              disabled={assignLoading}
+              onClick={handleRemove}
+              className="w-full rounded-2xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {activeAssignment.status === "PENDING" ? "Annuler l’invitation" : "Désaffecter (retirer du projet)"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={assignLoading || isProjectFull}
+              onClick={handleInvite}
+              className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(109,40,217,0.24)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {assignLoading ? "Envoi…" : isProjectFull ? "Équipe complète" : "Inviter sur le projet"}
+            </button>
+          )}
         </footer>
       </aside>
+
+      <ReasonModal
+        open={removeOpen}
+        title="Annuler / Désaffecter"
+        description="Un motif est obligatoire et sera journalisé."
+        placeholder="Ex: changement de priorité, disponibilité, profil non retenu…"
+        confirmLabel="Confirmer"
+        cancelLabel="Annuler"
+        variant="danger"
+        loading={assignLoading}
+        onCancel={() => setRemoveOpen(false)}
+        onConfirm={confirmRemove}
+      />
     </>
   );
 }

@@ -10,7 +10,7 @@ import {
   SparklesIcon,
   BoltIcon,
   QuestionMarkCircleIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import { toast } from "sonner";
 import { skillsApi } from "../../api/skillsApi";
 import type { PendingSkillRequestDto, SkillCategoryDto, SkillDto } from "./types";

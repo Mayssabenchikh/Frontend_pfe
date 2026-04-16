@@ -1,34 +1,17 @@
-import { UserGroupIcon } from "@heroicons/react/24/outline";
+import { UserGroupIcon } from "../../icons/heroicons/outline";
 import type { EmployeeMatchRowDto, TeamMemberPickDto } from "../../api/matchingApi";
 import { avatarGradient, avatarInitials, toPercent, toPercentNumber } from "./matchingVisuals";
 
 type Props = {
   members: TeamMemberPickDto[];
-  avgRedundancy: number;
   teamSize: number;
   memberMatches?: Record<string, EmployeeMatchRowDto>;
   projectName?: string | null;
 };
 
-export function TeamCard({ members, avgRedundancy, teamSize, memberMatches = {}, projectName }: Props) {
-  const avgMarginalGain =
-    members.length > 0
-      ? members.reduce((sum, m) => sum + m.marginal_coverage_gain, 0) / members.length
-      : 0;
-
-  const selectedConfidences = members
-    .map((m) => memberMatches[m.employee_keycloak_id]?.confidence_score)
-    .filter((v): v is number => typeof v === "number");
-  const avgConfidence =
-    selectedConfidences.length > 0
-      ? selectedConfidences.reduce((sum, value) => sum + value, 0) / selectedConfidences.length
-      : 0;
-
-  const saturationSignal = members.length > 1 ? members[members.length - 1].marginal_coverage_gain : avgMarginalGain;
-  const leadName = members[0]?.display_name;
-
+export function TeamCard({ members, teamSize, memberMatches = {}, projectName }: Props) {
   return (
-    <div className="space-y-6">
+    <div>
       <article className="overflow-hidden rounded-[30px] border border-violet-100 bg-white shadow-[0_20px_50px_rgba(100,65,190,0.11)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -51,6 +34,7 @@ export function TeamCard({ members, avgRedundancy, teamSize, memberMatches = {},
             const seed = row?.email || m.employee_keycloak_id || m.display_name;
             const initials = avatarInitials(m.display_name, row?.email);
             const avatar = avatarGradient(seed);
+            const position = idx + 1;
 
             return (
               <li key={m.employee_keycloak_id} className="px-6 py-5">
@@ -65,10 +49,7 @@ export function TeamCard({ members, avgRedundancy, teamSize, memberMatches = {},
 
                     <div className="min-w-0">
                       <p className="truncate text-xl font-black leading-none text-slate-800">{m.display_name}</p>
-                      <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.11em] text-violet-500">
-                        Position #{idx + 1}
-                        {row?.rank ? ` · Classement #${row.rank}` : ""}
-                      </p>
+                      <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.11em] text-violet-500">Position #{position}</p>
                     </div>
                   </div>
                 </div>
@@ -89,30 +70,6 @@ export function TeamCard({ members, avgRedundancy, teamSize, memberMatches = {},
           })}
         </ul>
       </article>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <article className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm">
-          <p className="text-[11px] font-bold uppercase tracking-[0.11em] text-slate-400">Apport du dernier profil</p>
-          <p className="mt-2 text-2xl font-black leading-none text-violet-700">{toPercent(saturationSignal)}</p>
-          <p className="mt-2 text-sm text-slate-500">Ce pourcentage montre ce que le dernier profil apporte encore a l'equipe.</p>
-        </article>
-
-        <article className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm">
-          <p className="text-[11px] font-bold uppercase tracking-[0.11em] text-slate-400">Fiabilite des scores</p>
-          <p className="mt-2 text-2xl font-black leading-none text-emerald-600">{toPercent(avgConfidence)}</p>
-          <p className="mt-2 text-sm text-slate-500">C'est la moyenne de fiabilite des profils choisis.</p>
-        </article>
-
-        <article className="rounded-[26px] bg-gradient-to-br from-violet-700 via-fuchsia-600 to-violet-700 p-5 text-white shadow-[0_18px_34px_rgba(109,40,217,0.25)]">
-          <p className="text-[11px] font-bold uppercase tracking-[0.11em] text-violet-100">Recommandation</p>
-          <p className="mt-2 text-xl font-black leading-tight">
-            {leadName ? `${leadName} est recommande en premier` : "Equipe recommandee"}
-          </p>
-          <p className="mt-2 text-sm text-violet-100/95">
-            Chevauchement moyen des competences : {toPercent(avgRedundancy)}. Apport moyen des profils : {toPercent(avgMarginalGain)}.
-          </p>
-        </article>
-      </div>
     </div>
   );
 }

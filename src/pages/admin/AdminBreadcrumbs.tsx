@@ -1,13 +1,15 @@
-import { ChevronRightIcon, HomeIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon, HomeIcon } from "../../icons/heroicons/outline";
 import type { NavId } from "./types";
 
 const LABELS: Record<NavId, string> = {
   dashboard: "Tableau de bord",
   users: "Utilisateurs",
   archives: "Archives",
+  projects: "Projets",
   skills: "Référentiel compétences",
   skillRequests: "Demandes compétences",
   skillCategories: "Catégories",
+  assignments: "Affectations",
   profile: "Mon profil",
 };
 

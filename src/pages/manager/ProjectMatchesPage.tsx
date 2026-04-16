@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { UsersIcon } from "@heroicons/react/24/outline";
 import { matchingApi, type EmployeeMatchRowDto, type MatchListResponseDto } from "../../api/matchingApi";
 import { projectsApi, type ProjectDto } from "../../api/projectsApi";
+import { assignmentsApi, type AssignmentDto } from "../../api/assignmentsApi";
 import { EmployeeCard } from "../../components/matching/EmployeeCard";
 import { TalentWorkspaceShell } from "../../components/matching/TalentWorkspaceShell";
 import { EmployeeMatchDrawer } from "./EmployeeMatchDrawer";
@@ -19,6 +19,7 @@ export function ProjectMatchesPage() {
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<EmployeeMatchRowDto | null>(null);
+  const [assignments, setAssignments] = useState<AssignmentDto[]>([]);
 
   useEffect(() => {
     if (Number.isNaN(projectId)) {
@@ -30,8 +31,12 @@ export function ProjectMatchesPage() {
     setLoading(true);
     setError(null);
 
-    Promise.all([projectsApi.get(projectId).catch(() => null), matchingApi.getProjectMatches(projectId).catch(() => null)])
-      .then(([projRes, matchRes]) => {
+    Promise.all([
+      projectsApi.get(projectId).catch(() => null),
+      matchingApi.getProjectMatches(projectId).catch(() => null),
+      assignmentsApi.listProjectAssignments(projectId).catch(() => null),
+    ])
+      .then(([projRes, matchRes, assignRes]) => {
         if (cancelled) return;
         setProject(projRes?.data ?? null);
         if (!matchRes?.data) {
@@ -42,6 +47,7 @@ export function ProjectMatchesPage() {
         } else {
           setMatches(matchRes.data);
         }
+        setAssignments(Array.isArray(assignRes?.data) ? assignRes!.data : []);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -87,11 +93,10 @@ export function ProjectMatchesPage() {
       }
       actions={
         <Link
-          to={`/manager/matching/${projectId}/team`}
+          to={`/manager/matching/${projectId}/workspace`}
           className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(109,40,217,0.25)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
         >
-          <UsersIcon className="h-4 w-4" />
-          Équipe optimale
+          Ouvrir workspace
         </Link>
       }
     >
@@ -127,7 +132,10 @@ export function ProjectMatchesPage() {
           setSelected(null);
         }}
         projectId={projectId}
+        projectTeamSize={project?.teamSize ?? null}
         row={selected}
+        assignments={assignments}
+        onAssignmentsChange={setAssignments}
       />
     </TalentWorkspaceShell>
   );

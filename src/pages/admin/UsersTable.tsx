@@ -13,11 +13,12 @@ import {
   NoSymbolIcon,
   PowerIcon,
   EyeIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 
 import type { UserListDto } from "./types";
 import { MESSAGES } from "./constants";
 import { getAvatarColor } from "./utils";
+import { PROJECTS_AG_THEME } from "../../components/projectsAgTheme";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -145,7 +146,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
         const loadingSpan = <span className="text-[10px]">…</span>;
 
         return (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-center gap-1 w-full">
             <button type="button" title="Voir les détails" onClick={() => onView(u)} className={`${btnCls} text-slate-600 hover:bg-slate-100 hover:border-slate-200 hover:text-slate-900 hover:-translate-y-px hover:shadow-md`}>
               <EyeIcon className="w-3.5 h-3.5" />
             </button>
@@ -207,46 +208,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
          * overflow-hidden évite tout scrollbar parasite sur ce conteneur.
          */
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-          <style>{`
-            .ag-theme-quartz {
-              --ag-background-color: #ffffff;
-              --ag-header-background-color: rgba(109,40,217,0.06);
-              --ag-odd-row-background-color: #ffffff;
-              --ag-row-hover-color: #f0f0ff;
-              --ag-border-color: #e8edf5;
-              --ag-header-foreground-color: #4c1d95;
-              --ag-foreground-color: #0f172a;
-              --ag-font-size: 14px;
-              --ag-cell-horizontal-padding: 16px;
-              --ag-row-height: 52px;
-              --ag-header-height: 42px;
-            }
-            .ag-theme-quartz .ag-header-cell-label {
-              font-size: 10.5px;
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.08em;
-              color: #5b21b6;
-            }
-            .ag-theme-quartz .ag-row { border-bottom: 1px solid #ede9fe; }
-            .ag-theme-quartz .ag-cell {
-              display: flex !important;
-              align-items: center !important;
-              line-height: normal !important;
-            }
-            .ag-theme-quartz .ag-cell-wrapper {
-              width: 100%;
-              display: flex;
-              align-items: center;
-            }
-            .ag-theme-quartz .ag-paging-panel {
-              border-top: 1px solid rgba(109,40,217,0.12);
-              background: rgba(109,40,217,0.04);
-              color: #5b21b6;
-              font-size: 12px;
-              font-weight: 500;
-            }
-          `}</style>
+          <style>{PROJECTS_AG_THEME}</style>
 
           {/*
            * Technique "absolute fill" : le div parent est relative + flex-1,
@@ -256,8 +218,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
            * Le padding-bottom réserve l'espace du compteur d'utilisateurs.
            */}
           <div
-            className="ag-theme-quartz absolute inset-0"
-            style={{ paddingBottom: "36px" }}
+            className="ag-theme-quartz ag-theme-projects absolute inset-0"
+            style={{ paddingBottom: "28px" }}
           >
             <AgGridReact<UserListDto>
               ref={gridRef}
@@ -272,7 +234,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               paginationPageSize={8}
               paginationPageSizeSelector={false}
               suppressCellFocus
-              rowHeight={52}
+              rowHeight={56}
               headerHeight={42}
               noRowsOverlayComponent={() => (
                 <div className="flex flex-col items-center gap-2 py-16">
@@ -284,7 +246,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
           </div>
 
           {/* Compteur collé en bas, au-dessus de la pagination AG Grid */}
-          <div className="absolute bottom-0 right-0 z-10 border-t border-violet-500/10 bg-white px-6 py-2 text-right text-xs font-medium text-violet-600">
+          <div className="absolute bottom-0 right-0 z-10 border-t border-violet-500/10 bg-white px-4 py-1.5 text-right text-[11px] font-semibold text-violet-600">
             {users.length} utilisateur{users.length !== 1 ? "s" : ""} affiché{users.length !== 1 ? "s" : ""} sur {users.length}
           </div>
         </div>

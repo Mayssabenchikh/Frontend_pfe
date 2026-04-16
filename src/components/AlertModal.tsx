@@ -1,7 +1,7 @@
 /**
  * Modal d'alerte unifié (avertissement, info) — design violet cohérent
  */
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon } from "../icons/heroicons/outline";
 
 interface Props {
   open: boolean;

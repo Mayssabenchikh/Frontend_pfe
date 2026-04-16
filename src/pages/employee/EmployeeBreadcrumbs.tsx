@@ -1,4 +1,4 @@
-import { ChevronRightIcon, HomeIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon, HomeIcon } from "../../icons/heroicons/outline";
 import { useLocation, Link } from "react-router-dom";
 
 function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string }[] {
@@ -16,6 +16,18 @@ function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string 
 
   if (parts[1] === "quiz") {
     return [{ label: "Quiz" }];
+  }
+
+  if (parts[1] === "assignments") {
+    return [{ label: "Affectations" }];
+  }
+
+  if (parts[1] === "projects" && parts.length === 2) {
+    return [{ label: "Mes projets" }];
+  }
+
+  if (parts[1] === "projects" && parts.length >= 3) {
+    return [{ label: "Mes projets", to: "/employee/projects" }, { label: "Détails du projet" }];
   }
 
   return [];

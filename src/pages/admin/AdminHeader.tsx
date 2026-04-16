@@ -4,7 +4,7 @@ import {
   UserCircleIcon,
   Bars3Icon,
   ChevronDownIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import type { NavId } from "./types";
 import { getAvatarColor, getDisplayNameInitials } from "./utils";
 

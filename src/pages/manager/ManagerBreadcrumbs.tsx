@@ -1,4 +1,4 @@
-import { ChevronRightIcon, HomeIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon, HomeIcon } from "../../icons/heroicons/outline";
 import { useLocation, Link } from "react-router-dom";
 
 function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }[] {
@@ -17,6 +17,11 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
   // /manager/quiz
   if (parts[1] === "quiz") {
     return [{ label: "Quiz" }];
+  }
+
+  // /manager/assignments
+  if (parts[1] === "assignments") {
+    return [{ label: "Affectations" }];
   }
 
   // /manager/matching (hub)

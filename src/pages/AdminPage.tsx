@@ -13,7 +13,7 @@ import {
   CalendarDaysIcon,
   CheckCircleIcon,
   NoSymbolIcon,
-} from "@heroicons/react/24/outline";
+} from "../icons/heroicons/outline";
 
 import type { UserListDto, ArchivedUserDto, NavId, AdminRole, TokenParsed } from "./admin/types";
 import { ROLE_LABELS, MESSAGES } from "./admin/constants";
@@ -29,10 +29,12 @@ import { SkillsCatalog } from "./admin/SkillsCatalog";
 import { SkillCategories } from "./admin/SkillCategories";
 import { PendingSkillRequests } from "./admin/PendingSkillRequests";
 import { AdminProfile } from "./admin/AdminProfile";
+import { AdminAssignmentsAudit } from "./admin/AdminAssignmentsAudit";
+import { AdminProjectsReadonly } from "./admin/AdminProjectsReadonly";
 import { CreateUserModal } from "./admin/CreateUserModal";
 import { EditUserModal } from "./admin/EditUserModal";
 import { FiltersPanel } from "../components/FiltersPanel";
-import { ArchiveBoxIcon } from "@heroicons/react/24/outline";
+import { ArchiveBoxIcon } from "../icons/heroicons/outline";
 
 const USERS_API = "/api/admin/users";
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
@@ -362,6 +364,14 @@ export default function AdminPage() {
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <PendingSkillRequests />
             </section>
+          )}
+
+          {currentView === "assignments" && (
+            <AdminAssignmentsAudit />
+          )}
+
+          {currentView === "projects" && (
+            <AdminProjectsReadonly />
           )}
 
           {currentView === "archives" && (

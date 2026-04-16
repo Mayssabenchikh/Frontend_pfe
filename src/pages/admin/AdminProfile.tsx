@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { CameraIcon, ArrowPathIcon, UserIcon, EnvelopeIcon, PhoneIcon, BuildingOffice2Icon, BriefcaseIcon, CalendarDaysIcon, CheckCircleIcon, PencilSquareIcon, ArrowDownTrayIcon, XMarkIcon, EyeIcon, EyeSlashIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { CameraIcon, ArrowPathIcon, UserIcon, EnvelopeIcon, PhoneIcon, BuildingOffice2Icon, BriefcaseIcon, CalendarDaysIcon, CheckCircleIcon, PencilSquareIcon, ArrowDownTrayIcon, XMarkIcon, EyeIcon, EyeSlashIcon, LockClosedIcon } from "../../icons/heroicons/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
 import { ADMIN_API_PATHS } from "./adminApiPaths";

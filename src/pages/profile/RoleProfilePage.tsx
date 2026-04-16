@@ -20,7 +20,7 @@ import {
   SparklesIcon,
   DocumentTextIcon,
   BeakerIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
 import { getAvatarColor } from "../admin/utils";

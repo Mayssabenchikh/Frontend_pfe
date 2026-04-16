@@ -147,8 +147,8 @@
 
 /* Sidebar */
 .admin-sidebar {
-  width: 240px;
-  min-width: 240px;
+  width: 280px;
+  min-width: 280px;
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -197,7 +197,7 @@
 /* Header left offset matches sidebar width */
 .admin-header-fixed {
   position: fixed;
-  top: 0; right: 0; left: 240px;
+  top: 0; right: 0; left: 280px;
   z-index: 40;
   height: 64px;
   display: flex;
@@ -269,7 +269,7 @@
 /* ── Mobile (≤ 768px) ───────────────────────────────────────── */
 @media (max-width: 768px) {
   .admin-sidebar-toggle { display: none; }
-  .admin-sidebar.collapsed { width: 240px; min-width: 240px; }
+  .admin-sidebar.collapsed { width: 280px; min-width: 280px; }
   .admin-sidebar.collapsed .admin-sidebar-logo { opacity: 1; width: auto; }
   .admin-sidebar.collapsed .admin-sidebar-header { justify-content: space-between; padding: 0 20px; }
   .admin-sidebar.collapsed .admin-nav-item { justify-content: flex-start; padding-left: 14px; padding-right: 14px; }

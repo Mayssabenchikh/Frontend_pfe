@@ -1,5 +1,4 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
+import { ArrowTopRightOnSquareIcon, StarIcon } from "../../icons/heroicons/outline";
 import type { EmployeeMatchRowDto } from "../../api/matchingApi";
 import { avatarGradient, avatarInitials, toPercent, toPercentNumber } from "./matchingVisuals";
 

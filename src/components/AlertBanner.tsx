@@ -4,7 +4,7 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-} from "@heroicons/react/24/outline";
+} from "../icons/heroicons/outline";
 
 type AlertVariant = "error" | "warning" | "success" | "info";
 

@@ -1,5 +1,5 @@
 import type { NavId } from "./types";
-import { Squares2X2Icon, UsersIcon, ArchiveBoxIcon, BookOpenIcon, FolderIcon, ChevronLeftIcon, ChevronRightIcon, InboxStackIcon } from "@heroicons/react/24/outline";
+import { Squares2X2Icon, UsersIcon, ArchiveBoxIcon, BookOpenIcon, FolderIcon, ChevronLeftIcon, ChevronRightIcon, InboxStackIcon, BriefcaseIcon, ClipboardDocumentListIcon } from "../../icons/heroicons/outline";
 
 type NavItem = { id: NavId; label: string; icon: React.ReactNode };
 type Props = {
@@ -18,9 +18,11 @@ const NAV: NavItem[] = [
   { id: "dashboard",      label: "Tableau de bord",        icon: <Squares2X2Icon className="w-5 h-5" /> },
   { id: "users",          label: "Utilisateurs",           icon: <UsersIcon className="w-5 h-5" /> },
   { id: "archives",       label: "Archives",               icon: <ArchiveBoxIcon className="w-5 h-5" /> },
+  { id: "projects",       label: "Projets",                icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
   { id: "skills",         label: "Référentiel compétences", icon: <BookOpenIcon className="w-5 h-5" /> },
   { id: "skillRequests",  label: "Demandes compétences",   icon: <InboxStackIcon className="w-5 h-5" /> },
   { id: "skillCategories", label: "Catégories",            icon: <FolderIcon className="w-5 h-5" /> },
+  { id: "assignments",    label: "Affectations",           icon: <BriefcaseIcon className="w-5 h-5" /> },
 ];
 
 export function AdminSidebar({ currentView, onNavChange, mobileOpen, collapsed = false, onToggleCollapse }: Props) {

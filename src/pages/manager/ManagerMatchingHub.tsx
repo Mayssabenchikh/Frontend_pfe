@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChartBarSquareIcon,
-  UserGroupIcon,
   RocketLaunchIcon,
   CircleStackIcon,
   CommandLineIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import { projectsApi, type ProjectDto } from "../../api/projectsApi";
 import { AlertBanner } from "../../components/AlertBanner";
 
@@ -133,18 +132,11 @@ export function ManagerMatchingHub() {
 
                 <div className="relative mt-5 flex flex-wrap gap-2">
                   <Link
-                    to={`/manager/matching/${p.id}/matches`}
+                    to={`/manager/matching/${p.id}/workspace`}
                     className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                   >
                     <ChartBarSquareIcon className="h-4 w-4 shrink-0" />
-                    Classement
-                  </Link>
-                  <Link
-                    to={`/manager/matching/${p.id}/team`}
-                    className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-violet-200 bg-white px-3 py-2 text-sm font-semibold text-violet-700 transition hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
-                  >
-                    <UserGroupIcon className="h-4 w-4 shrink-0" />
-                    Équipe
+                    Profils & équipe
                   </Link>
                 </div>
               </li>

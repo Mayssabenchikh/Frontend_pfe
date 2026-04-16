@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AcademicCapIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { AcademicCapIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from "../../icons/heroicons/outline";
 import { http } from "../../api/http";
 
 type EmployeeSkillDto = {

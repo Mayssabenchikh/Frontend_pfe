@@ -35,6 +35,7 @@ import {
   faRightFromBracket,
   faRocket,
   faShieldHalved,
+  faStar,
   faTableCellsLarge,
   faTag,
   faTerminal,
@@ -120,6 +121,7 @@ export const PowerIcon = makeFaIcon(faPowerOff);
 export const QuestionMarkCircleIcon = makeFaIcon(faCircleQuestionRegular);
 export const RocketLaunchIcon = makeFaIcon(faRocket);
 export const ShieldCheckIcon = makeFaIcon(faShieldHalved);
+export const StarIcon = makeFaIcon(faStar);
 export const SparklesIcon = makeFaIcon(faWandMagicSparkles);
 export const Squares2X2Icon = makeFaIcon(faTableCellsLarge);
 export const TagIcon = makeFaIcon(faTag);

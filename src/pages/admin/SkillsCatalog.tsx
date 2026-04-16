@@ -18,7 +18,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   TagIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import { skillsApi } from "../../api/skillsApi";
 import type { SkillDto, SkillCategoryDto } from "./types";
 import { getApiError } from "./utils";

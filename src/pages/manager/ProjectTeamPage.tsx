@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ChartBarSquareIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { matchingApi, type EmployeeMatchRowDto, type TeamBuildResponseDto } from "../../api/matchingApi";
 import { projectsApi, type ProjectDto } from "../../api/projectsApi";
 import { TeamCard } from "../../components/matching/TeamCard";
 import { TalentWorkspaceShell } from "../../components/matching/TalentWorkspaceShell";
-import { toPercent } from "../../components/matching/matchingVisuals";
 import { AlertBanner } from "../../components/AlertBanner";
 
 export function ProjectTeamPage() {
@@ -104,11 +102,10 @@ export function ProjectTeamPage() {
       }
       actions={
         <Link
-          to={`/manager/matching/${projectId}/matches`}
+          to={`/manager/matching/${projectId}/workspace`}
           className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 shadow-sm transition hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
         >
-          <ChartBarSquareIcon className="h-4 w-4" />
-          Classement
+          Ouvrir workspace
         </Link>
       }
     >
@@ -155,18 +152,12 @@ export function ProjectTeamPage() {
             </button>
           </div>
 
-          <article className="rounded-[28px] border border-emerald-100 bg-emerald-50/70 p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.11em] text-emerald-700">Efficacite globale</p>
-            <p className="mt-2 text-2xl font-black leading-none text-emerald-700">{team ? toPercent(1 - team.avg_redundancy, 1) : "--"}</p>
-            <p className="mt-2 text-sm text-emerald-900/80">Plus ce score est eleve, mieux l'equipe se complete. Chevauchement moyen : {team ? toPercent(team.avg_redundancy) : "--"}.</p>
-          </article>
         </div>
 
         <div className="min-w-0 space-y-6">
           {team ? (
             <TeamCard
               members={team.members}
-              avgRedundancy={team.avg_redundancy}
               teamSize={team.team_size}
               memberMatches={matchRows}
               projectName={project?.name ?? null}

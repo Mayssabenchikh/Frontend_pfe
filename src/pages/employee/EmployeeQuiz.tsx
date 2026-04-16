@@ -6,7 +6,7 @@ import {
   ArrowPathIcon,
   ChevronDownIcon,
   PaperAirplaneIcon,
-} from "@heroicons/react/24/outline";
+} from "../../icons/heroicons/outline";
 import { quizApi, type AttemptResultResponse, type EmployeeSkillDto, type QuizStartResponse } from "../../api/quizApi.ts";
 import { getSkillIconUrl } from "../admin/skillIcons";
 import { AlertBanner } from "../../components/AlertBanner";
