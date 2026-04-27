@@ -44,5 +44,26 @@ export const PROJECTS_AG_THEME = `
     font-size: 12px;
     font-weight: 500;
   }
+
+  @media (max-width: 767px) {
+    .ag-theme-projects {
+      --ag-font-size: 12px;
+      --ag-cell-horizontal-padding: 10px;
+      --ag-row-height: 52px;
+      --ag-header-height: 40px;
+    }
+    .ag-theme-projects .ag-header-cell-label {
+      font-size: 9.5px;
+      letter-spacing: 0.06em;
+    }
+    .ag-theme-projects .ag-paging-panel {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.35rem;
+      row-gap: 0.2rem;
+      padding: 0.45rem 0.3rem;
+      font-size: 11px;
+    }
+  }
 `;
 

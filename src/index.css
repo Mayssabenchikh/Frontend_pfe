@@ -73,6 +73,21 @@
   align-items: center;
 }
 
+@media (max-width: 767px) {
+  .ag-theme-quartz {
+    --ag-font-size: 12px;
+    --ag-cell-horizontal-padding: 12px;
+  }
+  .ag-theme-quartz .ag-paging-panel {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    row-gap: 0.25rem;
+    padding: 0.5rem 0.35rem;
+    font-size: 11px;
+  }
+}
+
 /* Quiz motion system */
 @keyframes quizFadeUp {
   from {
@@ -149,10 +164,13 @@
 .admin-sidebar {
   width: 280px;
   min-width: 280px;
+  max-width: min(280px, 100vw - 24px);
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  height: 100dvh;
+  min-height: 100dvh;
+  min-height: 100svh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   overflow-x: hidden;
   overflow-y: hidden;
   background: var(--glass-bg);
@@ -190,8 +208,14 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   min-width: 0;
+}
+
+/* Décalage sous le header fixe + encoche (notch) */
+.admin-content > main {
+  padding-top: calc(4rem + env(safe-area-inset-top, 0px));
 }
 
 /* Header left offset matches sidebar width */
@@ -204,11 +228,28 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
+  padding-left: max(32px, env(safe-area-inset-left, 0px));
+  padding-right: max(32px, env(safe-area-inset-right, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  min-height: calc(64px + env(safe-area-inset-top, 0px));
   background: var(--glass-bg-strong);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--glass-border);
   box-shadow: 0 2px 16px rgba(99, 102, 241, 0.08);
   transition: left 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Fil d’Ariane : défilement horizontal sur petits écrans (libellés longs) */
+.admin-breadcrumbs {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.admin-breadcrumbs::-webkit-scrollbar {
+  height: 4px;
+}
+.admin-breadcrumbs::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
 }
 .admin-layout[data-sidebar-collapsed] .admin-header-fixed {
   left: 72px;
@@ -283,6 +324,7 @@
   }
   .admin-sidebar.open {
     transform: translateX(0);
+    padding-top: env(safe-area-inset-top, 0px);
   }
   .sidebar-backdrop.open {
     display: block;
@@ -290,8 +332,13 @@
 
   /* Header spans full width */
   .admin-header-fixed {
-    left: 0;
-    padding: 0 16px;
+    left: 0 !important;
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .admin-layout[data-sidebar-collapsed] .admin-header-fixed {
+    left: 0 !important;
   }
 
   /* Hamburger visible */
@@ -328,10 +375,19 @@
 /* ── Small mobile (≤ 480px) ─────────────────────────────────── */
 @media (max-width: 480px) {
   .admin-header-fixed {
-    padding: 0 12px;
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
   }
   .dashboard-padding {
-    padding: 14px 12px 20px;
+    padding: 14px max(12px, env(safe-area-inset-left, 0px)) 20px max(12px, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* Très petits téléphones (≤ 360px) */
+@media (max-width: 360px) {
+  .dashboard-padding {
+    padding-top: 12px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
 }
 

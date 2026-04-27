@@ -40,6 +40,12 @@ export function avatarGradient(seed: string): [string, string] {
   return palettes[Math.abs(hash) % palettes.length];
 }
 
+/** Niveau de compétence affiché (N = niveau ; évite la confusion avec la lettre L). */
+export function formatSkillLevel(level: number | null | undefined): string {
+  if (level === null || level === undefined || Number.isNaN(Number(level))) return "—";
+  return `N${Number(level)}`;
+}
+
 export function formatFrenchDate(value?: string | null): string | null {
   if (!value) return null;
   const date = new Date(value);

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
+import type { AxiosResponse } from "axios";
 import {
   CameraIcon,
   ArrowPathIcon,
@@ -23,7 +24,9 @@ import {
 } from "../../icons/heroicons/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
+import { meApi } from "../../api/meApi";
 import { getAvatarColor } from "../admin/utils";
+import { getUserFacingApiMessage, translateApiMessageToFrench } from "../../utils/apiUserMessage";
 
 const STYLE_ELEMENT_ID = "role-profile-luxury-styles";
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
@@ -131,6 +134,54 @@ type ProfileData = {
   hireDate: string | null;
 };
 
+type ProfileGetRequestState = {
+  inFlight: Promise<AxiosResponse<unknown>> | null;
+  cacheAt: number;
+  cachedValue: AxiosResponse<unknown> | null;
+};
+
+const PROFILE_GET_DEDUPE_TTL_MS = 3000;
+const profileGetRequestState = new Map<string, ProfileGetRequestState>();
+
+function dedupedProfileGet<T>(endpoint: string, options?: { force?: boolean }): Promise<AxiosResponse<T>> {
+  const force = options?.force ?? false;
+  const now = Date.now();
+  const state = profileGetRequestState.get(endpoint);
+
+  if (!force && state?.cachedValue && now - state.cacheAt < PROFILE_GET_DEDUPE_TTL_MS) {
+    return Promise.resolve(state.cachedValue as AxiosResponse<T>);
+  }
+
+  if (!force && state?.inFlight) {
+    return state.inFlight as Promise<AxiosResponse<T>>;
+  }
+
+  const request = http.get<T>(endpoint).finally(() => {
+    const current = profileGetRequestState.get(endpoint);
+    if (!current) return;
+    current.inFlight = null;
+  });
+
+  profileGetRequestState.set(endpoint, {
+    inFlight: request,
+    cacheAt: state?.cacheAt ?? 0,
+    cachedValue: state?.cachedValue ?? null,
+  });
+
+  return request.then((res) => {
+    profileGetRequestState.set(endpoint, {
+      inFlight: null,
+      cacheAt: Date.now(),
+      cachedValue: res,
+    });
+    return res;
+  });
+}
+
+type ProfileMeResponse = ProfileData & {
+  avatarUrl?: string | null;
+};
+
 type TokenParsed = {
   given_name?: string;
   family_name?: string;
@@ -149,7 +200,6 @@ type EmployeeSkillItem = {
   categoryName: string;
   level: number;
   status: "EXTRACTED" | "QUIZ_PENDING" | "VALIDATED" | "FAILED" | string;
-  source: string;
 };
 
 type Section = "personal" | "cv";
@@ -158,6 +208,9 @@ type ExtractionResult = {
   matchedSkills: { skillName: string; categoryName: string }[];
   unmatchedSkills: string[];
   pendingRequestsCreated: number;
+  isCv?: boolean | null;
+  cvScore?: number | null;
+  cvMessage?: string | null;
 };
 
 export type RoleProfileConfig = {
@@ -181,7 +234,19 @@ function normalizeCvFilename(file: File): string {
 }
 
 function isAcceptedCvFile(file: File): boolean {
-  return file.type === "application/pdf" || file.name.endsWith(".pdf") || file.name.endsWith(".docx");
+  const lowerName = file.name.toLowerCase();
+  const acceptedMimeTypes = new Set([
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ]);
+  return acceptedMimeTypes.has(file.type) || lowerName.endsWith(".pdf") || lowerName.endsWith(".docx");
+}
+
+function getCvValidationError(file: File): string | null {
+  if (!isAcceptedCvFile(file)) {
+    return `Le fichier "${file.name}" n'est pas pris en charge. Veuillez choisir un CV au format PDF ou DOCX.`;
+  }
+  return null;
 }
 
 export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
@@ -209,8 +274,19 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
 
   useEffect(() => {
     setLoadingExtra(true);
-    http.get<ProfileData>(config.profileEndpoint)
-      .then((res) => setExtraData(res.data))
+    meApi
+      .byEndpoint<ProfileMeResponse>(config.profileEndpoint)
+      .then((res) => {
+        setExtraData({
+          phone: res.data?.phone ?? null,
+          department: res.data?.department ?? null,
+          jobTitle: res.data?.jobTitle ?? null,
+          hireDate: res.data?.hireDate ?? null,
+        });
+        if (res.data?.avatarUrl) {
+          setAvatarUrl(res.data.avatarUrl);
+        }
+      })
       .catch(() => {})
       .finally(() => setLoadingExtra(false));
   }, [config.profileEndpoint]);
@@ -235,14 +311,6 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
   const [employeeSkills, setEmployeeSkills] = useState<EmployeeSkillItem[]>([]);
   const [pendingUnrecognizedSkills, setPendingUnrecognizedSkills] = useState<string[]>([]);
-
-  useEffect(() => {
-    http.get<{ avatarUrl?: string }>(config.profileEndpoint)
-      .then((res) => {
-        if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl);
-      })
-      .catch(() => {});
-  }, [config.profileEndpoint]);
 
   const handleSaveProfile = useCallback(async () => {
     const fn = editedFirstName.trim();
@@ -297,15 +365,15 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
 
   useEffect(() => {
     if (!userId) return;
-    http.get<CvMetadata>(config.cvEndpoint)
+    dedupedProfileGet<CvMetadata>(config.cvEndpoint)
       .then((res) => {
         setCvFileName(res.data?.fileName ?? null);
       })
       .catch(() => {});
   }, [config.cvEndpoint, userId]);
 
-  const loadEmployeeSkills = useCallback(() => {
-    http.get<EmployeeSkillItem[]>(config.skillsEndpoint)
+  const loadEmployeeSkills = useCallback((force = false) => {
+    dedupedProfileGet<EmployeeSkillItem[]>(config.skillsEndpoint, { force })
       .then((res) => setEmployeeSkills(res.data ?? []))
       .catch(() => setEmployeeSkills([]));
   }, [config.skillsEndpoint]);
@@ -314,8 +382,8 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     loadEmployeeSkills();
   }, [loadEmployeeSkills]);
 
-  const loadPendingUnrecognizedSkills = useCallback(() => {
-    http.get<string[]>(config.pendingSkillsEndpoint)
+  const loadPendingUnrecognizedSkills = useCallback((force = false) => {
+    dedupedProfileGet<string[]>(config.pendingSkillsEndpoint, { force })
       .then((res) => setPendingUnrecognizedSkills(res.data ?? []))
       .catch(() => setPendingUnrecognizedSkills([]));
   }, [config.pendingSkillsEndpoint]);
@@ -328,22 +396,35 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && isAcceptedCvFile(file)) {
-      setCvFile(file);
-      setCvFileName(normalizeCvFilename(file));
-      setExtractionResult(null);
-    } else {
-      toast.error("Veuillez déposer un fichier PDF ou DOCX.");
-    }
-  };
+    if (!file) return;
 
-  const handleCvSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const validationError = getCvValidationError(file);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
     if (file) {
       setCvFile(file);
       setCvFileName(normalizeCvFilename(file));
       setExtractionResult(null);
     }
+  };
+
+  const handleCvSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validationError = getCvValidationError(file);
+    if (validationError) {
+      toast.error(validationError);
+      e.target.value = "";
+      return;
+    }
+
+    setCvFile(file);
+    setCvFileName(normalizeCvFilename(file));
+    setExtractionResult(null);
   };
 
   const handleExtractSkills = async () => {
@@ -360,13 +441,22 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
       setExtractionResult(res.data);
       const matched = res.data.matchedSkills?.length ?? 0;
       const unmatched = res.data.unmatchedSkills?.length ?? 0;
-      if (matched > 0) toast.success(`${matched} compétence(s) ajoutée(s) à votre profil !`);
+      const isCv = res.data.isCv ?? matched > 0;
+      const cvMessage = (res.data.cvMessage ?? "").trim();
+      if (!isCv) {
+        toast.warning(cvMessage || "Ce document ne semble pas être un CV exploitable. Veuillez importer un CV clair au format PDF ou DOCX.");
+      } else if (matched > 0) {
+        toast.success(`${matched} compétence(s) ajoutée(s) à votre profil !`);
+      } else {
+        toast.info("CV détecté, mais aucune compétence technique exploitable n'a été trouvée.");
+      }
       if (unmatched > 0) toast.info(`${unmatched} compétence(s) non reconnue(s) envoyée(s) à l'administrateur.`);
       setCvFileName(normalizeCvFilename(cvFile));
-      loadEmployeeSkills();
-      loadPendingUnrecognizedSkills();
-    } catch {
-      toast.error("Erreur lors de l'extraction des compétences.");
+      loadEmployeeSkills(true);
+      loadPendingUnrecognizedSkills(true);
+    } catch (err: unknown) {
+      const apiMessage = getUserFacingApiMessage(err, "Impossible d'analyser ce document.");
+      toast.error(translateApiMessageToFrench(apiMessage));
     } finally {
       setExtracting(false);
     }
@@ -379,8 +469,8 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden" style={{ background: "var(--luxury-light-bg)" }}>
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-2 px-3 py-1 md:gap-3 md:px-4 md:py-2">
-        <header className="profile-saas-card luxury-animate-in shrink-0 rounded-2xl px-3.5 py-2.5 md:px-4 md:py-3">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-2 px-2 py-1 sm:px-3 md:gap-3 md:px-4 md:py-2">
+        <header className="profile-saas-card luxury-animate-in shrink-0 rounded-2xl px-3 py-2.5 sm:px-3.5 md:px-4 md:py-3">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
               <div className="relative shrink-0 group">
@@ -415,10 +505,10 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
               </div>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <h1 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
+                  <h1 className="text-xl font-normal tracking-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#1e293b" }}>
                     {displayFirst}
                   </h1>
-                  <h2 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
+                  <h2 className="text-xl font-normal tracking-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#1e293b" }}>
                     {displayLast}
                   </h2>
                 </div>
@@ -431,7 +521,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
               </div>
             </div>
             <div
-              className="flex w-fit shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-sm transition-transform duration-200 hover:scale-[1.02]"
+              className="flex w-fit shrink-0 items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:self-auto"
               style={{ background: "rgba(16, 185, 129, 0.08)", borderColor: "var(--luxury-success)" }}
             >
               <CheckCircleIcon className="h-3 w-3 shrink-0" style={{ color: "var(--luxury-success)" }} />
@@ -471,7 +561,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
 
         <main className="min-h-0 flex-1 overflow-hidden luxury-animate-in" style={{ animationDelay: "0.1s" }}>
           <div className="profile-saas-card flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 md:p-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3 md:p-4">
               {section === "personal" && (
                 <PersonalSection
                   firstName={editedFirstName || firstName}
@@ -532,10 +622,10 @@ function ProfileSectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className={`profile-saas-card rounded-2xl ${compact ? "p-3 md:p-3.5" : "p-4 md:p-5"}`}>
+    <section className={`profile-saas-card rounded-2xl ${compact ? "p-2.5 sm:p-3 md:p-3.5" : "p-3 sm:p-4 md:p-5"}`}>
       {title ? (
         <div className={`${compact ? "mb-2.5 pb-2" : "mb-4 pb-3"} border-b border-slate-200/80`}>
-          <h3 className="text-lg font-bold" style={{ color: "#1e293b" }}>
+          <h3 className="text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>
             {title}
           </h3>
           {description ? (
@@ -626,7 +716,7 @@ function PersonalSection({
     <div className="flex flex-col gap-3 lg:gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="mb-0.5 text-lg font-bold" style={{ color: "#1e293b" }}>
+          <h2 className="mb-0.5 text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>
             Informations personnelles
           </h2>
           <p className="text-sm" style={{ color: "var(--luxury-text-muted)" }}>
@@ -816,8 +906,8 @@ function SecuritySection({ embedded = false, changePasswordEndpoint }: { embedde
       setFieldErrors({});
       toast.success("Mot de passe modifié avec succès.");
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "Erreur lors du changement de mot de passe.";
-      if (msg.toLowerCase().includes("incorrect")) {
+      const msg = getUserFacingApiMessage(err, "Erreur lors du changement de mot de passe.");
+      if (/incorrect|mot de passe actuel|identifiants/i.test(msg)) {
         setFieldErrors({ current: "Mot de passe actuel incorrect." });
       } else {
         toast.error(msg);
@@ -965,13 +1055,13 @@ function CVSection({
           const parsed = JSON.parse(text);
           const msg = parsed?.error || parsed?.message;
           if (msg) {
-            toast.error(String(msg));
+            toast.error(translateApiMessageToFrench(String(msg)));
             return;
           }
         } else {
           const msg = data?.error || data?.message;
           if (msg) {
-            toast.error(String(msg));
+            toast.error(translateApiMessageToFrench(String(msg)));
             return;
           }
         }
@@ -1140,6 +1230,9 @@ function ExtractionResultsSection({
   const failedCount = employeeSkills.filter((s) => s.status === "FAILED").length;
   const totalSkillPages = Math.max(1, Math.ceil(employeeSkills.length / SKILLS_PER_PAGE));
   const pagedSkills = employeeSkills.slice(skillsPage * SKILLS_PER_PAGE, (skillsPage + 1) * SKILLS_PER_PAGE);
+  const pageOffset = skillsPage * SKILLS_PER_PAGE;
+  const displayedPendingSkills =
+    pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills : (extractionResult?.unmatchedSkills ?? []);
 
   return (
     <div className="flex min-h-0 flex-col gap-5">
@@ -1184,7 +1277,7 @@ function ExtractionResultsSection({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                {pagedSkills.map((skill) => {
+                {pagedSkills.map((skill, idx) => {
                   const isValidated = skill.status === "VALIDATED";
                   const statusStyle =
                     skill.status === "VALIDATED"
@@ -1196,7 +1289,7 @@ function ExtractionResultsSection({
 
                   return (
                     <div
-                      key={skill.id}
+                      key={`skill-card-${skill.id}-${skill.skillId}-${pageOffset + idx}`}
                       className="group flex cursor-default items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:border-violet-200/80 hover:shadow-md"
                     >
                       <div className="min-w-0 flex-1">
@@ -1231,7 +1324,7 @@ function ExtractionResultsSection({
                 <div className="mt-4 flex items-center justify-center gap-2">
                   {Array.from({ length: totalSkillPages }).map((_, idx) => (
                     <button
-                      key={idx}
+                      key={`skills-page-${idx + 1}`}
                       type="button"
                       onClick={() => setSkillsPage(idx)}
                       aria-label={`Aller à la page ${idx + 1}`}
@@ -1276,9 +1369,9 @@ function ExtractionResultsSection({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {(pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills : (extractionResult?.unmatchedSkills ?? [])).map((skill, idx) => (
+                {displayedPendingSkills.map((skill, idx) => (
                   <span
-                    key={idx}
+                    key={`pending-skill-${skill}-${idx + 1}`}
                     className="inline-flex items-center rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-medium shadow-sm transition-all duration-200 hover:border-orange-200/80 hover:shadow"
                     style={{ color: "var(--luxury-text)" }}
                   >

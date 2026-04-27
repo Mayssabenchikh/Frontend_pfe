@@ -7,7 +7,8 @@ import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
 import { projectsApi, type ProjectDto, type ProjectPage } from "../../api/projectsApi";
 import { FiltersPanel } from "../../components/FiltersPanel";
 import { PROJECTS_AG_THEME } from "../../components/projectsAgTheme";
-import { InboxStackIcon } from "../../icons/heroicons/outline";
+import { syncAgGridColumnSizing } from "../../utils/agGridResponsive";
+import { FolderIcon } from "../../icons/heroicons/outline";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -59,6 +60,18 @@ export function AdminProjectsReadonly() {
     const t = window.setTimeout(() => load(), 250);
     return () => window.clearTimeout(t);
   }, [load]);
+
+  useEffect(() => {
+    const onResize = () => syncAgGridColumnSizing(gridRef.current?.api);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const t = window.setTimeout(() => syncAgGridColumnSizing(gridRef.current?.api), 150);
+    return () => window.clearTimeout(t);
+  }, [loading, items.length]);
 
   const statusLabel = (s?: string | null) => (s === "ACTIVE" ? "En cours" : s === "CLOSED" ? "Terminé" : "Brouillon");
   const statusCls = (s?: string | null) =>
@@ -238,8 +251,8 @@ export function AdminProjectsReadonly() {
                 rowData={items}
                 columnDefs={columnDefs}
                 defaultColDef={defaultColDef}
-                onGridReady={(e) => e.api.sizeColumnsToFit()}
-                onGridSizeChanged={(e) => e.api.sizeColumnsToFit()}
+                onGridReady={(e) => syncAgGridColumnSizing(e.api)}
+                onGridSizeChanged={(e) => syncAgGridColumnSizing(e.api)}
                 pagination
                 paginationPageSize={8}
                 paginationPageSizeSelector={false}
@@ -249,7 +262,7 @@ export function AdminProjectsReadonly() {
                 noRowsOverlayComponent={() => (
                   <div className="flex flex-col items-center gap-3 py-20">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 shadow-sm">
-                      <InboxStackIcon className="h-8 w-8 text-violet-700" />
+                      <FolderIcon className="h-8 w-8 text-violet-700" />
                     </div>
                     <div className="flex flex-col items-center gap-1">
                       <p className="text-sm font-bold text-violet-900">Aucun projet</p>

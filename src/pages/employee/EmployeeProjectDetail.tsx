@@ -4,6 +4,7 @@ import { employeeProjectsApi, type ProjectDto } from "../../api/projectsApi";
 import type { AssignmentDto } from "../../api/assignmentsApi";
 import { ArrowLeftIcon, InboxStackIcon, SparklesIcon, UserCircleIcon } from "../../icons/heroicons/outline";
 import { getAvatarColor, getDisplayNameInitials } from "../admin/utils";
+import { getUserFacingApiMessage } from "../../utils/apiUserMessage";
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
@@ -14,15 +15,14 @@ function Badge({ children }: { children: React.ReactNode }) {
 }
 
 export function EmployeeProjectDetail() {
-  const { id } = useParams<{ id: string }>();
-  const projectId = id ? parseInt(id, 10) : NaN;
+  const { id: projectUuid } = useParams<{ id: string }>();
   const [project, setProject] = useState<ProjectDto | null>(null);
   const [team, setTeam] = useState<AssignmentDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (Number.isNaN(projectId)) {
+    if (!projectUuid || !projectUuid.trim()) {
       setError("ID invalide");
       setLoading(false);
       return;
@@ -30,7 +30,7 @@ export function EmployeeProjectDetail() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    Promise.all([employeeProjectsApi.get(projectId), employeeProjectsApi.team(projectId)])
+    Promise.all([employeeProjectsApi.get(projectUuid), employeeProjectsApi.team(projectUuid)])
       .then(([pRes, tRes]) => {
         if (cancelled) return;
         setProject(pRes.data ?? null);
@@ -40,7 +40,7 @@ export function EmployeeProjectDetail() {
         if (cancelled) return;
         setProject(null);
         setTeam([]);
-        setError(err?.response?.data?.error ?? "Impossible de charger le projet");
+        setError(getUserFacingApiMessage(err, "Impossible de charger le projet."));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -48,7 +48,7 @@ export function EmployeeProjectDetail() {
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [projectUuid]);
 
   const teamMembers = useMemo(() => {
     const items = Array.isArray(team) ? team : [];
@@ -60,12 +60,12 @@ export function EmployeeProjectDetail() {
   }, [team]);
 
   if (loading) {
-    return <div className="px-6 py-8 text-sm text-slate-500">Chargement…</div>;
+    return <div className="px-4 py-8 text-sm text-slate-500 sm:px-6">Chargement…</div>;
   }
 
   if (error || !project) {
     return (
-      <div className="px-6 py-8">
+      <div className="px-4 py-8 sm:px-6">
         <p className="text-sm font-semibold text-red-600">{error ?? "Projet introuvable"}</p>
         <Link to="/employee/projects" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 hover:text-violet-800">
           <ArrowLeftIcon className="h-4 w-4" />
@@ -110,7 +110,7 @@ export function EmployeeProjectDetail() {
   })();
 
   return (
-    <div className="min-h-full w-full bg-[#f8f7ff] px-4 py-4 md:px-6 md:py-6">
+    <div className="min-h-full w-full bg-[#f8f7ff] px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
         {/* Topbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-1">
@@ -130,11 +130,11 @@ export function EmployeeProjectDetail() {
             {/* Hero card */}
             <article className="overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-sm">
               <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-violet-500 to-pink-500" />
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500">Détails du projet</p>
-                    <h1 className="mt-1 truncate text-2xl font-bold text-slate-800">{project.name}</h1>
+                    <h1 className="mt-1 truncate text-xl font-bold text-slate-800 sm:text-2xl">{project.name}</h1>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export function EmployeeProjectDetail() {
             </article>
 
             {/* Team members */}
-            <article className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm">
+            <article className="rounded-3xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="flex items-center gap-2 text-base font-semibold text-slate-800">
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
@@ -243,7 +243,7 @@ export function EmployeeProjectDetail() {
 
           {/* Right */}
           <aside className="flex flex-col gap-4 xl:col-span-4">
-            <article className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm">
+            <article className="rounded-3xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
               <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-800">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50">
                   <SparklesIcon className="h-4 w-4 text-violet-600" />
@@ -273,7 +273,7 @@ export function EmployeeProjectDetail() {
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ma participation</p>
                   <p className="mt-1 text-sm font-semibold text-slate-800">
-                    <Badge>Acceptée</Badge>
+                    <Badge>Affecté au projet</Badge>
                   </p>
                 </div>
               </div>

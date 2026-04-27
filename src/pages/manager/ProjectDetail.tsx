@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { projectsApi, type ProjectDto } from "../../api/projectsApi";
 import { skillsApi } from "../../api/skillsApi";
 import type { SkillDto } from "../admin/types";
+import { getApiError } from "../admin/utils";
 
 type ManagerOutletContext = {
   managerAvatarUrl: string | null;
@@ -42,7 +43,7 @@ export function ProjectDetail() {
     teamSize: 1,
     startDate: "",
     dueDate: "",
-    requirements: [] as { skillId: number; levelMin: number }[],
+    requirements: [] as { skillUuid: string; levelMin: number }[],
   });
 
   const hydrateForm = (p: ProjectDto) => {
@@ -55,21 +56,21 @@ export function ProjectDetail() {
       startDate: p.startDate ?? "",
       dueDate: p.dueDate ?? "",
       requirements: (p.requirements ?? []).map((r) => ({
-        skillId: r.skillId,
+        skillUuid: r.skillUuid,
         levelMin: r.levelMin,
       })),
     });
   };
 
   useEffect(() => {
-    const numId = id ? parseInt(id, 10) : NaN;
-    if (isNaN(numId)) {
-      setError("ID invalide");
+    const projectUuid = (id ?? "").trim();
+    if (!projectUuid) {
+      setError("Identifiant de projet invalide");
       setLoading(false);
       return;
     }
     projectsApi
-      .get(numId)
+      .get(projectUuid)
       .then((res) => {
         const data = res.data ?? null;
         setProject(data);
@@ -95,7 +96,7 @@ export function ProjectDetail() {
   if (error || !project)
     return <div className="p-6 text-red-500">{error ?? "Projet non trouvé"}</div>;
 
-  const numId = id ? parseInt(id, 10) : NaN;
+  const projectUuid = (id ?? "").trim();
 
   const formatDate = (value?: string | null) => {
     if (!value) return "—";
@@ -202,7 +203,7 @@ export function ProjectDetail() {
   };
 
   const handleSave = () => {
-    if (!project || Number.isNaN(numId)) return;
+    if (!project || !projectUuid) return;
     const dateErr = validateDates();
     if (dateErr) {
       toast.error(dateErr);
@@ -224,7 +225,7 @@ export function ProjectDetail() {
     }
     setSaving(true);
     projectsApi
-      .update(numId, payload)
+      .update(projectUuid, payload)
       .then((res) => {
         const next = res.data ?? project;
         setProject(next);
@@ -232,38 +233,38 @@ export function ProjectDetail() {
         setIsEditing(false);
         toast.success("Projet mis à jour");
       })
-      .catch(() => toast.error("Erreur lors de la mise à jour du projet"))
+      .catch((err) => toast.error(getApiError(err, "Erreur lors de la mise à jour du projet.")))
       .finally(() => setSaving(false));
   };
 
   const addRequirement = () => {
-    const used = new Set(form.requirements.map((r) => r.skillId));
-    const availableSkill = skills.find((s) => !used.has(s.id));
+    const used = new Set(form.requirements.map((r) => r.skillUuid));
+    const availableSkill = skills.find((s) => !used.has(s.uuid));
     if (!availableSkill) return;
     setForm((prev) => ({
       ...prev,
       requirements: [
         ...prev.requirements,
-        { skillId: availableSkill.id, levelMin: availableSkill.levelMin },
+        { skillUuid: availableSkill.uuid, levelMin: availableSkill.levelMin },
       ],
     }));
   };
 
-  const removeRequirement = (skillId: number) => {
+  const removeRequirement = (skillUuid: string) => {
     setForm((prev) => ({
       ...prev,
-      requirements: prev.requirements.filter((r) => r.skillId !== skillId),
+      requirements: prev.requirements.filter((r) => r.skillUuid !== skillUuid),
     }));
   };
 
-  const updateRequirementSkill = (oldSkillId: number, newSkillId: number) => {
-    const selected = skills.find((s) => s.id === newSkillId);
+  const updateRequirementSkill = (oldSkillUuid: string, newSkillUuid: string) => {
+    const selected = skills.find((s) => s.uuid === newSkillUuid);
     setForm((prev) => ({
       ...prev,
       requirements: prev.requirements.map((r) =>
-        r.skillId === oldSkillId
+        r.skillUuid === oldSkillUuid
           ? {
-              skillId: newSkillId,
+              skillUuid: newSkillUuid,
               levelMin: selected
                 ? Math.max(
                     selected.levelMin,
@@ -276,11 +277,11 @@ export function ProjectDetail() {
     }));
   };
 
-  const updateRequirementLevel = (skillId: number, levelMin: number) => {
+  const updateRequirementLevel = (skillUuid: string, levelMin: number) => {
     setForm((prev) => ({
       ...prev,
       requirements: prev.requirements.map((r) =>
-        r.skillId === skillId ? { ...r, levelMin } : r
+        r.skillUuid === skillUuid ? { ...r, levelMin } : r
       ),
     }));
   };
@@ -293,7 +294,7 @@ export function ProjectDetail() {
 
   /* ─── RENDER ─────────────────────────────────────────────────────────── */
   return (
-    <div className="min-h-full w-full bg-[#f8f7ff] px-4 py-4 md:px-6 md:py-6">
+    <div className="min-h-full w-full bg-[#f8f7ff] px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
 
         {/* ── Topbar ── */}
@@ -352,7 +353,7 @@ export function ProjectDetail() {
               {/* Accent banner */}
               <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-violet-500 to-pink-500" />
 
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500">
@@ -368,7 +369,7 @@ export function ProjectDetail() {
                         placeholder="Nom du projet"
                       />
                     ) : (
-                      <h1 className="mt-1 text-2xl font-bold text-slate-800">
+                      <h1 className="mt-1 text-xl font-bold text-slate-800 sm:text-2xl">
                         {project.name}
                       </h1>
                     )}
@@ -530,15 +531,16 @@ export function ProjectDetail() {
               <div className="space-y-2">
                 {(isEditing ? form.requirements : project.requirements).map(
                   (req) => {
-                    const skill = skills.find((s) => s.id === req.skillId);
-                    const usedIds = new Set(
-                      form.requirements.map((r) => r.skillId)
+                    const skillUuid = req.skillUuid;
+                    const skill = skills.find((s) => s.uuid === skillUuid);
+                    const usedUuids = new Set(
+                      form.requirements.map((r) => r.skillUuid)
                     );
-                    if (isEditing) usedIds.delete(req.skillId);
+                    if (isEditing) usedUuids.delete(skillUuid);
 
                     return (
                       <div
-                        key={req.skillId}
+                        key={skillUuid}
                         className={`grid grid-cols-1 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 ${
                           isEditing
                             ? "md:grid-cols-[1.6fr_0.7fr_0.35fr]"
@@ -547,19 +549,19 @@ export function ProjectDetail() {
                       >
                         {isEditing ? (
                           <select
-                            value={req.skillId}
+                            value={skillUuid}
                             onChange={(e) =>
                               updateRequirementSkill(
-                                req.skillId,
-                                Number(e.target.value)
+                                skillUuid,
+                                e.target.value
                               )
                             }
                             className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400"
                           >
                             {skills
-                              .filter((s) => !usedIds.has(s.id))
+                              .filter((s) => !usedUuids.has(s.uuid))
                               .map((s) => (
-                                <option key={s.id} value={s.id}>
+                                <option key={s.uuid} value={s.uuid}>
                                   {s.name} - {s.categoryName}
                                 </option>
                               ))}
@@ -587,7 +589,7 @@ export function ProjectDetail() {
                             value={req.levelMin}
                             onChange={(e) =>
                               updateRequirementLevel(
-                                req.skillId,
+                                skillUuid,
                                 Math.max(
                                   skill?.levelMin ?? 1,
                                   Number(e.target.value) || 1
@@ -608,7 +610,7 @@ export function ProjectDetail() {
                         {isEditing && (
                           <button
                             type="button"
-                            onClick={() => removeRequirement(req.skillId)}
+                            onClick={() => removeRequirement(skillUuid)}
                             className="rounded-xl border border-rose-200 bg-rose-50 px-2 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
                           >
                             Retirer

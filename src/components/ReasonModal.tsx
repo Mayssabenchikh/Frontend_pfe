@@ -45,11 +45,11 @@ export function ReasonModal({
   const disabled = loading || trimmed.length === 0;
 
   const content = (
-    <div className="app-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0 bg-slate-900/25" onClick={onCancel} aria-hidden="true" />
 
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/16 bg-white shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-7 py-5">
+      <div className="relative max-h-[min(92dvh,720px)] w-full max-w-md overflow-hidden overflow-y-auto rounded-3xl border border-violet-500/16 bg-white shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-7 sm:py-5">
           <div className="min-w-0">
             <h3 className="truncate text-sm font-bold text-violet-950">{title}</h3>
             {description ? <p className="mt-1 text-sm text-slate-600">{description}</p> : null}
@@ -64,7 +64,7 @@ export function ReasonModal({
           </button>
         </div>
 
-        <div className="px-7 py-5">
+        <div className="px-5 py-4 sm:px-7 sm:py-5">
           <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
             Motif (obligatoire)
             <textarea
@@ -75,11 +75,11 @@ export function ReasonModal({
               className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
             />
           </label>
-          <div className="mt-5 flex items-center justify-end gap-3">
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 sm:w-auto"
             >
               {cancelLabel}
             </button>
@@ -87,7 +87,7 @@ export function ReasonModal({
               type="button"
               onClick={() => onConfirm(trimmed)}
               disabled={disabled}
-              className={`rounded-xl px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`w-full rounded-xl px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
                 isDanger ? "bg-red-500 hover:bg-red-600" : "bg-gradient-to-br from-violet-600 to-indigo-600"
               }`}
             >

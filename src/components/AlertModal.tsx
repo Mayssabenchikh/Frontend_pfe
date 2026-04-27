@@ -20,20 +20,20 @@ export function AlertModal({
 }: Props) {
   if (!open) return null;
   return (
-    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
-      <div className="relative w-full max-w-md rounded-3xl overflow-hidden border border-violet-500/16 bg-white/[0.9] px-7 py-6 shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/15">
+      <div className="relative max-h-[min(90dvh,560px)] w-full max-w-md overflow-y-auto rounded-3xl border border-violet-500/16 bg-white/[0.9] px-5 py-5 shadow-[0_18px_48px_rgba(109,40,217,0.14)] sm:px-7 sm:py-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/15 sm:mx-0 mx-auto">
             <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1 text-center sm:text-left">
             <h3 className="text-sm font-bold text-violet-950">{title}</h3>
             <div className="mt-1.5 text-sm text-slate-600">{message}</div>
             <button
               type="button"
               onClick={onClose}
-              className="mt-4 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-4 py-2.5 text-xs font-semibold text-white"
+              className="mt-4 w-full rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-4 py-2.5 text-xs font-semibold text-white sm:w-auto"
             >
               {buttonLabel}
             </button>

@@ -6,18 +6,22 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminPage from "./pages/AdminPage";
 import ManagerPage from "./pages/ManagerPage";
 import { ManagerDashboard } from "./pages/manager/ManagerDashboard";
-import { ProjectsList } from "./pages/manager/ProjectsList";
+import ProjectsList from "./pages/manager/ProjectsList";
 import { ProjectDetail } from "./pages/manager/ProjectDetail";
 import { ManagerMatchingHub } from "./pages/manager/ManagerMatchingHub";
 import { ProjectTalentWorkspace } from "./pages/manager/ProjectTalentWorkspace";
 import { ManagerProfile } from "./pages/manager/ManagerProfile";
 import { ManagerAssignmentsHistory } from "./pages/manager/ManagerAssignmentsHistory";
+import { ManagerLearningHub } from "./pages/manager/ManagerLearningHub";
+import { ManagerLearningCourse } from "./pages/manager/ManagerLearningCourse";
 import EmployeePage from "./pages/EmployeePage";
 import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
 import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
 import { EmployeeAssignments } from "./pages/employee/EmployeeAssignments";
 import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
 import { EmployeeProjectDetail } from "./pages/employee/EmployeeProjectDetail";
+import { EmployeeLearningHub } from "./pages/employee/EmployeeLearningHub";
+import { EmployeeLearningCourse } from "./pages/employee/EmployeeLearningCourse";
 
 const EmployeeQuiz = lazy(() =>
   import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
@@ -127,6 +131,8 @@ function App() {
           <Route path="matching" element={<ManagerMatchingHub />} />
           <Route path="projects" element={<ProjectsList />} />
           <Route path="assignments" element={<ManagerAssignmentsHistory />} />
+          <Route path="learning" element={<ManagerLearningHub />} />
+          <Route path="learning/course/:progressUuid" element={<ManagerLearningCourse />} />
           <Route path="projects/:id/matches" element={<RedirectProjectMatchesToTalent />} />
           <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
@@ -143,6 +149,8 @@ function App() {
           <Route index element={<EmployeeDashboard />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="assignments" element={<EmployeeAssignments />} />
+          <Route path="learning" element={<EmployeeLearningHub />} />
+          <Route path="learning/course/:progressUuid" element={<EmployeeLearningCourse />} />
           <Route path="projects" element={<EmployeeProjects />} />
           <Route path="projects/:id" element={<EmployeeProjectDetail />} />
           <Route path="profile" element={<EmployeeMyProfile />} />

@@ -27,6 +27,7 @@ import { UsersTable } from "./admin/UsersTable";
 import { ArchivedUsersTable } from "./admin/ArchivedUsersTable";
 import { SkillsCatalog } from "./admin/SkillsCatalog";
 import { SkillCategories } from "./admin/SkillCategories";
+import { AdminTrainingsCatalog } from "./admin/AdminTrainingsCatalog";
 import { PendingSkillRequests } from "./admin/PendingSkillRequests";
 import { AdminProfile } from "./admin/AdminProfile";
 import { AdminAssignmentsAudit } from "./admin/AdminAssignmentsAudit";
@@ -38,6 +39,65 @@ import { ArchiveBoxIcon } from "../icons/heroicons/outline";
 
 const USERS_API = "/api/admin/users";
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
+const ARCHIVED_DEDUPE_TTL_MS = 3000;
+
+let archivedUsersInFlight: Promise<ArchivedUserDto[]> | null = null;
+let archivedUsersInFlightKey: string | null = null;
+let archivedUsersCache: { key: string; at: number; value: ArchivedUserDto[] } | null = null;
+
+function buildArchivedRequest(f: {
+  search: string;
+  role: string;
+  from: string;
+  to: string;
+  order: "recent" | "oldest" | "name";
+}) {
+  const params = {
+    search: f.search || undefined,
+    role: f.role !== "ALL" ? f.role : undefined,
+    from: f.from || undefined,
+    to: f.to || undefined,
+    order: f.order || undefined,
+  };
+  const key = JSON.stringify(params);
+  return { params, key };
+}
+
+function fetchArchivedUsersDeduped(
+  f: {
+    search: string;
+    role: string;
+    from: string;
+    to: string;
+    order: "recent" | "oldest" | "name";
+  },
+  force = false,
+): Promise<ArchivedUserDto[]> {
+  const { params, key } = buildArchivedRequest(f);
+
+  if (!force && archivedUsersCache && archivedUsersCache.key === key && Date.now() - archivedUsersCache.at < ARCHIVED_DEDUPE_TTL_MS) {
+    return Promise.resolve(archivedUsersCache.value);
+  }
+
+  if (!force && archivedUsersInFlight && archivedUsersInFlightKey === key) {
+    return archivedUsersInFlight;
+  }
+
+  archivedUsersInFlightKey = key;
+  archivedUsersInFlight = http
+    .get<ArchivedUserDto[]>(`${USERS_API}/archived`, { params })
+    .then((res) => {
+      const data = ensureArray(res?.data);
+      archivedUsersCache = { key, at: Date.now(), value: data };
+      return data;
+    })
+    .finally(() => {
+      archivedUsersInFlight = null;
+      archivedUsersInFlightKey = null;
+    });
+
+  return archivedUsersInFlight;
+}
 
 export default function AdminPage() {
   const { keycloak } = useKeycloak();
@@ -125,19 +185,12 @@ export default function AdminPage() {
       .finally(() => setUsersLoading(false));
   }, [usersFilters]);
 
-  const loadArchivedUsers = useCallback((filters?: Partial<typeof archivedFilters>) => {
+  const loadArchivedUsers = useCallback((filters?: Partial<typeof archivedFilters>, options?: { force?: boolean }) => {
     const f = { ...archivedFilters, ...(filters ?? {}) };
+    const force = options?.force ?? false;
     setArchivedLoading(true);
-    http.get<ArchivedUserDto[]>(`${USERS_API}/archived`, {
-      params: {
-        search: f.search || undefined,
-        role: f.role !== "ALL" ? f.role : undefined,
-        from: f.from || undefined,
-        to: f.to || undefined,
-        order: f.order || undefined,
-      },
-    })
-      .then((res) => { setArchivedUsers(ensureArray(res?.data)); setArchivedError(null); })
+    fetchArchivedUsersDeduped(f, force)
+      .then((data) => { setArchivedUsers(data); setArchivedError(null); })
       .catch((err) => { setArchivedError(getApiError(err, MESSAGES.errorLoad)); setArchivedUsers([]); })
       .finally(() => setArchivedLoading(false));
   }, [archivedFilters]);
@@ -154,9 +207,9 @@ export default function AdminPage() {
   }, [currentView, loadArchivedUsers, archivedFilters]);
 
   const handleToggleEnabled = useCallback((u: UserListDto) => {
-    setTogglingId(u.id);
+    setTogglingId(u.uuid);
     const action = u.enabled ? "désactivé" : "activé";
-    http.patch(`${USERS_API}/${u.id}/enabled`, { enabled: !u.enabled })
+    http.patch(`${USERS_API}/${u.uuid}/enabled`, { enabled: !u.enabled })
       .then(() => {
         loadUsers();
         toast.success(`Compte ${action} avec succès`, {
@@ -183,7 +236,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingUser) return;
     setEditLoading(true);
-    http.put(`${USERS_API}/${editingUser.id}`, {
+    http.put(`${USERS_API}/${editingUser.uuid}`, {
       email: editEmail, firstName: editFirstName, lastName: editLastName, role: editRole,
       department: editDepartment || null, jobTitle: editJobTitle || null,
       phone: editPhone || null, hireDate: editHireDate || null,
@@ -200,8 +253,8 @@ export default function AdminPage() {
   }, [editingUser, editEmail, editFirstName, editLastName, editRole, editDepartment, editJobTitle, editPhone, editHireDate, loadUsers]);
 
   const handleArchiveUser = useCallback((u: UserListDto) => {
-    setArchivingId(u.id);
-    http.patch(`${USERS_API}/${u.id}/archive`, {})
+    setArchivingId(u.uuid);
+    http.patch(`${USERS_API}/${u.uuid}/archive`, {})
       .then(() => {
         loadUsers();
         toast.success("Utilisateur archivé", {
@@ -213,11 +266,11 @@ export default function AdminPage() {
   }, [loadUsers]);
 
   const handleRestoreUser = useCallback((u: ArchivedUserDto) => {
-    setRestoringId(u.id);
-    http.patch(`${USERS_API}/${u.id}/restore`, {})
+    setRestoringId(u.uuid);
+    http.patch(`${USERS_API}/${u.uuid}/restore`, {})
       .then(() => {
         loadUsers();
-        loadArchivedUsers();
+        loadArchivedUsers(undefined, { force: true });
         toast.success("Utilisateur restauré", {
           description: `${u.firstName} ${u.lastName} peut à nouveau se connecter.`,
         });
@@ -227,10 +280,10 @@ export default function AdminPage() {
   }, [loadUsers, loadArchivedUsers]);
 
   const handleDeletePermanently = useCallback((u: ArchivedUserDto) => {
-    setDeletingId(u.id);
-    http.delete(`${USERS_API}/${u.id}`)
+    setDeletingId(u.uuid);
+    http.delete(`${USERS_API}/${u.uuid}`)
       .then(() => {
-        loadArchivedUsers();
+        loadArchivedUsers(undefined, { force: true });
         toast.success("Utilisateur supprimé définitivement", {
           description: `${u.firstName} ${u.lastName} a été supprimé de Keycloak et de la base de données.`,
         });
@@ -293,7 +346,6 @@ export default function AdminPage() {
   const handleNavChange = (view: NavId) => {
     setCurrentView(view);
     setSidebarOpen(false);
-    if (view === "archives") loadArchivedUsers();
   };
 
   return (
@@ -325,7 +377,7 @@ export default function AdminPage() {
           onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden pt-16">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <AdminBreadcrumbs currentView={currentView} onNavigate={handleNavChange} />
 
           {currentView === "dashboard" && (
@@ -354,6 +406,10 @@ export default function AdminPage() {
             </section>
           )}
 
+          {currentView === "trainings" && (
+            <AdminTrainingsCatalog />
+          )}
+
           {currentView === "skillCategories" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <SkillCategories />
@@ -376,7 +432,7 @@ export default function AdminPage() {
 
           {currentView === "archives" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-3 py-3 sm:px-6 sm:py-4">
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
                   <div className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-gradient-to-r from-amber-400/10 to-amber-400/5 px-4 py-3 text-amber-900 shadow-sm">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-400/25 bg-amber-400/20">
@@ -462,7 +518,7 @@ export default function AdminPage() {
 
           {currentView === "users" && (
             <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
-              <div className="users-toolbar flex w-full shrink-0 items-center justify-end border-b border-violet-500/10 px-6 py-3.5">
+              <div className="users-toolbar flex w-full shrink-0 items-center justify-end border-b border-violet-500/10 px-3 py-3 sm:px-6 sm:py-3.5">
                 <button
                   type="button"
                   onClick={() => { resetCreateForm(); setCreateModalOpen(true); }}
@@ -473,7 +529,7 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-3 py-3 sm:px-6 sm:py-4">
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
                   <FiltersPanel
                     title="Filtres"
@@ -594,7 +650,7 @@ export default function AdminPage() {
       {viewUser && (
         <div
           onClick={() => setViewUser(null)}
-          className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
           role="dialog"
           aria-modal="true"
         >

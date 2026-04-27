@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ModuleRegistry, AllCommunityModule, type ColDef, type ICellRendererParams } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
@@ -7,6 +7,7 @@ import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
 import { InboxStackIcon, ExclamationTriangleIcon } from "../../icons/heroicons/outline";
 import type { AssignmentEventDto } from "../../api/assignmentsApi";
 import { PROJECTS_AG_THEME } from "../../components/projectsAgTheme";
+import { syncAgGridColumnSizing } from "../../utils/agGridResponsive";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -38,7 +39,30 @@ function formatDate(iso: string): string {
   return d.toLocaleString("fr-FR");
 }
 
+function actionToFrench(action: unknown): string {
+  const value = String(action ?? "").toUpperCase();
+  if (value === "ASSIGNED") return "Affecté";
+  if (value === "ACCEPTED") return "Affectation confirmée";
+  if (value === "REFUSED") return "Refusé";
+  if (value === "REMOVED") return "Retiré";
+  return String(action ?? "—");
+}
+
 export function AssignmentEventsTable({ rows, loading, error }: Props) {
+  const gridRef = useRef<AgGridReact<AssignmentEventDto> | null>(null);
+
+  useEffect(() => {
+    const onResize = () => syncAgGridColumnSizing(gridRef.current?.api);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const t = window.setTimeout(() => syncAgGridColumnSizing(gridRef.current?.api), 150);
+    return () => window.clearTimeout(t);
+  }, [loading, rows.length]);
+
   const columnDefs = useMemo<ColDef<AssignmentEventDto>[]>(
     () => [
       {
@@ -58,8 +82,8 @@ export function AssignmentEventsTable({ rows, loading, error }: Props) {
           if (!e) return null;
           return (
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm font-semibold text-slate-800 truncate">{e.projectName || `#${e.projectId}`}</span>
-              <span className="text-xs text-slate-500 truncate">#{e.projectId}</span>
+              <span className="text-sm font-semibold text-slate-800 truncate">{e.projectName || `#${e.projectUuid}`}</span>
+              <span className="text-xs text-slate-500 truncate">#{e.projectUuid}</span>
             </div>
           );
         },
@@ -87,7 +111,7 @@ export function AssignmentEventsTable({ rows, loading, error }: Props) {
         minWidth: 140,
         cellRenderer: (p: ICellRendererParams<AssignmentEventDto>) => (
           <span className="inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-xs font-semibold text-violet-900">
-            {String(p.value ?? "—")}
+            {actionToFrench(p.value)}
           </span>
         ),
       },
@@ -151,11 +175,14 @@ export function AssignmentEventsTable({ rows, loading, error }: Props) {
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
           <div className="ag-theme-quartz ag-theme-projects absolute inset-0 w-full overflow-hidden">
             <AgGridReact<AssignmentEventDto>
+              ref={gridRef}
               theme="legacy"
               localeText={AG_GRID_LOCALE_FR}
               rowData={rows}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
+              onGridReady={(e) => syncAgGridColumnSizing(e.api)}
+              onGridSizeChanged={(e) => syncAgGridColumnSizing(e.api)}
               pagination
               paginationPageSize={8}
               paginationPageSizeSelector={false}

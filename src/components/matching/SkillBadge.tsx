@@ -1,4 +1,5 @@
 import type { MatchEvidence } from "../../api/matchingApi";
+import { formatSkillLevel } from "./matchingVisuals";
 
 type Props = {
   name: string;
@@ -30,7 +31,7 @@ export function SkillBadge({ name, level = 0, evidence, meets, compact }: Props)
     >
       <span className="max-w-[140px] truncate">{name}</span>
       {level !== undefined ? (
-        <span className="rounded bg-white/60 px-1 font-semibold tabular-nums">L{level}</span>
+        <span className="rounded bg-white/60 px-1 font-semibold tabular-nums">{formatSkillLevel(level)}</span>
       ) : null}
       {evidence && evidence !== "none" ? (
         <span className="rounded border border-white/40 bg-white/50 px-1 text-[10px] text-slate-600">

@@ -11,7 +11,7 @@ import { AlertBanner } from "../../components/AlertBanner";
 
 export function ProjectMatchesPage() {
   const { id } = useParams<{ id: string }>();
-  const projectId = id ? parseInt(id, 10) : NaN;
+  const projectUuid = (id ?? "").trim();
 
   const [project, setProject] = useState<ProjectDto | null>(null);
   const [matches, setMatches] = useState<MatchListResponseDto | null>(null);
@@ -22,8 +22,8 @@ export function ProjectMatchesPage() {
   const [assignments, setAssignments] = useState<AssignmentDto[]>([]);
 
   useEffect(() => {
-    if (Number.isNaN(projectId)) {
-      setError("ID besoin invalide");
+    if (!projectUuid) {
+      setError("Identifiant de projet invalide");
       setLoading(false);
       return;
     }
@@ -32,9 +32,9 @@ export function ProjectMatchesPage() {
     setError(null);
 
     Promise.all([
-      projectsApi.get(projectId).catch(() => null),
-      matchingApi.getProjectMatches(projectId).catch(() => null),
-      assignmentsApi.listProjectAssignments(projectId).catch(() => null),
+      projectsApi.get(projectUuid).catch(() => null),
+      matchingApi.getProjectMatches(projectUuid).catch(() => null),
+      assignmentsApi.listProjectAssignments(projectUuid).catch(() => null),
     ])
       .then(([projRes, matchRes, assignRes]) => {
         if (cancelled) return;
@@ -56,17 +56,17 @@ export function ProjectMatchesPage() {
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [projectUuid]);
 
   const openDetails = (row: EmployeeMatchRowDto) => {
     setSelected(row);
     setDrawerOpen(true);
   };
 
-  if (Number.isNaN(projectId)) {
+  if (!projectUuid) {
     return (
       <div className="p-6">
-        <AlertBanner message="ID invalide" />
+        <AlertBanner message="Identifiant de projet invalide" />
       </div>
     );
   }
@@ -93,8 +93,8 @@ export function ProjectMatchesPage() {
       }
       actions={
         <Link
-          to={`/manager/matching/${projectId}/workspace`}
-          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(109,40,217,0.25)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          to={`/manager/matching/${encodeURIComponent(projectUuid)}/workspace`}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(109,40,217,0.25)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:w-auto"
         >
           Ouvrir workspace
         </Link>
@@ -131,7 +131,7 @@ export function ProjectMatchesPage() {
           setDrawerOpen(false);
           setSelected(null);
         }}
-        projectId={projectId}
+        projectUuid={projectUuid}
         projectTeamSize={project?.teamSize ?? null}
         row={selected}
         assignments={assignments}

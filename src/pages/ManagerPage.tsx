@@ -9,13 +9,13 @@ import {
   ClipboardDocumentListIcon,
   ChartBarSquareIcon,
   BriefcaseIcon,
+  AcademicCapIcon,
 } from "../icons/heroicons/outline";
-import { http } from "../api/http";
+import { meApi } from "../api/meApi";
 import { ManagerBreadcrumbs } from "./manager/ManagerBreadcrumbs";
 import { AdminHeader } from "./admin/AdminHeader";
 
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
-const MANAGER_ME_ENDPOINT = "/api/manager/me";
 
 export default function ManagerPage() {
   const { keycloak } = useKeycloak();
@@ -37,8 +37,8 @@ export default function ManagerPage() {
     isTalentRoute;
 
   useEffect(() => {
-    http
-      .get<{ avatarUrl: string | null }>(MANAGER_ME_ENDPOINT)
+    meApi
+      .manager()
       .then((res) => {
         if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl);
       })
@@ -46,6 +46,20 @@ export default function ManagerPage() {
         // on garde simplement l'avatar existant (picture ou initiales)
       });
   }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const onChange = () => {
+      if (mq.matches) setSidebarCollapsed(false);
+    };
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   return (
     <div
@@ -217,6 +231,31 @@ export default function ManagerPage() {
               </>
             )}
           </NavLink>
+
+          <NavLink
+            to="/manager/learning"
+            className={({ isActive }) =>
+              [
+                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
+                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
+                isActive
+                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
+                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
+              ].join(" ")
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {!sidebarCollapsed && isActive && (
+                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
+                )}
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center ${isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"}`}>
+                  <AcademicCapIcon className="h-5 w-5" />
+                </span>
+                {!sidebarCollapsed && <span className="truncate">Formations</span>}
+              </>
+            )}
+          </NavLink>
         </nav>
       </aside>
 
@@ -233,7 +272,7 @@ export default function ManagerPage() {
           onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
         />
 
-        <main className="flex flex-1 flex-col overflow-hidden pt-16">
+        <main className="flex flex-1 flex-col overflow-hidden">
           <ManagerBreadcrumbs />
           <div className={`${isFullBleed ? "" : "dashboard-padding "}flex min-w-0 flex-1 flex-col overflow-hidden`}>
             <Outlet context={{ managerAvatarUrl: avatarUrl, managerName: displayName, managerEmail: email, currentPath: location.pathname, onAvatarUpdate: setAvatarUrl }} />

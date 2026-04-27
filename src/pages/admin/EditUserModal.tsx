@@ -96,9 +96,9 @@ export function EditUserModal({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [avatarPreview, setAvatarPreview] = useState<string | null>(_user?.avatarUrl ?? null);
-  const prevUserId = useRef<string | undefined>(_user?.id);
-  if (_user?.id !== prevUserId.current) {
-    prevUserId.current = _user?.id;
+  const prevUserId = useRef<string | undefined>(_user?.uuid);
+  if (_user?.uuid !== prevUserId.current) {
+    prevUserId.current = _user?.uuid;
     setAvatarPreview(_user?.avatarUrl ?? null);
   }
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -106,7 +106,7 @@ export function EditUserModal({
 
   const handleAvatarChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !_user?.id) return;
+    if (!file || !_user?.uuid) return;
     if (!file.type.startsWith("image/")) { toast.error("Veuillez sélectionner une image."); return; }
     if (file.size > 5 * 1024 * 1024) { toast.error("L'image ne doit pas dépasser 5 Mo."); return; }
     const reader = new FileReader();
@@ -116,7 +116,7 @@ export function EditUserModal({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await http.post<{ avatarUrl: string }>(ADMIN_API_PATHS.userAvatar(_user.id), formData, {
+      const res = await http.post<{ avatarUrl: string }>(ADMIN_API_PATHS.userAvatar(_user.uuid), formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAvatarPreview(res.data.avatarUrl);
@@ -166,17 +166,17 @@ export function EditUserModal({
   return (
     <div
       onClick={onClose}
-      className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
       role="dialog" aria-modal="true"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-2xl border border-slate-100 bg-white shadow-2xl max-h-[90vh] overflow-y-auto animate-[modalIn_0.2s_cubic-bezier(0.16,1,0.3,1)_both]"
+        className="w-full max-w-lg max-h-[min(92dvh,900px)] overflow-y-auto rounded-2xl border border-slate-100 bg-white shadow-2xl animate-[modalIn_0.2s_cubic-bezier(0.16,1,0.3,1)_both]"
       >
         <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
           <div>
             <h2 className="text-base font-bold text-indigo-950">Modifier l'utilisateur</h2>
             <p className="text-xs text-slate-400 mt-0.5">Mettez à jour les informations</p>
@@ -186,7 +186,7 @@ export function EditUserModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 p-4 sm:p-6">
 
           {/* Avatar upload */}
           <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
@@ -300,13 +300,13 @@ export function EditUserModal({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2.5 border-t border-slate-100 pt-4">
+          <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-2.5">
             <button type="button" onClick={onClose}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-500 bg-white hover:bg-slate-50 transition">
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 sm:w-auto">
               {MESSAGES.cancel}
             </button>
             <button type="submit" disabled={loading}
-              className="flex items-center gap-2 rounded-xl border-none px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-indigo-700 to-violet-700 shadow-md disabled:opacity-70 disabled:cursor-not-allowed transition">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-5 py-2 text-sm font-bold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto">
               {loading && <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />}
               {loading ? MESSAGES.submit : MESSAGES.save}
             </button>

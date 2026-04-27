@@ -45,7 +45,7 @@ matchingHttp.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 export type MatchEvidence = "quiz" | "cv" | "none";
 
 export type RequirementScoreDto = {
-  skill_id: number;
+  skill_uuid: string;
   skill_name: string;
   required_level: number;
   employee_level: number;
@@ -59,7 +59,7 @@ export type RequirementScoreDto = {
 export type MatchBreakdownDto = {
   requirements: RequirementScoreDto[];
   weights_total: number;
-  mandatory_failed: number[];
+  mandatory_failed: string[];
 };
 
 export type EmployeeMatchRowDto = {
@@ -71,17 +71,23 @@ export type EmployeeMatchRowDto = {
   meets_mandatory: boolean;
   rank: number;
   breakdown: MatchBreakdownDto;
-  match_result_id?: number | null;
+  match_result_uuid?: string | null;
 };
 
 export type MatchListResponseDto = {
-  project_id: number;
+  project_uuid: string;
   computed_at: string;
   employees: EmployeeMatchRowDto[];
+  total_employees: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
 };
 
 export type GapSkillDto = {
-  skill_id: number;
+  skill_uuid: string;
   skill_name: string;
   gap_type: "missing" | "insufficient_level" | "unverified_cv_only" | "quiz_pending_unverified" | "failed_quiz_recent";
   required_level?: number | null;
@@ -91,29 +97,9 @@ export type GapSkillDto = {
 };
 
 export type GapAnalysisResponseDto = {
-  project_id: number;
+  project_uuid: string;
   employee_keycloak_id: string;
   gaps: GapSkillDto[];
-};
-
-export type QuizSuggestionDto = {
-  skill_id: number;
-  skill_name: string;
-  reason: string;
-  suggested_quiz_kind: "initial" | "progression";
-};
-
-export type ImprovementSuggestionDto = {
-  title: string;
-  detail: string;
-};
-
-export type RecommendationResponseDto = {
-  project_id: number;
-  employee_keycloak_id: string;
-  quiz_suggestions: QuizSuggestionDto[];
-  improvements: ImprovementSuggestionDto[];
-  ai_narrative?: string | null;
 };
 
 export type TeamMemberPickDto = {
@@ -123,37 +109,56 @@ export type TeamMemberPickDto = {
 };
 
 export type TeamBuildResponseDto = {
-  project_id: number;
+  project_uuid: string;
   team_size: number;
   members: TeamMemberPickDto[];
   avg_redundancy: number;
+  total_members: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
 };
 
 export type ExplainResponseDto = {
-  match_result_id: number;
+  match_result_uuid: string;
   deterministic_summary: string;
   ai_explanation?: Record<string, unknown> | null;
 };
 
 export const matchingApi = {
-  getProjectMatches: (projectId: number) =>
-    matchingHttp.get<MatchListResponseDto>(`/projects/${projectId}/matches`),
+  getProjectMatches: (
+    projectUuid: string,
+    params?: {
+      page?: number;
+      page_size?: number;
+    },
+  ) =>
+    matchingHttp.get<MatchListResponseDto>(`/projects/${encodeURIComponent(projectUuid)}/matches`, { params }),
 
-  getEmployeeGap: (projectId: number, employeeKeycloakId: string) =>
-    matchingHttp.get<GapAnalysisResponseDto>(`/projects/${projectId}/employees/${encodeURIComponent(employeeKeycloakId)}/gap`),
-
-  getEmployeeRecommendation: (projectId: number, employeeKeycloakId: string, withAi = false) =>
-    matchingHttp.get<RecommendationResponseDto>(
-      `/projects/${projectId}/employees/${encodeURIComponent(employeeKeycloakId)}/recommendation`,
-      { params: { with_ai: withAi } },
+  getEmployeeGap: (projectUuid: string, employeeKeycloakId: string) =>
+    matchingHttp.get<GapAnalysisResponseDto>(
+      `/projects/${encodeURIComponent(projectUuid)}/employees/${encodeURIComponent(employeeKeycloakId)}/gap`,
     ),
 
-  buildTeam: (projectId: number, body: { team_size: number; only_mandatory_eligible?: boolean }) =>
-    matchingHttp.post<TeamBuildResponseDto>(`/projects/${projectId}/team`, {
-      team_size: body.team_size,
-      only_mandatory_eligible: body.only_mandatory_eligible ?? true,
-    }),
+  buildTeam: (
+    projectUuid: string,
+    body: { team_size: number; only_mandatory_eligible?: boolean },
+    params?: {
+      page?: number;
+      page_size?: number;
+    },
+  ) =>
+    matchingHttp.post<TeamBuildResponseDto>(
+      `/projects/${encodeURIComponent(projectUuid)}/team`,
+      {
+        team_size: body.team_size,
+        only_mandatory_eligible: body.only_mandatory_eligible ?? true,
+      },
+      { params },
+    ),
 
-  explainMatch: (matchResultId: number) =>
-    matchingHttp.get<ExplainResponseDto>(`/matches/${matchResultId}/explain`),
+  explainMatch: (matchResultUuid: string) =>
+    matchingHttp.get<ExplainResponseDto>(`/matches/${encodeURIComponent(matchResultUuid)}/explain`),
 };

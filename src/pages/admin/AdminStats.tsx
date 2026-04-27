@@ -11,12 +11,12 @@ type CardProps = {
 
 function Card({ label, value, icon, iconClass, iconBgClass, note }: CardProps) {
   return (
-    <div className="relative rounded-2xl border border-violet-500/15 bg-white/50 p-6 overflow-hidden shadow-md cursor-default transition-all -translate-y-0.5">
-      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-slate-50 pointer-events-none z-0" />
-      <div className="flex items-start justify-between relative z-10">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-900 mb-2">{label}</p>
-          <p className="text-4xl font-extrabold text-violet-900 leading-none tabular-nums tracking-tight">{value}</p>
+    <div className="relative cursor-default overflow-hidden rounded-2xl border border-violet-500/15 bg-white/50 p-4 shadow-md transition-all -translate-y-0.5 sm:p-6">
+      <div className="pointer-events-none absolute -right-6 -top-6 z-0 h-24 w-24 rounded-full bg-slate-50" />
+      <div className="relative z-10 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-900 sm:mb-2 sm:text-xs">{label}</p>
+          <p className="text-3xl font-extrabold leading-none tracking-tight text-violet-900 tabular-nums sm:text-4xl">{value}</p>
           {note && <p className="text-xs text-slate-900 mt-2">{note}</p>}
         </div>
         <div className={`min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${iconBgClass} ${iconClass}`}>
@@ -29,7 +29,7 @@ function Card({ label, value, icon, iconClass, iconBgClass, note }: CardProps) {
 
 export function AdminStats({ total, actifs, inactifs }: { total: number; actifs: number; inactifs: number }) {
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       <Card
         label="Total utilisateurs"
         value={total}

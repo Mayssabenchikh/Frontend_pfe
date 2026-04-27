@@ -1,5 +1,5 @@
 export type UserListDto = {
-  id: string;
+  uuid: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -13,7 +13,7 @@ export type UserListDto = {
 };
 
 export type ArchivedUserDto = {
-  id: string;
+  uuid: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -32,12 +32,13 @@ export type NavId =
   | "archives"
   | "projects"
   | "skills"
+  | "trainings"
   | "skillRequests"
   | "skillCategories"
   | "assignments"
   | "profile";
 
-export type SkillCategoryDto = { id: number; name: string; iconUrl?: string | null; skillsCount?: number; sampleSkillNames?: string[] };
+export type SkillCategoryDto = { uuid: string; name: string; iconUrl?: string | null; skillsCount?: number; sampleSkillNames?: string[] };
 export type SkillCategoryPageDto = {
   content: SkillCategoryDto[];
   totalElements: number;
@@ -57,10 +58,10 @@ export type SkillPageDto = {
   last: boolean;
 };
 export type SkillDto = {
-  id: number;
+  uuid: string;
   name: string;
   iconUrl?: string | null;
-  categoryId: number;
+  categoryUuid: string;
   categoryName: string;
   levelMin: number;
   levelMax: number;
@@ -68,7 +69,7 @@ export type SkillDto = {
 };
 
 export type PendingSkillRequestDto = {
-  id: number;
+  uuid: string;
   rawSkillName: string;
   requestedByName: string;
   requestedByEmail: string;
@@ -80,7 +81,7 @@ export type PendingSkillRequestDto = {
     requestedAt: string | null;
   }[];
   status: "PENDING" | "APPROVED" | "REJECTED" | "MERGED" | string;
-  resolvedSkillId: number | null;
+  resolvedSkillUuid: string | null;
   resolvedSkillName: string | null;
   adminNotes: string | null;
   createdAt: string;

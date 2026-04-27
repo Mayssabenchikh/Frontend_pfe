@@ -34,7 +34,7 @@ export function SkillCategories() {
   const [newName, setNewName]             = useState("");
   const [editName, setEditName]           = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [deletingId, setDeletingId]       = useState<number | null>(null);
+  const [deletingId, setDeletingId]       = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<SkillCategoryDto | null>(null);
   const [blockDelete, setBlockDelete]     = useState<SkillCategoryDto | null>(null);
   const [updateConfirm, setUpdateConfirm] = useState(false);
@@ -69,8 +69,8 @@ export function SkillCategories() {
     skillsApi.createCategory(name)
       .then(async (res) => {
         const created = res.data;
-        if (createIconFile && created?.id) {
-          await skillsApi.uploadCategoryIcon(created.id, createIconFile);
+        if (createIconFile && created?.uuid) {
+          await skillsApi.uploadCategoryIcon(created.uuid, createIconFile);
         }
         load();
         setCreateModal(false);
@@ -101,10 +101,10 @@ export function SkillCategories() {
     setUpdateConfirm(false);
     setSubmitLoading(true);
     Promise.resolve()
-      .then(() => (name !== editModal.name ? skillsApi.updateCategory(editModal.id, name) : null))
+      .then(() => (name !== editModal.name ? skillsApi.updateCategory(editModal.uuid, name) : null))
       .then(async () => {
         if (editIconFile) {
-          await skillsApi.uploadCategoryIcon(editModal.id, editIconFile);
+          await skillsApi.uploadCategoryIcon(editModal.uuid, editIconFile);
         }
       })
       .then(() => {
@@ -126,8 +126,8 @@ export function SkillCategories() {
     if (!deleteConfirm) return;
     const c = deleteConfirm;
     setDeleteConfirm(null);
-    setDeletingId(c.id);
-    skillsApi.deleteCategory(c.id)
+    setDeletingId(c.uuid);
+    skillsApi.deleteCategory(c.uuid)
       .then(() => {
         load();
         if ((c.skillsCount ?? 0) > 0) {
@@ -253,10 +253,10 @@ export function SkillCategories() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {categories.map((c, i) => (
                 <CategoryCard
-                  key={c.id}
+                  key={c.uuid}
                   category={c}
                   index={i}
-                  isDeleting={deletingId === c.id}
+                  isDeleting={deletingId === c.uuid}
                   onEdit={() => openEdit(c)}
                   onDelete={() => handleDeleteClick(c)}
                 />
@@ -538,7 +538,7 @@ interface ModalProps {
 
 function Modal({ title, subtitle, icon, onClose, children }: ModalProps) {
   return (
-    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/20 bg-white/[0.97] shadow-[0_32px_80px_rgba(109,40,217,0.2),0_8px_32px_rgba(109,40,217,0.1),inset_0_0_0_1px_rgba(255,255,255,0.8)] backdrop-blur-[32px]">

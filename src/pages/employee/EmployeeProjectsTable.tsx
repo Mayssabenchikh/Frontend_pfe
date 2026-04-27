@@ -1,12 +1,13 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ModuleRegistry, AllCommunityModule, type ColDef, type ICellRendererParams } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
-import { InboxStackIcon, EyeIcon } from "../../icons/heroicons/outline";
+import { FolderIcon, EyeIcon } from "../../icons/heroicons/outline";
 import type { ProjectDto } from "../../api/projectsApi";
 import { PROJECTS_AG_THEME } from "../../components/projectsAgTheme";
+import { syncAgGridColumnSizing } from "../../utils/agGridResponsive";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -41,6 +42,20 @@ function statusCls(s?: string | null) {
 }
 
 export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
+  const gridRef = useRef<AgGridReact<ProjectDto> | null>(null);
+
+  useEffect(() => {
+    const onResize = () => syncAgGridColumnSizing(gridRef.current?.api);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const t = window.setTimeout(() => syncAgGridColumnSizing(gridRef.current?.api), 150);
+    return () => window.clearTimeout(t);
+  }, [loading, rows.length]);
+
   const columnDefs = useMemo<ColDef<ProjectDto>[]>(
     () => [
       {
@@ -138,11 +153,14 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
           <div className="ag-theme-quartz ag-theme-projects absolute inset-0 w-full overflow-hidden">
             <AgGridReact<ProjectDto>
+              ref={gridRef}
               theme="legacy"
               localeText={AG_GRID_LOCALE_FR}
               rowData={rows}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
+              onGridReady={(e) => syncAgGridColumnSizing(e.api)}
+              onGridSizeChanged={(e) => syncAgGridColumnSizing(e.api)}
               pagination
               paginationPageSize={8}
               paginationPageSizeSelector={false}
@@ -153,11 +171,11 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
               noRowsOverlayComponent={() => (
                 <div className="flex flex-col items-center gap-3 py-20">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 shadow-sm">
-                    <InboxStackIcon className="h-8 w-8 text-violet-700" />
+                    <FolderIcon className="h-8 w-8 text-violet-700" />
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <p className="text-sm font-bold text-violet-900">Aucun projet</p>
-                    <p className="text-xs text-violet-400">Les projets acceptés apparaîtront ici</p>
+                    <p className="text-xs text-violet-400">Les projets auxquels vous êtes affecté apparaîtront ici</p>
                   </div>
                 </div>
               )}

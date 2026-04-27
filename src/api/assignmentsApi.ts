@@ -3,8 +3,8 @@ import { http } from "./http";
 export type AssignmentStatus = "PENDING" | "ACCEPTED" | "REFUSED" | "REMOVED";
 
 export type AssignmentDto = {
-  id: number;
-  projectId: number;
+  uuid: string;
+  projectUuid: string;
   projectName: string;
   projectStartDate: string | null;
   projectDueDate: string | null;
@@ -21,9 +21,9 @@ export type AssignmentDto = {
 export type AssignmentEventAction = "ASSIGNED" | "ACCEPTED" | "REFUSED" | "REMOVED";
 
 export type AssignmentEventDto = {
-  id: number;
-  assignmentId: number;
-  projectId: number;
+  uuid: string;
+  assignmentUuid: string;
+  projectUuid: string;
   projectName: string | null;
   employeeKeycloakId: string;
   employeeEmail: string;
@@ -46,21 +46,29 @@ export type PageDto<T> = {
   size: number;
 };
 
+export type EmployeeAcceptedAssignmentsCountDto = {
+  count: number;
+  max: number;
+  reached: boolean;
+};
+
 export const assignmentsApi = {
-  listProjectAssignments: (projectId: number) =>
-    http.get<AssignmentDto[]>(`/api/manager/projects/${projectId}/assignments`),
+  listProjectAssignments: (projectUuid: string) =>
+    http.get<AssignmentDto[]>(`/api/manager/projects/${projectUuid}/assignments`),
 
-  invite: (projectId: number, employeeKeycloakId: string) =>
-    http.post<AssignmentDto>(`/api/manager/projects/${projectId}/assignments/invite`, { employeeKeycloakId }),
+  invite: (projectUuid: string, employeeKeycloakId: string) =>
+    http.post<AssignmentDto>(`/api/manager/projects/${projectUuid}/assignments/invite`, { employeeKeycloakId }),
 
-  remove: (assignmentId: number, reason: string) =>
-    http.post<AssignmentDto>(`/api/manager/projects/assignments/${assignmentId}/remove`, { reason }),
+  remove: (assignmentUuid: string, reason: string) =>
+    http.post<AssignmentDto>(`/api/manager/projects/assignments/${assignmentUuid}/remove`, { reason }),
 
-  myPending: (params?: { project?: string; from?: string; to?: string; order?: string; page?: number; size?: number }) =>
-    http.get<PageDto<AssignmentDto>>(`/api/employee/assignments/pending`, { params }),
-  accept: (assignmentId: number) => http.post<AssignmentDto>(`/api/employee/assignments/${assignmentId}/accept`, {}),
-  refuse: (assignmentId: number, reason: string) =>
-    http.post<AssignmentDto>(`/api/employee/assignments/${assignmentId}/refuse`, { reason }),
+  employeeAcceptedAssignmentsCount: (employeeKeycloakId: string) =>
+    http.get<EmployeeAcceptedAssignmentsCountDto>(
+      `/api/manager/projects/assignments/employee/${encodeURIComponent(employeeKeycloakId)}/accepted-count`,
+    ),
+
+  myAssignments: (params?: { project?: string; from?: string; to?: string; order?: string; page?: number; size?: number }) =>
+    http.get<PageDto<AssignmentDto>>(`/api/employee/assignments`, { params }),
 
   adminEvents: (params?: { project?: string; employee?: string; page?: number; size?: number }) =>
     http.get(`/api/admin/assignments/events`, { params }),
@@ -68,4 +76,3 @@ export const assignmentsApi = {
   managerEvents: (params?: { project?: string; employee?: string; page?: number; size?: number }) =>
     http.get(`/api/manager/assignments/events`, { params }),
 };
-

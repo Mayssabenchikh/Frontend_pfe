@@ -31,16 +31,16 @@ export function ConfirmModal({
   if (!open) return null;
   const isDanger = variant === "danger";
   const content = (
-    <div className="app-modal-backdrop fixed inset-0 z-[80] flex items-center justify-center px-4">
+    <div className="app-modal-backdrop fixed inset-0 z-[80] flex items-center justify-center px-3 py-4 sm:px-4">
       <div className="absolute inset-0" onClick={onCancel} aria-hidden="true" />
-      <div className="relative w-full max-w-md rounded-3xl overflow-hidden border border-violet-500/16 bg-white/[0.9] px-7 py-6 shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
+      <div className="relative max-h-[min(90dvh,640px)] w-full max-w-md overflow-y-auto rounded-3xl border border-violet-500/16 bg-white/[0.9] px-5 py-5 shadow-[0_18px_48px_rgba(109,40,217,0.14)] sm:px-7 sm:py-6">
         <h3 className="text-sm font-bold text-violet-950">{title}</h3>
         <p className="mt-1.5 text-sm text-slate-600">{message}</p>
-        <div className="mt-5 flex items-center justify-end gap-3">
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 sm:w-auto"
           >
             {cancelLabel}
           </button>
@@ -48,7 +48,7 @@ export function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`rounded-xl px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${isDanger ? "bg-red-500 hover:bg-red-600" : "bg-gradient-to-br from-violet-600 to-indigo-600"}`}
+            className={`w-full rounded-xl px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${isDanger ? "bg-red-500 hover:bg-red-600" : "bg-gradient-to-br from-violet-600 to-indigo-600"}`}
           >
             {loading ? "…" : confirmLabel}
           </button>

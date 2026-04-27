@@ -6,12 +6,15 @@ import {
   ArrowPathIcon,
   ChevronDownIcon,
   PaperAirplaneIcon,
+  LockClosedIcon,
+  CalendarDaysIcon,
 } from "../../icons/heroicons/outline";
 import { quizApi, type AttemptResultResponse, type EmployeeSkillDto, type QuizStartResponse } from "../../api/quizApi.ts";
 import { getSkillIconUrl } from "../admin/skillIcons";
 import { AlertBanner } from "../../components/AlertBanner";
 import { AlertModal } from "../../components/AlertModal";
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { getUserFacingApiMessage, translateApiMessageToFrench } from "../../utils/apiUserMessage";
 
 type QuizPhase = "setup" | "in_progress" | "submitted";
 
@@ -40,11 +43,13 @@ function readApiError(error: any, fallback: string): { status?: number; code?: s
       ? detail.error_code
       : undefined;
 
-  const message =
+  const raw =
     (typeof data?.error === "string" && data.error.trim()) ||
     (typeof detail === "string" && detail.trim()) ||
     (detail && typeof detail === "object" && typeof detail.message === "string" && detail.message.trim()) ||
-    fallback;
+    "";
+
+  const message = raw ? translateApiMessageToFrench(raw) : getUserFacingApiMessage(error, fallback);
 
   return { status, code, message };
 }
@@ -128,9 +133,9 @@ function formatSkillLevelLabel(
   }
   if (rawStatus === "QUIZ_PENDING") {
     if (validated > 0) {
-      return `Validé L${validated} · Cible L${Math.max(validated, target)} (en attente)`;
+      return `Validé N${validated} · Cible N${Math.max(validated, target)} (en attente)`;
     }
-    return `Niveau cible L${Math.max(1, target)} (en attente de validation)`;
+    return `Niveau cible N${Math.max(1, target)} (en attente de validation)`;
   }
   if (numericLevel <= 0) {
     return "Niveau en attente";
@@ -162,7 +167,7 @@ export function EmployeeQuiz() {
   const [skills, setSkills] = useState<EmployeeSkillDto[]>([]);
   const [loadingSkills, setLoadingSkills] = useState(true);
   const [phase, setPhase] = useState<QuizPhase>("setup");
-  const [selectedSkillId, setSelectedSkillId] = useState<number | null>(null);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [startData, setStartData] = useState<QuizStartResponse | null>(null);
   const [result, setResult] = useState<AttemptResultResponse | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -185,7 +190,7 @@ export function EmployeeQuiz() {
         const data = Array.isArray(res.data) ? res.data : [];
         setSkills(data);
         if (!selectedSkillId && data.length) {
-          setSelectedSkillId(data[0].skillId);
+          setSelectedSkillId(data[0].skillUuid);
         }
       })
       .catch(() => setSkills([]))
@@ -245,12 +250,12 @@ export function EmployeeQuiz() {
   }, [phase, startData, result]);
 
   const selectedSkill = useMemo(
-    () => skills.find((s) => s.skillId === selectedSkillId) ?? null,
+    () => skills.find((s) => s.skillUuid === selectedSkillId) ?? null,
     [skills, selectedSkillId],
   );
   const setupPrimarySkill = selectedSkill ?? skills[0] ?? null;
   const setupSecondarySkills = useMemo(
-    () => skills.filter((s) => !setupPrimarySkill || s.skillId !== setupPrimarySkill.skillId),
+    () => skills.filter((s) => !setupPrimarySkill || s.skillUuid !== setupPrimarySkill.skillUuid),
     [skills, setupPrimarySkill],
   );
   const quizCooldownActive = useMemo(
@@ -471,14 +476,14 @@ export function EmployeeQuiz() {
         : null;
 
       const res = await quizApi.syncSkillStatus({
-        skillId: selectedSkillId,
+        skillUuid: selectedSkillId,
         passed: quizResult.passed,
         level: quizResult.level,
         nextAllowedAt: fallbackNextAllowedAt,
         quizKind,
       });
       const updated = res.data;
-      setSkills((prev) => prev.map((s) => (s.skillId === updated.skillId ? updated : s)));
+      setSkills((prev) => prev.map((s) => (s.skillUuid === updated.skillUuid ? updated : s)));
     } catch {
       // keep quiz UX responsive even if status sync fails
     }
@@ -617,7 +622,7 @@ export function EmployeeQuiz() {
     <div className="flex h-full min-h-0 w-full flex-col" style={{ background: "var(--luxury-light-bg, #f8f7ff)" }}>
       <div
         className={[
-          "relative flex min-h-0 flex-1 flex-col p-4 md:px-6 md:pt-6",
+          "relative flex min-h-0 flex-1 flex-col p-3 sm:p-4 md:px-6 md:pt-6",
           phase === "setup" ? "gap-4 overflow-hidden pb-0 md:pb-0" : "gap-6 overflow-auto md:pb-6",
         ].join(" ")}
       >
@@ -640,10 +645,10 @@ export function EmployeeQuiz() {
             <div className="quiz-enter quiz-enter-delay-1 flex min-h-0 flex-col gap-4">
 
             {setupPrimarySkill ? (
-              <div className="rounded-3xl border border-violet-100/80 bg-white p-5 shadow-md shadow-violet-100/50">
+              <div className="rounded-3xl border border-violet-100/80 bg-white p-4 shadow-md shadow-violet-100/50 sm:p-5">
                 <button
                   type="button"
-                  onClick={() => setSelectedSkillId(setupPrimarySkill.skillId)}
+                  onClick={() => setSelectedSkillId(setupPrimarySkill.skillUuid)}
                   className="w-full text-left"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -659,7 +664,7 @@ export function EmployeeQuiz() {
                         })()}
                       </div>
                       <div>
-                        <p className="text-2xl font-semibold text-slate-900">{setupPrimarySkill.skillName}</p>
+                        <p className="text-xl font-semibold text-slate-900 sm:text-2xl">{setupPrimarySkill.skillName}</p>
                         <p className="text-sm text-slate-500">
                           {formatSkillLevelLabel(
                             setupPrimarySkill.level,
@@ -681,11 +686,7 @@ export function EmployeeQuiz() {
                       <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                         <div className="flex items-start gap-3">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-50">
-                            <img
-                              src="/quiz/lock-outline.svg"
-                              alt="Illustration cadenas"
-                              className="h-7 w-7 object-contain"
-                            />
+                            <LockClosedIcon className="h-7 w-7 text-rose-600" />
                           </div>
                           <div className="min-w-0">
                             <p className="font-semibold text-slate-800">{quizCooldownActive ? "Quiz bloqué" : "Quiz disponible"}</p>
@@ -699,11 +700,7 @@ export function EmployeeQuiz() {
                       <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                         <div className="flex items-start gap-3">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-50">
-                            <img
-                              src="/quiz/calendar-outline.svg"
-                              alt="Illustration calendrier"
-                              className="h-7 w-7 object-contain"
-                            />
+                            <CalendarDaysIcon className="h-7 w-7 text-violet-600" />
                           </div>
                           <div className="min-w-0">
                             <p className="font-semibold text-slate-800">Prochaine tentative</p>
@@ -751,13 +748,13 @@ export function EmployeeQuiz() {
                 {setupSecondarySkills.map((s) => {
                   const badge = statusBadge(s.status);
                   const iconUrl = resolveSkillIconUrl(s);
-                  const selected = selectedSkillId === s.skillId;
+                  const selected = selectedSkillId === s.skillUuid;
 
                   return (
                     <button
-                      key={`${s.skillId}-${s.id}`}
+                      key={`${s.skillUuid}-${s.uuid}`}
                       type="button"
-                      onClick={() => setSelectedSkillId(s.skillId)}
+                      onClick={() => setSelectedSkillId(s.skillUuid)}
                       className={[
                         "group w-full rounded-2xl border px-3.5 py-2.5 text-left transition",
                         selected

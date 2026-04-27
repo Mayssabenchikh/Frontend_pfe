@@ -1,17 +1,6 @@
 import { useEffect, useState } from "react";
 import { AcademicCapIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from "../../icons/heroicons/outline";
-import { http } from "../../api/http";
-
-type EmployeeSkillDto = {
-  id: number;
-  skillId: number;
-  skillName: string;
-  categoryName: string;
-  level: number;
-  status: string;
-  source: string;
-  quizNextAllowedAt?: string | null;
-};
+import { quizApi, type EmployeeSkillDto } from "../../api/quizApi";
 
 export function EmployeeDashboard() {
   const [skills, setSkills] = useState<EmployeeSkillDto[]>([]);
@@ -19,8 +8,8 @@ export function EmployeeDashboard() {
 
   useEffect(() => {
     setLoading(true);
-    http
-      .get<EmployeeSkillDto[]>("/api/employee/me/skills")
+    quizApi
+      .listEmployeeSkills()
       .then((res) => setSkills(Array.isArray(res.data) ? res.data : []))
       .catch(() => setSkills([]))
       .finally(() => setLoading(false));
@@ -67,20 +56,20 @@ export function EmployeeDashboard() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mx-auto max-w-5xl space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="relative rounded-2xl border border-violet-500/15 bg-white/50 p-6 overflow-hidden shadow-md cursor-default transition-all -translate-y-0.5"
+            className="relative cursor-default overflow-hidden rounded-2xl border border-violet-500/15 bg-white/50 p-4 shadow-md transition-all -translate-y-0.5 sm:p-6"
           >
-            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-slate-50 pointer-events-none z-0" />
-            <div className="flex items-start justify-between relative z-10">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-900 mb-2">
+            <div className="pointer-events-none absolute -right-6 -top-6 z-0 h-24 w-24 rounded-full bg-slate-50" />
+            <div className="relative z-10 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-900 sm:mb-2 sm:text-xs">
                   {card.label}
                 </p>
-                <p className="text-4xl font-extrabold text-violet-900 leading-none tabular-nums tracking-tight">
+                <p className="text-3xl font-extrabold leading-none tracking-tight text-violet-900 tabular-nums sm:text-4xl">
                   {card.value}
                 </p>
                 {card.note && <p className="text-xs text-slate-900 mt-2">{card.note}</p>}

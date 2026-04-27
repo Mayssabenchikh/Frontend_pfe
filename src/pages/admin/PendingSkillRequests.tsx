@@ -45,7 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 type MergeSuggestion = {
-  skillId: number;
+  skillUuid: string;
   confidence: number;
   reason: string;
   source: "ai" | "local";
@@ -66,17 +66,17 @@ function normalizeKey(raw: string) {
 function findCatalogCollision(
   proposedName: string,
   allSkills: SkillDto[],
-  opts?: { allowSkillId?: number }
+  opts?: { allowSkillUuid?: string }
 ): { type: "skillName" | "synonym"; skill: SkillDto; alias?: string } | null {
   const key = normalizeKey(proposedName);
   if (!key) return null;
-  const allowId = opts?.allowSkillId;
+  const allowUuid = opts?.allowSkillUuid;
   for (const s of allSkills) {
-    if (allowId != null && s.id === allowId) continue;
+    if (allowUuid != null && s.uuid === allowUuid) continue;
     if (normalizeKey(s.name) === key) return { type: "skillName", skill: s };
   }
   for (const s of allSkills) {
-    if (allowId != null && s.id === allowId) continue;
+    if (allowUuid != null && s.uuid === allowUuid) continue;
     for (const a of s.synonyms ?? []) {
       if (normalizeKey(a) === key) return { type: "synonym", skill: s, alias: a };
     }
@@ -92,8 +92,8 @@ export function PendingSkillRequests() {
   const [resolveModal, setResolveModal] = useState<PendingSkillRequestDto | null>(null);
   const [requestersModal, setRequestersModal] = useState<PendingSkillRequestDto | null>(null);
   const [resolveAction, setResolveAction] = useState<"APPROVE" | "MERGE" | "REJECT">("APPROVE");
-  const [resolveCategoryId, setResolveCategoryId] = useState<number | "">("");
-  const [resolveSkillId, setResolveSkillId] = useState<number | "">("");
+  const [resolveCategoryId, setResolveCategoryId] = useState<string>("");
+  const [resolveSkillId, setResolveSkillId] = useState<string>("");
   const [resolveNotes, setResolveNotes] = useState("");
   const [resolveLoading, setResolveLoading] = useState(false);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
@@ -152,8 +152,8 @@ export function PendingSkillRequests() {
   const requests = data?.content ?? [];
   const mergeSkills = useMemo(() => {
     if (!skills.length) return [];
-    if (!mergeSuggestion?.skillId) return [];
-    const suggested = skills.find((s) => s.id === mergeSuggestion.skillId);
+    if (!mergeSuggestion?.skillUuid) return [];
+    const suggested = skills.find((s) => s.uuid === mergeSuggestion.skillUuid);
     if (!suggested) return [];
     return [suggested];
   }, [skills, mergeSuggestion]);
@@ -176,7 +176,7 @@ export function PendingSkillRequests() {
   const openResolveModal = (req: PendingSkillRequestDto) => {
     setResolveModal(req);
     setResolveAction("APPROVE");
-    setResolveCategoryId(categories[0]?.id ?? "");
+    setResolveCategoryId(categories[0]?.uuid ?? "");
     setResolveSkillId("");
     setResolveNotes("");
     setMergeSuggestion(null);
@@ -189,7 +189,7 @@ export function PendingSkillRequests() {
     for (const skill of skills) {
       if (normalizeKey(skill.name) === key) {
         return {
-          skillId: skill.id,
+          skillUuid: skill.uuid,
           confidence: 0.99,
           reason: "Correspondance exacte avec une compétence existante",
           source: "local",
@@ -198,7 +198,7 @@ export function PendingSkillRequests() {
       const alias = skill.synonyms?.find((a) => normalizeKey(a) === key);
       if (alias) {
         return {
-          skillId: skill.id,
+          skillUuid: skill.uuid,
           confidence: 0.97,
           reason: `Correspondance exacte avec le synonyme « ${alias} »`,
           source: "local",
@@ -225,7 +225,7 @@ export function PendingSkillRequests() {
     }
     if (!best || best.score < 0.4) return null;
     return {
-      skillId: best.skill.id,
+      skillUuid: best.skill.uuid,
       confidence: Number(best.score.toFixed(2)),
       reason: "Suggestion locale basée sur similarité de termes",
       source: "local",
@@ -236,23 +236,23 @@ export function PendingSkillRequests() {
     const local = findLocalSuggestion(req.rawSkillName);
     if (local) {
       setMergeSuggestion(local);
-      setResolveSkillId(local.skillId);
+      setResolveSkillId(local.skillUuid);
       setResolveAction("MERGE");
     }
 
     setSuggestionLoading(true);
     try {
-      const res = await skillsApi.suggestMergeForPendingSkillRequest(req.id);
+      const res = await skillsApi.suggestMergeForPendingSkillRequest(req.uuid);
       const payload = res.data;
-      if (!payload?.suggestedSkillId) return;
+      if (!payload?.suggestedSkillUuid) return;
       const reason = payload.reason?.trim() || "Suggestion IA basée sur similarité sémantique";
       setMergeSuggestion({
-        skillId: payload.suggestedSkillId,
+        skillUuid: payload.suggestedSkillUuid,
         confidence: Number(payload.confidence ?? 0),
         reason,
         source: "ai",
       });
-      setResolveSkillId(payload.suggestedSkillId);
+      setResolveSkillId(payload.suggestedSkillUuid);
       setResolveAction("MERGE");
     } catch {
       // Fallback silencieux vers la suggestion locale.
@@ -289,7 +289,7 @@ export function PendingSkillRequests() {
       }
     }
     if (resolveAction === "MERGE") {
-      const hit = findCatalogCollision(resolveModal.rawSkillName, skills, { allowSkillId: Number(resolveSkillId) });
+      const hit = findCatalogCollision(resolveModal.rawSkillName, skills, { allowSkillUuid: resolveSkillId });
       if (hit) {
         if (hit.type === "skillName") {
           toast.error(`Doublon: « ${resolveModal.rawSkillName} » existe déjà comme compétence (« ${hit.skill.name} », catégorie: ${hit.skill.categoryName}).`);
@@ -301,10 +301,10 @@ export function PendingSkillRequests() {
     }
 
     setResolveLoading(true);
-    skillsApi.resolvePendingSkillRequest(resolveModal.id, {
+    skillsApi.resolvePendingSkillRequest(resolveModal.uuid, {
       action: resolveAction,
-      categoryId: resolveAction === "APPROVE" ? Number(resolveCategoryId) : undefined,
-      existingSkillId: resolveAction === "MERGE" ? Number(resolveSkillId) : undefined,
+      categoryUuid: resolveAction === "APPROVE" ? resolveCategoryId : undefined,
+      existingSkillUuid: resolveAction === "MERGE" ? resolveSkillId : undefined,
       adminNotes: resolveNotes.trim() || undefined,
     })
       .then(() => {
@@ -416,7 +416,7 @@ export function PendingSkillRequests() {
                 <div className="grid gap-2">
                   {filteredRequests.map((req, index) => (
                     <article
-                      key={req.id}
+                      key={req.uuid}
                       className="fade-up group relative overflow-hidden rounded-xl border border-violet-500/10 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md hover:shadow-violet-100"
                       style={{ animationDelay: `${index * 35}ms` }}
                     >
@@ -553,7 +553,7 @@ export function PendingSkillRequests() {
       </div>
 
       {resolveModal && (
-        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => !resolveLoading && setResolveModal(null)} />
           <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50 px-5 py-3">
@@ -620,12 +620,12 @@ export function PendingSkillRequests() {
                   <label className="mb-1 block text-xs font-semibold text-slate-600">Catégorie cible</label>
                   <select
                     value={resolveCategoryId}
-                    onChange={(e) => setResolveCategoryId(e.target.value ? Number(e.target.value) : "")}
+                    onChange={(e) => setResolveCategoryId(e.target.value)}
                     className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
                   >
                     <option value="">Sélectionner une catégorie</option>
                     {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      <option key={cat.uuid} value={cat.uuid}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
@@ -636,7 +636,7 @@ export function PendingSkillRequests() {
                   <label className="mb-1 block text-xs font-semibold text-slate-600">Compétence cible</label>
                   <select
                     value={resolveSkillId}
-                    onChange={(e) => setResolveSkillId(e.target.value ? Number(e.target.value) : "")}
+                    onChange={(e) => setResolveSkillId(e.target.value)}
                     disabled={!mergeSuggestion}
                     className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
                   >
@@ -644,7 +644,7 @@ export function PendingSkillRequests() {
                       {mergeSuggestion ? "Sélectionner la suggestion" : "Aucune suggestion disponible"}
                     </option>
                     {mergeSkills.map((skill) => (
-                      <option key={skill.id} value={skill.id}>
+                      <option key={skill.uuid} value={skill.uuid}>
                         ⭐ Suggestion - {skill.name} - {skill.categoryName}
                       </option>
                     ))}
@@ -688,7 +688,7 @@ export function PendingSkillRequests() {
       )}
 
       {requestersModal && (
-        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setRequestersModal(null)} />
           <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50 px-5 py-3.5">

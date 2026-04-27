@@ -22,6 +22,14 @@ function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string 
     return [{ label: "Affectations" }];
   }
 
+  if (parts[1] === "learning" && parts.length === 2) {
+    return [{ label: "Formations" }];
+  }
+
+  if (parts[1] === "learning" && parts[2] === "course") {
+    return [{ label: "Formations", to: "/employee/learning" }, { label: "Cours YouTube" }];
+  }
+
   if (parts[1] === "projects" && parts.length === 2) {
     return [{ label: "Mes projets" }];
   }
@@ -41,7 +49,7 @@ export function EmployeeBreadcrumbs() {
 
   return (
     <nav
-      className={`admin-breadcrumbs flex shrink-0 items-center gap-2 px-6 text-sm text-slate-500 md:px-8 ${compact ? "h-8 py-0" : "h-10 pt-1"}`}
+      className={`admin-breadcrumbs flex min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8 ${compact ? "h-8 py-0" : "h-10 pt-1"}`}
       aria-label="Fil d'Ariane employé"
     >
       <Link

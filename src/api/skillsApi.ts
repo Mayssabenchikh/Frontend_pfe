@@ -15,10 +15,10 @@ const DEFAULT_PAGE_SIZE = 20;
 type PaginationOptions = { page?: number; size?: number; search?: string };
 type PendingStatus = "PENDING" | "APPROVED" | "MERGED" | "REJECTED";
 export type PendingMergeSuggestionDto = {
-  suggestedSkillId: number | null;
+  suggestedSkillUuid: string | null;
   confidence: number;
   reason?: string | null;
-  alternatives?: Array<{ skillId: number; confidence: number; reason?: string | null }>;
+  alternatives?: Array<{ skillUuid: string; confidence: number; reason?: string | null }>;
 };
 
 function buildPaginationParams(opts?: PaginationOptions): Record<string, string | number> {
@@ -40,44 +40,44 @@ export const skillsApi = {
   },
   createCategory: (name: string) =>
     http.post<SkillCategoryDto>(`${BASE}/skill-categories`, { name }),
-  updateCategory: (id: number, name: string) =>
-    http.put<SkillCategoryDto>(`${BASE}/skill-categories/${id}`, { name }),
-  deleteCategory: (id: number) =>
-    http.delete(`${BASE}/skill-categories/${id}`),
-  uploadCategoryIcon: (id: number, file: File) => {
+  updateCategory: (uuid: string, name: string) =>
+    http.put<SkillCategoryDto>(`${BASE}/skill-categories/${uuid}`, { name }),
+  deleteCategory: (uuid: string) =>
+    http.delete(`${BASE}/skill-categories/${uuid}`),
+  uploadCategoryIcon: (uuid: string, file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return http.post<SkillCategoryDto>(`${BASE}/skill-categories/${id}/icon`, form, {
+    return http.post<SkillCategoryDto>(`${BASE}/skill-categories/${uuid}/icon`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
 
-  listSkills: (categoryId?: number) => {
-    const params = categoryId ? { categoryId } : {};
+  listSkills: (categoryUuid?: string) => {
+    const params = categoryUuid ? { categoryUuid } : {};
     return http.get<SkillDto[]>(`${BASE}/skills`, { params });
   },
-  listSkillsPaginated: (opts?: { categoryId?: number; page?: number; size?: number; search?: string }) => {
+  listSkillsPaginated: (opts?: { categoryUuid?: string; page?: number; size?: number; search?: string }) => {
     const params = buildPaginationParams(opts);
-    if (opts?.categoryId != null) params.categoryId = opts.categoryId;
+    if (opts?.categoryUuid != null) params.categoryUuid = opts.categoryUuid;
     return http.get<SkillPageDto>(`${BASE}/skills`, { params });
   },
-  getSkill: (id: number) => http.get<SkillDto>(`${BASE}/skills/${id}`),
-  createSkill: (data: { name: string; categoryId: number; levelMin: number; levelMax: number }) =>
+  getSkill: (uuid: string) => http.get<SkillDto>(`${BASE}/skills/${uuid}`),
+  createSkill: (data: { name: string; categoryUuid: string; levelMin: number; levelMax: number }) =>
     http.post<SkillDto>(`${BASE}/skills`, data),
-  updateSkill: (id: number, data: { name: string; categoryId: number; levelMin: number; levelMax: number }) =>
-    http.put<SkillDto>(`${BASE}/skills/${id}`, data),
-  deleteSkill: (id: number) => http.delete(`${BASE}/skills/${id}`),
-  uploadSkillIcon: (id: number, file: File) => {
+  updateSkill: (uuid: string, data: { name: string; categoryUuid: string; levelMin: number; levelMax: number }) =>
+    http.put<SkillDto>(`${BASE}/skills/${uuid}`, data),
+  deleteSkill: (uuid: string) => http.delete(`${BASE}/skills/${uuid}`),
+  uploadSkillIcon: (uuid: string, file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return http.post<SkillDto>(`${BASE}/skills/${id}/icon`, form, {
+    return http.post<SkillDto>(`${BASE}/skills/${uuid}/icon`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  addSynonym: (skillId: number, alias: string) =>
-    http.post(`${BASE}/skills/${skillId}/synonyms`, { alias }),
-  removeSynonym: (skillId: number, alias: string) =>
-    http.delete(`${BASE}/skills/${skillId}/synonyms`, { params: { alias } }),
+  addSynonym: (skillUuid: string, alias: string) =>
+    http.post(`${BASE}/skills/${skillUuid}/synonyms`, { alias }),
+  removeSynonym: (skillUuid: string, alias: string) =>
+    http.delete(`${BASE}/skills/${skillUuid}/synonyms`, { params: { alias } }),
   listPendingSkillRequests: (opts?: { page?: number; size?: number; status?: PendingStatus }) => {
     const params = buildPaginationParams(opts);
     if (opts?.status) params.status = opts.status;
@@ -89,10 +89,10 @@ export const skillsApi = {
     http.get<{ count: number }>(`${BASE}/pending-skills/count`),
   getPendingSkillRequestsStats: () =>
     http.get<Record<PendingStatus, number>>(`${BASE}/pending-skills/stats`),
-  suggestMergeForPendingSkillRequest: (id: number) =>
-    http.post<PendingMergeSuggestionDto>(`${BASE}/pending-skills/${id}/suggest-merge`, {}),
+  suggestMergeForPendingSkillRequest: (uuid: string) =>
+    http.post<PendingMergeSuggestionDto>(`${BASE}/pending-skills/${uuid}/suggest-merge`, {}),
   resolvePendingSkillRequest: (
-    id: number,
-    data: { action: "APPROVE" | "MERGE" | "REJECT"; categoryId?: number; existingSkillId?: number; adminNotes?: string }
-  ) => http.post(`${BASE}/pending-skills/${id}/resolve`, data),
+    uuid: string,
+    data: { action: "APPROVE" | "MERGE" | "REJECT"; categoryUuid?: string; existingSkillUuid?: string; adminNotes?: string }
+  ) => http.post(`${BASE}/pending-skills/${uuid}/resolve`, data),
 };

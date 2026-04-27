@@ -9,6 +9,7 @@ import {
   Squares2X2Icon,
   Bars3Icon,
   EyeIcon,
+  FolderIcon,
 } from "../../icons/heroicons/outline";
 import {
   ModuleRegistry,
@@ -28,6 +29,8 @@ import { getPrimaryRole } from "../../auth/roles";
 import { getAvatarColor } from "../admin/utils";
 import { FiltersPanel } from "../../components/FiltersPanel";
 import { PROJECTS_AG_THEME } from "../../components/projectsAgTheme";
+import { syncAgGridColumnSizing } from "../../utils/agGridResponsive";
+import { getUserFacingApiMessage } from "../../utils/apiUserMessage";
 
 type ManagerOutletContext = {
   managerAvatarUrl: string | null;
@@ -38,7 +41,7 @@ type ManagerOutletContext = {
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-export function ProjectsList() {
+function ProjectsList() {
   const GRID_PAGE_SIZE = 12;
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
@@ -60,7 +63,7 @@ export function ProjectsList() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [createModal, setCreateModal] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ProjectDto | null>(null);
   const gridRef = useRef<AgGridReact<ProjectDto> | null>(null);
 
@@ -101,13 +104,26 @@ export function ProjectsList() {
     return () => clearTimeout(t);
   }, [load]);
 
-  const handleCreate = (data: { name: string; description?: string; status?: string; requirements?: { skillId: number; levelMin: number }[] }) => {
+  useEffect(() => {
+    if (viewMode !== "list") return;
+    const onResize = () => syncAgGridColumnSizing(gridRef.current?.api);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (loading || viewMode !== "list") return;
+    const t = window.setTimeout(() => syncAgGridColumnSizing(gridRef.current?.api), 150);
+    return () => window.clearTimeout(t);
+  }, [loading, projects.length, viewMode]);
+
+  const handleCreate = (data: { name: string; description?: string; status?: string; requirements?: { skillUuid: string; levelMin: number }[] }) => {
     return projectsApi.create(data)
       .then((res) => {
         setCreateModal(false);
         load();
         toast.success("Projet créé");
-        if (res.data?.id) navigate(`/manager/projects/${res.data.id}`);
+        if (res.data?.uuid) navigate(`/manager/projects/${res.data.uuid}`);
       });
   };
 
@@ -117,10 +133,10 @@ export function ProjectsList() {
     if (!deleteConfirm) return;
     const p = deleteConfirm;
     setDeleteConfirm(null);
-    setDeletingId(p.id);
-    projectsApi.delete(p.id)
+    setDeletingId(p.uuid);
+    projectsApi.delete(p.uuid)
       .then(() => { load(); toast.success("Projet supprimé"); })
-      .catch((err) => toast.error(err.response?.data?.error ?? "Erreur"))
+      .catch((err) => toast.error(getUserFacingApiMessage(err, "Une erreur est survenue.")))
       .finally(() => setDeletingId(null));
   };
 
@@ -262,7 +278,7 @@ export function ProjectsList() {
         cellRenderer: (params: ICellRendererParams<ProjectDto>) => {
           const p = params.data;
           if (!p) return null;
-          const isDel = deletingId === p.id;
+          const isDel = deletingId === p.uuid;
           return (
             <div className="flex w-full items-center justify-center gap-2">
               <button
@@ -271,7 +287,7 @@ export function ProjectsList() {
                 data-no-row-nav="true"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/manager/projects/${p.id}`);
+                  navigate(`/manager/projects/${p.uuid}`);
                 }}
                 className="inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-violet-500/25 bg-transparent px-3 text-xs font-semibold text-violet-700 transition-all duration-150 hover:-translate-y-px hover:border-violet-200 hover:bg-violet-50 hover:shadow-md"
               >
@@ -490,15 +506,15 @@ export function ProjectsList() {
                 rowData={filtered}
                 columnDefs={columnDefs}
                 defaultColDef={defaultColDef}
-                onGridReady={(e) => e.api.sizeColumnsToFit()}
-                onGridSizeChanged={(e) => e.api.sizeColumnsToFit()}
+                onGridReady={(e) => syncAgGridColumnSizing(e.api)}
+                onGridSizeChanged={(e) => syncAgGridColumnSizing(e.api)}
                 onRowClicked={(e) => {
                   const clickTarget = e.event?.target as HTMLElement | null;
                   if (clickTarget?.closest('[data-no-row-nav="true"],button,a,input,select,textarea')) {
                     return;
                   }
                   const p = e.data;
-                  if (p?.id != null) navigate(`/manager/projects/${p.id}`);
+                  if (p?.uuid != null) navigate(`/manager/projects/${p.uuid}`);
                 }}
                 pagination
                 paginationPageSize={8}
@@ -508,8 +524,8 @@ export function ProjectsList() {
                 headerHeight={42}
                 noRowsOverlayComponent={() => (
                   <div className="flex flex-col items-center gap-3 py-20">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 text-3xl">
-                      📁
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 shadow-sm">
+                      <FolderIcon className="h-8 w-8 text-violet-700" />
                     </div>
                     <div className="flex flex-col items-center gap-1">
                       <p className="text-sm font-bold text-slate-800">Aucun projet</p>
@@ -527,8 +543,8 @@ export function ProjectsList() {
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
             {filtered.length === 0 ? (
               <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-5 py-10 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 text-3xl">
-                  📁
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 shadow-sm">
+                  <FolderIcon className="h-8 w-8 text-violet-700" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-bold text-slate-800">Aucun projet</p>
@@ -544,18 +560,18 @@ export function ProjectsList() {
                     const leadFullName = p.leadName || p.leadEmail || managerName || managerEmail || "Lead";
                     const avatarSeed = p.leadEmail || managerEmail || leadFullName;
                     const gradient = getAvatarColor(avatarSeed);
-                    const isDel = deletingId === p.id;
+                    const isDel = deletingId === p.uuid;
 
                     return (
                       <article
-                        key={p.id}
-                        onClick={() => navigate(`/manager/projects/${p.id}`)}
+                        key={p.uuid}
+                        onClick={() => navigate(`/manager/projects/${p.uuid}`)}
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            navigate(`/manager/projects/${p.id}`);
+                            navigate(`/manager/projects/${p.uuid}`);
                           }
                         }}
                         className="group flex min-h-[390px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_5px_16px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-[0_12px_20px_rgba(15,23,42,0.1)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500/20"
@@ -706,3 +722,5 @@ export function ProjectsList() {
     </div>
   );
 }
+
+export default ProjectsList;

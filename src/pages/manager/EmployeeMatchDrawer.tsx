@@ -1,52 +1,34 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { XMarkIcon, SparklesIcon } from "../../icons/heroicons/outline";
-import {
-  matchingApi,
-  type EmployeeMatchRowDto,
-  type ExplainResponseDto,
-  type GapSkillDto,
-  type ImprovementSuggestionDto,
-  type QuizSuggestionDto,
-} from "../../api/matchingApi";
+import { toast } from "sonner";
+import { XMarkIcon } from "../../icons/heroicons/outline";
+import { matchingApi, type EmployeeMatchRowDto, type ExplainResponseDto, type GapSkillDto } from "../../api/matchingApi";
 import { assignmentsApi, type AssignmentDto } from "../../api/assignmentsApi";
 import { ExplanationBox } from "../../components/matching/ExplanationBox";
 import { GapList } from "../../components/matching/GapList";
-import { RecommendationList } from "../../components/matching/RecommendationList";
-import { SkillBadge } from "../../components/matching/SkillBadge";
 import { avatarGradient, avatarInitials, toPercent, toPercentNumber } from "../../components/matching/matchingVisuals";
 import { ReasonModal } from "../../components/ReasonModal";
+import { getUserFacingApiMessage } from "../../utils/apiUserMessage";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  projectId: number;
+  projectUuid: string;
   projectTeamSize: number | null;
   row: EmployeeMatchRowDto | null;
   assignments: AssignmentDto[];
   onAssignmentsChange: (next: AssignmentDto[]) => void;
 };
 
-export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize, row, assignments, onAssignmentsChange }: Props) {
+export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSize, row, assignments, onAssignmentsChange }: Props) {
   const titleId = useId();
   const [gapsLoading, setGapsLoading] = useState(false);
-  const [recoLoading, setRecoLoading] = useState(false);
   const [explainLoading, setExplainLoading] = useState(false);
   const [assignLoading, setAssignLoading] = useState(false);
   const [gaps, setGaps] = useState<GapSkillDto[]>([]);
-  const [reco, setReco] = useState<{ quizzes: QuizSuggestionDto[]; improvements: ImprovementSuggestionDto[] }>({
-    quizzes: [],
-    improvements: [],
-  });
-  const [aiNarrative, setAiNarrative] = useState<string | null>(null);
   const [explain, setExplain] = useState<ExplainResponseDto | null>(null);
-  const [withAiReco, setWithAiReco] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
-
-  const topSkills =
-    row?.breakdown.requirements
-      .slice()
-      .sort((a, b) => b.partial_score - a.partial_score)
-      .slice(0, 6) ?? [];
+  const [employeeAcceptedCount, setEmployeeAcceptedCount] = useState(0);
+  const [employeeAcceptedMax, setEmployeeAcceptedMax] = useState(3);
 
   const avatarSeed = row?.email || row?.employee_keycloak_id || row?.display_name || "employee";
   const avatar = avatarGradient(avatarSeed);
@@ -55,73 +37,62 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
   const activeAssignment = useMemo(() => {
     if (!row) return null;
     const items = assignments.filter(
-      (a) => a.projectId === projectId && a.employeeKeycloakId === row.employee_keycloak_id && (a.status === "PENDING" || a.status === "ACCEPTED"),
+      (a) => a.projectUuid === projectUuid && a.employeeKeycloakId === row.employee_keycloak_id && (a.status === "PENDING" || a.status === "ACCEPTED"),
     );
     return items[0] ?? null;
-  }, [assignments, projectId, row]);
+  }, [assignments, projectUuid, row]);
 
   const isProjectFull = useMemo(() => {
     const capacity = Math.max(1, projectTeamSize ?? 1);
-    const acceptedCount = assignments.filter((a) => a.projectId === projectId && a.status === "ACCEPTED").length;
+    const acceptedCount = assignments.filter((a) => a.projectUuid === projectUuid && a.status === "ACCEPTED").length;
     return acceptedCount >= capacity;
-  }, [assignments, projectId, projectTeamSize]);
+  }, [assignments, projectUuid, projectTeamSize]);
 
   useEffect(() => {
     if (!open || !row) return;
 
     setGapsLoading(true);
-    setRecoLoading(true);
-    setExplainLoading(Boolean(row.match_result_id));
+    setExplainLoading(Boolean(row.match_result_uuid));
     setExplain(null);
-    setAiNarrative(null);
-    setWithAiReco(false);
 
     matchingApi
-      .getEmployeeGap(projectId, row.employee_keycloak_id)
+      .getEmployeeGap(projectUuid, row.employee_keycloak_id)
       .then((res) => setGaps(res.data.gaps))
       .catch(() => setGaps([]))
       .finally(() => setGapsLoading(false));
 
-    matchingApi
-      .getEmployeeRecommendation(projectId, row.employee_keycloak_id, false)
-      .then((res) => {
-        setReco({ quizzes: res.data.quiz_suggestions, improvements: res.data.improvements });
-        setAiNarrative(res.data.ai_narrative ?? null);
-      })
-      .catch(() => setReco({ quizzes: [], improvements: [] }))
-      .finally(() => setRecoLoading(false));
-
-    if (row.match_result_id) {
+    if (row.match_result_uuid) {
       matchingApi
-        .explainMatch(row.match_result_id)
+        .explainMatch(row.match_result_uuid)
         .then((res) => setExplain(res.data))
         .catch(() => setExplain(null))
         .finally(() => setExplainLoading(false));
     } else {
       setExplain({
-        match_result_id: 0,
+        match_result_uuid: "",
         deterministic_summary:
           "Aucun enregistrement de correspondance associé. Rouvrez la page des classements pour régénérer les scores et activer l'explication détaillée.",
         ai_explanation: null,
       });
       setExplainLoading(false);
     }
-  }, [open, row, projectId]);
+  }, [open, row, projectUuid]);
 
-  const loadRecoWithAi = async () => {
-    if (!row) return;
-    setRecoLoading(true);
-    try {
-      const res = await matchingApi.getEmployeeRecommendation(projectId, row.employee_keycloak_id, true);
-      setReco({ quizzes: res.data.quiz_suggestions, improvements: res.data.improvements });
-      setAiNarrative(res.data.ai_narrative ?? null);
-      setWithAiReco(true);
-    } catch {
-      setAiNarrative(null);
-    } finally {
-      setRecoLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!open || !row) return;
+    assignmentsApi
+      .employeeAcceptedAssignmentsCount(row.employee_keycloak_id)
+      .then((res) => {
+        const count = Number(res.data?.count ?? 0);
+        const max = Number(res.data?.max ?? 3);
+        setEmployeeAcceptedCount(Number.isFinite(count) ? count : 0);
+        setEmployeeAcceptedMax(Number.isFinite(max) && max > 0 ? max : 3);
+      })
+      .catch(() => {
+        setEmployeeAcceptedCount(0);
+        setEmployeeAcceptedMax(3);
+      });
+  }, [open, row]);
 
   if (!open) return null;
 
@@ -129,9 +100,12 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
     if (!row) return;
     setAssignLoading(true);
     try {
-      await assignmentsApi.invite(projectId, row.employee_keycloak_id);
-      const res = await assignmentsApi.listProjectAssignments(projectId);
+      await assignmentsApi.invite(projectUuid, row.employee_keycloak_id);
+      const res = await assignmentsApi.listProjectAssignments(projectUuid);
       onAssignmentsChange(Array.isArray(res.data) ? res.data : []);
+      setEmployeeAcceptedCount((prev) => prev + 1);
+    } catch (err) {
+      toast.error(getUserFacingApiMessage(err, "Impossible d'affecter cet employé."));
     } finally {
       setAssignLoading(false);
     }
@@ -146,9 +120,12 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
     if (!activeAssignment) return;
     setAssignLoading(true);
     try {
-      await assignmentsApi.remove(activeAssignment.id, String(reason).trim());
-      const res = await assignmentsApi.listProjectAssignments(projectId);
+      await assignmentsApi.remove(activeAssignment.uuid, String(reason).trim());
+      const res = await assignmentsApi.listProjectAssignments(projectUuid);
       onAssignmentsChange(Array.isArray(res.data) ? res.data : []);
+      if (activeAssignment.status === "ACCEPTED") {
+        setEmployeeAcceptedCount((prev) => Math.max(0, prev - 1));
+      }
     } finally {
       setAssignLoading(false);
       setRemoveOpen(false);
@@ -167,9 +144,9 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[430px] flex-col border-l border-violet-100 bg-white shadow-[0_18px_56px_rgba(15,23,42,0.22)]"
+        className="fixed inset-y-0 right-0 z-50 flex max-h-[100dvh] w-full max-w-[430px] flex-col border-l border-violet-100 bg-white shadow-[0_18px_56px_rgba(15,23,42,0.22)] pt-[env(safe-area-inset-top,0px)]"
       >
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div
               className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-md"
@@ -178,7 +155,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
               {initials}
             </div>
             <div className="min-w-0">
-              <h2 id={titleId} className="truncate text-2xl font-black leading-none tracking-tight text-slate-800">
+              <h2 id={titleId} className="truncate text-xl font-black leading-tight tracking-tight text-slate-800 sm:text-2xl">
                 {row?.display_name || "Profil"}
               </h2>
               <p className="mt-1 truncate text-sm text-slate-500">{row?.email || ""}</p>
@@ -194,7 +171,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5 sm:py-4">
           {!row ? (
             <p className="text-sm text-slate-500">Aucun employé sélectionné.</p>
           ) : (
@@ -218,86 +195,36 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
                 </article>
               </div>
 
-              <section className="rounded-2xl border border-violet-100 bg-white p-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-600">Compétences clés</h3>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Niveau pris en compte = dernier niveau validé utilisé dans le score.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {topSkills.map((r) => {
-                    const hasUnverifiedLevelGap =
-                      r.effective_level !== r.employee_level && r.employee_level > r.effective_level;
-                    const pendingQuizLevel =
-                      r.evidence === "quiz" && r.effective_level === 0 && r.employee_level > 0;
-                    const levelDetails = hasUnverifiedLevelGap
-                      ? `Pris en compte: L${r.effective_level} · Déclaré: L${r.employee_level}${
-                          pendingQuizLevel ? " (quiz en attente)" : ""
-                        }`
-                      : null;
+              <p className="text-xs font-semibold text-slate-600">
+                {row.meets_mandatory ? "Exigences obligatoires du projet : conforme." : "Exigences obligatoires du projet : non satisfaites."}
+              </p>
 
-                    return (
-                      <div key={r.skill_id} className="space-y-1 rounded-lg border border-slate-100 bg-slate-50/70 px-2 py-1.5">
-                        <SkillBadge
-                          name={r.skill_name}
-                          level={r.effective_level}
-                          evidence={r.evidence}
-                          meets={r.meets}
-                        />
-                        {levelDetails ? <p className="text-[10px] text-slate-600">{levelDetails}</p> : null}
-                      </div>
-                    );
-                  })}
+              <section className="rounded-2xl border border-violet-100 bg-white p-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Écarts par rapport au projet</h3>
+                <div className="mt-2">
+                  <GapList gaps={gaps} loading={gapsLoading} />
                 </div>
-                {!topSkills.length ? <p className="mt-2 text-sm text-slate-500">Aucune compétence évaluée.</p> : null}
               </section>
 
               <section className="rounded-2xl border border-violet-100 bg-white p-4">
-                <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Écarts identifiés</h3>
-                <GapList gaps={gaps} loading={gapsLoading} />
-              </section>
-
-              <section className="rounded-2xl border border-violet-100 bg-white p-4">
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Recommandations</h3>
-                  <button
-                    type="button"
-                    onClick={loadRecoWithAi}
-                    disabled={recoLoading}
-                    className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-800 transition hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:opacity-50"
-                  >
-                    <SparklesIcon className="h-3.5 w-3.5" />
-                    Narration IA
-                  </button>
-                </div>
-                <RecommendationList quizzes={reco.quizzes} improvements={reco.improvements} loading={recoLoading} />
-              </section>
-
-              <section className="rounded-[24px] bg-gradient-to-br from-violet-700 via-fuchsia-600 to-violet-700 p-4 text-white">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-100">Synthèse prédictive</h3>
-                <p className="mt-2 text-sm leading-6 text-violet-50">
-                  {withAiReco && aiNarrative ? aiNarrative : explain?.deterministic_summary || "Synthèse indisponible."}
-                </p>
-                <p className="mt-3 text-xs text-violet-100/90">
-                  {row.meets_mandatory ? "Profil prioritaire." : "Remédiation requise avant affectation."}
-                </p>
-              </section>
-
-              <section className="rounded-2xl border border-violet-100 bg-white p-4">
-                <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Explication détaillée</h3>
+                <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Synthèse</h3>
                 <ExplanationBox
                   deterministicSummary={
-                    explain?.deterministic_summary ??
-                    "Explication déterministe indisponible pour cette correspondance."
+                    explain?.deterministic_summary ?? "Explication déterministe indisponible pour cette correspondance."
                   }
                   aiExplanation={explain?.ai_explanation ?? null}
-                  loading={explainLoading && Boolean(row.match_result_id)}
+                  loading={explainLoading && Boolean(row.match_result_uuid)}
                 />
               </section>
+              <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                Affectations actives de cet employé: <span className="font-semibold">{employeeAcceptedCount}</span> /{" "}
+                <span className="font-semibold">{employeeAcceptedMax}</span>.
+              </p>
             </div>
           )}
         </div>
 
-        <footer className="flex shrink-0 items-center border-t border-slate-100 px-5 py-4">
+        <footer className="flex shrink-0 items-center border-t border-slate-100 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:px-5 sm:py-4 sm:pb-4">
           {!row ? null : activeAssignment ? (
             <button
               type="button"
@@ -305,16 +232,22 @@ export function EmployeeMatchDrawer({ open, onClose, projectId, projectTeamSize,
               onClick={handleRemove}
               className="w-full rounded-2xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {activeAssignment.status === "PENDING" ? "Annuler l’invitation" : "Désaffecter (retirer du projet)"}
+              {activeAssignment.status === "PENDING" ? "Annuler l’affectation" : "Désaffecter (retirer du projet)"}
             </button>
           ) : (
             <button
               type="button"
-              disabled={assignLoading || isProjectFull}
+              disabled={assignLoading || isProjectFull || employeeAcceptedCount >= employeeAcceptedMax}
               onClick={handleInvite}
               className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(109,40,217,0.24)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {assignLoading ? "Envoi…" : isProjectFull ? "Équipe complète" : "Inviter sur le projet"}
+              {assignLoading
+                ? "Envoi…"
+                : isProjectFull
+                  ? "Équipe complète"
+                  : employeeAcceptedCount >= employeeAcceptedMax
+                    ? "Limite employé atteinte"
+                    : "Affecter au projet"}
             </button>
           )}
         </footer>

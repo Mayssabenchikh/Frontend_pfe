@@ -9,7 +9,7 @@ import { AlertBanner } from "../../components/AlertBanner";
 
 export function ProjectTeamPage() {
   const { id } = useParams<{ id: string }>();
-  const projectId = id ? parseInt(id, 10) : NaN;
+  const projectUuid = (id ?? "").trim();
 
   const [project, setProject] = useState<ProjectDto | null>(null);
   const [teamSize, setTeamSize] = useState(3);
@@ -21,17 +21,17 @@ export function ProjectTeamPage() {
 
   const build = useCallback(
     async (size: number, eligible: boolean) => {
-      if (Number.isNaN(projectId)) return;
+      if (!projectUuid) return;
       setLoadingTeam(true);
       try {
-        const res = await matchingApi.buildTeam(projectId, {
+        const res = await matchingApi.buildTeam(projectUuid, {
           team_size: size,
           only_mandatory_eligible: eligible,
         });
         setTeam(res.data);
 
         try {
-          const matchesRes = await matchingApi.getProjectMatches(projectId);
+          const matchesRes = await matchingApi.getProjectMatches(projectUuid);
           const byId = Object.fromEntries(
             (matchesRes.data.employees ?? []).map((row) => [row.employee_keycloak_id, row]),
           );
@@ -47,15 +47,15 @@ export function ProjectTeamPage() {
         setLoadingTeam(false);
       }
     },
-    [projectId],
+    [projectUuid],
   );
 
   useEffect(() => {
-    if (Number.isNaN(projectId)) return;
+    if (!projectUuid) return;
     let cancelled = false;
     setLoadingProject(true);
     projectsApi
-      .get(projectId)
+      .get(projectUuid)
       .then(async (res) => {
         if (cancelled) return;
         const p = res.data ?? null;
@@ -74,13 +74,13 @@ export function ProjectTeamPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, build]);
+  }, [projectUuid, build]);
 
   const onRecalculate = () => {
     void build(teamSize, onlyEligible);
   };
 
-  if (Number.isNaN(projectId)) {
+  if (!projectUuid) {
     return (
       <div className="p-6">
         <AlertBanner message="ID invalide" />
@@ -102,7 +102,7 @@ export function ProjectTeamPage() {
       }
       actions={
         <Link
-          to={`/manager/matching/${projectId}/workspace`}
+          to={`/manager/matching/${encodeURIComponent(projectUuid)}/workspace`}
           className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 shadow-sm transition hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
         >
           Ouvrir workspace

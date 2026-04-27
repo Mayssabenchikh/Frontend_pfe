@@ -38,11 +38,11 @@ export function AdminHeader({
   const safeRole = roleLabel?.trim() || "Administrateur";
 
   return (
-    <header className="admin-header-fixed z-30 flex items-center justify-between border-b border-violet-100/70 bg-white/70 px-4 shadow-md shadow-slate-200/50 backdrop-blur-xl md:px-6 lg:px-8">
-      <div className="flex min-w-0 items-center gap-2 md:gap-3">
+    <header className="admin-header-fixed z-40 flex items-center justify-between border-b border-violet-100/70 bg-white/70 px-3 shadow-md shadow-slate-200/50 backdrop-blur-xl sm:px-4 md:px-6 lg:px-8">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <button
           type="button"
-          className="hamburger-btn flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-500 shadow-sm transition-all duration-200 ease-in-out hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+          className="hamburger-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-500 shadow-sm transition-all duration-200 ease-in-out hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 md:h-9 md:w-9"
           onClick={onMenuToggle}
           aria-label="Menu"
         >
@@ -50,11 +50,11 @@ export function AdminHeader({
         </button>
       </div>
 
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex shrink-0 items-center gap-2 md:gap-3">
         <div className="relative">
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            className="group flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-1.5 py-1 pr-2 shadow-sm transition-all duration-200 ease-in-out hover:border-violet-200 hover:bg-violet-50"
+            className="group flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-2xl border border-slate-200/80 bg-white px-1.5 py-1 pr-2 shadow-sm transition-all duration-200 ease-in-out hover:border-violet-200 hover:bg-violet-50 sm:gap-2"
             aria-label="Menu utilisateur"
           >
             {avatarUrl ? (
@@ -74,12 +74,12 @@ export function AdminHeader({
               </div>
             )}
 
-            <div className="hidden min-w-0 text-left lg:block">
-              <p className="max-w-[140px] truncate text-sm font-semibold text-slate-700">{safeName}</p>
-              <p className="text-[11px] text-slate-400">{safeRole}</p>
+            <div className="hidden min-w-0 text-left sm:block">
+              <p className="max-w-[100px] truncate text-xs font-semibold text-slate-700 sm:max-w-[140px] sm:text-sm">{safeName}</p>
+              <p className="hidden text-[11px] text-slate-400 md:block">{safeRole}</p>
             </div>
             <ChevronDownIcon
-              className={`hidden h-4 w-4 text-slate-400 transition-transform duration-200 ease-in-out lg:block ${
+              className={`hidden h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ease-in-out sm:block ${
                 menuOpen ? "rotate-180" : ""
               }`}
             />
@@ -88,7 +88,7 @@ export function AdminHeader({
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 top-14 z-50 min-w-[220px] overflow-hidden rounded-2xl border border-slate-100/90 bg-white/95 shadow-lg shadow-slate-300/40 backdrop-blur-xl">
+            <div className="fixed right-3 left-3 top-[calc(4rem+env(safe-area-inset-top,0px)+6px)] z-50 max-h-[min(70vh,calc(100dvh-5rem))] overflow-y-auto overflow-x-hidden rounded-2xl border border-slate-100/90 bg-white/95 shadow-lg shadow-slate-300/40 backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:max-h-none sm:min-w-[220px] sm:overflow-visible">
               <div className="flex flex-col gap-1 p-1.5">
                 <button
                   onClick={() => {

@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { id: "users",          label: "Utilisateurs",           icon: <UsersIcon className="w-5 h-5" /> },
   { id: "archives",       label: "Archives",               icon: <ArchiveBoxIcon className="w-5 h-5" /> },
   { id: "projects",       label: "Projets",                icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
+  { id: "trainings",      label: "Formations",             icon: <BookOpenIcon className="w-5 h-5" /> },
   { id: "skills",         label: "Référentiel compétences", icon: <BookOpenIcon className="w-5 h-5" /> },
   { id: "skillRequests",  label: "Demandes compétences",   icon: <InboxStackIcon className="w-5 h-5" /> },
   { id: "skillCategories", label: "Catégories",            icon: <FolderIcon className="w-5 h-5" /> },

@@ -2,8 +2,8 @@ import axios from "axios";
 import { http } from "./http";
 
 export type EmployeeSkillDto = {
-  id: number;
-  skillId: number;
+  uuid: string;
+  skillUuid: string;
   skillName: string;
   iconUrl?: string | null;
   categoryName: string;
@@ -11,7 +11,6 @@ export type EmployeeSkillDto = {
   validatedLevel?: number;
   targetLevel?: number;
   status: string;
-  source: string;
   /** ISO local datetime ; present tant que le delai apres un echec n'est pas ecoule */
   quizNextAllowedAt?: string | null;
 };
@@ -27,7 +26,7 @@ export type QuizQuestion = {
 };
 
 export type QuizStartRequest = {
-  skillId: number;
+  skillId: string;
   skillName: string;
   level: number;
   skillStatus?: string;
@@ -96,7 +95,7 @@ export type AttemptResultResponse = {
 };
 
 export type QuizSkillStatusSyncRequest = {
-  skillId: number;
+  skillUuid: string;
   passed: boolean;
   level?: number | null;
   nextAllowedAt?: string | null;
@@ -105,6 +104,10 @@ export type QuizSkillStatusSyncRequest = {
 
 type AnswerItem = { questionId: string; answerKey: string };
 type ApiResponse<T> = Promise<{ data: T }>;
+
+const LIST_SKILLS_DEDUPE_TTL_MS = 3000;
+let listEmployeeSkillsInFlight: ApiResponse<EmployeeSkillDto[]> | null = null;
+let listEmployeeSkillsCache: { at: number; value: { data: EmployeeSkillDto[] } } | null = null;
 
 const quizAttemptHttp = axios.create({
   baseURL: import.meta.env.VITE_COMPETENCE_QUIZ_API_URL || "http://127.0.0.1:8002",
@@ -161,8 +164,27 @@ function wrapData<T>(data: T): { data: T } {
 
 export const quizApi = {
   listEmployeeSkills: async (): ApiResponse<EmployeeSkillDto[]> => {
-    const res = await http.get<EmployeeSkillDto[]>("/api/employee/me/skills");
-    return wrapData(Array.isArray(res.data) ? res.data : []);
+    const now = Date.now();
+    if (listEmployeeSkillsCache && now - listEmployeeSkillsCache.at < LIST_SKILLS_DEDUPE_TTL_MS) {
+      return listEmployeeSkillsCache.value;
+    }
+
+    if (listEmployeeSkillsInFlight) {
+      return listEmployeeSkillsInFlight;
+    }
+
+    listEmployeeSkillsInFlight = http
+      .get<EmployeeSkillDto[]>("/api/employee/me/skills")
+      .then((res) => {
+        const wrapped = wrapData(Array.isArray(res.data) ? res.data : []);
+        listEmployeeSkillsCache = { at: Date.now(), value: wrapped };
+        return wrapped;
+      })
+      .finally(() => {
+        listEmployeeSkillsInFlight = null;
+      });
+
+    return listEmployeeSkillsInFlight;
   },
 
   startQuiz: async (payload: QuizStartRequest): ApiResponse<QuizStartResponse> => {

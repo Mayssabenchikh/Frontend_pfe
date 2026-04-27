@@ -1,4 +1,5 @@
 import type { TokenParsed } from "./types";
+import { getUserFacingApiMessage } from "../../utils/apiUserMessage";
 
 export function getDisplayName(token: TokenParsed | undefined): string {
   if (!token) return "Utilisateur";
@@ -19,12 +20,7 @@ export function getInitials(token: TokenParsed | undefined): string {
 }
 
 export function getApiError(err: unknown, fallback: string): string {
-  if (err && typeof err === "object" && "response" in err) {
-    const res = (err as { response?: { data?: { error?: string } } }).response;
-    if (res?.data?.error) return res.data.error;
-  }
-  if (err instanceof Error) return err.message;
-  return fallback;
+  return getUserFacingApiMessage(err, fallback);
 }
 
 export function ensureArray<T>(value: T | T[] | null | undefined): T[] {

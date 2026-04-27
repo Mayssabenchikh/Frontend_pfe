@@ -24,14 +24,33 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
     return [{ label: "Affectations" }];
   }
 
+  // /manager/learning
+  if (parts[1] === "learning" && parts.length === 2) {
+    return [{ label: "Formations" }];
+  }
+
+  // /manager/learning/course/:progressUuid
+  if (parts[1] === "learning" && parts[2] === "course") {
+    return [
+      { label: "Formations", to: "/manager/learning" },
+      { label: "Lecture du cours" },
+    ];
+  }
+
   // /manager/matching (hub)
   if (parts[1] === "matching" && parts.length === 2) {
     return [{ label: "Correspondances" }];
   }
 
-  // /manager/matching/:id/matches | /manager/matching/:id/team
+  // /manager/matching/:id/workspace | /manager/matching/:id/matches | /manager/matching/:id/team
   if (parts[1] === "matching" && parts.length >= 4) {
     const sub = parts[3];
+    if (sub === "workspace") {
+      return [
+        { label: "Correspondances", to: "/manager/matching" },
+        { label: "Gestion des correspondances" },
+      ];
+    }
     if (sub === "matches") {
       return [
         { label: "Correspondances", to: "/manager/matching" },
@@ -49,6 +68,12 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
   // Anciennes URLs (redirigées)
   if (parts[1] === "projects" && parts.length >= 4) {
     const sub = parts[3];
+    if (sub === "workspace") {
+      return [
+        { label: "Correspondances", to: "/manager/matching" },
+        { label: "Gestion des correspondances" },
+      ];
+    }
     if (sub === "matches") {
       return [
         { label: "Correspondances", to: "/manager/matching" },
@@ -81,7 +106,7 @@ export function ManagerBreadcrumbs() {
 
   return (
     <nav
-      className="admin-breadcrumbs flex items-center gap-2 px-6 md:px-8 h-10 shrink-0 pt-1 text-sm text-slate-500"
+      className="admin-breadcrumbs flex h-10 min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 pt-1 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8"
       aria-label="Fil d'Ariane manager"
     >
       <Link

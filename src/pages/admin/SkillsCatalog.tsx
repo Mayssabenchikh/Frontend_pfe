@@ -29,7 +29,7 @@ import { AlertBanner } from "../../components/AlertBanner";
 /* ─────────────────────────────────────────────
    Types
 ───────────────────────────────────────────── */
-type FormState = { name: string; categoryId: number; levelMin: number; levelMax: number };
+type FormState = { name: string; categoryUuid: string; levelMin: number; levelMax: number };
 
 function normalizeKey(raw: string) {
   const s0 = (raw ?? "").trim().toLowerCase();
@@ -46,18 +46,18 @@ function normalizeKey(raw: string) {
 function findSkillCollision(
   proposedName: string,
   allSkills: SkillDto[],
-  opts?: { excludeSkillId?: number }
+  opts?: { excludeSkillUuid?: string }
 ): { type: "skillName" | "synonym"; skill: SkillDto; alias?: string } | null {
   const key = normalizeKey(proposedName);
   if (!key) return null;
-  const excludeId = opts?.excludeSkillId;
+  const excludeUuid = opts?.excludeSkillUuid;
 
   for (const s of allSkills) {
-    if (excludeId != null && s.id === excludeId) continue;
+    if (excludeUuid != null && s.uuid === excludeUuid) continue;
     if (normalizeKey(s.name) === key) return { type: "skillName", skill: s };
   }
   for (const s of allSkills) {
-    if (excludeId != null && s.id === excludeId) continue;
+    if (excludeUuid != null && s.uuid === excludeUuid) continue;
     for (const a of s.synonyms ?? []) {
       if (normalizeKey(a) === key) return { type: "synonym", skill: s, alias: a };
     }
@@ -79,16 +79,16 @@ export function SkillsCatalog() {
   const [categories, setCategories]         = useState<SkillCategoryDto[]>([]);
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [search, setSearch]                 = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
   const [createModal, setCreateModal]       = useState(false);
   const [editModal, setEditModal]           = useState<SkillDto | null>(null);
-  const [form, setForm]                     = useState<FormState>({ name: "", categoryId: 0, levelMin: 1, levelMax: 5 });
+  const [form, setForm]                     = useState<FormState>({ name: "", categoryUuid: "", levelMin: 1, levelMax: 5 });
   const [submitLoading, setSubmitLoading]   = useState(false);
   const [createIconFile, setCreateIconFile] = useState<File | null>(null);
   const [editIconFile, setEditIconFile] = useState<File | null>(null);
-  const [deletingId, setDeletingId]         = useState<number | null>(null);
+  const [deletingId, setDeletingId]         = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm]   = useState<SkillDto | null>(null);
   const [updateConfirm, setUpdateConfirm]   = useState(false);
   const [synonymModalSkill, setSynonymModalSkill] = useState<SkillDto | null>(null);
@@ -109,7 +109,7 @@ export function SkillsCatalog() {
   const loadSkills = useCallback(() => {
     setLoading(true);
     skillsApi.listSkillsPaginated({
-        categoryId: categoryFilter ?? undefined,
+        categoryUuid: categoryFilter ?? undefined,
         page,
         size: PAGE_SIZE,
         search: searchDebounced || undefined,
@@ -132,12 +132,12 @@ export function SkillsCatalog() {
   useEffect(() => { loadSkills(); }, [loadSkills]);
 
   const resetForm = () =>
-    setForm({ name: "", categoryId: categories[0]?.id ?? 0, levelMin: 1, levelMax: 5 });
+    setForm({ name: "", categoryUuid: categories[0]?.uuid ?? "", levelMin: 1, levelMax: 5 });
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     const name = form.name.trim();
-    if (!name || !form.categoryId) return;
+    if (!name || !form.categoryUuid) return;
     setSubmitLoading(true);
     skillsApi.listSkills()
       .then((r) => {
@@ -149,12 +149,12 @@ export function SkillsCatalog() {
           }
           throw new Error(`Doublon: « ${name} » correspond déjà au synonyme « ${hit.alias} » de « ${hit.skill.name} » (catégorie: ${hit.skill.categoryName}).`);
         }
-        return skillsApi.createSkill({ name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax });
+        return skillsApi.createSkill({ name, categoryUuid: form.categoryUuid, levelMin: form.levelMin, levelMax: form.levelMax });
       })
       .then(async (res) => {
         const created = res.data;
-        if (createIconFile && created?.id) {
-          await skillsApi.uploadSkillIcon(created.id, createIconFile);
+        if (createIconFile && created?.uuid) {
+          await skillsApi.uploadSkillIcon(created.uuid, createIconFile);
         }
         loadSkills();
         setCreateModal(false);
@@ -170,8 +170,8 @@ export function SkillsCatalog() {
     e.preventDefault();
     if (!editModal) return;
     const name = form.name.trim();
-    if (!name || !form.categoryId) return;
-    const unchanged = name === editModal.name && form.categoryId === editModal.categoryId && form.levelMin === editModal.levelMin && form.levelMax === editModal.levelMax;
+    if (!name || !form.categoryUuid) return;
+    const unchanged = name === editModal.name && form.categoryUuid === editModal.categoryUuid && form.levelMin === editModal.levelMin && form.levelMax === editModal.levelMax;
     if (unchanged && !editIconFile) {
       setEditModal(null);
       resetForm();
@@ -189,7 +189,7 @@ export function SkillsCatalog() {
       .then(() => skillsApi.listSkills())
       .then((r) => {
         const all = r.data ?? [];
-        const hit = findSkillCollision(name, all, { excludeSkillId: editModal.id });
+        const hit = findSkillCollision(name, all, { excludeSkillUuid: editModal.uuid });
         if (hit) {
           if (hit.type === "skillName") {
             throw new Error(`Doublon: « ${name} » existe déjà (catégorie: ${hit.skill.categoryName}).`);
@@ -198,12 +198,12 @@ export function SkillsCatalog() {
         }
       })
       .then(() => {
-        const changed = !(name === editModal.name && form.categoryId === editModal.categoryId && form.levelMin === editModal.levelMin && form.levelMax === editModal.levelMax);
-        return changed ? skillsApi.updateSkill(editModal.id, { name, categoryId: form.categoryId, levelMin: form.levelMin, levelMax: form.levelMax }) : null;
+        const changed = !(name === editModal.name && form.categoryUuid === editModal.categoryUuid && form.levelMin === editModal.levelMin && form.levelMax === editModal.levelMax);
+        return changed ? skillsApi.updateSkill(editModal.uuid, { name, categoryUuid: form.categoryUuid, levelMin: form.levelMin, levelMax: form.levelMax }) : null;
       })
       .then(async () => {
         if (editIconFile) {
-          await skillsApi.uploadSkillIcon(editModal.id, editIconFile);
+          await skillsApi.uploadSkillIcon(editModal.uuid, editIconFile);
         }
       })
       .then(() => {
@@ -225,8 +225,8 @@ export function SkillsCatalog() {
     if (!deleteConfirm) return;
     const s = deleteConfirm;
     setDeleteConfirm(null);
-    setDeletingId(s.id);
-    skillsApi.deleteSkill(s.id)
+    setDeletingId(s.uuid);
+    skillsApi.deleteSkill(s.uuid)
       .then(() => { loadSkills(); toast.success("Compétence supprimée"); })
       .catch((err) => toast.error(getApiError(err, "Échec de la suppression")))
       .finally(() => setDeletingId(null));
@@ -234,13 +234,13 @@ export function SkillsCatalog() {
 
   const openEdit = (s: SkillDto) => {
     setEditModal(s);
-    setForm({ name: s.name, categoryId: s.categoryId, levelMin: s.levelMin, levelMax: s.levelMax });
+    setForm({ name: s.name, categoryUuid: s.categoryUuid, levelMin: s.levelMin, levelMax: s.levelMax });
     setEditIconFile(null);
   };
 
   const openCreate = () => {
     resetForm();
-    if (categories.length) setForm((f) => ({ ...f, categoryId: categories[0].id }));
+    if (categories.length) setForm((f) => ({ ...f, categoryUuid: categories[0].uuid }));
     setCreateIconFile(null);
     setCreateModal(true);
   };
@@ -252,8 +252,8 @@ export function SkillsCatalog() {
     setSynonymDeleteConfirm(null);
   };
 
-  const refreshSynonymSkill = useCallback((skillId: number) => {
-    skillsApi.getSkill(skillId)
+  const refreshSynonymSkill = useCallback((skillUuid: string) => {
+    skillsApi.getSkill(skillUuid)
       .then((res) => {
         const updated = res.data;
         if (!updated) return;
@@ -261,7 +261,7 @@ export function SkillsCatalog() {
           if (!prev) return prev;
           return {
             ...prev,
-            content: prev.content.map((s) => (s.id === skillId ? updated : s)),
+            content: prev.content.map((s) => (s.uuid === skillUuid ? updated : s)),
           };
         });
         setSynonymModalSkill(updated);
@@ -288,12 +288,12 @@ export function SkillsCatalog() {
     setSynonymSubmitLoading(true);
 
     const addFlow = () =>
-      skillsApi.addSynonym(synonymModalSkill.id, alias)
+      skillsApi.addSynonym(synonymModalSkill.uuid, alias)
         .then(() => {
           toast.success(editingSynonymAlias ? "Synonyme modifié" : "Synonyme ajouté");
           setSynonymInput("");
           setEditingSynonymAlias(null);
-          refreshSynonymSkill(synonymModalSkill.id);
+          refreshSynonymSkill(synonymModalSkill.uuid);
         })
         .catch((err) => toast.error(getApiError(err, "Échec de l'ajout du synonyme")))
         .finally(() => setSynonymSubmitLoading(false));
@@ -303,12 +303,12 @@ export function SkillsCatalog() {
         .then((r) => {
           const all = r.data ?? [];
           const key = normalizeKey(alias);
-          const nameHit = all.find((s) => s.id !== synonymModalSkill.id && normalizeKey(s.name) === key);
+          const nameHit = all.find((s) => s.uuid !== synonymModalSkill.uuid && normalizeKey(s.name) === key);
           if (nameHit) {
             throw new Error(`Doublon: « ${alias} » est déjà le nom de « ${nameHit.name} » (catégorie: ${nameHit.categoryName}).`);
           }
           const synHit = all
-            .filter((s) => s.id !== synonymModalSkill.id)
+            .filter((s) => s.uuid !== synonymModalSkill.uuid)
             .flatMap((s) => (s.synonyms ?? []).map((a) => ({ skill: s, alias: a })))
             .find((x) => normalizeKey(x.alias) === key);
           if (synHit) {
@@ -327,19 +327,19 @@ export function SkillsCatalog() {
       .then((r) => {
         const all = r.data ?? [];
         const key = normalizeKey(alias);
-        const nameHit = all.find((s) => s.id !== synonymModalSkill.id && normalizeKey(s.name) === key);
+        const nameHit = all.find((s) => s.uuid !== synonymModalSkill.uuid && normalizeKey(s.name) === key);
         if (nameHit) {
           throw new Error(`Doublon: « ${alias} » est déjà le nom de « ${nameHit.name} » (catégorie: ${nameHit.categoryName}).`);
         }
         const synHit = all
-          .filter((s) => s.id !== synonymModalSkill.id)
+          .filter((s) => s.uuid !== synonymModalSkill.uuid)
           .flatMap((s) => (s.synonyms ?? []).map((a) => ({ skill: s, alias: a })))
           .find((x) => normalizeKey(x.alias) === key);
         if (synHit) {
           throw new Error(`Doublon: « ${alias} » est déjà utilisé comme synonyme de « ${synHit.skill.name} » (catégorie: ${synHit.skill.categoryName}).`);
         }
       })
-      .then(() => skillsApi.removeSynonym(synonymModalSkill.id, editingSynonymAlias))
+      .then(() => skillsApi.removeSynonym(synonymModalSkill.uuid, editingSynonymAlias))
       .then(() => addFlow())
       .catch((err) => {
         toast.error(getApiError(err, "Échec de la modification du synonyme"));
@@ -349,14 +349,14 @@ export function SkillsCatalog() {
 
   const handleRemoveSynonym = (skill: SkillDto, alias: string) => {
     setSynonymRemovingAlias(alias);
-    skillsApi.removeSynonym(skill.id, alias)
+    skillsApi.removeSynonym(skill.uuid, alias)
       .then(() => {
         toast.success("Synonyme supprimé");
         if (editingSynonymAlias === alias) {
           setEditingSynonymAlias(null);
           setSynonymInput("");
         }
-        refreshSynonymSkill(skill.id);
+        refreshSynonymSkill(skill.uuid);
       })
       .catch((err) => toast.error(getApiError(err, "Échec de la suppression du synonyme")))
       .finally(() => setSynonymRemovingAlias(null));
@@ -397,12 +397,12 @@ export function SkillsCatalog() {
             <FunnelIcon className="pointer-events-none absolute left-3.5 h-4 w-4 text-violet-400" />
             <select
               value={categoryFilter ?? ""}
-              onChange={(e) => setCategoryFilter(e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => setCategoryFilter(e.target.value || null)}
               className="cursor-pointer appearance-none rounded-xl border border-violet-500/20 bg-white py-2.5 pl-10 pr-8 text-sm text-violet-900 outline-none transition-all duration-150 focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
             >
               <option value="">Toutes les catégories</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.uuid} value={c.uuid}>{c.name}</option>
               ))}
             </select>
             <ChevronDownIcon className="w-3 h-3 absolute right-2.5 text-violet-400 pointer-events-none" />
@@ -477,10 +477,10 @@ export function SkillsCatalog() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 content-start">
               {skills.map((s, i) => (
                 <SkillCard
-                  key={s.id}
+                  key={s.uuid}
                   skill={s}
                   index={i}
-                  isDeleting={deletingId === s.id}
+                  isDeleting={deletingId === s.uuid}
                   onManageSynonyms={() => openSynonyms(s)}
                   onEdit={() => openEdit(s)}
                   onDelete={() => handleDeleteClick(s)}
@@ -573,7 +573,7 @@ export function SkillsCatalog() {
       />
 
       {synonymModalSkill && (
-        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setSynonymModalSkill(null)} />
           <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-500/20 bg-white shadow-[0_30px_80px_rgba(76,29,149,0.22)]">
             <div className="flex items-center justify-between border-b border-violet-500/10 bg-gradient-to-br from-violet-50 to-indigo-50 px-6 py-4">
@@ -855,7 +855,7 @@ interface SkillFormModalProps {
 
 function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFile, onSubmit, onClose, submitLoading }: SkillFormModalProps) {
   return (
-    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/20 bg-white/[0.97] shadow-[0_32px_80px_rgba(109,40,217,0.18),0_8px_32px_rgba(109,40,217,0.1)] backdrop-blur-[32px]">
@@ -899,11 +899,11 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
             </label>
             <div className="relative">
               <StyledSelect
-                value={form.categoryId}
-                onChange={(e) => setForm((f) => ({ ...f, categoryId: Number(e.target.value) }))}
+                value={form.categoryUuid}
+                onChange={(e) => setForm((f) => ({ ...f, categoryUuid: e.target.value }))}
               >
                 {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.uuid} value={c.uuid}>{c.name}</option>
                 ))}
               </StyledSelect>
               <ChevronDownIcon className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-violet-400 pointer-events-none" />
@@ -970,7 +970,7 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
             </button>
             <button
               type="submit"
-              disabled={submitLoading || !form.name.trim() || !form.categoryId}
+              disabled={submitLoading || !form.name.trim() || !form.categoryUuid}
               className="relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-5 py-2.5 text-xs font-semibold text-white shadow-[0_4px_18px_rgba(124,58,237,0.36),inset_0_1px_0_rgba(255,255,255,0.22)] transition-all duration-200 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitLoading && <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />}

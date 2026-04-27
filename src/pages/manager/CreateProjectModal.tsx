@@ -6,7 +6,7 @@ import type { ProjectDto } from "../../api/projectsApi";
 
 type Props = {
   onClose: () => void;
-  onSubmit: (data: { name: string; description?: string; status?: string; priority?: string; teamSize?: number; startDate?: string; dueDate?: string; requirements?: { skillId: number; levelMin: number }[] }) => Promise<void>;
+  onSubmit: (data: { name: string; description?: string; status?: string; priority?: string; teamSize?: number; startDate?: string; dueDate?: string; requirements?: { skillUuid: string; levelMin: number }[] }) => Promise<void>;
   initialProject?: ProjectDto | null;
   leadAvatarUrl?: string | null;
   leadName?: string | null;
@@ -87,8 +87,8 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
   const [startDate, setStartDate] = useState(initialProject?.startDate ?? "");
   const [dueDate, setDueDate] = useState(initialProject?.dueDate ?? "");
   const [skills, setSkills] = useState<SkillDto[]>([]);
-  const [requirements, setRequirements] = useState<{ skillId: number; levelMin: number }[]>(
-    initialProject?.requirements?.map((r) => ({ skillId: r.skillId, levelMin: r.levelMin })) ?? []
+  const [requirements, setRequirements] = useState<{ skillUuid: string; levelMin: number }[]>(
+    initialProject?.requirements?.map((r) => ({ skillUuid: r.skillUuid, levelMin: r.levelMin })) ?? []
   );
   const [loading, setLoading] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
@@ -136,19 +136,19 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
   }, []);
 
   const addRequirement = () => {
-    const used = new Set(requirements.map((r) => r.skillId));
-    const skill = skills.find((s) => !used.has(s.id));
+    const used = new Set(requirements.map((r) => r.skillUuid));
+    const skill = skills.find((s) => !used.has(s.uuid));
     if (!skill) return;
-    setRequirements((prev) => [...prev, { skillId: skill.id, levelMin: skill.levelMin }]);
+    setRequirements((prev) => [...prev, { skillUuid: skill.uuid, levelMin: skill.levelMin }]);
   };
 
-  const removeRequirement = (skillId: number) => {
-    setRequirements((prev) => prev.filter((x) => x.skillId !== skillId));
+  const removeRequirement = (skillUuid: string) => {
+    setRequirements((prev) => prev.filter((x) => x.skillUuid !== skillUuid));
   };
 
-  const setReqLevel = (skillId: number, levelMin: number) => {
+  const setReqLevel = (skillUuid: string, levelMin: number) => {
     setRequirements((prev) =>
-      prev.map((x) => (x.skillId === skillId ? { ...x, levelMin } : x))
+      prev.map((x) => (x.skillUuid === skillUuid ? { ...x, levelMin } : x))
     );
   };
 
@@ -174,10 +174,10 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
   };
 
   const modalContent = (
-    <div className="app-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center px-4">
-      <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
+    <div className="app-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center px-3 py-4 sm:px-4">
+      <div className="max-h-[min(92dvh,900px)] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-3xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
           <div>
             <h3 className="text-base font-semibold text-slate-900">
               {isEdit ? "Modifier le projet" : "Nouveau projet"}
@@ -222,7 +222,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 px-4 py-3 sm:px-6 sm:py-4">
           {/* Nom */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -363,13 +363,13 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
             {/* List */}
             <div className="space-y-2">
               {requirements.map((r) => {
-                const skill = skills.find((s) => s.id === r.skillId);
-                const usedIds = new Set(requirements.map((req) => req.skillId));
-                usedIds.delete(r.skillId);
+                const skill = skills.find((s) => s.uuid === r.skillUuid);
+                const usedUuids = new Set(requirements.map((req) => req.skillUuid));
+                usedUuids.delete(r.skillUuid);
 
                 return (
                   <div
-                    key={r.skillId}
+                    key={r.skillUuid}
                     className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-3 transition-shadow hover:shadow-sm hover:border-slate-300"
                   >
                     {/* Row number badge */}
@@ -381,21 +381,21 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
                           <CategoryDot name={skill?.categoryName} />
                           <select
-                            value={r.skillId}
+                            value={r.skillUuid}
                             onChange={(e) => {
-                              const sid = Number(e.target.value);
+                              const sid = e.target.value;
                               setRequirements((prev) => {
-                                const rest = prev.filter((x) => x.skillId !== r.skillId);
-                                const s = skills.find((x) => x.id === sid);
-                                return [...rest, { skillId: sid, levelMin: s ? s.levelMin : 1 }];
+                                const rest = prev.filter((x) => x.skillUuid !== r.skillUuid);
+                                const s = skills.find((x) => x.uuid === sid);
+                                return [...rest, { skillUuid: sid, levelMin: s ? s.levelMin : 1 }];
                               });
                             }}
                             className="flex-1 min-w-0 truncate rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-200"
                           >
                             {skills
-                              .filter((s) => !usedIds.has(s.id))
+                              .filter((s) => !usedUuids.has(s.uuid))
                               .map((s) => (
-                                <option key={s.id} value={s.id}>
+                                <option key={s.uuid} value={s.uuid}>
                                   {s.name} — {s.categoryName}
                                 </option>
                               ))}
@@ -403,7 +403,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeRequirement(r.skillId)}
+                          onClick={() => removeRequirement(r.skillUuid)}
                           className="flex-shrink-0 flex h-6 w-6 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500"
                           title="Supprimer"
                         >
@@ -422,7 +422,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                           value={r.levelMin}
                           min={skill?.levelMin ?? 1}
                           max={skill?.levelMax ?? 5}
-                          onChange={(v) => setReqLevel(r.skillId, v)}
+                          onChange={(v) => setReqLevel(r.skillUuid, v)}
                         />
                       </div>
                     </div>
@@ -453,18 +453,18 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim() || !!dateError}
-              className="rounded-xl bg-gradient-to-r from-indigo-700 to-violet-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md disabled:opacity-60"
+              className="w-full rounded-xl bg-gradient-to-r from-indigo-700 to-violet-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md disabled:opacity-60 sm:w-auto"
             >
               {loading ? (isEdit ? "Enregistrement..." : "Création...") : isEdit ? "Enregistrer" : "Créer"}
             </button>

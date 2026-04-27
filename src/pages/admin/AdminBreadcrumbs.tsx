@@ -6,6 +6,7 @@ const LABELS: Record<NavId, string> = {
   users: "Utilisateurs",
   archives: "Archives",
   projects: "Projets",
+  trainings: "Formations",
   skills: "Référentiel compétences",
   skillRequests: "Demandes compétences",
   skillCategories: "Catégories",
@@ -24,8 +25,7 @@ export function AdminBreadcrumbs({ currentView, onNavigate }: Props) {
 
   return (
     <nav
-      className="admin-breadcrumbs flex items-center gap-2 px-6 md:px-8 h-10 shrink-0 pt-1
-        text-sm text-slate-500"
+      className="admin-breadcrumbs flex h-10 min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 pt-1 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8"
       aria-label="Fil d'Ariane"
     >
       <button

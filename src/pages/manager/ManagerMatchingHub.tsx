@@ -51,9 +51,9 @@ export function ManagerMatchingHub() {
 
   return (
     <div className="min-h-full w-full" style={{ background: "var(--luxury-light-bg, #f8f7ff)" }}>
-      <div className="mx-auto w-full max-w-[1680px] px-4 py-2.5 sm:px-8 sm:py-4 lg:px-12 lg:py-5 xl:px-14">
+      <div className="mx-auto w-full max-w-[1680px] px-3 py-2.5 sm:px-8 sm:py-4 lg:px-12 lg:py-5 xl:px-14">
         <header className="mb-4 sm:mb-5">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Profils et équipes</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Profils et équipes</h1>
           <p className="text-sm text-slate-600">
             Gérez vos projets et trouvez les meilleurs profils selon les compétences demandées.
           </p>
@@ -91,7 +91,7 @@ export function ManagerMatchingHub() {
               const requirements = p.requirements ?? [];
               return (
               <li
-                key={p.id}
+                key={p.uuid}
                 className="group relative flex min-h-[270px] min-w-0 flex-col overflow-hidden rounded-[26px] border border-violet-100/80 bg-white p-5 shadow-[0_12px_30px_rgba(110,86,207,0.1)] transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-[0_16px_34px_rgba(110,86,207,0.14)]"
               >
                 <div className="pointer-events-none absolute inset-x-5 bottom-5 h-16 rounded-[22px] bg-gradient-to-r from-violet-100/45 to-transparent blur-2xl" />
@@ -115,7 +115,7 @@ export function ManagerMatchingHub() {
                       {requirements.length ? (
                         requirements.map((req, reqIdx) => (
                           <span
-                            key={`${p.id}-${req.id}`}
+                            key={`${p.uuid}-${req.uuid}`}
                             className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${requirementTagClasses[(idx + reqIdx) % requirementTagClasses.length]}`}
                           >
                             {req.skillName}
@@ -132,7 +132,7 @@ export function ManagerMatchingHub() {
 
                 <div className="relative mt-5 flex flex-wrap gap-2">
                   <Link
-                    to={`/manager/matching/${p.id}/workspace`}
+                    to={`/manager/matching/${encodeURIComponent(p.uuid)}/workspace`}
                     className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                   >
                     <ChartBarSquareIcon className="h-4 w-4 shrink-0" />

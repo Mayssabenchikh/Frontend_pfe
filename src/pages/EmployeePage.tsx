@@ -9,8 +9,9 @@ import {
   UserCircleIcon,
   BriefcaseIcon,
   ClipboardDocumentListIcon,
+  AcademicCapIcon,
 } from "../icons/heroicons/outline";
-import { http } from "../api/http";
+import { meApi } from "../api/meApi";
 import { EmployeeBreadcrumbs } from "./employee/EmployeeBreadcrumbs";
 import { AdminHeader } from "./admin/AdminHeader";
 
@@ -30,11 +31,12 @@ export default function EmployeePage() {
   const isProfilePage = location.pathname.startsWith("/employee/profile");
   const isQuizPage = location.pathname.startsWith("/employee/quiz");
   const isAssignmentsPage = location.pathname.startsWith("/employee/assignments");
+  const isLearningPage = location.pathname.startsWith("/employee/learning");
   const isProjectsPage = location.pathname.startsWith("/employee/projects");
 
   useEffect(() => {
-    http
-      .get<{ avatarUrl: string | null }>("/api/employee/me")
+    meApi
+      .employee()
       .then((res) => {
         if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl);
       })
@@ -42,6 +44,20 @@ export default function EmployeePage() {
         // on garde simplement l'avatar existant (picture ou initiales)
       });
   }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const onChange = () => {
+      if (mq.matches) setSidebarCollapsed(false);
+    };
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   return (
     <div className="admin-layout" data-sidebar-collapsed={sidebarCollapsed || undefined}>
@@ -159,6 +175,31 @@ export default function EmployeePage() {
           </NavLink>
 
           <NavLink
+            to="/employee/learning"
+            className={({ isActive }) =>
+              [
+                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
+                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
+                isActive
+                  ? "bg-indigo-50 text-indigo-800 font-semibold"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
+              ].join(" ")
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {!sidebarCollapsed && isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
+                )}
+                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
+                  <AcademicCapIcon className="w-5 h-5" />
+                </span>
+                {!sidebarCollapsed && <span className="truncate">Formations</span>}
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
             to="/employee/projects"
             className={({ isActive }) =>
               [
@@ -223,7 +264,7 @@ export default function EmployeePage() {
           onLogout={() => keycloak.logout({ redirectUri: `${window.location.origin}/` })}
         />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pt-16">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <EmployeeBreadcrumbs />
           <div
             className={
@@ -233,6 +274,8 @@ export default function EmployeePage() {
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
                 : isAssignmentsPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
+                : isLearningPage
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-6"
                 : isProjectsPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
                 : "dashboard-padding"

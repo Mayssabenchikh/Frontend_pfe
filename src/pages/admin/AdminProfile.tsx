@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { http } from "../../api/http";
 import { ADMIN_API_PATHS } from "./adminApiPaths";
 import type { TokenParsed } from "./types";
-import { getAvatarColor } from "./utils";
+import { getAvatarColor, getApiError } from "./utils";
 
 const styles = `
   :root {
@@ -149,8 +149,8 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden" style={{ background: "var(--luxury-light-bg)" }}>
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-2 px-3 py-1 md:gap-3 md:px-4 md:py-2">
-        <header className="profile-saas-card luxury-animate-in shrink-0 rounded-2xl px-3.5 py-2.5 md:px-4 md:py-3">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-2 px-2 py-1 sm:px-3 md:gap-3 md:px-4 md:py-2">
+        <header className="profile-saas-card luxury-animate-in shrink-0 rounded-2xl px-3 py-2.5 sm:px-3.5 md:px-4 md:py-3">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
               <div className="relative shrink-0 group">
@@ -185,10 +185,10 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
               </div>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <h1 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
+                  <h1 className="text-xl font-normal tracking-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#1e293b" }}>
                     {displayFirst}
                   </h1>
-                  <h2 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-4xl" style={{ color: "#1e293b" }}>
+                  <h2 className="text-xl font-normal tracking-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#1e293b" }}>
                     {displayLast}
                   </h2>
                 </div>
@@ -200,7 +200,7 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
                 </div>
               </div>
             </div>
-            <div className="flex w-fit shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-sm transition-transform duration-200 hover:scale-[1.02]" style={{ background: "rgba(16, 185, 129, 0.08)", borderColor: "var(--luxury-success)" }}>
+            <div className="flex w-fit shrink-0 items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:self-auto" style={{ background: "rgba(16, 185, 129, 0.08)", borderColor: "var(--luxury-success)" }}>
               <CheckCircleIcon className="h-3 w-3 shrink-0" style={{ color: "var(--luxury-success)" }} />
               Compte actif
             </div>
@@ -209,7 +209,7 @@ export function AdminProfile({ token, adminKeycloakId, initialAvatarUrl, onAvata
 
         <main className="min-h-0 flex-1 overflow-hidden luxury-animate-in" style={{ animationDelay: "0.1s" }}>
           <div className="profile-saas-card flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-3 px-3 pb-2 md:pt-4 md:px-4 md:pb-3">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-2 pt-2 sm:px-3 md:px-4 md:pb-3 md:pt-4">
               <PersonalSection
                 firstName={editedFirstName || firstName}
                 lastName={editedLastName || lastName}
@@ -303,7 +303,7 @@ function PersonalSection({
     <div className="flex flex-col gap-4 lg:gap-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="mb-0.5 text-lg font-bold" style={{ color: "#1e293b" }}>Informations personnelles</h2>
+          <h2 className="mb-0.5 text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>Informations personnelles</h2>
           <p className="text-sm" style={{ color: "var(--luxury-text-muted)" }}>
             {isEditing ? "Modifiez votre profil et enregistrez les modifications." : "Gérez vos informations de base."}
           </p>
@@ -332,9 +332,9 @@ function PersonalSection({
       </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5 lg:items-start">
-        <div className="profile-saas-card rounded-2xl p-4 md:p-5">
+        <div className="profile-saas-card rounded-2xl p-3 sm:p-4 md:p-5">
           <div className="mb-3 border-b border-slate-200/80 pb-3">
-            <h3 className="text-lg font-bold" style={{ color: "#1e293b" }}>Identité & contact</h3>
+            <h3 className="text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>Identité & contact</h3>
           </div>
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -359,9 +359,9 @@ function PersonalSection({
           </div>
         </div>
 
-        <div className="profile-saas-card rounded-2xl p-4 md:p-5">
+        <div className="profile-saas-card rounded-2xl p-3 sm:p-4 md:p-5">
           <div className="mb-3 border-b border-slate-200/80 pb-3">
-            <h3 className="text-lg font-bold" style={{ color: "#1e293b" }}>Informations professionnelles</h3>
+            <h3 className="text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>Informations professionnelles</h3>
           </div>
           {loadingExtra ? (
             <div className="flex justify-center py-10">
@@ -382,9 +382,9 @@ function PersonalSection({
         </div>
       </div>
 
-      <div className="profile-saas-card rounded-2xl p-4 md:p-5">
+      <div className="profile-saas-card rounded-2xl p-3 sm:p-4 md:p-5">
         <div className="mb-3 border-b border-slate-200/80 pb-3">
-          <h3 className="text-lg font-bold" style={{ color: "#1e293b" }}>Sécurité & Mot de passe</h3>
+          <h3 className="text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>Sécurité & Mot de passe</h3>
           <p className="mt-1 text-sm" style={{ color: "var(--luxury-text-muted)" }}>Modifiez votre mot de passe de connexion.</p>
         </div>
         <SecuritySection embedded />
@@ -482,8 +482,8 @@ function SecuritySection({ embedded = false }: { embedded?: boolean }) {
       setFieldErrors({});
       toast.success("Mot de passe modifié avec succès.");
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "Erreur lors du changement de mot de passe.";
-      if (msg.toLowerCase().includes("incorrect")) {
+      const msg = getApiError(err, "Erreur lors du changement de mot de passe.");
+      if (/incorrect|mot de passe actuel|identifiants/i.test(msg)) {
         setFieldErrors({ current: "Mot de passe actuel incorrect." });
       } else {
         toast.error(msg);

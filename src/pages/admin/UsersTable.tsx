@@ -13,12 +13,15 @@ import {
   NoSymbolIcon,
   PowerIcon,
   EyeIcon,
+  ExclamationTriangleIcon,
+  UserGroupIcon,
 } from "../../icons/heroicons/outline";
 
 import type { UserListDto } from "./types";
 import { MESSAGES } from "./constants";
 import { getAvatarColor } from "./utils";
 import { PROJECTS_AG_THEME } from "../../components/projectsAgTheme";
+import { syncAgGridColumnSizing } from "../../utils/agGridResponsive";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -139,8 +142,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
       headerName: "Actions", flex: 0.9, minWidth: 130, sortable: false, filter: false,
       cellRenderer: (p: ICellRendererParams<UserListDto>) => {
         const u = p.data; if (!u) return null;
-        const isTog = togglingId === u.id;
-        const isArch = archivingId === u.id;
+        const isTog = togglingId === u.uuid;
+        const isArch = archivingId === u.uuid;
 
         const btnCls = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/25 bg-transparent transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45";
         const loadingSpan = <span className="text-[10px]">…</span>;
@@ -175,14 +178,22 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
 
   useEffect(() => {
     if (loading) return;
-    const t = setTimeout(() => gridRef.current?.api?.sizeColumnsToFit(), 150);
+    const t = setTimeout(() => syncAgGridColumnSizing(gridRef.current?.api), 150);
     return () => clearTimeout(t);
   }, [loading, users.length]);
+
+  useEffect(() => {
+    const onResize = () => syncAgGridColumnSizing(gridRef.current?.api);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xl text-red-500">⚠</div>
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-red-200 bg-red-50">
+          <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />
+        </div>
         <p className="text-sm font-semibold text-red-900">{error}</p>
       </div>
     );
@@ -228,8 +239,8 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               rowData={users}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
-              onGridReady={(e) => { e.api.sizeColumnsToFit(); }}
-              onGridSizeChanged={(e) => e.api.sizeColumnsToFit()}
+              onGridReady={(e) => syncAgGridColumnSizing(e.api)}
+              onGridSizeChanged={(e) => syncAgGridColumnSizing(e.api)}
               pagination
               paginationPageSize={8}
               paginationPageSizeSelector={false}
@@ -237,8 +248,10 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
               rowHeight={56}
               headerHeight={42}
               noRowsOverlayComponent={() => (
-                <div className="flex flex-col items-center gap-2 py-16">
-                  <span className="text-4xl">👥</span>
+                <div className="flex flex-col items-center gap-3 py-16">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-200/80 bg-violet-50">
+                    <UserGroupIcon className="h-7 w-7 text-violet-600" />
+                  </div>
                   <p className="text-sm font-medium text-violet-800">{MESSAGES.noUsers}</p>
                 </div>
               )}

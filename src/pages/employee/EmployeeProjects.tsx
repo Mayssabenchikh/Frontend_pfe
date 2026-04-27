@@ -38,7 +38,7 @@ export function EmployeeProjects() {
     return () => window.clearTimeout(t);
   }, [load]);
 
-  const onOpen = (p: ProjectDto) => navigate(`/employee/projects/${p.id}`);
+  const onOpen = (p: ProjectDto) => navigate(`/employee/projects/${p.uuid}`);
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">

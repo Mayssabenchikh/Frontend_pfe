@@ -1,4 +1,5 @@
 import type { GapSkillDto } from "../../api/matchingApi";
+import { formatSkillLevel } from "./matchingVisuals";
 
 const gapLabel: Record<GapSkillDto["gap_type"], string> = {
   missing: "Manquante",
@@ -34,9 +35,11 @@ const gapStyle: Record<GapSkillDto["gap_type"], { item: string; badge: string }>
 type Props = {
   gaps: GapSkillDto[];
   loading?: boolean;
+  /** Si vrai et liste vide, ne rien afficher (message regroupé côté parent). */
+  suppressEmptyState?: boolean;
 };
 
-export function GapList({ gaps, loading }: Props) {
+export function GapList({ gaps, loading, suppressEmptyState }: Props) {
   if (loading) {
     return (
       <div className="space-y-2">
@@ -48,6 +51,7 @@ export function GapList({ gaps, loading }: Props) {
   }
 
   if (!gaps.length) {
+    if (suppressEmptyState) return null;
     return (
       <p className="rounded-xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800">
         Aucun écart par rapport aux exigences du projet.
@@ -59,7 +63,7 @@ export function GapList({ gaps, loading }: Props) {
     <ul className="space-y-2">
       {gaps.map((g) => (
         <li
-          key={`${g.skill_id}-${g.gap_type}`}
+          key={`${g.skill_uuid}-${g.gap_type}`}
           className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm ${gapStyle[g.gap_type].item}`}
         >
           <div>
@@ -71,7 +75,7 @@ export function GapList({ gaps, loading }: Props) {
           <div className="text-right text-xs text-slate-600">
             {g.required_level != null ? (
               <span>
-                Requis: <strong>L{g.required_level}</strong>
+                Requis: <strong>{formatSkillLevel(g.required_level)}</strong>
               </span>
             ) : null}
             {g.employee_level != null ? (
@@ -79,7 +83,7 @@ export function GapList({ gaps, loading }: Props) {
             ) : null}
             {g.employee_level != null ? (
               <span className="ml-2">
-                Actuel: <strong>L{g.employee_level}</strong>
+                Actuel: <strong>{formatSkillLevel(g.employee_level)}</strong>
               </span>
             ) : null}
           </div>
