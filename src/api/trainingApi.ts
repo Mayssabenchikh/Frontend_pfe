@@ -96,6 +96,11 @@ export type UpsertTrainingCourseRequest = {
 export const trainingApi = {
   recommendTop3: (payload: RecommendationRequest) =>
     http.post<RecommendationItem[]>("/api/employee/training/recommend", payload),
+  /** Recommandations pour l’éditeur de parcours (responsable formation uniquement). */
+  trainingManagerRecommendTop3: (payload: RecommendationRequest) =>
+    http.post<RecommendationItem[]>("/api/training-manager/training/recommend", payload),
+  trainingManagerPlaylistVideos: (playlistUrl: string) =>
+    http.get<PlaylistVideo[]>("/api/training-manager/training/playlist-videos", { params: { playlistUrl } }),
   discoverCourses: (params: {
     q?: string;
     category?: string;

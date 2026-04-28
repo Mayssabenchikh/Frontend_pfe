@@ -35,11 +35,17 @@ type Props = {
   onArchive: (user: UserListDto) => void;
 };
 
-const ROLE_LABELS: Record<string, string> = { MANAGER: "Manager", ADMIN: "Admin", EMPLOYEE: "Employé" };
+const ROLE_LABELS: Record<string, string> = {
+  MANAGER: "Manager",
+  ADMIN: "Admin",
+  EMPLOYEE: "Employé",
+  TRAINING_MANAGER: "Responsable formation",
+};
 const ROLE_CLASSES: Record<string, string> = {
   MANAGER: "bg-orange-50 text-orange-800 border-orange-200",
   ADMIN: "bg-violet-50 text-violet-900 border-violet-200",
   EMPLOYEE: "bg-blue-50 text-blue-800 border-blue-200",
+  TRAINING_MANAGER: "bg-teal-50 text-teal-900 border-teal-200",
 };
 
 function SkeletonRow() {
@@ -117,7 +123,14 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
       headerName: "Rôle", field: "role", flex: 0.8, minWidth: 90,
       cellRenderer: (p: ICellRendererParams<UserListDto>) => {
         const role = (p.value as string) ?? "";
-        const dotCls = role === "MANAGER" ? "bg-orange-500" : role === "ADMIN" ? "bg-violet-600" : "bg-blue-600";
+        const dotCls =
+          role === "MANAGER"
+            ? "bg-orange-500"
+            : role === "ADMIN"
+              ? "bg-violet-600"
+              : role === "TRAINING_MANAGER"
+                ? "bg-teal-500"
+                : "bg-blue-600";
         return (
           <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[11px] font-semibold ${ROLE_CLASSES[role] ?? ROLE_CLASSES.EMPLOYEE}`}>
             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotCls}`} />

@@ -1,4 +1,4 @@
-export type AppRole = "ADMIN" | "MANAGER" | "EMPLOYEE";
+export type AppRole = "ADMIN" | "MANAGER" | "EMPLOYEE" | "TRAINING_MANAGER";
 
 export function getRealmRoles(tokenParsed: unknown): string[] {
   if (!tokenParsed || typeof tokenParsed !== "object") return [];
@@ -13,6 +13,7 @@ export function getPrimaryRole(tokenParsed: unknown): AppRole | null {
   const roles = getRealmRoles(tokenParsed);
   if (roles.includes("ADMIN")) return "ADMIN";
   if (roles.includes("MANAGER")) return "MANAGER";
+  if (roles.includes("TRAINING_MANAGER")) return "TRAINING_MANAGER";
   if (roles.includes("EMPLOYEE")) return "EMPLOYEE";
   return null;
 }
@@ -23,6 +24,8 @@ export function getRedirectPathForRole(role: AppRole): string {
       return "/admin";
     case "MANAGER":
       return "/manager";
+    case "TRAINING_MANAGER":
+      return "/training-manager";
     case "EMPLOYEE":
       return "/employee";
     default:

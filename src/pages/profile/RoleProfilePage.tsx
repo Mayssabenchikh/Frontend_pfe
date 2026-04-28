@@ -222,11 +222,13 @@ export type RoleProfileConfig = {
   extraUpdateEndpoint: string;
   avatarEndpoint: string;
   changePasswordEndpoint: string;
-  cvEndpoint: string;
-  cvExtractEndpoint: string;
-  cvDownloadEndpoint: string;
-  skillsEndpoint: string;
-  pendingSkillsEndpoint: string;
+  /** When false, hide CV / extraction / skills UI and do not call CV-related APIs. */
+  showCvSection?: boolean;
+  cvEndpoint?: string;
+  cvExtractEndpoint?: string;
+  cvDownloadEndpoint?: string;
+  skillsEndpoint?: string;
+  pendingSkillsEndpoint?: string;
 };
 
 function normalizeCvFilename(file: File): string {
@@ -249,11 +251,23 @@ function getCvValidationError(file: File): string | null {
   return null;
 }
 
+function isCvSectionEnabled(config: RoleProfileConfig): boolean {
+  if (config.showCvSection === false) return false;
+  return Boolean(
+    config.cvEndpoint &&
+      config.cvExtractEndpoint &&
+      config.cvDownloadEndpoint &&
+      config.skillsEndpoint &&
+      config.pendingSkillsEndpoint,
+  );
+}
+
 export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   const { keycloak } = useKeycloak();
   const token = keycloak.tokenParsed as TokenParsed | undefined;
   const userId = keycloak.subject;
   const { onAvatarUpdate } = useOutletContext<ProfileOutletContext>() || {};
+  const cvEnabled = isCvSectionEnabled(config);
 
   const firstName = token?.given_name ?? "";
   const lastName = token?.family_name ?? "";
@@ -298,6 +312,10 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   const gradient = getAvatarColor(email);
 
   const [section, setSection] = useState<Section>("personal");
+
+  useEffect(() => {
+    if (!cvEnabled && section === "cv") setSection("personal");
+  }, [cvEnabled, section]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -364,33 +382,49 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   }, [config.avatarEndpoint, onAvatarUpdate, token?.picture, userId]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!cvEnabled || !userId || !config.cvEndpoint) return;
     dedupedProfileGet<CvMetadata>(config.cvEndpoint)
       .then((res) => {
         setCvFileName(res.data?.fileName ?? null);
       })
       .catch(() => {});
-  }, [config.cvEndpoint, userId]);
+  }, [config.cvEndpoint, userId, cvEnabled]);
 
-  const loadEmployeeSkills = useCallback((force = false) => {
-    dedupedProfileGet<EmployeeSkillItem[]>(config.skillsEndpoint, { force })
-      .then((res) => setEmployeeSkills(res.data ?? []))
-      .catch(() => setEmployeeSkills([]));
-  }, [config.skillsEndpoint]);
+  const loadEmployeeSkills = useCallback(
+    (force = false) => {
+      if (!cvEnabled || !config.skillsEndpoint) return;
+      dedupedProfileGet<EmployeeSkillItem[]>(config.skillsEndpoint, { force })
+        .then((res) => setEmployeeSkills(res.data ?? []))
+        .catch(() => setEmployeeSkills([]));
+    },
+    [config.skillsEndpoint, cvEnabled],
+  );
 
   useEffect(() => {
+    if (!cvEnabled) {
+      setEmployeeSkills([]);
+      return;
+    }
     loadEmployeeSkills();
-  }, [loadEmployeeSkills]);
+  }, [loadEmployeeSkills, cvEnabled]);
 
-  const loadPendingUnrecognizedSkills = useCallback((force = false) => {
-    dedupedProfileGet<string[]>(config.pendingSkillsEndpoint, { force })
-      .then((res) => setPendingUnrecognizedSkills(res.data ?? []))
-      .catch(() => setPendingUnrecognizedSkills([]));
-  }, [config.pendingSkillsEndpoint]);
+  const loadPendingUnrecognizedSkills = useCallback(
+    (force = false) => {
+      if (!cvEnabled || !config.pendingSkillsEndpoint) return;
+      dedupedProfileGet<string[]>(config.pendingSkillsEndpoint, { force })
+        .then((res) => setPendingUnrecognizedSkills(res.data ?? []))
+        .catch(() => setPendingUnrecognizedSkills([]));
+    },
+    [config.pendingSkillsEndpoint, cvEnabled],
+  );
 
   useEffect(() => {
+    if (!cvEnabled) {
+      setPendingUnrecognizedSkills([]);
+      return;
+    }
     loadPendingUnrecognizedSkills();
-  }, [loadPendingUnrecognizedSkills]);
+  }, [loadPendingUnrecognizedSkills, cvEnabled]);
 
   const handleCvDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -428,7 +462,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   };
 
   const handleExtractSkills = async () => {
-    if (!cvFile) return;
+    if (!cvFile || !config.cvExtractEndpoint) return;
     setExtracting(true);
     setExtractionResult(null);
     const form = new FormData();
@@ -464,7 +498,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
 
   const sections: { id: Section; label: string; icon: React.ReactNode }[] = [
     { id: "personal", label: "Informations personnelles", icon: <UserIcon className="w-4 h-4" /> },
-    { id: "cv", label: "Extraction CV", icon: <SparklesIcon className="w-4 h-4" /> },
+    ...(cvEnabled ? [{ id: "cv" as const, label: "Extraction CV", icon: <SparklesIcon className="w-4 h-4" /> }] : []),
   ];
 
   return (
@@ -532,32 +566,34 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
           </div>
         </header>
 
-        <nav
-          className="profile-saas-card luxury-animate-in flex shrink-0 gap-1 overflow-x-auto rounded-2xl p-1 md:p-1.5"
-          style={{ animationDelay: "0.05s" }}
-          aria-label="Sections du profil"
-        >
-          {sections.map((s, idx) => {
-            const active = section === s.id;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setSection(s.id)}
-                style={{
-                  animation: `fadeInUp 0.6s ease-out ${idx * 0.05}s both`,
-                  background: active ? "rgba(124, 58, 237, 0.12)" : "transparent",
-                  color: active ? "var(--luxury-primary)" : "var(--luxury-text-muted)",
-                  border: active ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid transparent",
-                }}
-                className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200 hover:bg-violet-50/80 md:px-4 md:text-sm md:font-medium active:scale-[0.98]"
-              >
-                {s.icon}
-                {s.label}
-              </button>
-            );
-          })}
-        </nav>
+        {sections.length > 1 ? (
+          <nav
+            className="profile-saas-card luxury-animate-in flex shrink-0 gap-1 overflow-x-auto rounded-2xl p-1 md:p-1.5"
+            style={{ animationDelay: "0.05s" }}
+            aria-label="Sections du profil"
+          >
+            {sections.map((s, idx) => {
+              const active = section === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSection(s.id)}
+                  style={{
+                    animation: `fadeInUp 0.6s ease-out ${idx * 0.05}s both`,
+                    background: active ? "rgba(124, 58, 237, 0.12)" : "transparent",
+                    color: active ? "var(--luxury-primary)" : "var(--luxury-text-muted)",
+                    border: active ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid transparent",
+                  }}
+                  className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200 hover:bg-violet-50/80 md:px-4 md:text-sm md:font-medium active:scale-[0.98]"
+                >
+                  {s.icon}
+                  {s.label}
+                </button>
+              );
+            })}
+          </nav>
+        ) : null}
 
         <main className="min-h-0 flex-1 overflow-hidden luxury-animate-in" style={{ animationDelay: "0.1s" }}>
           <div className="profile-saas-card flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
@@ -585,7 +621,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
                   changePasswordEndpoint={config.changePasswordEndpoint}
                 />
               )}
-              {section === "cv" && (
+              {section === "cv" && cvEnabled && config.cvDownloadEndpoint && (
                 <CVSection
                   cvFile={cvFile}
                   cvFileName={cvFileName}

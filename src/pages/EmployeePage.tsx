@@ -10,6 +10,7 @@ import {
   BriefcaseIcon,
   ClipboardDocumentListIcon,
   AcademicCapIcon,
+  BookOpenIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
 import { EmployeeBreadcrumbs } from "./employee/EmployeeBreadcrumbs";
@@ -33,7 +34,6 @@ export default function EmployeePage() {
   const isAssignmentsPage = location.pathname.startsWith("/employee/assignments");
   const isLearningPage = location.pathname.startsWith("/employee/learning");
   const isProjectsPage = location.pathname.startsWith("/employee/projects");
-
   useEffect(() => {
     meApi
       .employee()
@@ -195,6 +195,31 @@ export default function EmployeePage() {
                   <AcademicCapIcon className="w-5 h-5" />
                 </span>
                 {!sidebarCollapsed && <span className="truncate">Formations</span>}
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/employee/learning-programs"
+            className={({ isActive }) =>
+              [
+                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
+                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
+                isActive
+                  ? "bg-indigo-50 text-indigo-800 font-semibold"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
+              ].join(" ")
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {!sidebarCollapsed && isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
+                )}
+                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
+                  <BookOpenIcon className="w-5 h-5" />
+                </span>
+                {!sidebarCollapsed && <span className="truncate">Parcours guidés</span>}
               </>
             )}
           </NavLink>

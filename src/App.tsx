@@ -14,6 +14,9 @@ import { ManagerProfile } from "./pages/manager/ManagerProfile";
 import { ManagerAssignmentsHistory } from "./pages/manager/ManagerAssignmentsHistory";
 import { ManagerLearningHub } from "./pages/manager/ManagerLearningHub";
 import { ManagerLearningCourse } from "./pages/manager/ManagerLearningCourse";
+import { EmployeeLearningPrograms } from "./pages/employee/EmployeeLearningPrograms";
+import { EmployeeLearningProgramPlayer } from "./pages/employee/EmployeeLearningProgramPlayer";
+import { EmployeeLearningProgramQuiz } from "./pages/employee/EmployeeLearningProgramQuiz";
 import EmployeePage from "./pages/EmployeePage";
 import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
 import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
@@ -22,6 +25,11 @@ import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
 import { EmployeeProjectDetail } from "./pages/employee/EmployeeProjectDetail";
 import { EmployeeLearningHub } from "./pages/employee/EmployeeLearningHub";
 import { EmployeeLearningCourse } from "./pages/employee/EmployeeLearningCourse";
+import { TrainingManagerPrograms } from "./pages/employee/TrainingManagerPrograms";
+import { TrainingManagerProgramEditor } from "./pages/employee/TrainingManagerProgramEditor";
+import TrainingManagerPage from "./pages/training-manager/TrainingManagerPage";
+import { TrainingManagerDashboard } from "./pages/training-manager/TrainingManagerDashboard";
+import { TrainingManagerProfile } from "./pages/training-manager/TrainingManagerProfile";
 
 const EmployeeQuiz = lazy(() =>
   import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
@@ -133,10 +141,26 @@ function App() {
           <Route path="assignments" element={<ManagerAssignmentsHistory />} />
           <Route path="learning" element={<ManagerLearningHub />} />
           <Route path="learning/course/:progressUuid" element={<ManagerLearningCourse />} />
+          <Route path="learning-programs" element={<EmployeeLearningPrograms />} />
+          <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />
+          <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />
           <Route path="projects/:id/matches" element={<RedirectProjectMatchesToTalent />} />
           <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="profile" element={<ManagerProfile />} />
+        </Route>
+        <Route
+          path="/training-manager"
+          element={
+            <ProtectedRoute allowedRoles={["TRAINING_MANAGER"]}>
+              <TrainingManagerPage />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<TrainingManagerDashboard />} />
+          <Route path="programs" element={<TrainingManagerPrograms />} />
+          <Route path="programs/:uuid" element={<TrainingManagerProgramEditor />} />
+          <Route path="profile" element={<TrainingManagerProfile />} />
         </Route>
         <Route
           path="/employee"
@@ -151,6 +175,9 @@ function App() {
           <Route path="assignments" element={<EmployeeAssignments />} />
           <Route path="learning" element={<EmployeeLearningHub />} />
           <Route path="learning/course/:progressUuid" element={<EmployeeLearningCourse />} />
+          <Route path="learning-programs" element={<EmployeeLearningPrograms />} />
+          <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />
+          <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />
           <Route path="projects" element={<EmployeeProjects />} />
           <Route path="projects/:id" element={<EmployeeProjectDetail />} />
           <Route path="profile" element={<EmployeeMyProfile />} />

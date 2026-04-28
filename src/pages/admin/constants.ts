@@ -2,11 +2,13 @@ export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Administrateur",
   MANAGER: "Manager",
   EMPLOYEE: "Employé",
+  TRAINING_MANAGER: "Responsable formation",
 };
 
 export const ROLE_OPTIONS = [
   { value: "EMPLOYEE" as const, label: "Employé" },
   { value: "MANAGER" as const, label: "Manager" },
+  { value: "TRAINING_MANAGER" as const, label: "Responsable formation" },
 ] as const;
 
 export const MESSAGES = {

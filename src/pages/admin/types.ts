@@ -96,7 +96,7 @@ export type PendingSkillRequestPageDto = {
   size: number;
 };
 
-export type AdminRole = "MANAGER" | "EMPLOYEE";
+export type AdminRole = "MANAGER" | "EMPLOYEE" | "TRAINING_MANAGER";
 
 export type MessageType = "success" | "error";
 

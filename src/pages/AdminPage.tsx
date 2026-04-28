@@ -16,7 +16,7 @@ import {
 } from "../icons/heroicons/outline";
 
 import type { UserListDto, ArchivedUserDto, NavId, AdminRole, TokenParsed } from "./admin/types";
-import { ROLE_LABELS, MESSAGES } from "./admin/constants";
+import { ROLE_LABELS, ROLE_OPTIONS, MESSAGES } from "./admin/constants";
 import { getDisplayName, getInitials, getApiError, ensureArray, getAvatarColor } from "./admin/utils";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { AdminSidebar } from "./admin/AdminSidebar";
@@ -225,7 +225,9 @@ export default function AdminPage() {
     setEditEmail(u.email);
     setEditFirstName(u.firstName);
     setEditLastName(u.lastName);
-    setEditRole((u.role === "MANAGER" ? "MANAGER" : "EMPLOYEE") as AdminRole);
+    setEditRole(
+      (u.role === "MANAGER" ? "MANAGER" : u.role === "TRAINING_MANAGER" ? "TRAINING_MANAGER" : "EMPLOYEE") as AdminRole,
+    );
     setEditDepartment(u.department ?? "");
     setEditJobTitle(u.jobTitle ?? "");
     setEditPhone(u.phone ?? "");
@@ -467,8 +469,11 @@ export default function AdminPage() {
                           className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
                         >
                           <option value="ALL">Tous les rôles</option>
-                          <option value="MANAGER">Manager</option>
-                          <option value="EMPLOYEE">Employé</option>
+                          {ROLE_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div>
@@ -568,8 +573,11 @@ export default function AdminPage() {
                             className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
                           >
                             <option value="ALL">Tous les rôles</option>
-                            <option value="MANAGER">Manager</option>
-                            <option value="EMPLOYEE">Employé</option>
+                            {ROLE_OPTIONS.map((o) => (
+                              <option key={o.value} value={o.value}>
+                                {o.label}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div>

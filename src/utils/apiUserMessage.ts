@@ -93,6 +93,19 @@ function extractFromResponseData(data: unknown): string | null {
     if (typeof o.message === "string" && o.message.trim()) return String(o.message).trim();
   }
 
+  if (Array.isArray(d.errors)) {
+    const parts = d.errors
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const o = item as Record<string, unknown>;
+        if (typeof o.defaultMessage === "string" && o.defaultMessage.trim()) return o.defaultMessage.trim();
+        if (typeof o.message === "string" && o.message.trim()) return o.message.trim();
+        return null;
+      })
+      .filter(Boolean) as string[];
+    if (parts.length) return parts.join(" · ");
+  }
+
   return null;
 }
 

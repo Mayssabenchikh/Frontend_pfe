@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   BoltIcon,
   CheckCircleIcon,
@@ -164,6 +165,9 @@ function quizKindForSkill(skill?: EmployeeSkillDto | null): QuizStartResponse["q
 }
 
 export function EmployeeQuiz() {
+  const [searchParams] = useSearchParams();
+  const skillFromUrl = searchParams.get("skill");
+
   const [skills, setSkills] = useState<EmployeeSkillDto[]>([]);
   const [loadingSkills, setLoadingSkills] = useState(true);
   const [phase, setPhase] = useState<QuizPhase>("setup");
@@ -197,6 +201,14 @@ export function EmployeeQuiz() {
       .finally(() => setLoadingSkills(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!skillFromUrl || skills.length === 0) return;
+    const match = skills.some((s) => s.skillUuid === skillFromUrl);
+    if (match) {
+      setSelectedSkillId(skillFromUrl);
+    }
+  }, [skillFromUrl, skills]);
 
   useEffect(() => {
     if (phase !== "in_progress" || !startData) return;
