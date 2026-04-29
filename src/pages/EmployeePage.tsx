@@ -10,7 +10,7 @@ import {
   BriefcaseIcon,
   ClipboardDocumentListIcon,
   AcademicCapIcon,
-  BookOpenIcon,
+  SparklesIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
 import { EmployeeBreadcrumbs } from "./employee/EmployeeBreadcrumbs";
@@ -33,6 +33,7 @@ export default function EmployeePage() {
   const isQuizPage = location.pathname.startsWith("/employee/quiz");
   const isAssignmentsPage = location.pathname.startsWith("/employee/assignments");
   const isLearningPage = location.pathname.startsWith("/employee/learning");
+  const isRecommendationsPage = location.pathname.startsWith("/employee/training-recommendations");
   const isProjectsPage = location.pathname.startsWith("/employee/projects");
   useEffect(() => {
     meApi
@@ -200,7 +201,7 @@ export default function EmployeePage() {
           </NavLink>
 
           <NavLink
-            to="/employee/learning-programs"
+            to="/employee/training-recommendations"
             className={({ isActive }) =>
               [
                 "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
@@ -217,9 +218,9 @@ export default function EmployeePage() {
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
                 )}
                 <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
-                  <BookOpenIcon className="w-5 h-5" />
+                  <SparklesIcon className="w-5 h-5" />
                 </span>
-                {!sidebarCollapsed && <span className="truncate">Parcours guidés</span>}
+                {!sidebarCollapsed && <span className="truncate">Recommandations IA</span>}
               </>
             )}
           </NavLink>
@@ -299,7 +300,7 @@ export default function EmployeePage() {
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
                 : isAssignmentsPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
-                : isLearningPage
+                : isLearningPage || isRecommendationsPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-6"
                 : isProjectsPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"

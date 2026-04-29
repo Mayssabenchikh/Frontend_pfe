@@ -22,7 +22,6 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminHeader } from "./admin/AdminHeader";
 import { AdminBreadcrumbs } from "./admin/AdminBreadcrumbs";
-import { AdminStats } from "./admin/AdminStats";
 import { UsersTable } from "./admin/UsersTable";
 import { ArchivedUsersTable } from "./admin/ArchivedUsersTable";
 import { SkillsCatalog } from "./admin/SkillsCatalog";
@@ -382,13 +381,7 @@ export default function AdminPage() {
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <AdminBreadcrumbs currentView={currentView} onNavigate={handleNavChange} />
 
-          {currentView === "dashboard" && (
-            <div className="dashboard-padding">
-              <div className="mx-auto flex max-w-[1100px] flex-col gap-7">
-                <AdminStats total={stats.total} actifs={stats.actifs} inactifs={stats.inactifs} />
-              </div>
-            </div>
-          )}
+          {currentView === "dashboard" && <div className="dashboard-padding" />}
 
           {currentView === "profile" && (
             <AdminProfile

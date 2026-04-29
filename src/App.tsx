@@ -25,6 +25,7 @@ import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
 import { EmployeeProjectDetail } from "./pages/employee/EmployeeProjectDetail";
 import { EmployeeLearningHub } from "./pages/employee/EmployeeLearningHub";
 import { EmployeeLearningCourse } from "./pages/employee/EmployeeLearningCourse";
+import { EmployeeTrainingRecommendations } from "./pages/employee/EmployeeTrainingRecommendations";
 import { TrainingManagerPrograms } from "./pages/employee/TrainingManagerPrograms";
 import { TrainingManagerProgramEditor } from "./pages/employee/TrainingManagerProgramEditor";
 import TrainingManagerPage from "./pages/training-manager/TrainingManagerPage";
@@ -175,6 +176,7 @@ function App() {
           <Route path="assignments" element={<EmployeeAssignments />} />
           <Route path="learning" element={<EmployeeLearningHub />} />
           <Route path="learning/course/:progressUuid" element={<EmployeeLearningCourse />} />
+          <Route path="training-recommendations" element={<EmployeeTrainingRecommendations />} />
           <Route path="learning-programs" element={<EmployeeLearningPrograms />} />
           <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />
           <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />
