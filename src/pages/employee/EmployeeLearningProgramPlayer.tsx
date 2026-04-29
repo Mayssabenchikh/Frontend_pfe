@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import {
   employeeLearningProgramApi,
   type ActivitySubmissionMode,
@@ -8,6 +8,7 @@ import {
 } from "../../api/learningProgramApi";
 import { useLearningProgramBasePath } from "../../hooks/useLearningProgramBasePath";
 import {
+  ArrowLeftIcon,
   ArrowPathIcon,
   BookOpenIcon,
   CheckCircleIcon,
@@ -103,7 +104,9 @@ function ProgressRing({ percent }: { percent: number }) {
 
 export function EmployeeLearningProgramPlayer() {
   const base = useLearningProgramBasePath();
+  const location = useLocation();
   const { enrollmentUuid } = useParams<{ enrollmentUuid: string }>();
+  const backTo = (location.state as { backTo?: string } | null)?.backTo ?? `${base}/training-recommendations`;
   const [player, setPlayer] = useState<LearningPlayer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activityBusy, setActivityBusy] = useState<string | null>(null);
@@ -263,7 +266,7 @@ export function EmployeeLearningProgramPlayer() {
     return (
       <div className="p-6">
         <p className="text-rose-700">{error}</p>
-        <Link to={`${base}/learning-programs`} className="text-indigo-600 text-sm mt-2 inline-block">
+        <Link to={backTo} className="text-indigo-600 text-sm mt-2 inline-block">
           ← Retour
         </Link>
       </div>
@@ -288,10 +291,11 @@ export function EmployeeLearningProgramPlayer() {
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white shadow-sm">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-4 px-4 py-3 sm:px-6">
           <Link
-            to={`${base}/learning-programs`}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            to={backTo}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
           >
-            <span aria-hidden>←</span> Parcours
+            <ArrowLeftIcon className="h-3.5 w-3.5" />
+            Retour
           </Link>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{player.programTitle}</h1>

@@ -45,7 +45,9 @@ export function EmployeeTrainingRecommendations({
     setStartingId(rec.trainingUuid);
     try {
       const { data } = await employeeLearningProgramApi.enroll(rec.trainingUuid);
-      navigate(`${basePath}/learning-programs/play/${data.enrollmentUuid}`);
+      navigate(`${basePath}/learning-programs/play/${data.enrollmentUuid}`, {
+        state: { fromRecommendations: true, backTo: `${basePath}/training-recommendations` },
+      });
     } catch {
       toast.error("Impossible de démarrer cette formation.");
     } finally {
