@@ -123,7 +123,7 @@ export function ProgramEditorRecommendations({
       <div className="border-b border-slate-200/60 bg-white/60 px-4 py-4 backdrop-blur-sm">
         <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">Sources recommandées</h3>
         <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
-          Basé sur le catalogue formations (skill + niveau). Pour une vidéo simple, ajoutez directement; pour une playlist, listez puis choisissez une vidéo.
+           Pour une vidéo simple, ajoutez directement; pour une playlist, listez puis choisissez une vidéo.
         </p>
       </div>
 
