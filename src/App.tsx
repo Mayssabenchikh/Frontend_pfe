@@ -136,6 +136,12 @@ function App() {
           <Route path="matching" element={<ManagerMatchingHub />} />
           <Route path="projects" element={<ProjectsList />} />
           <Route path="assignments" element={<ManagerAssignmentsHistory />} />
+          <Route
+            path="training-recommendations"
+            element={<EmployeeTrainingRecommendations basePath="/manager" />}
+          />
+          <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />
+          <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />
           <Route path="projects/:id/matches" element={<RedirectProjectMatchesToTalent />} />
           <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
           <Route path="projects/:id" element={<ProjectDetail />} />

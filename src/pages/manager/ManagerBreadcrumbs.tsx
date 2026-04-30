@@ -24,6 +24,18 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
     return [{ label: "Affectations" }];
   }
 
+  if (parts[1] === "training-recommendations") {
+    return [{ label: "Formations" }];
+  }
+
+  if (parts[1] === "learning-programs" && parts[2] === "play") {
+    return [{ label: "Formations", to: "/manager/training-recommendations" }, { label: "Parcours guidé" }];
+  }
+
+  if (parts[1] === "learning-programs" && parts[2] === "quiz") {
+    return [{ label: "Formations", to: "/manager/training-recommendations" }, { label: "Quiz parcours" }];
+  }
+
   // /manager/matching (hub)
   if (parts[1] === "matching" && parts.length === 2) {
     return [{ label: "Correspondances" }];

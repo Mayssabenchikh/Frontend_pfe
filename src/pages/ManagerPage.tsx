@@ -9,6 +9,7 @@ import {
   BriefcaseIcon,
   ClipboardDocumentListIcon,
   ChartBarSquareIcon,
+  SparklesIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
 import { ManagerBreadcrumbs } from "./manager/ManagerBreadcrumbs";
@@ -241,6 +242,35 @@ export default function ManagerPage() {
                   <BriefcaseIcon className="h-5 w-5" />
                 </span>
                 {!sidebarCollapsed && <span className="truncate">Affectations</span>}
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/manager/training-recommendations"
+            className={({ isActive }) =>
+              [
+                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
+                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
+                isActive
+                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
+                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
+              ].join(" ")
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {!sidebarCollapsed && isActive && (
+                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
+                )}
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${
+                    isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"
+                  }`}
+                >
+                  <SparklesIcon className="h-5 w-5" />
+                </span>
+                {!sidebarCollapsed && <span className="truncate">Formations</span>}
               </>
             )}
           </NavLink>

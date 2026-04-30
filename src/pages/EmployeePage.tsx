@@ -194,7 +194,7 @@ export default function EmployeePage() {
                 <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
                   <SparklesIcon className="w-5 h-5" />
                 </span>
-                {!sidebarCollapsed && <span className="truncate">Recommandations IA</span>}
+                {!sidebarCollapsed && <span className="truncate">Formations</span>}
               </>
             )}
           </NavLink>
