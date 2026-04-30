@@ -26,7 +26,6 @@ import { UsersTable } from "./admin/UsersTable";
 import { ArchivedUsersTable } from "./admin/ArchivedUsersTable";
 import { SkillsCatalog } from "./admin/SkillsCatalog";
 import { SkillCategories } from "./admin/SkillCategories";
-import { AdminTrainingsCatalog } from "./admin/AdminTrainingsCatalog";
 import { PendingSkillRequests } from "./admin/PendingSkillRequests";
 import { AdminProfile } from "./admin/AdminProfile";
 import { AdminAssignmentsAudit } from "./admin/AdminAssignmentsAudit";
@@ -159,12 +158,6 @@ export default function AdminPage() {
   const [viewUser, setViewUser] = useState<UserListDto | null>(null);
 
   const usersList = useMemo(() => ensureArray(users), [users]);
-  const stats = useMemo(() => ({
-    total: usersList.length,
-    actifs: usersList.filter((u) => u.enabled).length,
-    inactifs: usersList.filter((u) => !u.enabled).length,
-  }), [usersList]);
-
   const loadUsers = useCallback((filters?: Partial<typeof usersFilters>) => {
     const f = { ...usersFilters, ...(filters ?? {}) };
     setUsersLoading(true);
@@ -399,10 +392,6 @@ export default function AdminPage() {
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <SkillsCatalog />
             </section>
-          )}
-
-          {currentView === "trainings" && (
-            <AdminTrainingsCatalog />
           )}
 
           {currentView === "skillCategories" && (

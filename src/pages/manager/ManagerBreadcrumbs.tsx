@@ -24,19 +24,6 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
     return [{ label: "Affectations" }];
   }
 
-  // /manager/learning
-  if (parts[1] === "learning" && parts.length === 2) {
-    return [{ label: "Formations" }];
-  }
-
-  // /manager/learning/course/:progressUuid
-  if (parts[1] === "learning" && parts[2] === "course") {
-    return [
-      { label: "Formations", to: "/manager/learning" },
-      { label: "Lecture du cours" },
-    ];
-  }
-
   // /manager/matching (hub)
   if (parts[1] === "matching" && parts.length === 2) {
     return [{ label: "Correspondances" }];
@@ -136,4 +123,3 @@ export function ManagerBreadcrumbs() {
     </nav>
   );
 }
-

@@ -12,8 +12,6 @@ import { ManagerMatchingHub } from "./pages/manager/ManagerMatchingHub";
 import { ProjectTalentWorkspace } from "./pages/manager/ProjectTalentWorkspace";
 import { ManagerProfile } from "./pages/manager/ManagerProfile";
 import { ManagerAssignmentsHistory } from "./pages/manager/ManagerAssignmentsHistory";
-import { ManagerLearningHub } from "./pages/manager/ManagerLearningHub";
-import { ManagerLearningCourse } from "./pages/manager/ManagerLearningCourse";
 import { EmployeeLearningPrograms } from "./pages/employee/EmployeeLearningPrograms";
 import { EmployeeLearningProgramPlayer } from "./pages/employee/EmployeeLearningProgramPlayer";
 import { EmployeeLearningProgramQuiz } from "./pages/employee/EmployeeLearningProgramQuiz";
@@ -140,11 +138,6 @@ function App() {
           <Route path="matching" element={<ManagerMatchingHub />} />
           <Route path="projects" element={<ProjectsList />} />
           <Route path="assignments" element={<ManagerAssignmentsHistory />} />
-          <Route path="learning" element={<ManagerLearningHub />} />
-          <Route path="learning/course/:progressUuid" element={<ManagerLearningCourse />} />
-          <Route path="learning-programs" element={<EmployeeLearningPrograms />} />
-          <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />
-          <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />
           <Route path="projects/:id/matches" element={<RedirectProjectMatchesToTalent />} />
           <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
           <Route path="projects/:id" element={<ProjectDetail />} />

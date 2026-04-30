@@ -70,29 +70,6 @@ export type PlaylistVideo = {
   thumbnailUrl: string;
 };
 
-export type TrainingCourse = {
-  uuid: string;
-  category: string;
-  skillName: string;
-  employeeSkillLevel: number;
-  targetSkillLevel: number;
-  courseName: string;
-  courseLevel: string;
-  playlistUrl: string;
-  active: boolean;
-};
-
-export type UpsertTrainingCourseRequest = {
-  category: string;
-  skillName: string;
-  employeeSkillLevel: number;
-  targetSkillLevel: number;
-  courseName: string;
-  courseLevel: string;
-  playlistUrl: string;
-  active: boolean;
-};
-
 export const trainingApi = {
   recommendTop3: (payload: RecommendationRequest) =>
     http.post<RecommendationItem[]>("/api/employee/training/recommend", payload),
@@ -140,20 +117,4 @@ export const trainingApi = {
     http.get<EmployeeTrainingProgress[]>("/api/employee/training/my-learning"),
   playlistVideos: (playlistUrl: string) =>
     http.get<PlaylistVideo[]>("/api/employee/training/playlist-videos", { params: { playlistUrl } }),
-
-  listCoursesAdmin: () =>
-    http.get<TrainingCourse[]>("/api/admin/trainings"),
-  createCourseAdmin: (payload: UpsertTrainingCourseRequest) =>
-    http.post<TrainingCourse>("/api/admin/trainings", payload),
-  updateCourseAdmin: (uuid: string, payload: UpsertTrainingCourseRequest) =>
-    http.put<TrainingCourse>(`/api/admin/trainings/${uuid}`, payload),
-  deleteCourseAdmin: (uuid: string) =>
-    http.delete(`/api/admin/trainings/${uuid}`),
-  importCsvAdmin: (file: File) => {
-    const form = new FormData();
-    form.append("file", file);
-    return http.post<{ imported: number }>("/api/admin/trainings/import", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
 };

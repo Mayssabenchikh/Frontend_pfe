@@ -32,7 +32,6 @@ export type NavId =
   | "archives"
   | "projects"
   | "skills"
-  | "trainings"
   | "skillRequests"
   | "skillCategories"
   | "assignments"
