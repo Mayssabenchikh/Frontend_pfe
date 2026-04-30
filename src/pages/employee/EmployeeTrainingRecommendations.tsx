@@ -55,9 +55,9 @@ export function EmployeeTrainingRecommendations({
     }
   }
 
-  const projectRecs = recommendations.filter((r) => r.type === "PROJECT");
-  const mandatoryRecs = recommendations.filter((r) => r.type === "PROGRESSION" && r.mandatory);
-  const progressionRecs = recommendations.filter((r) => r.type === "PROGRESSION" && !r.mandatory);
+  const requiredProjectRecs = recommendations.filter((r) => r.type === "PROJECT");
+  const cooldownRecs = recommendations.filter((r) => r.type === "PROGRESSION" && r.mandatory);
+  const otherRecs = recommendations.filter((r) => r.type === "PROGRESSION" && !r.mandatory);
 
   return (
     <div className="w-full space-y-6">
@@ -107,18 +107,18 @@ export function EmployeeTrainingRecommendations({
         </div>
       )}
 
-      {/* ── PROJECT section ── */}
-      {projectRecs.length > 0 && (
+      {/* ── REQUIRED PROJECT section ── */}
+      {requiredProjectRecs.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <BriefcaseIcon className="h-5 w-5 text-red-500" />
-            <h3 className="text-lg font-bold text-slate-900">Formations Projet</h3>
+            <h3 className="text-lg font-bold text-slate-900">Formations Obligatoires (Projet)</h3>
             <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-red-700">
-              Haute priorité
+              Obligatoire
             </span>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {projectRecs.map((rec) => (
+            {requiredProjectRecs.map((rec) => (
               <RecommendationCard
                 key={`project-${rec.trainingUuid}-${rec.skillName}-${rec.contextName ?? ""}`}
                 rec={rec}
@@ -126,7 +126,7 @@ export function EmployeeTrainingRecommendations({
                 startingId={startingId}
                 accentClass="border-red-200 hover:shadow-red-200/40"
                 badgeClass="bg-red-100 text-red-700"
-                badgeLabel="PROJET"
+                badgeLabel="Obligatoire"
                 buttonGradient="from-red-600 to-rose-600"
                 buttonShadow="shadow-[0_8px_18px_rgba(220,38,38,0.35)]"
               />
@@ -136,17 +136,14 @@ export function EmployeeTrainingRecommendations({
       )}
 
       {/* ── MANDATORY / COOLDOWN section ── */}
-      {mandatoryRecs.length > 0 && (
+      {cooldownRecs.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <BoltIcon className="h-5 w-5 text-amber-500" />
-            <h3 className="text-lg font-bold text-slate-900">Formations Obligatoires</h3>
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-700">
-              Cooldown actif
-            </span>
+            <h3 className="text-lg font-bold text-slate-900">Formations en cooldown</h3>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {mandatoryRecs.map((rec) => (
+            {cooldownRecs.map((rec) => (
               <RecommendationCard
                 key={`mandatory-${rec.trainingUuid}-${rec.skillName}`}
                 rec={rec}
@@ -154,7 +151,7 @@ export function EmployeeTrainingRecommendations({
                 startingId={startingId}
                 accentClass="border-amber-200 hover:shadow-amber-200/40"
                 badgeClass="bg-amber-100 text-amber-700"
-                badgeLabel="OBLIGATOIRE"
+                badgeLabel="À refaire plus tard"
                 buttonGradient="from-amber-600 to-orange-600"
                 buttonShadow="shadow-[0_8px_18px_rgba(217,119,6,0.35)]"
               />
@@ -163,15 +160,15 @@ export function EmployeeTrainingRecommendations({
         </section>
       )}
 
-      {/* ── PROGRESSION section ── */}
-      {progressionRecs.length > 0 && (
+      {/* ── OTHER section ── */}
+      {otherRecs.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <ArrowTrendingUpIcon className="h-5 w-5 text-violet-500" />
-            <h3 className="text-lg font-bold text-slate-900">Progression de Compétences</h3>
+            <h3 className="text-lg font-bold text-slate-900">Autres Formations Recommandées</h3>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {progressionRecs.map((rec) => (
+            {otherRecs.map((rec) => (
               <RecommendationCard
                 key={`progression-${rec.trainingUuid}-${rec.skillName}`}
                 rec={rec}
