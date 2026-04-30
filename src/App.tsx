@@ -21,8 +21,6 @@ import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
 import { EmployeeAssignments } from "./pages/employee/EmployeeAssignments";
 import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
 import { EmployeeProjectDetail } from "./pages/employee/EmployeeProjectDetail";
-import { EmployeeLearningHub } from "./pages/employee/EmployeeLearningHub";
-import { EmployeeLearningCourse } from "./pages/employee/EmployeeLearningCourse";
 import { EmployeeTrainingRecommendations } from "./pages/employee/EmployeeTrainingRecommendations";
 import { TrainingManagerPrograms } from "./pages/employee/TrainingManagerPrograms";
 import { TrainingManagerProgramEditor } from "./pages/employee/TrainingManagerProgramEditor";
@@ -167,8 +165,6 @@ function App() {
           <Route index element={<EmployeeDashboard />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="assignments" element={<EmployeeAssignments />} />
-          <Route path="learning" element={<EmployeeLearningHub />} />
-          <Route path="learning/course/:progressUuid" element={<EmployeeLearningCourse />} />
           <Route path="training-recommendations" element={<EmployeeTrainingRecommendations />} />
           <Route path="learning-programs" element={<EmployeeLearningPrograms />} />
           <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />

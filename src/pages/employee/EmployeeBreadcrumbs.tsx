@@ -22,14 +22,6 @@ function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string 
     return [{ label: "Affectations" }];
   }
 
-  if (parts[1] === "learning" && parts.length === 2) {
-    return [{ label: "Formations" }];
-  }
-
-  if (parts[1] === "learning" && parts[2] === "course") {
-    return [{ label: "Formations", to: "/employee/learning" }, { label: "Cours YouTube" }];
-  }
-
   if (parts[1] === "projects" && parts.length === 2) {
     return [{ label: "Mes projets" }];
   }
