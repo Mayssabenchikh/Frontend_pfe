@@ -125,11 +125,13 @@ export function TrainingManagerPrograms() {
                       </span>
                     </div>
                     <span className="flex items-center gap-0.5 text-sm font-semibold text-violet-700 transition group-hover:gap-1">
-                      Éditer
+                        Voir les détails
                       <ChevronRightIcon className="h-4 w-4" />
                     </span>
                   </div>
+
                 </Link>
+                
               </li>
             ))}
           </ul>
