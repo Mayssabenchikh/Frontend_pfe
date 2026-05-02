@@ -17,6 +17,16 @@ export type EmployeeSkillDto = {
 
 export type QuizKind = "initial" | "progression";
 
+export type PagedEmployeeSkillResponse = {
+  content: EmployeeSkillDto[];
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+};
+
 export type QuizQuestion = {
   id: string;
   targetLevel?: number;
@@ -163,28 +173,50 @@ function wrapData<T>(data: T): { data: T } {
 }
 
 export const quizApi = {
-  listEmployeeSkills: async (): ApiResponse<EmployeeSkillDto[]> => {
+  listEmployeeSkills: async (search?: string): ApiResponse<EmployeeSkillDto[]> => {
     const now = Date.now();
-    if (listEmployeeSkillsCache && now - listEmployeeSkillsCache.at < LIST_SKILLS_DEDUPE_TTL_MS) {
+    const normalizedSearch = search?.trim() || "";
+    const cacheKey = normalizedSearch.toLowerCase();
+    if (!cacheKey && listEmployeeSkillsCache && now - listEmployeeSkillsCache.at < LIST_SKILLS_DEDUPE_TTL_MS) {
       return listEmployeeSkillsCache.value;
     }
 
-    if (listEmployeeSkillsInFlight) {
+    if (!cacheKey && listEmployeeSkillsInFlight) {
       return listEmployeeSkillsInFlight;
     }
 
-    listEmployeeSkillsInFlight = http
-      .get<EmployeeSkillDto[]>("/api/employee/me/skills")
+    const request = http
+      .get<EmployeeSkillDto[]>("/api/employee/me/skills", {
+        params: cacheKey ? { search: normalizedSearch } : undefined,
+      })
       .then((res) => {
         const wrapped = wrapData(Array.isArray(res.data) ? res.data : []);
-        listEmployeeSkillsCache = { at: Date.now(), value: wrapped };
+        if (!cacheKey) {
+          listEmployeeSkillsCache = { at: Date.now(), value: wrapped };
+        }
         return wrapped;
       })
       .finally(() => {
-        listEmployeeSkillsInFlight = null;
+        if (!cacheKey) {
+          listEmployeeSkillsInFlight = null;
+        }
       });
 
-    return listEmployeeSkillsInFlight;
+    if (!cacheKey) {
+      listEmployeeSkillsInFlight = request;
+    }
+
+    return request;
+  },
+
+  listEmployeeSkillsPaged: async (search?: string, page: number = 0, size: number = 15): ApiResponse<PagedEmployeeSkillResponse> => {
+    const params: Record<string, any> = { page, size };
+    if (search?.trim()) {
+      params.search = search.trim();
+    }
+
+    const res = await http.get<PagedEmployeeSkillResponse>("/api/employee/me/skills", { params });
+    return wrapData(res.data);
   },
 
   startQuiz: async (payload: QuizStartRequest): ApiResponse<QuizStartResponse> => {

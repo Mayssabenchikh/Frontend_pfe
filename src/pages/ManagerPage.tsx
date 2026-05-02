@@ -30,10 +30,11 @@ export default function ManagerPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
 
   const location = useLocation();
+  const isQuizPage = location.pathname.startsWith("/manager/quiz");
   const isTalentRoute = /^\/manager\/matching(\/|$)/.test(location.pathname);
   const isFullBleed =
     location.pathname.startsWith("/manager/projects") ||
-    location.pathname.startsWith("/manager/quiz") ||
+    isQuizPage ||
     isTalentRoute;
 
   useEffect(() => {
@@ -291,9 +292,15 @@ export default function ManagerPage() {
           onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
         />
 
-        <main className="flex flex-1 flex-col overflow-hidden">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ManagerBreadcrumbs />
-          <div className={`${isFullBleed ? "" : "dashboard-padding "}flex min-w-0 flex-1 flex-col overflow-hidden`}>
+          <div
+            className={
+              isQuizPage
+                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
+                : `${isFullBleed ? "" : "dashboard-padding "}flex min-w-0 flex-1 flex-col overflow-hidden`
+            }
+          >
             <Outlet
               context={{
                 managerAvatarUrl: avatarUrl,
