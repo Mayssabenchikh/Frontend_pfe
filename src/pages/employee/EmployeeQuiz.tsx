@@ -11,10 +11,14 @@ import {
   faCalendarDays,
   faWandSparkles,
   faChevronDown,
-  faChevronUp,
   faXmark,
   faChevronLeft,
   faChevronRight,
+  faBookmark,
+  faClipboardCheck,
+  faRightFromBracket,
+  faShieldHalved,
+  faChartSimple,
 } from "@fortawesome/free-solid-svg-icons";
 import { quizApi, type AttemptResultResponse, type EmployeeSkillDto, type QuizStartResponse, type PagedEmployeeSkillResponse } from "../../api/quizApi.ts";
 import { getSkillIconUrl } from "../admin/skillIcons";
@@ -28,6 +32,7 @@ type QuizPhase = "setup" | "in_progress" | "submitted";
 const QUESTION_COUNT = 20;
 const TIME_LIMIT_SECONDS = 15 * 60;
 const SKILLS_PAGE_SIZE = 12;
+const REVIEW_PAGE_SIZE = 4;
 const MIN_START_LOADING_MS = 600;
 const QUIZ_FAIL_COOLDOWN_DAYS = 15;
 
@@ -97,6 +102,13 @@ function formatSkillLevelLabel(level?: number | null, status?: string | null, va
     if (validated > 0) return `Validé N${validated} · Cible N${Math.max(validated, target)} (en attente)`;
     return `Niveau cible N${Math.max(1, target)} (en attente)`;
   }
+  if (rawStatus === "FAILED") {
+    if (validated > 0) {
+      if (target <= validated) return `Niveau validé N${validated} · Progression à retenter`;
+      return `Niveau validé N${validated} · Objectif N${target} à retenter`;
+    }
+    return `Niveau cible N${Math.max(1, target || numericLevel)} à retenter`;
+  }
   if (numericLevel <= 0) return "Niveau en attente";
   return `Expertise Niveau ${numericLevel}`;
 }
@@ -114,8 +126,19 @@ function quizKindForSkill(skill?: EmployeeSkillDto | null): QuizStartResponse["q
   if (status === "EXTRACTED" || status === "QUIZ_PENDING") return "initial";
   return "progression";
 }
-function statusBadgeConfig(status: string): { label: string; className: string } {
+function levelName(level?: number | null): string {
+  const value = Number(level ?? 0);
+  if (value >= 5) return "Expert";
+  if (value >= 4) return "Avancé";
+  if (value >= 3) return "Intermédiaire";
+  if (value >= 2) return "Junior";
+  if (value >= 1) return "Débutant";
+  return "À estimer";
+}
+function statusBadgeConfig(status: string, validatedLevel?: number | null): { label: string; className: string } {
   const raw = String(status ?? "").toUpperCase();
+  const validated = Number(validatedLevel ?? 0) || 0;
+  if (raw === "FAILED" && validated > 0) return { label: `Validé N${validated}`, className: "badge-green" };
   const label = statusToFrench(raw);
   if (raw === "VALIDATED") return { label, className: "badge-green" };
   if (raw === "FAILED") return { label, className: "badge-red" };
@@ -139,10 +162,12 @@ export function EmployeeQuiz() {
   const [startData, setStartData] = useState<QuizStartResponse | null>(null);
   const [result, setResult] = useState<AttemptResultResponse | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Record<string, boolean>>({});
   const [activeQuestion, setActiveQuestion] = useState(0);
+  const [reviewPage, setReviewPage] = useState(0);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [starting, setStarting] = useState(false);
-  const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0);
   const [openedReviewQuestionId, setOpenedReviewQuestionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cooldownAlertMessage, setCooldownAlertMessage] = useState<string | null>(null);
@@ -209,31 +234,28 @@ export function EmployeeQuiz() {
   }, [phase, startData]);
 
   useEffect(() => {
-    if (!starting) { setGenerationElapsedSeconds(0); return; }
-    const interval = window.setInterval(() => setGenerationElapsedSeconds((p) => p + 1), 1000);
-    return () => window.clearInterval(interval);
-  }, [starting]);
-
-  useEffect(() => {
     if (phase !== "submitted" || !startData || !result || (result.feedbackStatus !== "PENDING" && result.feedbackStatus !== "GENERATING")) return;
     const interval = window.setInterval(async () => {
       try {
-        const res = await quizApi.result(startData.attemptId);
+        const res = await quizApi.result(startData.attemptId, reviewPage, REVIEW_PAGE_SIZE);
         setResult(res.data);
         if (res.data.feedbackStatus === "READY" || res.data.feedbackStatus === "FAILED") window.clearInterval(interval);
       } catch { window.clearInterval(interval); }
     }, 5000);
     return () => window.clearInterval(interval);
-  }, [phase, startData, result]);
+  }, [phase, startData, result, reviewPage]);
 
   const selectedSkill = useMemo(() => skills.find((s) => s.skillUuid === selectedSkillId) ?? null, [skills, selectedSkillId]);
   const quizCooldownActive = useMemo(() => isQuizCooldownActive(selectedSkill?.quizNextAllowedAt), [selectedSkill]);
   const questions = startData?.quiz?.questions ?? [];
   const answeredCount = useMemo(() => questions.filter((q) => Boolean(answers[q.id])).length, [questions, answers]);
+  const bookmarkedCount = useMemo(() => questions.filter((q) => Boolean(bookmarkedQuestions[q.id])).length, [questions, bookmarkedQuestions]);
   const currentQuestion = questions[activeQuestion];
+  const currentQuestionMarked = currentQuestion ? Boolean(bookmarkedQuestions[currentQuestion.id]) : false;
   const isLastQuestion = activeQuestion === questions.length - 1;
   const hasCurrentAnswer = currentQuestion ? Boolean(answers[currentQuestion.id]) : false;
   const isUrgent = remainingSeconds <= 120;
+  const unansweredCount = Math.max(questions.length - answeredCount, 0);
   const score = result?.scorePercent ?? 0;
   const ring = circularStroke(score);
   const roundedScore = Math.round(score);
@@ -251,34 +273,79 @@ export function EmployeeQuiz() {
     }));
   }, [result, startData]);
 
-  const submittedQuestionCards = useMemo(() => {
-    if (!result || !startData) return [];
+  const { allSubmittedCards, displayedSubmittedCards, reviewTotalPages } = useMemo(() => {
+    if (!startData || !result) return { allSubmittedCards: [], displayedSubmittedCards: [], reviewTotalPages: 0 };
     const feedbackMap = new Map(perQuestionInsights.map((item) => [item.questionId, item]));
-    return (result.result?.perQuestion ?? []).map((scoreItem, index) => {
+    const serverPage = result.questionPage?.currentPage;
+    const serverPageSize = result.questionPage?.pageSize ?? REVIEW_PAGE_SIZE;
+
+    // build cards from whatever per-question data we have in the result (may be page-scoped)
+    const raw = result.result?.perQuestion ?? [];
+    const all = raw.map((scoreItem, idx) => {
       const quizQuestion = startData.quiz.questions.find((q) => q.id === scoreItem.questionId);
       const correctOption = quizQuestion?.options?.find((o) => o.key === scoreItem.correctAnswerKey);
       const userOption = quizQuestion?.options?.find((o) => o.key === scoreItem.userAnswerKey);
       const insight = feedbackMap.get(scoreItem.questionId);
+      // if server provides page info, compute global index using that page offset
+      const baseIndex = (typeof serverPage === 'number') ? (serverPage * serverPageSize + idx) : idx;
       return {
-        index, questionId: scoreItem.questionId, isCorrect: scoreItem.isCorrect,
+        index: baseIndex,
+        questionId: scoreItem.questionId,
+        isCorrect: scoreItem.isCorrect,
         questionText: quizQuestion?.question || "Question indisponible",
         correctText: `${scoreItem.correctAnswerKey}${correctOption?.text ? ` – ${correctOption.text}` : ""}`,
         userText: scoreItem.userAnswerKey ? `${scoreItem.userAnswerKey}${userOption?.text ? ` – ${userOption.text}` : ""}` : "Aucune réponse",
         explanation: insight?.explanation || "",
       };
     });
-  }, [result, startData, perQuestionInsights]);
+
+    // If server provides totalPages, use that. Otherwise compute from available items.
+    const totalPages = (typeof result.questionPage?.totalPages === 'number' && result.questionPage.totalPages > 0)
+      ? result.questionPage.totalPages
+      : Math.max(1, Math.ceil(all.length / REVIEW_PAGE_SIZE));
+
+    // Determine displayed slice: if server paginates, 'all' already represents current page; otherwise slice client-side
+    let displayed = all;
+    if (typeof result.questionPage?.totalPages !== 'number') {
+      const start = reviewPage * REVIEW_PAGE_SIZE;
+      displayed = all.slice(start, start + REVIEW_PAGE_SIZE).map((card, i) => ({ ...card, index: start + i }));
+    }
+
+    return { allSubmittedCards: all, displayedSubmittedCards: displayed, reviewTotalPages: totalPages };
+  }, [result, startData, perQuestionInsights, reviewPage]);
 
   function resolveSkillIconUrl(skill: EmployeeSkillDto): string | null {
     return skill.iconUrl || getSkillIconUrl(skill.skillName);
   }
-  async function fetchResultWithRetry(attemptId: number, retries = 5, delayMs = 700) {
+  async function fetchResultWithRetry(attemptId: number, retries = 5, delayMs = 700, page = reviewPage) {
     let lastError: any;
     for (let i = 0; i < retries; i += 1) {
-      try { return await quizApi.result(attemptId); }
+      try { return await quizApi.result(attemptId, page, REVIEW_PAGE_SIZE); }
       catch (e: any) { lastError = e; if (!isConflictError(e) || i === retries - 1) throw e; await sleep(delayMs); }
     }
     throw lastError;
+  }
+
+  async function loadReviewPage(page: number) {
+    if (!startData || submitting) return;
+    setError(null);
+    if (typeof page !== "number" || Number.isNaN(page)) return;
+    // guard and clamp requested page using current known total pages if available
+    const knownTotal = result?.questionPage?.totalPages;
+    let requested = Math.max(0, Math.floor(page));
+    if (typeof knownTotal === "number" && knownTotal > 0) requested = Math.min(requested, Math.max(0, knownTotal - 1));
+    setReviewLoading(true);
+    try {
+      const resultRes = await fetchResultWithRetry(startData.attemptId, 5, 700, requested);
+      const current = resultRes.data.questionPage?.currentPage ?? requested;
+      setReviewPage(current);
+      setResult(resultRes.data);
+      setOpenedReviewQuestionId(resultRes.data.result?.perQuestion?.[0]?.questionId ?? null);
+    } catch (e: any) {
+      setError(readApiError(e, "Impossible de charger cette page de réponses").message);
+    } finally {
+      setReviewLoading(false);
+    }
   }
 
   async function startQuiz(skillUuid?: string) {
@@ -322,6 +389,10 @@ export function EmployeeQuiz() {
     void saveSingleAnswer(questionId, answerKey);
   }
 
+  function toggleBookmark(questionId: string) {
+    setBookmarkedQuestions((prev) => ({ ...prev, [questionId]: !prev[questionId] }));
+  }
+
   useEffect(() => {
     if (phase !== "in_progress" || !currentQuestion) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -357,7 +428,8 @@ export function EmployeeQuiz() {
     try {
       const payload = Object.entries(answers).map(([questionId, answerKey]) => ({ questionId, answerKey }));
       await quizApi.submit(startData.attemptId, payload);
-      const resultRes = await fetchResultWithRetry(startData.attemptId);
+      const resultRes = await fetchResultWithRetry(startData.attemptId, 5, 700, 0);
+      setReviewPage(0);
       setResult(resultRes.data); setOpenedReviewQuestionId(resultRes.data.result?.perQuestion?.[0]?.questionId ?? null);
       await syncSkillStatusAfterQuiz(resultRes.data, startData.quizKind, selectedSkillId ?? undefined);
       setPhase("submitted");
@@ -365,7 +437,7 @@ export function EmployeeQuiz() {
       const parsed = readApiError(e, "Soumission impossible");
       if (parsed.status === 404) {
         try {
-          const resultRes = await fetchResultWithRetry(startData.attemptId, 12, 800);
+          const resultRes = await fetchResultWithRetry(startData.attemptId, 12, 800, 0);
           setResult(resultRes.data); setOpenedReviewQuestionId(resultRes.data.result?.perQuestion?.[0]?.questionId ?? null);
           await syncSkillStatusAfterQuiz(resultRes.data, startData.quizKind, selectedSkillId ?? undefined);
           setPhase("submitted"); return;
@@ -381,7 +453,8 @@ export function EmployeeQuiz() {
     try {
       const payload = Object.entries(answers).map(([questionId, answerKey]) => ({ questionId, answerKey }));
       try { await quizApi.submit(startData.attemptId, payload); } catch (e: any) { if (!isConflictError(e)) throw e; }
-      const resultRes = await fetchResultWithRetry(startData.attemptId);
+      const resultRes = await fetchResultWithRetry(startData.attemptId, 5, 700, 0);
+      setReviewPage(0);
       setResult(resultRes.data); setOpenedReviewQuestionId(resultRes.data.result?.perQuestion?.[0]?.questionId ?? null);
       await syncSkillStatusAfterQuiz(resultRes.data, startData.quizKind, selectedSkillId ?? undefined);
       setPhase("submitted");
@@ -389,7 +462,7 @@ export function EmployeeQuiz() {
       const parsed = readApiError(e, "Attendez la finalisation automatique");
       if (parsed.status === 404) {
         try {
-          const resultRes = await fetchResultWithRetry(startData.attemptId, 12, 800);
+          const resultRes = await fetchResultWithRetry(startData.attemptId, 12, 800, 0);
           setResult(resultRes.data); setOpenedReviewQuestionId(resultRes.data.result?.perQuestion?.[0]?.questionId ?? null);
           await syncSkillStatusAfterQuiz(resultRes.data, startData.quizKind, selectedSkillId ?? undefined);
           setPhase("submitted"); return;
@@ -400,13 +473,19 @@ export function EmployeeQuiz() {
   }
 
   async function resetFlow() {
-    setPhase("setup"); setStartData(null); setResult(null); setAnswers({});
+    setPhase("setup"); setStartData(null); setResult(null); setAnswers({}); setBookmarkedQuestions({});
+    setReviewPage(0);
     setActiveQuestion(0); setOpenedReviewQuestionId(null); setRemainingSeconds(0); setError(null);
-    try { const res = await quizApi.listEmployeeSkills(); const data = Array.isArray(res.data) ? res.data : []; setSkills(data); } catch { /* ignore */ }
+    setSkillSearch("");
+    setSelectedCategory("ALL");
+    setCurrentPage(0);
+    setSubmitting(false);
+    submitLockRef.current = false;
   }
 
   function quitInProgressQuiz() {
-    setQuitConfirmOpen(false); setPhase("setup"); setStartData(null); setResult(null); setAnswers({});
+    setQuitConfirmOpen(false); setPhase("setup"); setStartData(null); setResult(null); setAnswers({}); setBookmarkedQuestions({});
+    setReviewPage(0);
     setActiveQuestion(0); setOpenedReviewQuestionId(null); setRemainingSeconds(0); setError(null);
     setSubmitting(false); submitLockRef.current = false;
   }
@@ -433,7 +512,7 @@ export function EmployeeQuiz() {
     .eq-fade-in { animation: eq-fade-in 0.28s ease both; }
 
     /* ── Badges ── */
-    .eq-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; letter-spacing: 0.01em; }
+    .eq-pill { display: inline-flex; align-items: center; padding: 4px 11px; border-radius: 99px; font-size: 12px; font-weight: 600; letter-spacing: 0.01em; }
     .badge-violet { background: #EDE9FE; color: #5B21B6; }
     .badge-green  { background: #D1FAE5; color: #065F46; }
     .badge-red    { background: #FEE2E2; color: #991B1B; }
@@ -459,14 +538,14 @@ export function EmployeeQuiz() {
       box-shadow: 0 1px 4px rgba(109,40,217,0.12);
     }
     .eq-sel-avatar img { width: 22px; height: 22px; object-fit: contain; }
-    .eq-sel-name { font-size: 15px; font-weight: 700; color: #1E1B4B; }
-    .eq-sel-meta { font-size: 12px; color: #7C3AED; margin-top: 3px; font-weight: 500; }
+    .eq-sel-name { font-size: 18px; font-weight: 700; color: #1E1B4B; }
+    .eq-sel-meta { font-size: 14px; color: #7C3AED; margin-top: 3px; font-weight: 500; }
 
     /* ── Stats row ── */
     .eq-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .eq-stat { border-radius: 10px; padding: 12px 14px; border: 1px solid transparent; }
-    .eq-stat-val { font-size: 19px; font-weight: 700; line-height: 1; }
-    .eq-stat-lbl { font-size: 11px; margin-top: 4px; font-weight: 500; opacity: 0.75; }
+    .eq-stat-val { font-size: 22px; font-weight: 700; line-height: 1; }
+    .eq-stat-lbl { font-size: 12px; margin-top: 5px; font-weight: 500; opacity: 0.75; }
     .eq-stat.s-violet  { background: #EDE9FE; border-color: #DDD6FE; }
     .eq-stat.s-violet  .eq-stat-val { color: #5B21B6; }
     .eq-stat.s-violet  .eq-stat-lbl { color: #5B21B6; }
@@ -489,8 +568,8 @@ export function EmployeeQuiz() {
     .eq-info-ico.teal   { background: #CFFAFE; }
     .eq-info-ico.violet svg { color: #6D28D9; width: 14px; height: 14px; }
     .eq-info-ico.teal   svg { color: #0891B2; width: 14px; height: 14px; }
-    .eq-info-lbl { font-size: 12px; font-weight: 600; color: #1E1B4B; }
-    .eq-info-sub { font-size: 11px; color: #6B7280; margin-top: 1px; }
+    .eq-info-lbl { font-size: 14px; font-weight: 600; color: #1E1B4B; }
+    .eq-info-sub { font-size: 12px; color: #6B7280; margin-top: 1px; }
 
     /* ── Buttons ── */
     .eq-btn-primary {
@@ -498,7 +577,7 @@ export function EmployeeQuiz() {
       background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
       color: #fff;
       border: none; border-radius: 10px;
-      font-size: 13px; font-weight: 600;
+      font-size: 14px; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
       margin-top: 16px;
       transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
@@ -508,18 +587,18 @@ export function EmployeeQuiz() {
     .eq-btn-primary:active:not(:disabled) { transform: scale(0.985); }
     .eq-btn-primary:disabled { opacity: 0.42; cursor: not-allowed; box-shadow: none; }
 
-    .eq-btn-ghost { padding: 7px 14px; background: #fff; color: #374151; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+    .eq-btn-ghost { padding: 8px 15px; background: #fff; color: #374151; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
     .eq-btn-ghost:hover:not(:disabled) { background: #F9FAFB; border-color: #D1D5DB; }
     .eq-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .eq-btn-danger { padding: 7px 14px; background: #fff; color: #DC2626; border: 1px solid #FECACA; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+    .eq-btn-danger { padding: 8px 15px; background: #fff; color: #DC2626; border: 1px solid #FECACA; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
     .eq-btn-danger:hover:not(:disabled) { background: #FEF2F2; }
 
     .eq-btn-next {
       padding: 8px 20px;
       background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
       color: #fff; border: none; border-radius: 8px;
-      font-size: 12px; font-weight: 600; cursor: pointer;
+      font-size: 14px; font-weight: 600; cursor: pointer;
       transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
       box-shadow: 0 2px 6px rgba(109,40,217,0.2);
     }
@@ -528,7 +607,7 @@ export function EmployeeQuiz() {
     .eq-btn-next:disabled { background: #E5E7EB; color: #9CA3AF; cursor: not-allowed; box-shadow: none; }
 
     /* ── Section label ── */
-    .eq-section-lbl { font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .eq-section-lbl { font-size: 12px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
 
     .eq-section-topbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
     .eq-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -540,7 +619,7 @@ export function EmployeeQuiz() {
       width: 100%;
       border: 1px solid #E5E7EB; border-radius: 10px;
       background: #fff; padding: 9px 38px 9px 36px;
-      font-size: 13px; color: #1E1B4B;
+      font-size: 14px; color: #1E1B4B;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
@@ -594,7 +673,7 @@ export function EmployeeQuiz() {
       border-radius: 12px;
       background: linear-gradient(180deg, #FFFFFF 0%, #FAF8FF 100%);
       padding: 10px 40px 10px 14px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: #26215C;
       outline: none;
@@ -658,16 +737,16 @@ export function EmployeeQuiz() {
     }
     .eq-empty-ico-outer svg { width: 26px; height: 26px; color: #6D28D9; }
     .eq-empty-title {
-      font-size: 15px; font-weight: 700; color: #1E1B4B;
+      font-size: 17px; font-weight: 700; color: #1E1B4B;
       margin-bottom: 4px; line-height: 1.35;
     }
     .eq-empty-sub {
-      font-size: 12px; color: #6B7280;
+      font-size: 14px; color: #6B7280;
       max-width: 280px; line-height: 1.65; margin-bottom: 4px;
     }
     .eq-empty-hint {
       display: inline-flex; align-items: center; gap: 5px;
-      font-size: 11px; color: #9CA3AF;
+      font-size: 12px; color: #9CA3AF;
       padding: 5px 11px;
       background: #F9F8FF; border: 1px solid #EDE9FE;
       border-radius: 99px; margin-top: 4px;
@@ -675,12 +754,13 @@ export function EmployeeQuiz() {
     .eq-empty-hint svg { width: 11px; height: 11px; color: #7C3AED; }
     .eq-empty-action {
       margin-top: 14px;
+      margin-bottom: 18px;
       display: inline-flex; align-items: center; gap: 7px;
       padding: 9px 20px;
       background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
       color: #fff;
       border: none; border-radius: 9px;
-      font-size: 12px; font-weight: 600;
+      font-size: 14px; font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
       box-shadow: 0 2px 8px rgba(109,40,217,0.22);
@@ -726,59 +806,21 @@ export function EmployeeQuiz() {
     }
     .eq-sk-ico img { width: 20px; height: 20px; object-fit: contain; }
     .eq-sk-ico svg { width: 20px; height: 20px; color: #6D28D9; }
-    .eq-sk-name { font-size: 14px; font-weight: 650; color: #1E1B4B; line-height: 1.35; }
-    .eq-sk-lvl  { font-size: 12px; color: #7C3AED; margin-top: 4px; font-weight: 500; }
-    .eq-sk-footer { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6B7280; }
+    .eq-sk-name { font-size: 16px; font-weight: 650; color: #1E1B4B; line-height: 1.35; }
+    .eq-sk-lvl  { font-size: 14px; color: #7C3AED; margin-top: 4px; font-weight: 500; }
+    .eq-sk-footer { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6B7280; }
     .eq-sk-footer svg { width: 12px; height: 12px; color: #9CA3AF; }
     .eq-sk-sep { color: #D1D5DB; margin: 0 2px; }
     .eq-sk-start {
       width: 100%; padding: 9px;
       background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
       color: #fff; border: none; border-radius: 8px;
-      font-size: 12px; font-weight: 600; cursor: pointer;
+      font-size: 14px; font-weight: 600; cursor: pointer;
       transition: opacity 0.15s, box-shadow 0.15s;
       box-shadow: 0 1px 5px rgba(109,40,217,0.18);
     }
     .eq-sk-start:hover:not(:disabled)  { opacity: 0.88; box-shadow: 0 3px 10px rgba(109,40,217,0.26); }
     .eq-sk-start:disabled { background: #F3F4F6; color: #9CA3AF; cursor: not-allowed; box-shadow: none; }
-
-    /* ── Generation overlay ── */
-    .eq-gen-wrap {
-      display: flex; align-items: center; justify-content: center;
-      min-height: 360px;
-    }
-    .eq-gen-card {
-      background: #fff;
-      border: 1px solid #EAE7F8; border-radius: 18px;
-      padding: 40px 44px; text-align: center; max-width: 300px;
-      box-shadow: 0 8px 32px rgba(109,40,217,0.08);
-      animation: eq-fade-in 0.3s ease both;
-    }
-    .eq-gen-ring {
-      width: 56px; height: 56px; margin: 0 auto 20px;
-      border-radius: 50%;
-      border: 3.5px solid #EDE9FE;
-      border-top-color: #6D28D9;
-      animation: eq-spin 0.9s linear infinite;
-      position: relative;
-    }
-    .eq-gen-dots { display: flex; gap: 5px; justify-content: center; margin: 14px 0 0; }
-    .eq-gen-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #6D28D9; opacity: 0.3;
-      animation: eq-bounce-dot 1.4s ease-in-out infinite;
-    }
-    .eq-gen-dot:nth-child(2) { animation-delay: 0.16s; }
-    .eq-gen-dot:nth-child(3) { animation-delay: 0.32s; }
-    .eq-gen-title { font-size: 16px; font-weight: 700; color: #1E1B4B; }
-    .eq-gen-sub   { font-size: 12px; color: #6B7280; margin-top: 6px; line-height: 1.6; }
-    .eq-gen-skill { color: #6D28D9; font-weight: 600; }
-    .eq-gen-time  {
-      font-size: 32px; font-weight: 700; color: #6D28D9;
-      margin: 16px 0 2px; font-variant-numeric: tabular-nums;
-      letter-spacing: -0.02em;
-    }
-    .eq-gen-time-lbl { font-size: 11px; color: #9CA3AF; font-weight: 500; }
 
     /* ── Progress bar ── */
     .eq-prog-wrap { background: #EDE9FE; border-radius: 99px; height: 4px; overflow: hidden; margin-top: 10px; }
@@ -796,6 +838,12 @@ export function EmployeeQuiz() {
     .eq-dot:hover:not(.done) { border-color: #7C3AED; color: #6D28D9; background: #F5F3FF; }
     .eq-dot.done { background: #6D28D9; border-color: #6D28D9; color: #fff; }
     .eq-dot.cur  { background: #EDE9FE; border-color: #7C3AED; color: #5B21B6; }
+
+    /* ── Page buttons ── */
+    .eq-page-btn { min-width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #E6E6F0; background: #fff; color: #4B5563; font-weight: 700; cursor: pointer; padding: 0 10px; }
+    .eq-page-btn:hover { border-color: #C4B5FD; color: #6D28D9; }
+    .eq-page-btn.active { background: #6D28D9; color: #fff; border-color: #6D28D9; }
+    .eq-page-btn.disabled { opacity: 0.45; cursor: not-allowed; }
 
     /* ── Question header ── */
     .eq-q-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid #F3F4F6; margin-bottom: 16px; }
@@ -936,7 +984,7 @@ export function EmployeeQuiz() {
                       </div>
                     </div>
                     {(() => {
-                      const b = statusBadgeConfig(selectedSkillForSetup.status);
+                      const b = statusBadgeConfig(selectedSkillForSetup.status, selectedSkillForSetup.validatedLevel);
                       return <span className={`eq-pill ${b.className}`}>{b.label}</span>;
                     })()}
                   </div>
@@ -1074,7 +1122,7 @@ export function EmployeeQuiz() {
                     <div className="eq-browser-main">
                       <div className="eq-skills-grid">
                         {visibleSkills.map((skill) => {
-                          const badge = statusBadgeConfig(skill.status);
+                          const badge = statusBadgeConfig(skill.status, skill.validatedLevel);
                           const iconUrl = resolveSkillIconUrl(skill);
                           const isSelected = selectedSkillId === skill.skillUuid;
                           const cooldown = isQuizCooldownActive(skill.quizNextAllowedAt);
@@ -1190,235 +1238,532 @@ export function EmployeeQuiz() {
             </>
           )}
 
-          {/* ══════════════ GENERATING ══════════════ */}
-          {phase === "setup" && starting && (
-            <div className="eq-gen-wrap">
-              <div className="eq-gen-card">
-                <div className="eq-gen-ring" />
-                <div className="eq-gen-title">Génération du quiz</div>
-                <div className="eq-gen-sub">
-                  Questions adaptées à votre profil pour{" "}
-                  <span className="eq-gen-skill">{selectedSkillForSetup?.skillName}</span>
-                </div>
-                <div className="eq-gen-time">{formatTime(generationElapsedSeconds)}</div>
-                <div className="eq-gen-time-lbl">temps écoulé</div>
-                <div className="eq-gen-dots">
-                  <div className="eq-gen-dot" />
-                  <div className="eq-gen-dot" />
-                  <div className="eq-gen-dot" />
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* ══════════════ IN PROGRESS ══════════════ */}
           {phase === "in_progress" && startData && currentQuestion && (
-            <>
-              {/* Progress tracker */}
-              <div className="eq-card" style={{ padding: "14px 18px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-                    Session en cours
-                    <span style={{ color: "#6D28D9", margin: "0 5px" }}>{answeredCount}/{questions.length}</span>
-                    <span style={{ color: "#9CA3AF", fontWeight: 400 }}>réponses</span>
-                  </div>
-                  <button className="eq-btn-danger" onClick={() => setQuitConfirmOpen(true)} disabled={submitting}>
-                    Quitter
-                  </button>
-                </div>
-                <div className="eq-dots">
-                  {questions.map((q, i) => (
-                    <div
-                      key={q.id}
-                      className={`eq-dot${answers[q.id] ? " done" : i === activeQuestion ? " cur" : ""}`}
-                      onClick={() => setActiveQuestion(i)}
-                    >
-                      {i + 1}
-                    </div>
-                  ))}
-                </div>
-                <div className="eq-prog-wrap">
-                  <div className="eq-prog-bar" style={{ width: `${(answeredCount / questions.length) * 100}%` }} />
-                </div>
-              </div>
-
-              {/* Question card */}
-              <div className="eq-card">
-                <div className="eq-q-header">
-                  <div className="eq-q-meta">
-                    <span className="eq-q-num">Q {activeQuestion + 1} / {questions.length}</span>
-                    <span className="eq-q-cat">{currentQuestion.category || "Compréhension"}</span>
-                  </div>
-                  <div className={`eq-timer${isUrgent ? " urgent" : ""}`}>
-                    <FontAwesomeIcon icon={faClock} className="eq-timer-icon" />
-                    <div>
-                      <div className="eq-timer-val">{formatTime(remainingSeconds)}</div>
-                      <div className="eq-timer-lbl">restant</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="eq-q-text">{currentQuestion.question}</div>
-
-                <div>
-                  {currentQuestion.options.map((option) => {
-                    const isSelected = answers[currentQuestion.id] === option.key;
-                    return (
-                      <div
-                        key={`${currentQuestion.id}-${option.key}`}
-                        className={`eq-opt${isSelected ? " selected" : ""}`}
-                        onClick={() => pickAnswer(currentQuestion.id, option.key)}
-                      >
-                        <span className="eq-opt-key">{option.key}</span>
-                        <span className="eq-opt-text">{option.text}</span>
-                        {isSelected && <FontAwesomeIcon icon={faCircleCheck} style={{ width: 16, height: 16, color: "#6D28D9", flexShrink: 0 }} />}
+            <section className="quiz-enter -m-3 bg-[#F5F7FB] text-slate-950">
+              <div>
+                <div className="grid w-full items-start gap-6 p-4 pb-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:p-8 xl:pb-6">
+                  <main className="space-y-4">
+                    <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
+                            <FontAwesomeIcon icon={faClipboardCheck} className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-xl font-black">Session en cours</p>
+                            <p className="text-sm font-medium text-slate-500">{answeredCount} / {questions.length} réponses complétées</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className={["text-sm font-black uppercase tracking-[0.12em]", isUrgent ? "text-rose-600" : "text-rose-700"].join(" ")}>Temps restant</p>
+                            <p className={["font-mono text-3xl font-black leading-none", isUrgent ? "text-rose-700" : "text-slate-950"].join(" ")}>{formatTime(remainingSeconds)}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setQuitConfirmOpen(true)}
+                            disabled={submitting}
+                            className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
+                            Quitter
+                          </button>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
 
-                <div className="eq-qnav">
-                  <div className="eq-nav-l">
-                    <button
-                      className="eq-btn-ghost"
-                      onClick={() => setActiveQuestion((v) => Math.max(0, v - 1))}
-                      disabled={activeQuestion === 0}
-                    >
-                      ← Précédent
-                    </button>
-                    <button
-                      className="eq-btn-ghost"
-                      onClick={() => setActiveQuestion((v) => Math.min(questions.length - 1, v + 1))}
-                      disabled={activeQuestion === questions.length - 1}
-                    >
-                      Sauter
-                    </button>
-                  </div>
-                  <button
-                    className="eq-btn-next"
-                    disabled={submitting || (!isLastQuestion && !hasCurrentAnswer)}
-                    onClick={() => {
-                      if (isLastQuestion) { void handleSubmit(); return; }
-                      setActiveQuestion((v) => Math.min(questions.length - 1, v + 1));
-                    }}
-                  >
-                    {submitting
-                      ? <FontAwesomeIcon icon={faSpinner} style={{ width: 14, height: 14, animation: "eq-spin 0.85s linear infinite" }} />
-                      : isLastQuestion ? "Soumettre ✓" : "Suivant →"}
-                  </button>
+                    <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm">
+                      <div className="flex flex-nowrap justify-between gap-1.5">
+                        {questions.map((q, index) => {
+                          const answered = Boolean(answers[q.id]);
+                          const marked = Boolean(bookmarkedQuestions[q.id]);
+                          const active = index === activeQuestion;
+                          return (
+                            <button
+                              key={q.id}
+                              type="button"
+                              onClick={() => setActiveQuestion(index)}
+                              aria-label={`Aller à la question ${index + 1}`}
+                              className={[
+                                "relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition xl:h-9 xl:w-9",
+                                active
+                                  ? "border-violet-600 bg-violet-700 text-white ring-4 ring-violet-200"
+                                  : answered
+                                    ? "border-emerald-200 bg-emerald-100 text-emerald-800"
+                                    : marked
+                                      ? "border-amber-300 bg-amber-50 text-amber-700 ring-2 ring-amber-100"
+                                      : "border-violet-200 bg-slate-100 text-slate-700 hover:border-violet-400 hover:text-violet-700",
+                              ].join(" ")}
+                            >
+                              {index + 1}
+                              {marked && (
+                                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-400" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="h-full rounded-full bg-violet-700 transition-all duration-300"
+                          style={{ width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm shadow-violet-100">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-violet-700 px-3.5 py-1.5 text-sm font-black text-white">Question {activeQuestion + 1} / {questions.length}</span>
+                          <span className="rounded-full border border-violet-200 bg-slate-100 px-3.5 py-1.5 text-sm font-bold text-slate-700">{currentQuestion.category || "Compréhension"}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleBookmark(currentQuestion.id)}
+                          aria-pressed={currentQuestionMarked}
+                          className={[
+                            "inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition",
+                            currentQuestionMarked
+                              ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                              : "text-slate-700 hover:bg-slate-100",
+                          ].join(" ")}
+                        >
+                          <FontAwesomeIcon icon={faBookmark} className="h-5 w-5" />
+                          {currentQuestionMarked ? "Marqué" : "Marquer"}
+                        </button>
+                      </div>
+
+                      <h2 className="mt-6 text-xl font-black leading-snug tracking-tight text-slate-950 md:text-2xl">
+                        {currentQuestion.question}
+                      </h2>
+
+                      <div key={`options-${currentQuestion.id}`} className="quiz-question-swap mt-5 space-y-3">
+                        {currentQuestion.options.map((option) => {
+                          const selected = answers[currentQuestion.id] === option.key;
+                          return (
+                            <button
+                              key={`${currentQuestion.id}-${option.key}`}
+                              type="button"
+                              onClick={() => pickAnswer(currentQuestion.id, option.key)}
+                              className={[
+                                "group flex w-full items-center gap-4 rounded-xl border px-4 py-3.5 text-left transition-all duration-150",
+                                selected
+                                  ? "border-violet-700 bg-violet-50 shadow-sm ring-2 ring-violet-500"
+                                  : "border-violet-200 bg-white hover:border-violet-400 hover:bg-violet-50/40",
+                              ].join(" ")}
+                            >
+                              <span
+                                className={[
+                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base font-black",
+                                  selected ? "bg-violet-700 text-white" : "bg-slate-100 text-slate-700 group-hover:bg-violet-100 group-hover:text-violet-700",
+                                ].join(" ")}
+                              >
+                                {option.key}
+                              </span>
+                              <span className={["min-w-0 flex-1 text-base font-semibold leading-relaxed md:text-lg", selected ? "text-violet-800" : "text-slate-800"].join(" ")}>
+                                {option.text}
+                              </span>
+                              {selected && <FontAwesomeIcon icon={faCircleCheck} className="h-6 w-6 shrink-0 text-violet-700" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setActiveQuestion((v) => Math.max(0, v - 1))}
+                        disabled={activeQuestion === 0}
+                        className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-6 py-3 text-base font-bold text-slate-700 shadow-sm transition hover:border-violet-400 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <FontAwesomeIcon icon={faChevronLeft} className="h-4 w-4" />
+                        Précédent
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveQuestion((v) => Math.min(questions.length - 1, v + 1))}
+                        disabled={activeQuestion === questions.length - 1}
+                        className="px-6 py-3 text-base font-semibold text-slate-700 transition hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Sauter
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isLastQuestion) { void handleSubmit(); return; }
+                          setActiveQuestion((v) => Math.min(questions.length - 1, v + 1));
+                        }}
+                        disabled={submitting || (!isLastQuestion && !hasCurrentAnswer)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-8 py-3 text-base font-black text-white shadow-lg shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                      >
+                        {submitting ? (
+                          <>
+                            <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin" />
+                            Soumission...
+                          </>
+                        ) : (
+                          <>
+                            {isLastQuestion ? "Soumettre" : "Suivant"}
+                            <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </main>
+
+                  <aside className="space-y-4 self-start">
+                    <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4 text-violet-700" />
+                        <h3 className="text-xl font-black">Aperçu</h3>
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        <div className="flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2">
+                          <span className="text-base font-medium text-slate-600">Niveau estimé</span>
+                          <span className="rounded-md bg-orange-100 px-3 py-1 text-sm font-bold text-slate-900">{levelName(startData.level)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-base">
+                          <span className="font-medium text-slate-600">Réponses données</span>
+                          <span className="font-mono text-2xl font-black text-emerald-600">{String(answeredCount).padStart(2, "0")}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-base">
+                          <span className="font-medium text-slate-600">Questions restantes</span>
+                          <span className="text-xl font-black text-slate-950">{unansweredCount}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-base">
+                          <span className="font-medium text-slate-600">Marquées</span>
+                          <span className="text-xl font-black text-amber-600">{bookmarkedCount}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-hidden rounded-2xl bg-violet-700 p-4 text-white shadow-lg shadow-violet-200">
+                      <div className="flex items-center gap-3">
+                        <FontAwesomeIcon icon={faShieldHalved} className="h-5 w-5" />
+                        <h3 className="text-xl font-black">Prêt à finir ?</h3>
+                      </div>
+                      <p className="mt-3 text-sm font-medium leading-relaxed text-violet-50">
+                        Vous pouvez revoir vos réponses à tout moment avant de soumettre définitivement votre évaluation.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="mt-4 w-full rounded-xl bg-white px-4 py-3 text-base font-black text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:bg-violet-100"
+                      >
+                        {submitting ? "Soumission..." : "Soumettre le quiz"}
+                      </button>
+                    </div>
+                  </aside>
                 </div>
               </div>
-            </>
+            </section>
           )}
 
           {/* ══════════════ SUBMITTED ══════════════ */}
           {phase === "submitted" && result && (
-            <div className="eq-card">
-              {/* Score ring */}
-              <div className="eq-result-score">
-                <svg width="84" height="84" viewBox="0 0 120 120" style={{ flexShrink: 0 }}>
-                  <circle cx="60" cy="60" r={ring.radius} strokeWidth="10" fill="none" stroke="#EDE9FE" />
-                  <circle
-                    cx="60" cy="60" r={ring.radius} strokeWidth="10" fill="none"
-                    stroke={passed ? "#059669" : "#DC2626"}
-                    strokeLinecap="round"
-                    strokeDasharray={ring.circumference}
-                    strokeDashoffset={ring.offset}
-                    transform="rotate(-90 60 60)"
-                    style={{ transition: "stroke-dashoffset 0.85s cubic-bezier(0.4,0,0.2,1)" }}
-                  />
-                  <text x="60" y="57" textAnchor="middle" fontSize="19" fontWeight="700" fill="#1E1B4B">{roundedScore}%</text>
-                  <text x="60" y="73" textAnchor="middle" fontSize="10" fontWeight="500" fill="#9CA3AF">score</text>
-                </svg>
-                <div>
-                  <div className="eq-score-heading">{passed ? "Quiz validé !" : "À renforcer"}</div>
-                  <div className="eq-score-lbl">
-                    {result.result?.correctAnswers ?? 0} bonne{(result.result?.correctAnswers ?? 0) !== 1 ? "s" : ""} réponse{(result.result?.correctAnswers ?? 0) !== 1 ? "s" : ""} sur {questions.length}
-                  </div>
-                  <div className="eq-score-tags">
-                    {passed
-                      ? <span className="eq-pill badge-green">Niveau augmenté</span>
-                      : <span className="eq-pill badge-red">Réessayez dans {QUIZ_FAIL_COOLDOWN_DAYS} j</span>}
-                    <span className="eq-pill badge-slate">Session terminée</span>
-                  </div>
-                  {result.nextAllowedAt && (
-                    <div style={{ fontSize: 11, color: "#6B7280", marginTop: 8 }}>
-                      Prochaine tentative : {new Date(result.nextAllowedAt).toLocaleString("fr-FR")}
+            <section className="quiz-enter space-y-4 pb-5">
+              <div className="quiz-enter quiz-enter-delay-1 rounded-lg border border-violet-100 bg-white px-5 py-6 shadow-sm">
+                  <div className="grid gap-5 md:grid-cols-[132px_minmax(0,1fr)] md:items-center">
+                  <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-white">
+                    <div className="relative h-28 w-28">
+                      <svg className="h-28 w-28 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle cx="60" cy="60" r={ring.radius} strokeWidth="8" className="fill-none stroke-slate-100" />
+                        <circle
+                          cx="60"
+                          cy="60"
+                          r={ring.radius}
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          className={["fill-none transition-all duration-700", passed ? "stroke-emerald-500" : "stroke-rose-500"].join(" ")}
+                          strokeDasharray={ring.circumference}
+                          strokeDashoffset={ring.offset}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <p className="text-3xl font-black leading-none text-slate-900">{roundedScore}%</p>
+                        <p className="mt-1 text-[11px] font-black uppercase tracking-[0.08em] text-slate-400">score</p>
+                      </div>
                     </div>
-                  )}
+                  </div>
+
+                  <div className="min-w-0 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Résultat du quiz</h2>
+                        <span
+                          className={[
+                            "rounded px-2.5 py-1 text-[10px] font-black uppercase tracking-wide",
+                            passed ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
+                          ].join(" ")}
+                        >
+                          {passed ? "Quiz validé" : "Quiz non validé"}
+                        </span>
+                      </div>
+                      <p className="mt-2 max-w-3xl text-base font-medium leading-relaxed text-slate-500">
+                        <span className="font-black text-slate-800">
+                          {result.result?.correctAnswers ?? 0} bonne{(result.result?.correctAnswers ?? 0) !== 1 ? "s" : ""} réponse{(result.result?.correctAnswers ?? 0) !== 1 ? "s" : ""} sur {questions.length}.
+                        </span>{" "}
+                        Consultez le détail ci-dessous pour identifier les notions maîtrisées et celles qui nécessitent une révision approfondie avant votre certification finale.
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-start">
+                      <button
+                        type="button"
+                        onClick={resetFlow}
+                        className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-black text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-100"
+                      >
+                        <FontAwesomeIcon icon={faWandSparkles} className="h-4 w-4" />
+                        Démarrer nouveau quiz
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Kind band */}
-              <div className={`eq-kind-band ${passed ? "pass" : startData?.quizKind === "initial" ? "neutral" : "fail"}`}>
-                {startData?.quizKind === "initial"
-                  ? "Niveau attribué selon votre score."
-                  : passed
-                    ? "Niveau augmenté suite à la validation."
-                    : "Score insuffisant — niveau inchangé."}
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-emerald-50 text-emerald-600">
+                      <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-400">Correctes</p>
+                      <p className="text-xl font-black leading-tight text-slate-900">{result.result?.correctAnswers ?? 0}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-slate-50 text-slate-500">
+                      <FontAwesomeIcon icon={faClipboardCheck} className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-400">Questions</p>
+                      <p className="text-xl font-black leading-tight text-slate-900">{questions.length}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-violet-50 text-violet-700">
+                      <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-400">Niveau</p>
+                      <p className="text-xl font-black leading-tight text-slate-900">{levelName(result.level)}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="eq-divider" />
+              <div className={["grid gap-4", result.nextAllowedAt ? "lg:grid-cols-2" : "lg:grid-cols-[minmax(0,1fr)_auto]"].join(" ")}>
+                <div
+                  className={[
+                    "border-l-4 p-4",
+                    result.passed
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                      : "border-rose-500 bg-rose-50 text-rose-800",
+                  ].join(" ")}
+                >
+                  <div className="flex items-start gap-3">
+                    <FontAwesomeIcon icon={result.passed ? faCircleCheck : faXmark} className="mt-0.5 h-4 w-4" />
+                    <div>
+                      <p className="text-sm font-black">
+                        {startData?.quizKind === "initial"
+                          ? "Niveau attribué selon votre score"
+                          : result.passed
+                            ? "Validé, niveau augmenté"
+                            : "Score insuffisant, progression à retenter"}
+                      </p>
+                      <p className="mt-1 text-sm font-medium opacity-90">
+                        {result.passed
+                          ? "Vos compétences ont été mises à jour dans votre profil collaborateur."
+                          : "Votre niveau validé est conservé. Revoyez les points ci-dessous avant une nouvelle tentative."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Feedback banners */}
+                {result.nextAllowedAt && (
+                  <div className="border-l-4 border-amber-500 bg-amber-50 p-4 text-amber-800">
+                    <div className="flex items-start gap-3">
+                      <FontAwesomeIcon icon={faCalendarDays} className="mt-0.5 h-4 w-4" />
+                      <div>
+                        <p className="text-sm font-black">
+                          Prochaine tentative autorisée : {formatFrenchDate(result.nextAllowedAt)}
+                        </p>
+                        <p className="mt-1 text-sm font-medium opacity-90">
+                          Un délai de carence est nécessaire pour consolider vos acquis.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* bouton supprimé sur demande */}
+              </div>
+
               {(result.feedbackStatus === "PENDING" || result.feedbackStatus === "GENERATING") && (
-                <div className="eq-feedback-banner pending">
-                  <div className="eq-fb-title">Génération du feedback en cours</div>
-                  <div>Le score est disponible. Le détail IA se complète automatiquement.</div>
+                <div className="rounded-2xl border border-violet-300 bg-violet-50/70 p-4">
+                  <p className="text-base font-semibold text-violet-800">Génération du feedback en cours</p>
+                  <p className="mt-1 text-sm text-violet-700/90">
+                    Le score est déjà disponible. Le détail IA continue de se compléter automatiquement.
+                  </p>
                 </div>
               )}
               {result.feedbackStatus === "FAILED" && (
-                <div className="eq-feedback-banner failed">
-                  <div className="eq-fb-title">Feedback IA indisponible</div>
-                  <div>Le détail local reste visible ci-dessous.</div>
+                <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4">
+                  <p className="text-base font-semibold text-amber-800">Feedback IA indisponible</p>
+                  <p className="mt-1 text-sm text-amber-700/90">
+                    Le détail local reste visible. Vous pouvez réessayer plus tard.
+                  </p>
                 </div>
               )}
 
-              {/* Per-question review */}
-              <div className="eq-section-lbl">Détail par question</div>
-              {submittedQuestionCards.map((card) => {
-                const expanded = openedReviewQuestionId === card.questionId;
-                return (
-                  <div key={card.questionId} className="eq-review-item">
-                    <div
-                      className={`eq-review-head ${card.isCorrect ? "ok" : "ko"}`}
+              <div className="quiz-enter quiz-enter-delay-2 space-y-3">
+                <div className="flex items-center gap-2 text-slate-800">
+                  <FontAwesomeIcon icon={faClipboardCheck} className="h-4 w-4 text-slate-600" />
+                  <h3 className="text-xl font-black">Détail des réponses</h3>
+                </div>
+                {displayedSubmittedCards.map((card) => {
+                  const expanded = openedReviewQuestionId === card.questionId;
+                  return (
+                    <button
+                      key={card.questionId}
+                      type="button"
                       onClick={() => setOpenedReviewQuestionId((prev) => prev === card.questionId ? null : card.questionId)}
+                      className={[
+                        "w-full rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-violet-200",
+                        expanded ? "shadow-md" : "shadow-sm",
+                      ].join(" ")}
                     >
-                      <span className="eq-review-qnum">Q{card.index + 1}</span>
-                      <span className="eq-review-qtxt">{card.questionText}</span>
-                      <span className={`eq-pill ${card.isCorrect ? "badge-green" : "badge-red"}`}>
-                        {card.isCorrect ? "Correcte" : "Incorrecte"}
-                      </span>
-                      {expanded
-                        ? <FontAwesomeIcon icon={faChevronUp} style={{ width: 14, height: 14, color: "#9CA3AF", flexShrink: 0 }} />
-                        : <FontAwesomeIcon icon={faChevronDown} style={{ width: 14, height: 14, color: "#9CA3AF", flexShrink: 0 }} />}
-                    </div>
-                    {expanded && (
-                      <div className="eq-review-body">
-                        <div className="eq-review-row">
-                          <span style={{ fontWeight: 600, color: "#065F46" }}>Bonne réponse : </span>
-                          {card.correctText}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                          <span className="mt-0.5 inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-slate-100 px-2 text-sm font-black text-slate-600">
+                            #{card.index + 1}
+                          </span>
+                          <p className="min-w-0 flex-1 text-base font-black leading-relaxed text-slate-800">
+                            {card.questionText}
+                          </p>
                         </div>
-                        <div className="eq-review-row">
-                          <span style={{ fontWeight: 600, color: "#374151" }}>Votre réponse : </span>
-                          {card.userText}
-                        </div>
-                        {card.explanation && (
-                          <div className={card.isCorrect ? "eq-explain-ok" : "eq-explain-ko"}>
-                            {card.explanation}
-                          </div>
-                        )}
+                        <span
+                          className={[
+                            "shrink-0 rounded px-3 py-1 text-[11px] font-black uppercase tracking-wide",
+                            card.isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
+                          ].join(" ")}
+                        >
+                          {card.isCorrect ? "Correcte" : "Incorrecte"}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
 
-              <button className="eq-btn-primary" onClick={resetFlow} style={{ marginTop: 14 }}>
-                <FontAwesomeIcon icon={faSpinner} style={{ width: 14, height: 14 }} />
-                Nouveau quiz
-              </button>
-            </div>
+                      {expanded && (
+                        <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                          <div className="rounded border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                            <span className="mr-2">✓</span>
+                            <span className="font-black">Bonne réponse :</span> {card.correctText}
+                          </div>
+                          <div
+                            className={[
+                              "rounded border px-4 py-3 text-sm font-semibold",
+                              card.isCorrect
+                                ? "border-slate-100 bg-white text-slate-600"
+                                : "border-rose-100 bg-rose-50 text-rose-700",
+                            ].join(" ")}
+                          >
+                            <span className="mr-2">{card.isCorrect ? "⊙" : "×"}</span>
+                            <span className="font-black">Votre réponse :</span> {card.userText}
+                          </div>
+                          {!!card.explanation && (
+                            <div className="pt-1">
+                              <p className="text-sm leading-relaxed text-slate-600">{card.explanation}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+                {reviewTotalPages > 1 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-600">
+                      Page {reviewPage + 1} sur {reviewTotalPages}
+                      <span className="ml-2 text-slate-400">
+                        {result.questionPage?.totalCount ?? allSubmittedCards.length} réponses
+                      </span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (result.questionPage) void loadReviewPage(reviewPage - 1);
+                          else setReviewPage((p) => Math.max(0, p - 1));
+                        }}
+                        disabled={(result.questionPage ? !result.questionPage.hasPrevious : reviewPage === 0) || submitting || reviewLoading}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        <FontAwesomeIcon icon={faChevronLeft} className="h-3.5 w-3.5" />
+                        Précédent
+                      </button>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", maxWidth: 420, overflowX: "auto", padding: "4px 2px" }}>
+                        {(() => {
+                          const total = reviewTotalPages;
+                          const cur = reviewPage;
+                          if (!total || total <= 1) return null;
+                          const pagesSet = new Set<number>();
+                          pagesSet.add(0);
+                          pagesSet.add(total - 1);
+                          for (let i = cur - 2; i <= cur + 2; i += 1) {
+                            if (i > 0 && i < total - 1) pagesSet.add(i);
+                          }
+                          const arr = Array.from(pagesSet).sort((a, b) => a - b);
+                          const seq: Array<number | string> = [];
+                          for (let i = 0; i < arr.length; i += 1) {
+                            seq.push(arr[i]);
+                            if (i < arr.length - 1 && arr[i + 1] > arr[i] + 1) seq.push("...");
+                          }
+                          return seq.map((p, idx) => {
+                            if (p === "...") return <span key={`sep-${idx}`} style={{ padding: "0 6px", color: "#9CA3AF" }}>…</span>;
+                            const pageNum = Number(p);
+                            const isActive = pageNum === cur;
+                            return (
+                              <button
+                                key={`pg-${pageNum}`}
+                                type="button"
+                                onClick={() => {
+                                  if (result.questionPage) void loadReviewPage(pageNum);
+                                  else setReviewPage(pageNum);
+                                }}
+                                disabled={reviewLoading || submitting}
+                                className={["eq-page-btn", isActive ? "active" : "", reviewLoading ? "disabled" : ""].join(" ")}
+                                aria-current={isActive}
+                                title={`Aller à la page ${pageNum + 1}`}
+                              >
+                                {pageNum + 1}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (result.questionPage) void loadReviewPage(reviewPage + 1);
+                          else setReviewPage((p) => Math.min(reviewTotalPages - 1, p + 1));
+                        }}
+                        disabled={(result.questionPage ? !result.questionPage.hasNext : reviewPage >= reviewTotalPages - 1) || submitting || reviewLoading}
+                        className="inline-flex items-center gap-2 rounded-lg bg-violet-700 px-3 py-2 text-sm font-bold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        Suivant
+                        <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
           )}
         </div>
       </div>

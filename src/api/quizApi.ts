@@ -102,6 +102,14 @@ export type AttemptResultResponse = {
       nextSteps?: string[];
     };
   };
+  questionPage?: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  } | null;
 };
 
 export type QuizSkillStatusSyncRequest = {
@@ -246,9 +254,14 @@ export const quizApi = {
     return wrapData(res.data);
   },
 
-  result: async (attemptId: number): ApiResponse<AttemptResultResponse> => {
+  result: async (attemptId: number, page?: number, size?: number): ApiResponse<AttemptResultResponse> => {
     const res = await withAttemptBasePath((basePath) =>
-      quizAttemptHttp.get<AttemptResultResponse>(`${basePath}/${attemptId}/result`),
+      quizAttemptHttp.get<AttemptResultResponse>(`${basePath}/${attemptId}/result`, {
+        params: {
+          ...(page !== undefined ? { page } : {}),
+          ...(size !== undefined ? { size } : {}),
+        },
+      }),
       { retryOnNotFound: false },
     );
     return wrapData(res.data);
