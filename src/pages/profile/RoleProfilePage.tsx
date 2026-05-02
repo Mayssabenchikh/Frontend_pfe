@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
 import type { AxiosResponse } from "axios";
 import {
@@ -262,12 +262,39 @@ function isCvSectionEnabled(config: RoleProfileConfig): boolean {
   );
 }
 
+function pickArrayPayload(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== "object") return [];
+
+  const record = data as Record<string, unknown>;
+  const candidates = [record.content, record.items, record.skills, record.pendingSkills, record.data, record.results];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+  return [];
+}
+
+function normalizeEmployeeSkillsPayload(data: unknown): EmployeeSkillItem[] {
+  return pickArrayPayload(data).filter((item): item is EmployeeSkillItem => {
+    if (!item || typeof item !== "object") return false;
+    const row = item as Partial<EmployeeSkillItem>;
+    return typeof row.skillName === "string" && typeof row.status === "string";
+  });
+}
+
+function normalizePendingSkillsPayload(data: unknown): string[] {
+  return pickArrayPayload(data)
+    .map((item) => String(item ?? "").trim())
+    .filter(Boolean);
+}
+
 export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   const { keycloak } = useKeycloak();
   const token = keycloak.tokenParsed as TokenParsed | undefined;
   const userId = keycloak.subject;
   const { onAvatarUpdate } = useOutletContext<ProfileOutletContext>() || {};
   const cvEnabled = isCvSectionEnabled(config);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const firstName = token?.given_name ?? "";
   const lastName = token?.family_name ?? "";
@@ -311,11 +338,25 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   const initials = `${displayFirst[0] ?? ""}${displayLast[0] ?? ""}`.trim().toUpperCase() || config.fallbackInitials;
   const gradient = getAvatarColor(email);
 
-  const [section, setSection] = useState<Section>("personal");
+  const [section, setSection] = useState<Section>(() => {
+    const requested = searchParams.get("section");
+    if (cvEnabled && requested === "cv") return "cv";
+    return "personal";
+  });
 
   useEffect(() => {
-    if (!cvEnabled && section === "cv") setSection("personal");
-  }, [cvEnabled, section]);
+    if (!cvEnabled && section === "cv") {
+      setSection("personal");
+      const next = new URLSearchParams(searchParams);
+      next.delete("section");
+      setSearchParams(next, { replace: true });
+      return;
+    }
+
+    const requested = searchParams.get("section");
+    const target: Section = cvEnabled && requested === "cv" ? "cv" : "personal";
+    if (target !== section) setSection(target);
+  }, [cvEnabled, section, searchParams, setSearchParams]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -394,7 +435,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     (force = false) => {
       if (!cvEnabled || !config.skillsEndpoint) return;
       dedupedProfileGet<EmployeeSkillItem[]>(config.skillsEndpoint, { force })
-        .then((res) => setEmployeeSkills(res.data ?? []))
+        .then((res) => setEmployeeSkills(normalizeEmployeeSkillsPayload(res.data)))
         .catch(() => setEmployeeSkills([]));
     },
     [config.skillsEndpoint, cvEnabled],
@@ -412,7 +453,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     (force = false) => {
       if (!cvEnabled || !config.pendingSkillsEndpoint) return;
       dedupedProfileGet<string[]>(config.pendingSkillsEndpoint, { force })
-        .then((res) => setPendingUnrecognizedSkills(res.data ?? []))
+        .then((res) => setPendingUnrecognizedSkills(normalizePendingSkillsPayload(res.data)))
         .catch(() => setPendingUnrecognizedSkills([]));
     },
     [config.pendingSkillsEndpoint, cvEnabled],
@@ -462,7 +503,11 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   };
 
   const handleExtractSkills = async () => {
-    if (!cvFile || !config.cvExtractEndpoint) return;
+    if (!config.cvExtractEndpoint) return;
+    if (!cvFile) {
+      toast.info("Veuillez d'abord sélectionner un CV (PDF ou DOCX), puis cliquer sur Extraire.");
+      return;
+    }
     setExtracting(true);
     setExtractionResult(null);
     const form = new FormData();
@@ -578,7 +623,13 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => setSection(s.id)}
+                  onClick={() => {
+                    setSection(s.id);
+                    const next = new URLSearchParams(searchParams);
+                    if (s.id === "cv") next.set("section", "cv");
+                    else next.delete("section");
+                    setSearchParams(next, { replace: true });
+                  }}
                   style={{
                     animation: `fadeInUp 0.6s ease-out ${idx * 0.05}s both`,
                     background: active ? "rgba(124, 58, 237, 0.12)" : "transparent",
@@ -1200,7 +1251,7 @@ function CVSection({
                 <button
                   type="button"
                   onClick={onExtract}
-                  disabled={!cvFile || extracting}
+                  disabled={extracting}
                   style={{ background: "var(--luxury-primary)" }}
                   className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
