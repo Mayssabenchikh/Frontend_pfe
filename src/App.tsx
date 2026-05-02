@@ -32,10 +32,6 @@ const EmployeeQuiz = lazy(() =>
   import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
 );
 
-const EmployeeQuizDashboard = lazy(() =>
-  import("./pages/employee/EmployeeQuizDashboard").then((module) => ({ default: module.EmployeeQuizDashboard })),
-);
-
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 const UPDATE_PASSWORD_ACTION = "UPDATE_PASSWORD";
 const KC_ACTION_STATUS_KEYS = ["kc_action_status", "kc_actionStatus"] as const;
@@ -174,7 +170,6 @@ function App() {
         >
           <Route index element={<EmployeeDashboard />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
-          <Route path="quiz-dashboard" element={<EmployeeQuizDashboard />} />
           <Route path="assignments" element={<EmployeeAssignments />} />
           <Route path="training-recommendations" element={<EmployeeTrainingRecommendations />} />
           <Route path="learning-programs" element={<EmployeeLearningPrograms />} />
