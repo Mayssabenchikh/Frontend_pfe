@@ -66,9 +66,8 @@ export function EmployeeAssignmentsTable({ rows, loading }: Props) {
           const a = p.data;
           if (!a) return null;
           return (
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm font-semibold text-slate-800 truncate">{a.projectName}</span>
-              <span className="text-xs text-slate-500 truncate">#{a.projectUuid}</span>
+            <div className="flex min-w-0 items-center">
+              <span className="truncate text-sm font-semibold text-slate-800">{a.projectName || "Projet sans nom"}</span>
             </div>
           );
         },

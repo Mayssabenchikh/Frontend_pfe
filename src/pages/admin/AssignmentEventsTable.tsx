@@ -81,9 +81,8 @@ export function AssignmentEventsTable({ rows, loading, error }: Props) {
           const e = p.data;
           if (!e) return null;
           return (
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm font-semibold text-slate-800 truncate">{e.projectName || `#${e.projectUuid}`}</span>
-              <span className="text-xs text-slate-500 truncate">#{e.projectUuid}</span>
+            <div className="flex min-w-0 items-center">
+              <span className="truncate text-sm font-semibold text-slate-800">{e.projectName || "Projet sans nom"}</span>
             </div>
           );
         },
@@ -208,4 +207,3 @@ export function AssignmentEventsTable({ rows, loading, error }: Props) {
     </div>
   );
 }
-

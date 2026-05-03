@@ -522,13 +522,17 @@ export function EmployeeQuiz() {
 
     /* ── Card ── */
     .eq-card {
-      background: #fff;
-      border: 1px solid #EAE7F8;
+      background:
+        radial-gradient(circle at 12% 16%, rgba(124, 58, 237, 0.11), transparent 24%),
+        radial-gradient(circle at 92% 18%, rgba(59, 130, 246, 0.08), transparent 27%),
+        radial-gradient(circle at 96% 92%, rgba(16, 185, 129, 0.08), transparent 30%),
+        linear-gradient(135deg, #FFFFFF 0%, #FAF8FF 42%, #F8FAFC 70%, #F0FDF4 100%);
+      border: 1px solid rgba(221, 214, 254, 0.86);
       border-radius: 14px;
       padding: 14px 16px;
+      box-shadow: 0 12px 28px rgba(76, 29, 149, 0.08), inset 0 0 0 5px rgba(255, 255, 255, 0.58);
       animation: eq-fade-in 0.25s ease both;
     }
-
     /* ── Selected skill header ── */
     .eq-sel-header { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #F0EEF9; margin-bottom: 16px; }
     .eq-sel-avatar {
@@ -770,7 +774,7 @@ export function EmployeeQuiz() {
     .eq-empty-action svg { width: 13px; height: 13px; }
 
     /* ── Skills grid ── */
-    .eq-skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+    .eq-skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
     @media (min-width: 1280px) {
       .eq-skills-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
@@ -782,45 +786,139 @@ export function EmployeeQuiz() {
       box-shadow: 0 -8px 18px rgba(109, 40, 217, 0.035);
     }
     .eq-skill-card {
-      background: #fff; border: 1px solid #EAE7F8; border-radius: 12px;
-      min-height: 190px;
-      padding: 18px; cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 205px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border: 1px solid rgba(221, 214, 254, 0.86);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 12% 16%, rgba(124, 58, 237, 0.11), transparent 24%),
+        radial-gradient(circle at 92% 18%, rgba(59, 130, 246, 0.08), transparent 27%),
+        radial-gradient(circle at 96% 92%, rgba(16, 185, 129, 0.08), transparent 30%),
+        linear-gradient(135deg, #FFFFFF 0%, #FAF8FF 42%, #F8FAFC 70%, #F0FDF4 100%);
+      box-shadow: 0 12px 28px rgba(76, 29, 149, 0.08), inset 0 0 0 5px rgba(255, 255, 255, 0.58);
       transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
-      display: flex; flex-direction: column; gap: 12px;
+    }
+    .eq-skill-card::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      pointer-events: none;
     }
     .eq-skill-card:hover {
       border-color: #A78BFA;
-      box-shadow: 0 4px 16px rgba(109,40,217,0.10);
-      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(76, 29, 149, 0.12), inset 0 0 0 5px rgba(255, 255, 255, 0.62);
+      transform: translateY(-2px);
     }
     .eq-skill-card.active {
-      border-color: #6D28D9;
-      box-shadow: 0 0 0 2.5px rgba(109,40,217,0.16), 0 4px 16px rgba(109,40,217,0.10);
-      transform: translateY(-1px);
+      border-color: #7C3AED;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18), 0 16px 34px rgba(76, 29, 149, 0.13), inset 0 0 0 5px rgba(255, 255, 255, 0.62);
+      transform: translateY(-2px);
+    }
+    .eq-skill-card > * {
+      position: relative;
+      z-index: 1;
     }
     .eq-sk-top { display: flex; align-items: flex-start; justify-content: space-between; }
     .eq-sk-ico {
-      width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px;
-      background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
+      width: 46px; height: 46px; flex-shrink: 0; border-radius: 14px;
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 58%, #2563EB 100%);
       display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 20px rgba(91, 33, 182, 0.22);
     }
-    .eq-sk-ico img { width: 20px; height: 20px; object-fit: contain; }
-    .eq-sk-ico svg { width: 20px; height: 20px; color: #6D28D9; }
-    .eq-sk-name { font-size: 16px; font-weight: 650; color: #1E1B4B; line-height: 1.35; }
-    .eq-sk-lvl  { font-size: 14px; color: #7C3AED; margin-top: 4px; font-weight: 500; }
-    .eq-sk-footer { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6B7280; }
-    .eq-sk-footer svg { width: 12px; height: 12px; color: #9CA3AF; }
-    .eq-sk-sep { color: #D1D5DB; margin: 0 2px; }
+    .eq-sk-ico img { width: 25px; height: 25px; object-fit: contain; filter: brightness(0) invert(1); }
+    .eq-sk-ico svg { width: 23px; height: 23px; color: #FFFFFF; }
+    .eq-skill-card .eq-pill {
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+    }
+    .eq-sk-name { font-size: 20px; font-weight: 900; color: #071452; line-height: 1.08; letter-spacing: 0; }
+    .eq-sk-lvl  { font-size: 12px; color: #5B36F2; margin-top: 5px; font-weight: 800; line-height: 1.35; }
+    .eq-sk-footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(221, 214, 254, 0.78);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.66);
+      box-shadow: 0 8px 20px rgba(76, 29, 149, 0.05);
+    }
+    .eq-sk-metric {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+    .eq-sk-metric-icon {
+      display: inline-flex;
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: #EEF2FF;
+      color: #4F46E5;
+    }
+    .eq-sk-metric-icon svg { width: 13px; height: 13px; color: #4F46E5; }
+    .eq-sk-metric-val { font-size: 12px; font-weight: 900; color: #071452; line-height: 1.1; }
+    .eq-sk-metric-lbl { margin-top: 2px; font-size: 9px; font-weight: 700; color: #64709D; line-height: 1.1; }
+    .eq-sk-unavailable {
+      display: flex;
+      min-height: 44px;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      overflow: hidden;
+      border: 1.5px dashed #C4B5FD;
+      border-radius: 15px;
+      background:
+        radial-gradient(circle at 7% 78%, rgba(124, 58, 237, 0.11), transparent 26%),
+        radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.08), transparent 28%),
+        rgba(245, 243, 255, 0.68);
+      color: #5B36F2;
+      text-align: left;
+    }
+    .eq-sk-unavailable-icon {
+      display: inline-flex;
+      width: 28px;
+      height: 28px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #EDE9FE;
+      color: #6D28D9;
+    }
+    .eq-sk-unavailable-icon svg { width: 13px; height: 13px; }
+    .eq-sk-unavailable-title { font-size: 12px; font-weight: 900; line-height: 1; }
     .eq-sk-start {
-      width: 100%; padding: 9px;
-      background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
-      color: #fff; border: none; border-radius: 8px;
-      font-size: 14px; font-weight: 600; cursor: pointer;
+      width: 100%; padding: 10px;
+      background: linear-gradient(135deg, #6D28D9 0%, #4F46E5 68%, #0EA5E9 100%);
+      color: #fff; border: none; border-radius: 14px;
+      font-size: 13px; font-weight: 800; cursor: pointer;
       transition: opacity 0.15s, box-shadow 0.15s;
-      box-shadow: 0 1px 5px rgba(109,40,217,0.18);
+      box-shadow: 0 10px 20px rgba(109, 40, 217, 0.22);
     }
-    .eq-sk-start:hover:not(:disabled)  { opacity: 0.88; box-shadow: 0 3px 10px rgba(109,40,217,0.26); }
+    .eq-sk-start:hover:not(:disabled)  { opacity: 0.9; box-shadow: 0 3px 10px rgba(109,40,217,0.26); }
     .eq-sk-start:disabled { background: #F3F4F6; color: #9CA3AF; cursor: not-allowed; box-shadow: none; }
+    @media (max-width: 700px) {
+      .eq-skills-grid { grid-template-columns: 1fr; }
+      .eq-skill-card { min-height: 0; padding: 14px; border-radius: 18px; }
+      .eq-sk-name { font-size: 20px; }
+    }
 
     /* ── Progress bar ── */
     .eq-prog-wrap { background: #EDE9FE; border-radius: 99px; height: 4px; overflow: hidden; margin-top: 10px; }
@@ -989,7 +1087,6 @@ export function EmployeeQuiz() {
                     })()}
                   </div>
 
-                  {/* Stats */}
                   <div className="eq-stats">
                     <div className="eq-stat s-violet">
                       <div className="eq-stat-val">20</div>
@@ -1009,7 +1106,6 @@ export function EmployeeQuiz() {
                     </div>
                   </div>
 
-                  {/* Info cells */}
                   <div className="eq-info-row">
                     <div className="eq-info-cell">
                       <div className={`eq-info-ico ${quizCooldownActive ? "teal" : "violet"}`}>
@@ -1031,9 +1127,6 @@ export function EmployeeQuiz() {
                     </div>
                   </div>
 
-      
-
-                  {/* CTA */}
                   {!quizCooldownActive && (
                     <button
                       className="eq-btn-primary"
@@ -1136,7 +1229,7 @@ export function EmployeeQuiz() {
                                 <div className="eq-sk-ico">
                                   {iconUrl
                                     ? <img src={iconUrl} alt="" />
-                                    : <FontAwesomeIcon icon={faBolt} style={{ width: 18, height: 18 }} />}
+                                    : <FontAwesomeIcon icon={faBolt} />}
                                 </div>
                                 <span className={`eq-pill ${badge.className}`}>{badge.label}</span>
                               </div>
@@ -1147,23 +1240,45 @@ export function EmployeeQuiz() {
                                 </div>
                               </div>
                               <div className="eq-sk-footer">
-                                <FontAwesomeIcon icon={faClock} style={{ width: 12, height: 12 }} />
-                                <span>15 min</span>
-                                <span className="eq-sk-sep">·</span>
-                                <FontAwesomeIcon icon={faWandSparkles} style={{ width: 12, height: 12 }} />
-                                <span>20 questions</span>
+                                <div className="eq-sk-metric">
+                                  <span className="eq-sk-metric-icon">
+                                    <FontAwesomeIcon icon={faClock} />
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="eq-sk-metric-val">15 min</div>
+                                    <div className="eq-sk-metric-lbl">Durée estimée</div>
+                                  </div>
+                                </div>
+                                <div className="eq-sk-metric">
+                                  <span className="eq-sk-metric-icon">
+                                    <FontAwesomeIcon icon={faChartSimple} />
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="eq-sk-metric-val">20 questions</div>
+                                    <div className="eq-sk-metric-lbl">Quiz IA</div>
+                                  </div>
+                                </div>
                               </div>
-                              <button
-                                className="eq-sk-start"
-                                disabled={loadingSkills || starting || cooldown}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedSkillId(skill.skillUuid);
-                                  void startQuiz(skill.skillUuid);
-                                }}
-                              >
-                                {cooldown ? "Indisponible" : "Commencer"}
-                              </button>
+                              {cooldown ? (
+                                <div className="eq-sk-unavailable" aria-label="Indisponible">
+                                  <span className="eq-sk-unavailable-icon">
+                                    <FontAwesomeIcon icon={faLock} />
+                                  </span>
+                                  <span className="eq-sk-unavailable-title">Indisponible</span>
+                                </div>
+                              ) : (
+                                <button
+                                  className="eq-sk-start"
+                                  disabled={loadingSkills || starting}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedSkillId(skill.skillUuid);
+                                    void startQuiz(skill.skillUuid);
+                                  }}
+                                >
+                                  Commencer
+                                </button>
+                              )}
                             </div>
                           );
                         })}
@@ -1244,7 +1359,7 @@ export function EmployeeQuiz() {
               <div>
                 <div className="grid w-full items-start gap-6 p-4 pb-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:p-8 xl:pb-6">
                   <main className="space-y-4">
-                    <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
                       <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
@@ -1273,7 +1388,7 @@ export function EmployeeQuiz() {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
                       <div className="flex flex-nowrap justify-between gap-1.5">
                         {questions.map((q, index) => {
                           const answered = Boolean(answers[q.id]);
@@ -1312,7 +1427,7 @@ export function EmployeeQuiz() {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm shadow-violet-100">
+                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-5 shadow-sm shadow-violet-100/70">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="rounded-full bg-violet-700 px-3.5 py-1.5 text-sm font-black text-white">Question {activeQuestion + 1} / {questions.length}</span>
@@ -1350,7 +1465,7 @@ export function EmployeeQuiz() {
                                 "group flex w-full items-center gap-4 rounded-xl border px-4 py-3.5 text-left transition-all duration-150",
                                 selected
                                   ? "border-violet-700 bg-violet-50 shadow-sm ring-2 ring-violet-500"
-                                  : "border-violet-200 bg-white hover:border-violet-400 hover:bg-violet-50/40",
+                                  : "border-violet-100 bg-white/90 hover:border-violet-400 hover:bg-violet-50/60",
                               ].join(" ")}
                             >
                               <span
@@ -1414,7 +1529,7 @@ export function EmployeeQuiz() {
                   </main>
 
                   <aside className="space-y-4 self-start">
-                    <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
                       <div className="flex items-center gap-3">
                         <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4 text-violet-700" />
                         <h3 className="text-xl font-black">Aperçu</h3>
@@ -1465,7 +1580,7 @@ export function EmployeeQuiz() {
           {/* ══════════════ SUBMITTED ══════════════ */}
           {phase === "submitted" && result && (
             <section className="quiz-enter space-y-4 pb-5">
-              <div className="quiz-enter quiz-enter-delay-1 rounded-lg border border-violet-100 bg-white px-5 py-6 shadow-sm">
+              <div className="quiz-enter quiz-enter-delay-1 rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 px-5 py-6 shadow-sm shadow-violet-100/60">
                   <div className="grid gap-5 md:grid-cols-[132px_minmax(0,1fr)] md:items-center">
                   <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-white">
                     <div className="relative h-28 w-28">
@@ -1524,7 +1639,7 @@ export function EmployeeQuiz() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-emerald-50 text-emerald-600">
                       <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
@@ -1535,7 +1650,7 @@ export function EmployeeQuiz() {
                     </div>
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-slate-50 text-slate-500">
                       <FontAwesomeIcon icon={faClipboardCheck} className="h-4 w-4" />
@@ -1546,7 +1661,7 @@ export function EmployeeQuiz() {
                     </div>
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-violet-50 text-violet-700">
                       <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4" />
@@ -1636,7 +1751,7 @@ export function EmployeeQuiz() {
                       type="button"
                       onClick={() => setOpenedReviewQuestionId((prev) => prev === card.questionId ? null : card.questionId)}
                       className={[
-                        "w-full rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-violet-200",
+                        "w-full rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/60 p-4 text-left transition-all hover:border-violet-300",
                         expanded ? "shadow-md" : "shadow-sm",
                       ].join(" ")}
                     >
@@ -1687,7 +1802,7 @@ export function EmployeeQuiz() {
                   );
                 })}
                 {reviewTotalPages > 1 && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/60 px-4 py-3 shadow-sm shadow-violet-100/60">
                     <p className="text-sm font-semibold text-slate-600">
                       Page {reviewPage + 1} sur {reviewTotalPages}
                       <span className="ml-2 text-slate-400">
