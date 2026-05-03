@@ -543,27 +543,20 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     }
   };
 
-  const sections: { id: Section; label: string; icon: React.ReactNode }[] = [
-    { id: "personal", label: "Informations personnelles", icon: <UserIcon className="w-4 h-4" /> },
-    ...(cvEnabled ? [{ id: "cv" as const, label: "Analyse du CV", icon: <SparklesIcon className="w-4 h-4" /> }] : []),
-  ];
-
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden" style={{ background: "var(--luxury-light-bg)" }}>
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-2 px-2 py-1 sm:px-3 md:gap-3 md:px-4 md:py-2">
-        <header className="profile-saas-card luxury-animate-in shrink-0 rounded-2xl px-3 py-2.5 sm:px-3.5 md:px-4 md:py-3">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
-              <div className="relative shrink-0 group">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f6f5ff] font-['Inter',sans-serif]">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
+        <header className="relative shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-white px-6 py-5 shadow-[0_10px_30px_rgba(79,70,229,0.06)]">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-700 via-fuchsia-500 to-indigo-500" />
+          <div className="pointer-events-none absolute right-0 top-0 h-28 w-56 bg-gradient-to-l from-violet-50 to-transparent" />
+          <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="relative h-20 w-20 shrink-0">
                 {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={fullName}
-                    className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5"
-                  />
+                  <img src={avatarUrl} alt={fullName} className="h-20 w-20 rounded-xl object-cover shadow-md ring-1 ring-violet-100" />
                 ) : (
                   <div
-                    className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl text-xl font-semibold text-white shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-0.5 sm:text-2xl"
+                    className="flex h-20 w-20 items-center justify-center rounded-xl text-2xl font-semibold text-white shadow-md ring-1 ring-violet-100"
                     style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
                   >
                     {initials}
@@ -574,83 +567,51 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
                   title="Changer la photo"
-                  className="absolute -bottom-2 -right-2 rounded-xl border border-slate-200/80 bg-white/90 p-2 shadow-md backdrop-blur transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 active:scale-95"
+                  className="absolute -bottom-1.5 -right-1.5 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-white bg-violet-700 text-white shadow-md transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {uploadingAvatar ? (
-                    <ArrowPathIcon className="h-4 w-4 animate-spin" style={{ color: "var(--luxury-primary)" }} />
-                  ) : (
-                    <CameraIcon className="h-4 w-4" style={{ color: "var(--luxury-primary)" }} />
-                  )}
+                  {uploadingAvatar ? <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" /> : <CameraIcon className="h-3.5 w-3.5" />}
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <h1 className="text-xl font-normal tracking-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#1e293b" }}>
-                    {displayFirst}
-                  </h1>
-                  <h2 className="text-xl font-normal tracking-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#1e293b" }}>
-                    {displayLast}
-                  </h2>
+
+              <div className="min-w-0">
+                <h1 className="truncate text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{fullName}</h1>
+                <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+                  <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-200">{config.roleDisplayLabel}</span>
+                  {email ? (
+                    <>
+                      <span className="text-slate-400">•</span>
+                      <span className="min-w-0 truncate">{email}</span>
+                    </>
+                  ) : null}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-0.5 w-6 rounded-full" style={{ background: "var(--luxury-primary)" }} />
-                  <p className="text-xs font-medium uppercase tracking-widest" style={{ color: "var(--luxury-text-muted)" }}>
-                    {config.roleDisplayLabel}
-                  </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditedFirstName(firstName);
+                      setEditedLastName(lastName);
+                      setIsEditing(true);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(109,40,217,0.18)] transition hover:bg-violet-800 disabled:opacity-60"
+                    disabled={isEditing}
+                  >
+                    <PencilSquareIcon className="h-4 w-4" />
+                    Modifier le profil
+                  </button>
                 </div>
               </div>
             </div>
-            <div
-              className="flex w-fit shrink-0 items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:self-auto"
-              style={{ background: "rgba(16, 185, 129, 0.08)", borderColor: "var(--luxury-success)" }}
-            >
-              <CheckCircleIcon className="h-3 w-3 shrink-0" style={{ color: "var(--luxury-success)" }} />
-              <span className="font-semibold" style={{ color: "var(--luxury-success)" }}>
-                Compte actif
-              </span>
+
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              <CheckCircleIcon className="h-4 w-4" />
+              Compte actif
             </div>
           </div>
         </header>
 
-        {sections.length > 1 ? (
-          <nav
-            className="profile-saas-card luxury-animate-in flex shrink-0 gap-1 overflow-x-auto rounded-2xl p-1 md:p-1.5"
-            style={{ animationDelay: "0.05s" }}
-            aria-label="Sections du profil"
-          >
-            {sections.map((s, idx) => {
-              const active = section === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => {
-                    setSection(s.id);
-                    const next = new URLSearchParams(searchParams);
-                    if (s.id === "cv") next.set("section", "cv");
-                    else next.delete("section");
-                    setSearchParams(next, { replace: true });
-                  }}
-                  style={{
-                    animation: `fadeInUp 0.6s ease-out ${idx * 0.05}s both`,
-                    background: active ? "rgba(124, 58, 237, 0.12)" : "transparent",
-                    color: active ? "var(--luxury-primary)" : "var(--luxury-text-muted)",
-                    border: active ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid transparent",
-                  }}
-                  className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200 hover:bg-violet-50/80 md:px-4 md:text-sm md:font-medium active:scale-[0.98]"
-                >
-                  {s.icon}
-                  {s.label}
-                </button>
-              );
-            })}
-          </nav>
-        ) : null}
-
         <main className="min-h-0 flex-1 overflow-hidden luxury-animate-in" style={{ animationDelay: "0.1s" }}>
-          <div className="profile-saas-card flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3 md:p-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               {section === "personal" && (
                 <PersonalSection
                   firstName={editedFirstName || firstName}
@@ -692,7 +653,6 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
                 />
               )}
             </div>
-          </div>
         </main>
       </div>
     </div>
@@ -871,36 +831,6 @@ export function RoleCvExtractionPage({ config }: { config: RoleProfileConfig }) 
   );
 }
 
-function ProfileSectionCard({
-  title,
-  description,
-  compact = false,
-  children,
-}: {
-  title?: string;
-  description?: string;
-  compact?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className={`profile-saas-card rounded-2xl ${compact ? "p-2.5 sm:p-3 md:p-3.5" : "p-3 sm:p-4 md:p-5"}`}>
-      {title ? (
-        <div className={`${compact ? "mb-2.5 pb-2" : "mb-4 pb-3"} border-b border-slate-200/80`}>
-          <h3 className="text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>
-            {title}
-          </h3>
-          {description ? (
-            <p className="mt-0.5 text-sm" style={{ color: "var(--luxury-text-muted)" }}>
-              {description}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-      {children}
-    </section>
-  );
-}
-
 function PersonalSection({
   firstName, lastName, email,
   isEditing, saving,
@@ -974,151 +904,142 @@ function PersonalSection({
   };
 
   return (
-    <div className="flex flex-col gap-3 lg:gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="mb-0.5 text-base font-bold sm:text-lg" style={{ color: "#1e293b" }}>
-            Informations personnelles
-          </h2>
-          <p className="text-sm" style={{ color: "var(--luxury-text-muted)" }}>
-            {isEditing ? "Modifiez votre profil et enregistrez les modifications." : "Gérez vos informations de base."}
-          </p>
-        </div>
-        {!isEditing ? (
-          <button
-            type="button"
-            onClick={onEdit}
-            style={{ background: "rgba(124, 58, 237, 0.08)", border: "1.5px solid var(--luxury-primary)" }}
-            className="flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 hover:shadow-md active:scale-[0.98]"
-          >
-            <PencilSquareIcon className="h-4 w-4" style={{ color: "var(--luxury-primary)" }} />
-            <span style={{ color: "var(--luxury-primary)" }}>Modifier</span>
-          </button>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={saving}
-              style={{ border: "1.5px solid rgba(148, 163, 184, 0.25)" }}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
-            >
-              <XMarkIcon className="h-4 w-4" />
-              Annuler
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                void handleSaveAll();
-              }}
-              disabled={saving || savingExtra}
-              style={{ background: "var(--luxury-primary)" }}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white transition-all duration-200 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving || savingExtra ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <ArrowDownTrayIcon className="h-4 w-4" />}
-              {saving || savingExtra ? "Enregistrement..." : "Enregistrer"}
-            </button>
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(340px,410px)]">
+      <section className="min-h-[520px] overflow-hidden rounded-xl border border-violet-100 bg-white shadow-[0_10px_30px_rgba(79,70,229,0.05)]">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-white via-violet-50/50 to-white px-6 py-5">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-violet-600">Profil</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">Informations personnelles et professionnelles</h2>
           </div>
-        )}
-      </div>
+          {!isEditing ? (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100 transition hover:bg-violet-100"
+              title="Modifier"
+            >
+              <PencilSquareIcon className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4 lg:items-start">
-        <ProfileSectionCard title="Identité & contact" compact>
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="px-6 py-6">
+          {isEditing ? (
+            <div className="mb-8 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                <XMarkIcon className="h-4 w-4" />
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleSaveAll();
+                }}
+                disabled={saving || savingExtra}
+                className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving || savingExtra ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <ArrowDownTrayIcon className="h-4 w-4" />}
+                {saving || savingExtra ? "Enregistrement..." : "Enregistrer"}
+              </button>
+            </div>
+          ) : null}
+
+          {loadingExtra ? (
+            <div className="flex justify-center py-16">
+              <ArrowPathIcon className="h-6 w-6 animate-spin text-violet-700" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {isEditing ? (
                 <>
-                  <LuxuryEditableField label="Prénom" icon={<UserIcon className="h-4 w-4" />} value={firstName} onChange={onEditedFirstNameChange} placeholder="Prénom" autoFocus />
-                  <LuxuryEditableField label="Nom" icon={<UserIcon className="h-4 w-4" />} value={lastName} onChange={onEditedLastNameChange} placeholder="Nom" />
+                  <ProfileEditableField icon={<UserIcon className="h-4 w-4" />} label="Prénom" value={firstName} onChange={onEditedFirstNameChange} placeholder="Prénom" autoFocus />
+                  <ProfileEditableField icon={<UserIcon className="h-4 w-4" />} label="Nom" value={lastName} onChange={onEditedLastNameChange} placeholder="Nom" />
+                  <ProfileReadonlyItem icon={<EnvelopeIcon className="h-4 w-4" />} label="Adresse e-mail" value={email || "—"} />
+                  <ProfileEditableField icon={<BuildingOffice2Icon className="h-4 w-4" />} label="Département" value={editDept} onChange={setEditDept} placeholder="Département" />
+                  <ProfileEditableField icon={<BriefcaseIcon className="h-4 w-4" />} label="Poste" value={editJob} onChange={setEditJob} placeholder="Poste" />
+                  <ProfileEditableField icon={<PhoneIcon className="h-4 w-4" />} label="Téléphone" value={editPhone} onChange={setEditPhone} placeholder="+216 20 123 456" type="tel" />
+                  <ProfileEditableField icon={<CalendarDaysIcon className="h-4 w-4" />} label="Date d'embauche" value={editHire} onChange={setEditHire} type="date" />
                 </>
               ) : (
                 <>
-                  <LuxuryReadonlyField icon={<UserIcon className="h-4 w-4" />} label="Prénom" value={firstName || "—"} />
-                  <LuxuryReadonlyField icon={<UserIcon className="h-4 w-4" />} label="Nom" value={lastName || "—"} />
+                  <ProfileReadonlyItem icon={<UserIcon className="h-4 w-4" />} label="Prénom" value={firstName || "—"} />
+                  <ProfileReadonlyItem icon={<UserIcon className="h-4 w-4" />} label="Nom" value={lastName || "—"} />
+                  <ProfileReadonlyItem icon={<EnvelopeIcon className="h-4 w-4" />} label="Adresse e-mail" value={email || "—"} />
+                  <ProfileReadonlyItem icon={<BuildingOffice2Icon className="h-4 w-4" />} label="Département" value={extraData.department || "—"} />
+                  <ProfileReadonlyItem icon={<BriefcaseIcon className="h-4 w-4" />} label="Poste" value={extraData.jobTitle || "—"} />
+                  <ProfileReadonlyItem icon={<PhoneIcon className="h-4 w-4" />} label="Téléphone" value={extraData.phone || "—"} />
+                  <ProfileReadonlyItem icon={<CalendarDaysIcon className="h-4 w-4" />} label="Date d'embauche" value={extraData.hireDate || "—"} />
                 </>
               )}
             </div>
-            <LuxuryReadonlyField
-              icon={<EnvelopeIcon className="h-4 w-4" />}
-              label="Adresse e-mail"
-              value={email || "—"}
-              badge={
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm"
-                  style={{ background: "rgba(16, 185, 129, 0.08)", color: "var(--luxury-success)", border: "1px solid rgba(16, 185, 129, 0.3)" }}
-                >
-                  <CheckCircleIcon className="h-3 w-3" /> Vérifié
-                </span>
-              }
-            />
-          </div>
-        </ProfileSectionCard>
-
-        <ProfileSectionCard title="Informations professionnelles" compact>
-          {loadingExtra ? (
-            <div className="flex justify-center py-10">
-              <ArrowPathIcon className="h-5 w-5 animate-spin" style={{ color: "var(--luxury-primary)" }} />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {isEditing ? (
-                  <LuxuryEditableField
-                    icon={<PhoneIcon className="h-4 w-4" />}
-                    label="Téléphone"
-                    value={editPhone}
-                    onChange={setEditPhone}
-                    placeholder="+216 20 123 456"
-                    type="tel"
-                  />
-                ) : (
-                  <LuxuryReadonlyField icon={<PhoneIcon className="h-4 w-4" />} label="Téléphone" value={extraData.phone || "—"} />
-                )}
-                {isEditing ? (
-                  <LuxuryEditableField
-                    icon={<CalendarDaysIcon className="h-4 w-4" />}
-                    label="Date d'embauche"
-                    value={editHire}
-                    onChange={setEditHire}
-                    type="date"
-                  />
-                ) : (
-                  <LuxuryReadonlyField icon={<CalendarDaysIcon className="h-4 w-4" />} label="Date d'embauche" value={extraData.hireDate || "—"} />
-                )}
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {isEditing ? (
-                  <LuxuryEditableField
-                    icon={<BuildingOffice2Icon className="h-4 w-4" />}
-                    label="Département"
-                    value={editDept}
-                    onChange={setEditDept}
-                    placeholder="ex: Ingénierie"
-                  />
-                ) : (
-                  <LuxuryReadonlyField icon={<BuildingOffice2Icon className="h-4 w-4" />} label="Département" value={extraData.department || "—"} />
-                )}
-                {isEditing ? (
-                  <LuxuryEditableField
-                    icon={<BriefcaseIcon className="h-4 w-4" />}
-                    label="Poste"
-                    value={editJob}
-                    onChange={setEditJob}
-                    placeholder="ex: Développeur"
-                  />
-                ) : (
-                  <LuxuryReadonlyField icon={<BriefcaseIcon className="h-4 w-4" />} label="Poste" value={extraData.jobTitle || "—"} />
-                )}
-              </div>
-            </div>
           )}
-        </ProfileSectionCard>
-      </div>
+        </div>
+      </section>
 
-      <ProfileSectionCard compact title="Sécurité & Mot de passe" description="Modifiez votre mot de passe de connexion.">
-        <SecuritySection embedded changePasswordEndpoint={changePasswordEndpoint} />
-      </ProfileSectionCard>
+      <section className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-[0_10px_30px_rgba(79,70,229,0.05)]">
+        <div className="border-b border-slate-100 bg-gradient-to-r from-white via-violet-50/60 to-white px-6 py-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-violet-600">Accès</p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">Sécurité du compte</h2>
+        </div>
+        <div className="px-6 py-6">
+          <SecuritySection embedded changePasswordEndpoint={changePasswordEndpoint} />
+        </div>
+      </section>
     </div>
+  );
+}
+
+function ProfileReadonlyItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="group min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3.5 transition hover:border-violet-100 hover:bg-white hover:shadow-sm">
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-violet-700 ring-1 ring-violet-100 transition group-hover:bg-violet-50">{icon}</span>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
+      </div>
+      <p className={`mt-2 truncate pl-10 text-sm font-semibold ${value === "—" ? "text-slate-400" : "text-slate-800"}`}>{value}</p>
+    </div>
+  );
+}
+
+function ProfileEditableField({
+  icon,
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  autoFocus,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+  autoFocus?: boolean;
+}) {
+  return (
+    <label className="block min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3.5">
+      <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-violet-700 ring-1 ring-violet-100">{icon}</span>
+        {label}
+      </span>
+      <div className="mt-2 pl-10">
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+        />
+      </div>
+    </label>
   );
 }
 
@@ -1179,83 +1100,75 @@ function SecuritySection({ embedded = false, changePasswordEndpoint }: { embedde
   }, [changePasswordEndpoint, confirmPassword, currentPassword, newPassword]);
 
   return (
-    <div className={`flex w-full flex-col gap-4 ${embedded ? "" : "mx-auto max-w-3xl"}`}>
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div className={`flex w-full flex-col ${embedded ? "" : "mx-auto max-w-3xl"}`}>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <LuxuryPasswordField
+          id="sec-current"
+          label="Mot de passe actuel"
+          value={currentPassword}
+          show={showCurrent}
+          onToggle={() => setShowCurrent((v) => !v)}
+          onChange={setCurrentPassword}
+          error={fieldErrors.current}
+          placeholder="Votre mot de passe actuel"
+          autoComplete="current-password"
+        />
+
+        <div>
           <LuxuryPasswordField
-            id="sec-current"
-            label="Mot de passe actuel"
-            value={currentPassword}
-            show={showCurrent}
-            onToggle={() => setShowCurrent((v) => !v)}
-            onChange={setCurrentPassword}
-            error={fieldErrors.current}
-            placeholder="Votre mot de passe actuel"
-            autoComplete="current-password"
-          />
-
-          <div>
-            <LuxuryPasswordField
-              id="sec-new"
-              label="Nouveau mot de passe"
-              value={newPassword}
-              show={showNew}
-              onToggle={() => setShowNew((v) => !v)}
-              onChange={setNewPassword}
-              error={fieldErrors.newPwd}
-              placeholder="Minimum 8 caractères"
-              autoComplete="new-password"
-            />
-
-            {newPassword ? (
-              <div className="mt-2.5 flex flex-col gap-1.5">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="h-1 flex-1 rounded-full transition-all duration-300"
-                      style={{
-                        background:
-                          i <= strength.score
-                            ? `rgba(124, 58, 237, ${0.28 + strength.score * 0.1})`
-                            : "rgba(148, 163, 184, 0.22)",
-                      }}
-                    />
-                  ))}
-                </div>
-                {strength.label ? (
-                  <span className="text-xs font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
-                    {strength.label}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 border-t border-slate-200/80 pt-3 md:grid-cols-[1fr_auto] md:items-end">
-          <LuxuryPasswordField
-            id="sec-confirm"
-            label="Confirmer le nouveau mot de passe"
-            value={confirmPassword}
-            show={showConfirm}
-            onToggle={() => setShowConfirm((v) => !v)}
-            onChange={setConfirmPassword}
-            error={fieldErrors.confirm}
-            placeholder="Répétez le nouveau mot de passe"
+            id="sec-new"
+            label="Nouveau mot de passe"
+            value={newPassword}
+            show={showNew}
+            onToggle={() => setShowNew((v) => !v)}
+            onChange={setNewPassword}
+            error={fieldErrors.newPwd}
+            placeholder="Entrer le nouveau mot de passe"
             autoComplete="new-password"
           />
+          <p className="mt-1.5 text-xs font-medium text-slate-400">Min. 8 caractères, avec un chiffre recommandé.</p>
 
-          <button
-            type="submit"
-            disabled={saving}
-            style={{ background: "var(--luxury-primary)" }}
-            className="flex h-fit items-center justify-center gap-2 rounded-xl px-5 py-2 text-sm font-bold text-white transition-all duration-200 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <LockClosedIcon className="h-4 w-4" />}
-            {saving ? "Modification..." : "Modifier le mot de passe"}
-          </button>
+          {newPassword ? (
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="h-1 flex-1 rounded-full transition-all duration-300"
+                    style={{
+                      background:
+                        i <= strength.score
+                          ? `rgba(124, 58, 237, ${0.28 + strength.score * 0.1})`
+                          : "rgba(148, 163, 184, 0.22)",
+                    }}
+                  />
+                ))}
+              </div>
+              {strength.label ? <span className="text-xs font-semibold text-slate-500">{strength.label}</span> : null}
+            </div>
+          ) : null}
         </div>
+
+        <LuxuryPasswordField
+          id="sec-confirm"
+          label="Confirmer le nouveau mot de passe"
+          value={confirmPassword}
+          show={showConfirm}
+          onToggle={() => setShowConfirm((v) => !v)}
+          onChange={setConfirmPassword}
+          error={fieldErrors.confirm}
+          placeholder="Répéter le mot de passe"
+          autoComplete="new-password"
+        />
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(109,40,217,0.18)] transition hover:bg-violet-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <LockClosedIcon className="h-4 w-4" />}
+          {saving ? "Modification..." : "Changer le mot de passe"}
+        </button>
       </form>
     </div>
   );
@@ -1438,7 +1351,7 @@ function CVSection({
                 <button
                   type="button"
                   onClick={handleDownloadCv}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-50 hover:text-[#2b087f] disabled:opacity-50"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-50 hover:text-[#2b087f] disabled:opacity-50"
                   title="Télécharger"
                   disabled={!cvFileName && !cvFile}
                 >
@@ -1643,74 +1556,6 @@ function ExtractionResultsSection({
   );
 }
 
-function LuxuryEditableField({
-  icon,
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  autoFocus,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
-  autoFocus?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="flex items-center gap-1 text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
-        <span style={{ color: "var(--luxury-primary)" }}>{icon}</span>
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        className="luxury-input rounded-xl px-3 py-2 text-xs transition-all duration-300"
-        style={{ animation: "none" }}
-      />
-    </div>
-  );
-}
-
-function LuxuryReadonlyField({
-  icon,
-  label,
-  value,
-  badge,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  badge?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="flex items-center gap-1 text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
-        <span style={{ color: "var(--luxury-primary)" }}>{icon}</span>
-        {label}
-      </label>
-      <div
-        className="flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all duration-200 hover:border-violet-200/70 hover:shadow-sm"
-        style={{
-          background: "var(--luxury-input)",
-          border: "1px solid rgba(148, 163, 184, 0.2)",
-          color: value === "—" ? "var(--luxury-text-muted)" : "var(--luxury-text)",
-        }}
-      >
-        <span className={value === "—" ? "" : "font-medium"}>{value}</span>
-        {badge}
-      </div>
-    </div>
-  );
-}
-
 function LuxuryPasswordField({
   id,
   label,
@@ -1734,8 +1579,8 @@ function LuxuryPasswordField({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="flex items-center gap-1 text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--luxury-text-muted)" }}>
-        <LockClosedIcon className="w-3 h-3" style={{ color: "var(--luxury-primary)" }} />
+      <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">
+        <LockClosedIcon className="h-3.5 w-3.5 text-violet-700" />
         {label}
       </label>
       <div className="relative">
@@ -1746,19 +1591,18 @@ function LuxuryPasswordField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="luxury-input w-full rounded-xl px-3 py-2 pr-9 text-xs transition-all duration-300"
+          className="w-full rounded-lg border bg-white px-3.5 py-2.5 pr-10 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
           style={{
-            background: error ? "rgba(239, 68, 68, 0.05)" : "var(--luxury-input)",
-            borderColor: error ? "var(--luxury-error)" : "rgba(148, 163, 184, 0.2)",
+            background: error ? "rgba(239, 68, 68, 0.05)" : "#ffffff",
+            borderColor: error ? "var(--luxury-error)" : "#dbe3f0",
           }}
         />
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 transition-colors duration-300"
-          style={{ color: "var(--luxury-text-muted)" }}
+          className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition-colors duration-300 hover:bg-violet-50 hover:text-violet-700"
         >
-          {show ? <EyeSlashIcon className="w-3 h-3" /> : <EyeIcon className="w-3 h-3" />}
+          {show ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
         </button>
       </div>
       {error && (
