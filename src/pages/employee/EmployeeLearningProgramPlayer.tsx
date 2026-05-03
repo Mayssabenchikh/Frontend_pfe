@@ -79,6 +79,15 @@ function submissionModeLabel(mode: ActivitySubmissionMode | null | undefined): s
   return "Texte";
 }
 
+function playerStatusLabel(status?: string | null): string {
+  const value = String(status ?? "").toUpperCase();
+  if (value === "COMPLETED") return "Terminé";
+  if (value === "IN_PROGRESS") return "En cours";
+  if (value === "NOT_STARTED") return "Non commencé";
+  if (value === "CANCELLED") return "Annulé";
+  return status || "Statut inconnu";
+}
+
 function stepKindLabel(step: LearningPlayerStep): string {
   if (step.stepKind === "VIDEO") return "Vidéo";
   if (step.stepKind === "TEXT") return "Lecture";
@@ -415,6 +424,7 @@ export function EmployeeLearningProgramPlayer() {
   const [uploadBusy, setUploadBusy] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, ActivityDraft>>({});
   const [selectedStepIndex, setSelectedStepIndex] = useState(0);
+  const [modulesSidebarOpen, setModulesSidebarOpen] = useState(true);
 
   const reload = useCallback(async () => {
     if (!enrollmentUuid) return null;
@@ -650,7 +660,7 @@ export function EmployeeLearningProgramPlayer() {
               <span className="hidden h-2.5 w-2.5 rounded-full bg-violet-600 sm:block" />
               <h1 className="truncate text-base font-extrabold text-slate-950 sm:text-xl">{player.programTitle}</h1>
               <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-base font-bold uppercase tracking-wide text-violet-800 md:inline-flex">
-                {player.status}
+                {playerStatusLabel(player.status)}
               </span>
             </div>
             <p className="mt-0.5 hidden truncate text-base text-slate-500 sm:block">
@@ -675,6 +685,18 @@ export function EmployeeLearningProgramPlayer() {
               <div className="h-full rounded-full bg-violet-700 transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
             </div>
           </div>
+
+          {!modulesSidebarOpen ? (
+            <button
+              type="button"
+              onClick={() => setModulesSidebarOpen(true)}
+              className="hidden min-h-10 shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 text-base font-bold text-violet-700 shadow-sm transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:inline-flex"
+              title="Afficher les modules"
+            >
+              <ClipboardDocumentListIcon className="h-4 w-4" />
+              Afficher modules
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -707,8 +729,29 @@ export function EmployeeLearningProgramPlayer() {
         </div>
       ) : null}
 
-      <div className="mx-auto grid w-full max-w-none items-stretch gap-6 px-5 pb-6 pt-3 sm:px-8 lg:grid-cols-[380px_minmax(0,1fr)_380px]">
+      <div
+        className={cn(
+          "mx-auto grid w-full max-w-none items-stretch gap-6 px-5 pb-6 pt-3 sm:px-8",
+          modulesSidebarOpen ? "lg:grid-cols-[380px_minmax(0,1fr)_380px]" : "lg:grid-cols-[minmax(0,1fr)_380px]",
+        )}
+      >
+        {modulesSidebarOpen ? (
         <aside className="hidden h-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
+          <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <p className="text-base font-extrabold text-slate-950">Modules</p>
+              <p className="text-base text-slate-500">{player.steps.length} étape{player.steps.length > 1 ? "s" : ""}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setModulesSidebarOpen(false)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+              aria-label="Fermer les modules"
+              title="Fermer les modules"
+            >
+              <ArrowLeftIcon className="h-4 w-4" />
+            </button>
+          </div>
           <nav className="space-y-5" aria-label="Plan du programme">
             {toc.map((part) => (
               <section key={part.partNumber}>
@@ -737,6 +780,7 @@ export function EmployeeLearningProgramPlayer() {
             ))}
           </nav>
         </aside>
+        ) : null}
 
         <main className="flex min-w-0 flex-col space-y-5">
           <div className="lg:hidden">
