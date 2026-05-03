@@ -14,6 +14,7 @@ import {
   CheckCircleIcon,
   PencilSquareIcon,
   ArrowDownTrayIcon,
+  ArrowTopRightOnSquareIcon,
   XMarkIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -21,6 +22,8 @@ import {
   SparklesIcon,
   DocumentTextIcon,
   BeakerIcon,
+  CommandLineIcon,
+  InformationCircleIcon,
 } from "../../icons/heroicons/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
@@ -543,7 +546,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
 
   const sections: { id: Section; label: string; icon: React.ReactNode }[] = [
     { id: "personal", label: "Informations personnelles", icon: <UserIcon className="w-4 h-4" /> },
-    ...(cvEnabled ? [{ id: "cv" as const, label: "Extraction CV", icon: <SparklesIcon className="w-4 h-4" /> }] : []),
+    ...(cvEnabled ? [{ id: "cv" as const, label: "Analyse du CV", icon: <SparklesIcon className="w-4 h-4" /> }] : []),
   ];
 
   return (
@@ -820,39 +823,33 @@ export function RoleCvExtractionPage({ config }: { config: RoleProfileConfig }) 
     return (
       <div className="flex min-h-full w-full items-center justify-center bg-[#f8f7ff] p-6">
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
-          <p className="text-base font-bold text-slate-900">Extraction CV indisponible</p>
+          <p className="text-base font-bold text-slate-900">Analyse du CV indisponible</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-full w-full overflow-auto bg-[#f8f7ff] px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
-        <header className="rounded-lg border border-violet-100 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-800">
-                <SparklesIcon className="h-4 w-4" />
-                Skills intelligence
-              </div>
-              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Extraction CV</h1>
-              <p className="mt-2 max-w-3xl text-base leading-7 text-slate-600">
-                Importez un CV PDF ou DOCX pour extraire les compétences et préparer leur validation.
-              </p>
-            </div>
-            {cvFileName ? (
-              <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
-                <CheckCircleIcon className="h-4 w-4" />
-                CV disponible
-              </span>
-            ) : (
-              <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-bold text-orange-700">
-                <DocumentTextIcon className="h-4 w-4" />
-                Aucun CV
-              </span>
-            )}
+    <div className="min-h-full w-full overflow-auto bg-[#f6f7fc] px-4 py-7 sm:px-6 lg:px-9">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7">
+        <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-4xl font-extrabold leading-tight text-[#2b087f] sm:text-[42px]">Analyser un CV et extraire les compétences</h1>
+            <p className="mt-2 max-w-3xl text-base leading-7 text-slate-600">
+              Importez un CV PDF ou DOCX pour analyser automatiquement les expertises de vos talents grâce à notre moteur IA propriétaire.
+            </p>
           </div>
+          {cvFileName ? (
+            <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-700">
+              <CheckCircleIcon className="h-4 w-4" />
+              CV disponible
+            </span>
+          ) : (
+            <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-5 py-3 text-sm font-semibold text-orange-700">
+              <DocumentTextIcon className="h-4 w-4" />
+              Aucun CV
+            </span>
+          )}
         </header>
 
         <CVSection
@@ -1337,20 +1334,60 @@ function CVSection({
     }
   }, [cvDownloadEndpoint, cvFile?.name, cvFileName]);
 
-  const hasRightPanel =
-    Boolean(extractionResult) || employeeSkills.length > 0 || pendingUnrecognizedSkills.length > 0;
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewFileName = cvFile?.name ?? cvFileName;
+  const canPreviewPdf = Boolean(previewUrl && (cvFile?.type === "application/pdf" || previewFileName?.toLowerCase().endsWith(".pdf")));
+
+  const handleOpenCvInNewTab = useCallback(() => {
+    if (!previewUrl) {
+      toast.info("L'aperçu du CV n'est pas encore disponible.");
+      return;
+    }
+    window.open(previewUrl, "_blank", "noopener,noreferrer");
+  }, [previewUrl]);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+
+    setPreviewUrl(null);
+
+    if (cvFile) {
+      objectUrl = window.URL.createObjectURL(cvFile);
+      setPreviewUrl(objectUrl);
+      return () => {
+        window.URL.revokeObjectURL(objectUrl as string);
+      };
+    }
+
+    if (!cvFileName) return;
+
+    http
+      .get(cvDownloadEndpoint, { responseType: "blob" })
+      .then((res) => {
+        if (!active) return;
+        const blob = new Blob([res.data], { type: res.headers?.["content-type"] || "application/octet-stream" });
+        objectUrl = window.URL.createObjectURL(blob);
+        setPreviewUrl(objectUrl);
+      })
+      .catch(() => {
+        if (active) setPreviewUrl(null);
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) window.URL.revokeObjectURL(objectUrl);
+    };
+  }, [cvDownloadEndpoint, cvFile, cvFileName]);
 
   return (
-    <div className={`grid min-h-0 grid-cols-1 gap-5 ${hasRightPanel ? "lg:grid-cols-12 lg:gap-6 lg:items-start" : ""}`}>
-      <div className={`order-2 shrink-0 ${hasRightPanel ? "lg:order-1 lg:col-span-5" : ""}`}>
+    <div className="grid min-h-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)] lg:items-start">
+      <div className="flex min-w-0 flex-col gap-7">
         <div
-          className="profile-saas-card relative overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl p-5 transition-all duration-300 md:p-6 lg:h-[min(32rem,calc(100vh-14rem))]"
+          className="relative overflow-hidden rounded-xl border-2 border-dashed bg-white px-5 py-8 text-center transition-all duration-300 sm:px-9 sm:py-10"
           style={{
-            border: dragOver ? "2px dashed var(--luxury-primary)" : "1px solid rgba(148, 163, 184, 0.14)",
-            background: dragOver
-              ? "linear-gradient(145deg, rgba(124, 58, 237, 0.1) 0%, rgba(255, 255, 255, 0.95) 45%, rgba(248, 247, 255, 0.98) 100%)"
-              : "linear-gradient(145deg, rgba(124, 58, 237, 0.04) 0%, #ffffff 40%, rgba(248, 247, 255, 0.6) 100%)",
-            boxShadow: dragOver ? "0 12px 40px rgba(124, 58, 237, 0.15)" : undefined,
+            borderColor: dragOver ? "#7c3aed" : "#dbe3f1",
+            boxShadow: dragOver ? "0 20px 45px rgba(76, 29, 149, 0.12)" : "0 1px 2px rgba(15, 23, 42, 0.03)",
           }}
           onDragOver={(e) => {
             e.preventDefault();
@@ -1359,112 +1396,109 @@ function CVSection({
           onDragLeave={() => onDragOver(false)}
           onDrop={onCvDrop}
         >
-          <div
-            className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-40 profile-ai-glow"
-            style={{ background: "radial-gradient(circle, rgba(124, 58, 237, 0.35) 0%, transparent 70%)" }}
-          />
-          <div className="relative flex min-h-full flex-col items-center justify-center px-2 py-4 text-center md:px-4 md:py-6">
-            <div className="w-full max-w-md">
-              <div
-                className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl shadow-md transition-transform duration-300 hover:scale-105 md:mb-5 md:h-16 md:w-16"
-                style={{
-                  background: extracting ? "rgba(124, 58, 237, 0.15)" : "rgba(124, 58, 237, 0.1)",
-                  border: "1px solid rgba(124, 58, 237, 0.25)",
-                }}
-              >
-                {extracting ? (
-                  <ArrowPathIcon className="h-7 w-7 animate-spin md:h-8 md:w-8" style={{ color: "var(--luxury-primary)" }} />
-                ) : (
-                  <SparklesIcon className="h-7 w-7 md:h-8 md:w-8" style={{ color: "var(--luxury-primary)" }} />
-                )}
-              </div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider md:text-[13px]" style={{ color: "var(--luxury-primary)" }}>
-                Extraction assistée
-              </p>
-              <h3 className="mb-2 text-base font-bold md:text-lg" style={{ color: "#1e293b" }}>
-                Importez votre CV
-              </h3>
-              <p className="mb-5 max-w-sm text-center text-xs leading-relaxed md:mb-6 md:text-sm" style={{ color: "var(--luxury-text-muted)" }}>
-                Glissez-déposez votre CV (PDF ou DOCX) pour analyser vos compétences
-              </p>
-
-              {cvFile || cvFileName ? (
-                <div
-                  className="mx-auto mb-5 flex w-full max-w-full items-center gap-3 rounded-xl px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md"
-                  style={{ background: "rgba(124, 58, 237, 0.06)", border: "1px solid rgba(124, 58, 237, 0.2)" }}
-                >
-                  <DocumentTextIcon className="h-5 w-5 shrink-0" style={{ color: "var(--luxury-primary)" }} />
-                  <button
-                    type="button"
-                    onClick={handleDownloadCv}
-                    className="min-w-0 flex-1 truncate text-left text-sm font-medium underline decoration-transparent transition-colors hover:decoration-inherit disabled:cursor-not-allowed disabled:opacity-70"
-                    style={{ color: "var(--luxury-text)" }}
-                    title="Télécharger"
-                    disabled={!cvFileName && !cvFile}
-                  >
-                    {cvFile?.name ?? cvFileName}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDownloadCv}
-                    className="shrink-0 rounded-lg p-2 transition-colors hover:bg-violet-50 disabled:opacity-60"
-                    style={{ color: "var(--luxury-primary)" }}
-                    title="Télécharger"
-                    disabled={!cvFileName && !cvFile}
-                  >
-                    <ArrowDownTrayIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              ) : null}
-
-              <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-                <button
-                  type="button"
-                  onClick={() => cvInputRef.current?.click()}
-                  style={{ border: "1.5px solid var(--luxury-primary)" }}
-                  className="rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 hover:bg-violet-50 active:scale-[0.98]"
-                >
-                  <span style={{ color: "var(--luxury-primary)" }}>Choisir un fichier</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={onExtract}
-                  disabled={extracting}
-                  style={{ background: "var(--luxury-primary)" }}
-                  className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {extracting ? (
-                    <>
-                      <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                      Extraction en cours…
-                    </>
-                  ) : (
-                    <>
-                      <SparklesIcon className="h-5 w-5" />
-                      Extraire
-                    </>
-                  )}
-                </button>
-              </div>
-              <input ref={cvInputRef} type="file" accept=".pdf,.docx" className="hidden" onChange={onCvSelect} />
+          <div className="mx-auto flex max-w-[520px] flex-col items-center">
+            <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[#e8e0fb] text-[#7c3aed]">
+              {extracting ? <ArrowPathIcon className="h-8 w-8 animate-spin" /> : <SparklesIcon className="h-8 w-8" />}
             </div>
+            <h3 className="mt-7 text-lg font-semibold text-[#2b087f]">Prêt pour l’extraction</h3>
+            <p className="mt-3 max-w-[470px] text-base leading-7 text-slate-600">
+              Faites glisser votre fichier ici ou utilisez le bouton ci-dessous. Formats acceptés : PDF, DOCX (Max 10Mo).
+            </p>
+
+            <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => cvInputRef.current?.click()}
+                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-lg border border-violet-200 bg-white px-5 text-base font-bold text-[#2b087f] transition hover:border-violet-300 hover:bg-violet-50"
+              >
+                <DocumentTextIcon className="h-5 w-5" />
+                <span>Choisir un fichier</span>
+              </button>
+              <button
+                type="button"
+                onClick={onExtract}
+                disabled={extracting}
+                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-lg bg-[#3b007d] px-6 text-base font-bold text-white shadow-[0_14px_24px_rgba(59,0,125,0.22)] transition hover:bg-[#31006a] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {extracting ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
+                <span>{extracting ? "Extraction..." : "Extraire"}</span>
+              </button>
+            </div>
+
+            {cvFile || cvFileName ? (
+              <div className="mt-8 flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-red-50 text-red-600">
+                  <DocumentTextIcon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-slate-950">{cvFile?.name ?? cvFileName}</p>
+                  <p className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    {cvFile ? `${(cvFile.size / 1024 / 1024).toFixed(1)} MB` : "CV enregistré"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadCv}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-50 hover:text-[#2b087f] disabled:opacity-50"
+                  title="Télécharger"
+                  disabled={!cvFileName && !cvFile}
+                >
+                  <ArrowDownTrayIcon className="h-5 w-5" />
+                </button>
+              </div>
+            ) : null}
+            <input ref={cvInputRef} type="file" accept=".pdf,.docx" className="hidden" onChange={onCvSelect} />
           </div>
         </div>
+
+        {cvFile || cvFileName ? (
+          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h3 className="text-base font-extrabold text-slate-950">Aperçu du CV</h3>
+                <p className="mt-1 truncate text-xs font-semibold text-slate-400">{previewFileName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleOpenCvInNewTab}
+                disabled={!previewUrl}
+                className="inline-flex w-fit items-center gap-2 rounded-lg border border-violet-200 bg-white px-4 py-2 text-sm font-bold text-[#2b087f] transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                Ouvrir dans une nouvelle page
+              </button>
+            </div>
+            <div className="flex min-h-[620px] items-center justify-center bg-gradient-to-b from-slate-100 via-slate-50 to-white p-4 sm:p-7">
+              {canPreviewPdf ? (
+                <iframe title="Aperçu du CV" src={previewUrl ?? undefined} className="h-[575px] w-full max-w-[520px] rounded-lg bg-white shadow-2xl ring-1 ring-slate-200" />
+              ) : (
+                <div className="flex h-[575px] w-full max-w-[520px] flex-col items-center justify-center rounded-lg bg-white p-8 text-center shadow-2xl ring-1 ring-slate-200">
+                  <DocumentTextIcon className="h-16 w-16 text-slate-300" />
+                  <p className="mt-4 max-w-xs truncate text-sm font-bold text-slate-700">{previewFileName}</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">Aperçu disponible uniquement pour les fichiers PDF.</p>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-3 bg-white px-5 py-5 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={handleOpenCvInNewTab}
+                disabled={!previewUrl}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#e9e1f3] px-8 py-3 text-sm font-bold text-[#2b087f] transition hover:bg-[#ded2ee] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                Ouvrir le CV complet
+              </button>
+            </div>
+          </section>
+        ) : null}
       </div>
 
-      {hasRightPanel ? (
-        <div className="order-1 flex min-h-0 flex-col lg:order-2 lg:col-span-7">
-          <div className="profile-saas-card min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl lg:max-h-[min(32rem,calc(100vh-14rem))]">
-            <div className="p-4 md:p-5">
-              <ExtractionResultsSection
-                extractionResult={extractionResult}
-                employeeSkills={employeeSkills}
-                pendingUnrecognizedSkills={pendingUnrecognizedSkills}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ExtractionResultsSection
+        extractionResult={extractionResult}
+        employeeSkills={employeeSkills}
+        pendingUnrecognizedSkills={pendingUnrecognizedSkills}
+      />
     </div>
   );
 }
@@ -1498,150 +1532,124 @@ function ExtractionResultsSection({
   const pageOffset = skillsPage * SKILLS_PER_PAGE;
   const displayedPendingSkills =
     pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills : (extractionResult?.unmatchedSkills ?? []);
+  const remainingSkillsCount = Math.max(0, employeeSkills.length - pagedSkills.length);
 
   return (
-    <div className="flex min-h-0 flex-col gap-5">
-      {extractionResult || employeeSkills.length > 0 || pendingUnrecognizedSkills.length > 0 ? (
-        <>
-          {employeeSkills.length > 0 ? (
-            <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-4 shadow-sm md:p-5">
-              <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-3">
-                  <div
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm"
-                    style={{ background: "rgba(124, 58, 237, 0.1)", border: "1px solid rgba(124, 58, 237, 0.2)" }}
-                  >
-                    <BeakerIcon className="h-6 w-6" style={{ color: "var(--luxury-primary)" }} />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold leading-tight" style={{ color: "#1e293b" }}>
-                      Compétences extraites ({employeeSkills.length})
-                    </h3>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <span
-                    className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm"
-                    style={{ background: "rgba(16, 185, 129, 0.1)", color: "var(--luxury-success)", border: "1px solid var(--luxury-success)" }}
-                  >
-                    Validées: {validatedCount}
-                  </span>
-                  <span
-                    className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm"
-                    style={{ background: "rgba(249, 115, 22, 0.1)", color: "#C2410C", border: "1px solid rgba(249, 115, 22, 0.45)" }}
-                  >
-                    En attente: {pendingQuizCount}
-                  </span>
-                  <span
-                    className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm"
-                    style={{ background: "rgba(239, 68, 68, 0.1)", color: "var(--luxury-error)", border: "1px solid var(--luxury-error)" }}
-                  >
-                    À repasser: {failedCount}
-                  </span>
-                </div>
-              </div>
+    <aside className="flex min-w-0 flex-col gap-7">
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-6">
+          <h2 className="text-lg font-medium text-[#2b087f]">Compétences extraites</h2>
+          <span className="rounded-md bg-violet-100 px-2.5 py-1 text-xs font-bold text-[#6d28d9]">{employeeSkills.length}</span>
+        </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                {pagedSkills.map((skill, idx) => {
-                  const statusStyle =
-                    skill.status === "VALIDATED"
-                      ? { background: "rgba(16, 185, 129, 0.1)", color: "var(--luxury-success)", border: "1px solid var(--luxury-success)" }
-                      : skill.status === "FAILED"
-                        ? { background: "rgba(239, 68, 68, 0.1)", color: "var(--luxury-error)", border: "1px solid var(--luxury-error)" }
-                        : { background: "rgba(249, 115, 22, 0.1)", color: "#C2410C", border: "1px solid rgba(249, 115, 22, 0.45)" };
-                  const statusLabel = skill.status === "VALIDATED" ? "Validée" : skill.status === "FAILED" ? "À repasser" : "Quiz en attente";
+        <div className="grid grid-cols-3 gap-3 border-b border-slate-100 px-6 py-7">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-4 text-center">
+            <p className="text-[11px] font-extrabold uppercase text-emerald-900">Validées</p>
+            <p className="mt-1 text-2xl font-extrabold text-emerald-600">{validatedCount}</p>
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-4 text-center">
+            <p className="text-[11px] font-extrabold uppercase text-amber-800">En attente</p>
+            <p className="mt-1 text-2xl font-extrabold text-amber-600">{pendingQuizCount}</p>
+          </div>
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-4 text-center">
+            <p className="text-[11px] font-extrabold uppercase text-red-800">À repasser</p>
+            <p className="mt-1 text-2xl font-extrabold text-red-600">{failedCount}</p>
+          </div>
+        </div>
 
-                  return (
-                    <div
-                      key={`skill-card-${skill.id}-${skill.skillId}-${pageOffset + idx}`}
-                      className="group flex cursor-default items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:border-violet-200/80 hover:shadow-md"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-semibold" style={{ color: "#1e293b" }}>
-                          {skill.skillName}
-                        </p>
-                        <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "var(--luxury-text-muted)" }}>
-                          {skill.categoryName} · Niveau {skill.level}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
-                        <span className="inline-flex rounded-lg px-2.5 py-1 text-[10px] font-bold" style={statusStyle}>
-                          {statusLabel}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        <div className="flex flex-col gap-3 px-5 py-6">
+          {pagedSkills.length > 0 ? (
+            pagedSkills.map((skill, idx) => {
+              const isValidated = skill.status === "VALIDATED";
+              const isFailed = skill.status === "FAILED";
+              const statusLabel = isValidated ? "Validée" : isFailed ? "À repasser" : skill.status === "QUIZ_PENDING" ? "Quiz en attente" : "Extraite";
+              const badgeClass = isValidated
+                ? "bg-emerald-100 text-emerald-700"
+                : isFailed
+                  ? "bg-red-100 text-red-600"
+                  : "bg-amber-100 text-amber-700";
+              const iconClass = isValidated
+                ? "bg-violet-50 text-[#2b087f]"
+                : isFailed
+                  ? "bg-red-50 text-red-700"
+                  : "bg-violet-50 text-[#6d28d9]";
 
-              {totalSkillPages > 1 ? (
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  {Array.from({ length: totalSkillPages }).map((_, idx) => (
-                    <button
-                      key={`skills-page-${idx + 1}`}
-                      type="button"
-                      onClick={() => setSkillsPage(idx)}
-                      aria-label={`Aller à la page ${idx + 1}`}
-                      className="h-2 rounded-full transition-all duration-200 hover:opacity-90"
-                      style={{
-                        width: skillsPage === idx ? "1.25rem" : "0.5rem",
-                        background: skillsPage === idx ? "var(--luxury-primary)" : "rgba(148, 163, 184, 0.28)",
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {pendingUnrecognizedSkills.length > 0 || (extractionResult?.unmatchedSkills.length ?? 0) > 0 ? (
-            <div
-              className="rounded-2xl border p-4 shadow-sm md:p-5"
-              style={{
-                background: "linear-gradient(135deg, rgba(249, 115, 22, 0.06) 0%, rgba(255, 255, 255, 0.95) 100%)",
-                borderColor: "rgba(249, 115, 22, 0.28)",
-              }}
-            >
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-lg"
-                    style={{ background: "rgba(249, 115, 22, 0.12)", border: "1px solid rgba(249, 115, 22, 0.35)" }}
-                  >
-                    <ArrowPathIcon className="h-4 w-4" style={{ color: "#EA580C" }} />
-                  </div>
-                  <span className="text-xs font-bold" style={{ color: "#1e293b" }}>
-                    En attente de validation
-                  </span>
-                </div>
-                <span
-                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "rgba(249, 115, 22, 0.12)", color: "#C2410C", border: "1px solid rgba(249, 115, 22, 0.4)" }}
+              return (
+                <div
+                  key={`skill-card-${skill.id}-${skill.skillId}-${pageOffset + idx}`}
+                  className="flex min-h-[86px] items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4"
                 >
-                  {pendingUnrecognizedSkills.length > 0 ? pendingUnrecognizedSkills.length : (extractionResult?.unmatchedSkills.length ?? 0)} compétence(s)
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {displayedPendingSkills.map((skill, idx) => (
-                  <span
-                    key={`pending-skill-${skill}-${idx + 1}`}
-                    className="inline-flex items-center rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-medium shadow-sm transition-all duration-200 hover:border-orange-200/80 hover:shadow"
-                    style={{ color: "var(--luxury-text)" }}
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-
-              <p className="mt-3 text-[11px] leading-relaxed" style={{ color: "var(--luxury-text-muted)" }}>
-                Ces compétences seront examinées par un administrateur et ajoutées au référentiel si validées.
-              </p>
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>
+                    {isFailed ? <CommandLineIcon className="h-5 w-5" /> : isValidated ? <BeakerIcon className="h-5 w-5" /> : <InformationCircleIcon className="h-5 w-5" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <p className="min-w-0 whitespace-normal text-base font-extrabold leading-5 text-slate-950">{skill.skillName}</p>
+                      <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase ${badgeClass}`}>{statusLabel}</span>
+                    </div>
+                    <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                      {skill.categoryName} <span className="mx-1 text-slate-300">•</span> Niveau {skill.level}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
+              <p className="text-sm font-semibold text-slate-500">Aucune compétence extraite pour le moment.</p>
             </div>
-          ) : null}
-        </>
+          )}
+        </div>
+
+        {totalSkillPages > 1 ? (
+          <div className="flex items-center justify-center gap-2 border-t border-slate-100 px-5 py-4">
+            {Array.from({ length: totalSkillPages }).map((_, idx) => (
+              <button
+                key={`skills-page-${idx + 1}`}
+                type="button"
+                onClick={() => setSkillsPage(idx)}
+                aria-label={`Aller à la page ${idx + 1}`}
+                className="h-2 rounded-full transition-all duration-200 hover:opacity-90"
+                style={{
+                  width: skillsPage === idx ? "1.25rem" : "0.5rem",
+                  background: skillsPage === idx ? "#3b007d" : "rgba(148, 163, 184, 0.35)",
+                }}
+              />
+            ))}
+          </div>
+        ) : remainingSkillsCount > 0 ? (
+          <div className="border-t border-slate-100 px-5 py-4 text-center text-sm font-bold text-[#2b087f]">
+            Afficher les {remainingSkillsCount} autres compétences
+          </div>
+        ) : null}
+      </section>
+
+      {displayedPendingSkills.length > 0 ? (
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ArrowPathIcon className="h-5 w-5 text-orange-500" />
+              <h3 className="text-base font-extrabold text-slate-950">En attente de validation</h3>
+            </div>
+            <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{displayedPendingSkills.length}</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {displayedPendingSkills.map((skill, idx) => (
+              <span key={`pending-skill-${skill}-${idx + 1}`} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                {skill}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-5 flex gap-3 rounded-lg bg-violet-50 px-4 py-4 text-sm leading-6 text-[#5b21b6]">
+            <InformationCircleIcon className="mt-1 h-4 w-4 shrink-0" />
+            <p>Ces compétences n'ont pas pu être matchées avec le référentiel standard de l'entreprise. Elles nécessitent une validation manuelle par un administrateur RH pour être indexées.</p>
+          </div>
+        </section>
       ) : null}
-    </div>
+
+    </aside>
   );
 }
 
