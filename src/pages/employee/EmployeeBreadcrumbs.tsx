@@ -14,6 +14,10 @@ function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string 
     return [{ label: "Mon profil" }];
   }
 
+  if (parts[1] === "cv-extraction") {
+    return [{ label: "Extraction CV" }];
+  }
+
   if (parts[1] === "quiz") {
     return [{ label: "Quiz" }];
   }

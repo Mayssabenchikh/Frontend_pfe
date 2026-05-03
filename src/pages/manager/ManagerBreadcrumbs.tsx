@@ -19,6 +19,10 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
     return [{ label: "Quiz" }];
   }
 
+  if (parts[1] === "cv-extraction") {
+    return [{ label: "Extraction CV" }];
+  }
+
   // /manager/assignments
   if (parts[1] === "assignments") {
     return [{ label: "Affectations" }];

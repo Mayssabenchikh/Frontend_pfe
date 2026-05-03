@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useKeycloak } from "@react-keycloak/web";
-import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
   Squares2X2Icon,
   UserCircleIcon,
   BriefcaseIcon,
@@ -14,6 +13,7 @@ import {
 import { meApi } from "../api/meApi";
 import { EmployeeBreadcrumbs } from "./employee/EmployeeBreadcrumbs";
 import { AdminHeader } from "./admin/AdminHeader";
+import { DashboardSidebar, DashboardSidebarNavItem } from "../components/DashboardSidebar";
 
 export default function EmployeePage() {
   const { keycloak } = useKeycloak();
@@ -29,6 +29,7 @@ export default function EmployeePage() {
 
   const location = useLocation();
   const isProfilePage = location.pathname.startsWith("/employee/profile");
+  const isCvExtractionPage = location.pathname.startsWith("/employee/cv-extraction");
   const isQuizPage = location.pathname.startsWith("/employee/quiz");
   const isAssignmentsPage = location.pathname.startsWith("/employee/assignments");
   const isLearningPage = location.pathname.startsWith("/employee/learning");
@@ -67,190 +68,15 @@ export default function EmployeePage() {
         onClick={() => setSidebarOpen(false)}
       />
 
-      {/* Sidebar employee avec le même style que manager/admin */}
-      <aside
-        className={`admin-sidebar flex flex-col${
-          sidebarOpen ? " open" : ""
-        }${sidebarCollapsed ? " collapsed" : ""}`}
-      >
-        {/* Header sidebar : logo + flèche */}
-        <div
-          className={`h-16 flex items-center shrink-0 admin-sidebar-header ${
-            sidebarCollapsed ? "justify-center px-0" : "justify-between px-3"
-          }`}
-        >
-          <div className="admin-sidebar-logo flex items-center justify-center overflow-hidden min-w-0 flex-1">
-            <img src="/logo.png" alt="Logo" className="h-9 w-auto object-contain" />
-          </div>
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed((c) => !c)}
-            className="admin-sidebar-toggle flex items-center justify-center w-8 h-8 flex-shrink-0 text-slate-400 hover:text-violet-600 transition-colors duration-200"
-            aria-label={sidebarCollapsed ? "Ouvrir le menu" : "Réduire le menu"}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRightIcon className="w-5 h-5" strokeWidth={2} />
-            ) : (
-              <ChevronLeftIcon className="w-5 h-5" strokeWidth={2} />
-            )}
-          </button>
-        </div>
-
-        {/* Navigation employee : tableau de bord + compétences + profil */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-5 flex flex-col gap-0.5">
-          <NavLink
-            to="/employee"
-            end
-            className={({ isActive }) =>
-              [
-                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "bg-indigo-50 text-indigo-800 font-semibold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
-                )}
-                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
-                  <Squares2X2Icon className="w-5 h-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Tableau de bord</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/employee/quiz"
-            className={({ isActive }) =>
-              [
-                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "bg-indigo-50 text-indigo-800 font-semibold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
-                )}
-                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
-                  <ClipboardDocumentCheckIcon className="w-5 h-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Quiz</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/employee/assignments"
-            className={({ isActive }) =>
-              [
-                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "bg-indigo-50 text-indigo-800 font-semibold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
-                )}
-                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
-                  <BriefcaseIcon className="w-5 h-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Affectations</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/employee/training-recommendations"
-            className={({ isActive }) =>
-              [
-                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "bg-indigo-50 text-indigo-800 font-semibold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
-                )}
-                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
-                  <SparklesIcon className="w-5 h-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Formations</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/employee/projects"
-            className={({ isActive }) =>
-              [
-                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "bg-indigo-50 text-indigo-800 font-semibold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
-                )}
-                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
-                  <ClipboardDocumentListIcon className="w-5 h-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Mes projets</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/employee/profile"
-            className={({ isActive }) =>
-              [
-                "relative flex items-center w-full rounded-xl py-2.5 text-sm font-medium transition-all admin-nav-item group",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "bg-indigo-50 text-indigo-800 font-semibold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r bg-gradient-to-b from-indigo-700 to-violet-700" />
-                )}
-                <span className={`shrink-0 flex items-center justify-center ${isActive ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}>
-                  <UserCircleIcon className="w-5 h-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Mon profil</span>}
-              </>
-            )}
-          </NavLink>
-
-        </nav>
-      </aside>
+      <DashboardSidebar mobileOpen={sidebarOpen} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed((c) => !c)}>
+        <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/employee" end collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Extraction CV" icon={<DocumentTextIcon className="h-5 w-5" />} to="/employee/cv-extraction" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/employee/quiz" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/employee/assignments" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/employee/training-recommendations" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Mes projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/employee/projects" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Mon profil" icon={<UserCircleIcon className="h-5 w-5" />} to="/employee/profile" collapsed={sidebarCollapsed} />
+      </DashboardSidebar>
 
       {/* Contenu : même header fixe et même padding que manager/admin */}
       <div className="admin-content">
@@ -271,7 +97,7 @@ export default function EmployeePage() {
             className={
               isProfilePage
                 ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
-                : isQuizPage
+                : isCvExtractionPage || isQuizPage
                 ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"
                 : isAssignmentsPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"

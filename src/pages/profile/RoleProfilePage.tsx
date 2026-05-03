@@ -697,6 +697,184 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   );
 }
 
+export function RoleCvExtractionPage({ config }: { config: RoleProfileConfig }) {
+  const { keycloak } = useKeycloak();
+  const userId = keycloak.subject;
+  const cvEnabled = isCvSectionEnabled(config);
+
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [cvFileName, setCvFileName] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const cvInputRef = useRef<HTMLInputElement>(null);
+  const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
+  const [employeeSkills, setEmployeeSkills] = useState<EmployeeSkillItem[]>([]);
+  const [pendingUnrecognizedSkills, setPendingUnrecognizedSkills] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!cvEnabled || !userId || !config.cvEndpoint) return;
+    dedupedProfileGet<CvMetadata>(config.cvEndpoint)
+      .then((res) => setCvFileName(res.data?.fileName ?? null))
+      .catch(() => {});
+  }, [config.cvEndpoint, userId, cvEnabled]);
+
+  const loadEmployeeSkills = useCallback(
+    (force = false) => {
+      if (!cvEnabled || !config.skillsEndpoint) return;
+      dedupedProfileGet<EmployeeSkillItem[]>(config.skillsEndpoint, { force })
+        .then((res) => setEmployeeSkills(normalizeEmployeeSkillsPayload(res.data)))
+        .catch(() => setEmployeeSkills([]));
+    },
+    [config.skillsEndpoint, cvEnabled],
+  );
+
+  const loadPendingUnrecognizedSkills = useCallback(
+    (force = false) => {
+      if (!cvEnabled || !config.pendingSkillsEndpoint) return;
+      dedupedProfileGet<string[]>(config.pendingSkillsEndpoint, { force })
+        .then((res) => setPendingUnrecognizedSkills(normalizePendingSkillsPayload(res.data)))
+        .catch(() => setPendingUnrecognizedSkills([]));
+    },
+    [config.pendingSkillsEndpoint, cvEnabled],
+  );
+
+  useEffect(() => {
+    if (!cvEnabled) return;
+    loadEmployeeSkills();
+    loadPendingUnrecognizedSkills();
+  }, [cvEnabled, loadEmployeeSkills, loadPendingUnrecognizedSkills]);
+
+  const handleCvDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    const validationError = getCvValidationError(file);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    setCvFile(file);
+    setCvFileName(normalizeCvFilename(file));
+    setExtractionResult(null);
+  };
+
+  const handleCvSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validationError = getCvValidationError(file);
+    if (validationError) {
+      toast.error(validationError);
+      e.target.value = "";
+      return;
+    }
+
+    setCvFile(file);
+    setCvFileName(normalizeCvFilename(file));
+    setExtractionResult(null);
+  };
+
+  const handleExtractSkills = async () => {
+    if (!config.cvExtractEndpoint) return;
+    if (!cvFile) {
+      toast.info("Veuillez d'abord sélectionner un CV (PDF ou DOCX), puis cliquer sur Extraire.");
+      return;
+    }
+    setExtracting(true);
+    setExtractionResult(null);
+    const form = new FormData();
+    form.append("file", cvFile);
+
+    try {
+      const res = await http.post<ExtractionResult>(config.cvExtractEndpoint, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setExtractionResult(res.data);
+      const matched = res.data.matchedSkills?.length ?? 0;
+      const unmatched = res.data.unmatchedSkills?.length ?? 0;
+      const isCv = res.data.isCv ?? matched > 0;
+      const cvMessage = (res.data.cvMessage ?? "").trim();
+      if (!isCv) {
+        toast.warning(cvMessage || "Ce document ne semble pas être un CV exploitable. Veuillez importer un CV clair au format PDF ou DOCX.");
+      } else if (matched > 0) {
+        toast.success(`${matched} compétence(s) ajoutée(s) à votre profil !`);
+      } else {
+        toast.info("CV détecté, mais aucune compétence technique exploitable n'a été trouvée.");
+      }
+      if (unmatched > 0) toast.info(`${unmatched} compétence(s) non reconnue(s) envoyée(s) à l'administrateur.`);
+      setCvFileName(normalizeCvFilename(cvFile));
+      loadEmployeeSkills(true);
+      loadPendingUnrecognizedSkills(true);
+    } catch (err: unknown) {
+      const apiMessage = getUserFacingApiMessage(err, "Impossible d'analyser ce document.");
+      toast.error(translateApiMessageToFrench(apiMessage));
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  if (!cvEnabled || !config.cvDownloadEndpoint) {
+    return (
+      <div className="flex min-h-full w-full items-center justify-center bg-[#f8f7ff] p-6">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <p className="text-base font-bold text-slate-900">Extraction CV indisponible</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-full w-full overflow-auto bg-[#f8f7ff] px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
+        <header className="rounded-lg border border-violet-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-800">
+                <SparklesIcon className="h-4 w-4" />
+                Skills intelligence
+              </div>
+              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Extraction CV</h1>
+              <p className="mt-2 max-w-3xl text-base leading-7 text-slate-600">
+                Importez un CV PDF ou DOCX pour extraire les compétences et préparer leur validation.
+              </p>
+            </div>
+            {cvFileName ? (
+              <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
+                <CheckCircleIcon className="h-4 w-4" />
+                CV disponible
+              </span>
+            ) : (
+              <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-bold text-orange-700">
+                <DocumentTextIcon className="h-4 w-4" />
+                Aucun CV
+              </span>
+            )}
+          </div>
+        </header>
+
+        <CVSection
+          cvFile={cvFile}
+          cvFileName={cvFileName}
+          dragOver={dragOver}
+          extracting={extracting}
+          cvInputRef={cvInputRef}
+          onDragOver={setDragOver}
+          onCvDrop={handleCvDrop}
+          onCvSelect={handleCvSelect}
+          onExtract={handleExtractSkills}
+          extractionResult={extractionResult}
+          employeeSkills={employeeSkills}
+          pendingUnrecognizedSkills={pendingUnrecognizedSkills}
+          cvDownloadEndpoint={config.cvDownloadEndpoint}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ProfileSectionCard({
   title,
   description,
@@ -1365,7 +1543,6 @@ function ExtractionResultsSection({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {pagedSkills.map((skill, idx) => {
-                  const isValidated = skill.status === "VALIDATED";
                   const statusStyle =
                     skill.status === "VALIDATED"
                       ? { background: "rgba(16, 185, 129, 0.1)", color: "var(--luxury-success)", border: "1px solid var(--luxury-success)" }
@@ -1391,16 +1568,6 @@ function ExtractionResultsSection({
                         <span className="inline-flex rounded-lg px-2.5 py-1 text-[10px] font-bold" style={statusStyle}>
                           {statusLabel}
                         </span>
-                        {!isValidated ? (
-                          <button
-                            type="button"
-                            onClick={() => toast.info("Quiz bientôt disponible")}
-                            style={{ background: "rgba(124, 58, 237, 0.08)", border: "1px solid var(--luxury-primary)" }}
-                            className="rounded-lg px-2.5 py-1 text-[10px] font-semibold transition-all duration-200 hover:bg-violet-100/80 active:scale-95"
-                          >
-                            <span style={{ color: "var(--luxury-primary)" }}>Quiz</span>
-                          </button>
-                        ) : null}
                       </div>
                     </div>
                   );

@@ -10,14 +10,14 @@ import ProjectsList from "./pages/manager/ProjectsList";
 import { ProjectDetail } from "./pages/manager/ProjectDetail";
 import { ManagerMatchingHub } from "./pages/manager/ManagerMatchingHub";
 import { ProjectTalentWorkspace } from "./pages/manager/ProjectTalentWorkspace";
-import { ManagerProfile } from "./pages/manager/ManagerProfile";
+import { ManagerCvExtraction, ManagerProfile } from "./pages/manager/ManagerProfile";
 import { ManagerAssignmentsHistory } from "./pages/manager/ManagerAssignmentsHistory";
 import { EmployeeLearningPrograms } from "./pages/employee/EmployeeLearningPrograms";
 import { EmployeeLearningProgramPlayer } from "./pages/employee/EmployeeLearningProgramPlayer";
 import { EmployeeLearningProgramQuiz } from "./pages/employee/EmployeeLearningProgramQuiz";
 import EmployeePage from "./pages/EmployeePage";
 import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
-import { EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
+import { EmployeeCvExtraction, EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
 import { EmployeeAssignments } from "./pages/employee/EmployeeAssignments";
 import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
 import { EmployeeProjectDetail } from "./pages/employee/EmployeeProjectDetail";
@@ -129,6 +129,7 @@ function App() {
           }
         >
           <Route index element={<ManagerDashboard />} />
+          <Route path="cv-extraction" element={<ManagerCvExtraction />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="matching/:id/workspace" element={<ProjectTalentWorkspace />} />
           <Route path="matching/:id/matches" element={<Navigate to="../workspace" replace />} />
@@ -169,6 +170,7 @@ function App() {
           }
         >
           <Route index element={<EmployeeDashboard />} />
+          <Route path="cv-extraction" element={<EmployeeCvExtraction />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="assignments" element={<EmployeeAssignments />} />
           <Route path="training-recommendations" element={<EmployeeTrainingRecommendations />} />

@@ -3,6 +3,7 @@ import { useKeycloak } from "@react-keycloak/web";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
   Squares2X2Icon,
   BriefcaseIcon,
   ClipboardDocumentListIcon,
@@ -29,10 +30,12 @@ export default function ManagerPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
 
   const location = useLocation();
+  const isCvExtractionPage = location.pathname.startsWith("/manager/cv-extraction");
   const isQuizPage = location.pathname.startsWith("/manager/quiz");
   const isTalentRoute = /^\/manager\/matching(\/|$)/.test(location.pathname);
   const isFullBleed =
     location.pathname.startsWith("/manager/projects") ||
+    isCvExtractionPage ||
     isQuizPage ||
     isTalentRoute;
 
@@ -71,6 +74,7 @@ export default function ManagerPage() {
 
       <DashboardSidebar mobileOpen={sidebarOpen} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed((c) => !c)}>
         <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/manager" end collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Extraction CV" icon={<DocumentTextIcon className="h-5 w-5" />} to="/manager/cv-extraction" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/manager/quiz" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/manager/projects" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Correspondances" icon={<ChartBarSquareIcon className="h-5 w-5" />} to="/manager/matching" active={isTalentRoute} collapsed={sidebarCollapsed} />
@@ -95,7 +99,7 @@ export default function ManagerPage() {
           <ManagerBreadcrumbs />
           <div
             className={
-              isQuizPage
+              isQuizPage || isCvExtractionPage
                 ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
                 : `${isFullBleed ? "" : "dashboard-padding "}flex min-w-0 flex-1 flex-col overflow-hidden`
             }

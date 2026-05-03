@@ -45,7 +45,9 @@ function DashboardSidebarNavContent({ label, icon, active, collapsed, subtitle }
       <span
         className={[
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors",
-          active ? "bg-white text-violet-700 shadow-sm" : "text-slate-400 group-hover:bg-white group-hover:text-violet-700 group-hover:shadow-sm",
+          active
+            ? "text-violet-700 drop-shadow-[0_1px_6px_rgba(124,58,237,0.24)]"
+            : "text-slate-400 group-hover:text-violet-700",
         ].join(" ")}
       >
         {icon}
