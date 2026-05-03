@@ -21,14 +21,13 @@ import {
   LockClosedIcon,
   SparklesIcon,
   DocumentTextIcon,
-  BeakerIcon,
-  CommandLineIcon,
   InformationCircleIcon,
 } from "../../icons/heroicons/outline";
 import { toast } from "sonner";
 import { http } from "../../api/http";
 import { meApi } from "../../api/meApi";
 import { getAvatarColor } from "../admin/utils";
+import { getSkillIconUrl } from "../admin/skillIcons";
 import { getUserFacingApiMessage, translateApiMessageToFrench } from "../../utils/apiUserMessage";
 
 const STYLE_ELEMENT_ID = "role-profile-luxury-styles";
@@ -831,10 +830,10 @@ export function RoleCvExtractionPage({ config }: { config: RoleProfileConfig }) 
 
   return (
     <div className="min-h-full w-full overflow-auto bg-[#f6f7fc] px-4 py-7 sm:px-6 lg:px-9">
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7">
+      <div className="flex w-full flex-col gap-7">
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
-            <h1 className="text-4xl font-extrabold leading-tight text-[#2b087f] sm:text-[42px]">Analyser un CV et extraire les compétences</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Analyser un CV et extraire les compétences</h1>
             <p className="mt-2 max-w-3xl text-base leading-7 text-slate-600">
               Importez un CV PDF ou DOCX pour analyser automatiquement les expertises de vos talents grâce à notre moteur IA propriétaire.
             </p>
@@ -1409,7 +1408,7 @@ function CVSection({
               <button
                 type="button"
                 onClick={() => cvInputRef.current?.click()}
-                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-lg border border-violet-200 bg-white px-5 text-base font-bold text-[#2b087f] transition hover:border-violet-300 hover:bg-violet-50"
+                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-2xl border border-violet-200 bg-white px-5 text-base font-bold text-[#2b087f] transition hover:border-violet-300 hover:bg-violet-50"
               >
                 <DocumentTextIcon className="h-5 w-5" />
                 <span>Choisir un fichier</span>
@@ -1418,7 +1417,7 @@ function CVSection({
                 type="button"
                 onClick={onExtract}
                 disabled={extracting}
-                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-lg bg-[#3b007d] px-6 text-base font-bold text-white shadow-[0_14px_24px_rgba(59,0,125,0.22)] transition hover:bg-[#31006a] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-2xl bg-[#3b007d] px-6 text-base font-bold text-white shadow-[0_14px_24px_rgba(59,0,125,0.22)] transition hover:bg-[#31006a] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {extracting ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
                 <span>{extracting ? "Extraction..." : "Extraire"}</span>
@@ -1458,15 +1457,6 @@ function CVSection({
                 <h3 className="text-base font-extrabold text-slate-950">Aperçu du CV</h3>
                 <p className="mt-1 truncate text-xs font-semibold text-slate-400">{previewFileName}</p>
               </div>
-              <button
-                type="button"
-                onClick={handleOpenCvInNewTab}
-                disabled={!previewUrl}
-                className="inline-flex w-fit items-center gap-2 rounded-lg border border-violet-200 bg-white px-4 py-2 text-sm font-bold text-[#2b087f] transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                Ouvrir dans une nouvelle page
-              </button>
             </div>
             <div className="flex min-h-[620px] items-center justify-center bg-gradient-to-b from-slate-100 via-slate-50 to-white p-4 sm:p-7">
               {canPreviewPdf ? (
@@ -1563,24 +1553,24 @@ function ExtractionResultsSection({
               const isValidated = skill.status === "VALIDATED";
               const isFailed = skill.status === "FAILED";
               const statusLabel = isValidated ? "Validée" : isFailed ? "À repasser" : skill.status === "QUIZ_PENDING" ? "Quiz en attente" : "Extraite";
+              const skillIconUrl = getSkillIconUrl(skill.skillName);
               const badgeClass = isValidated
                 ? "bg-emerald-100 text-emerald-700"
                 : isFailed
                   ? "bg-red-100 text-red-600"
                   : "bg-amber-100 text-amber-700";
-              const iconClass = isValidated
-                ? "bg-violet-50 text-[#2b087f]"
-                : isFailed
-                  ? "bg-red-50 text-red-700"
-                  : "bg-violet-50 text-[#6d28d9]";
 
               return (
                 <div
                   key={`skill-card-${skill.id}-${skill.skillId}-${pageOffset + idx}`}
                   className="flex min-h-[86px] items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4"
                 >
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>
-                    {isFailed ? <CommandLineIcon className="h-5 w-5" /> : isValidated ? <BeakerIcon className="h-5 w-5" /> : <InformationCircleIcon className="h-5 w-5" />}
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-[#6d28d9]">
+                    {skillIconUrl ? (
+                      <img src={skillIconUrl} alt="" className="h-7 w-7 object-contain" />
+                    ) : (
+                      <SparklesIcon className="h-5 w-5" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-start justify-between gap-3">

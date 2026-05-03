@@ -70,7 +70,7 @@ export default function EmployeePage() {
 
       <DashboardSidebar mobileOpen={sidebarOpen} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed((c) => !c)}>
         <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/employee" end collapsed={sidebarCollapsed} />
-        <DashboardSidebarNavItem label="Extraction CV" icon={<DocumentTextIcon className="h-5 w-5" />} to="/employee/cv-extraction" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Analyse du CV" icon={<DocumentTextIcon className="h-5 w-5" />} to="/employee/cv-extraction" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/employee/quiz" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/employee/assignments" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/employee/training-recommendations" collapsed={sidebarCollapsed} />
