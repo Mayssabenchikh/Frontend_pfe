@@ -13,14 +13,29 @@ const markdownSanitizeSchema: Schema = {
 };
 
 const markdownComponents: Components = {
-  img: ({ node: _n, ...props }) => (
-    <img
-      {...props}
-      loading="lazy"
-      decoding="async"
-      className="my-5 block max-h-[min(70vh,720px)] w-auto max-w-full rounded-xl border border-slate-200/90 object-contain shadow-sm"
-    />
-  ),
+  img: ({ node: _n, ...props }) => {
+    const image = (
+      <img
+        {...props}
+        loading="lazy"
+        decoding="async"
+        className="block max-h-[min(76vh,820px)] w-auto max-w-full rounded-xl border border-slate-200/90 object-contain shadow-sm transition duration-200 group-hover:border-violet-300 group-hover:shadow-md"
+      />
+    );
+    return typeof props.src === "string" && props.src.trim() ? (
+      <a
+        href={props.src}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group my-5 inline-block max-w-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+        title="Ouvrir l'image"
+      >
+        {image}
+      </a>
+    ) : (
+      <span className="my-5 block">{image}</span>
+    );
+  },
   a: ({ node: _n, ...props }) => (
     <a {...props} className="font-semibold text-sky-700 underline decoration-sky-300/70 underline-offset-2 hover:text-sky-900" rel="noopener noreferrer" target="_blank" />
   ),

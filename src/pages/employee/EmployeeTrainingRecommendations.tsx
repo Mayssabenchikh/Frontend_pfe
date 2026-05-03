@@ -13,6 +13,8 @@ import {
   ArrowTrendingUpIcon,
   BriefcaseIcon,
   SparklesIcon,
+  ChartBarSquareIcon,
+  TagIcon,
 } from "../../icons/heroicons/outline";
 
 type EmployeeTrainingRecommendationsProps = {
@@ -58,19 +60,24 @@ export function EmployeeTrainingRecommendations({
   const requiredProjectRecs = recommendations.filter((r) => r.type === "PROJECT");
   const cooldownRecs = recommendations.filter((r) => r.type === "PROGRESSION" && r.mandatory);
   const otherRecs = recommendations.filter((r) => r.type === "PROGRESSION" && !r.mandatory);
+  const topRequired = requiredProjectRecs[0] ?? null;
+  const remainingRequired = requiredProjectRecs.slice(1);
+  const secondaryRecs = [...cooldownRecs, ...otherRecs];
 
   return (
-    <div className="w-full space-y-6">
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-violet-700 to-indigo-700 p-8 text-white shadow-[0_20px_40px_rgba(79,70,229,0.35)]">
-        <div className="pointer-events-none absolute inset-0 animate-pulse bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_45%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.18),transparent_45%)]" />
-        <div className="relative flex items-center gap-3">
-          <SparklesIcon className="h-8 w-8 text-amber-300" />
+    <div className="w-full space-y-6 bg-[var(--luxury-light-bg,#f8f7ff)] pb-8">
+      <section className="relative overflow-hidden rounded-3xl border border-violet-100 bg-white p-7 shadow-[0_8px_26px_rgba(124,58,237,0.08)]">
+        <div className="pointer-events-none absolute -right-10 -top-8 h-40 w-40 rounded-full bg-violet-100/65 blur-2xl" />
+        <div className="pointer-events-none absolute left-8 top-4 h-16 w-16 rounded-full bg-indigo-50 blur-xl" />
+        <div className="relative flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Recommandations de Formation</h2>
-            <p className="mt-1 max-w-2xl text-sm text-violet-100">
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Recommandations de Formation</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600 md:text-base">
               Formations personnalisées selon vos projets et votre progression — sélectionnées par IA.
             </p>
+          </div>
+          <div className="hidden h-24 w-24 items-center justify-center rounded-full bg-violet-50 text-violet-700 md:flex">
+            <SparklesIcon className="h-10 w-10" />
           </div>
         </div>
       </section>
@@ -88,7 +95,7 @@ export function EmployeeTrainingRecommendations({
       {/* ── Error ── */}
       {error && !loading && (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-          <ExclamationCircleIcon className="mx-auto mb-2 h-8 w-8 text-red-400" />
+          <ExclamationCircleIcon className="mx-auto mb-2 h-8 w-8 text-violet-500" />
           <p className="text-sm text-red-700">
             Une erreur est survenue lors du chargement des recommandations.
           </p>
@@ -98,7 +105,7 @@ export function EmployeeTrainingRecommendations({
       {/* ── Empty ── */}
       {!loading && !error && recommendations.length === 0 && (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-          <RocketLaunchIcon className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+          <RocketLaunchIcon className="mx-auto mb-3 h-10 w-10 text-violet-500" />
           <p className="text-sm font-medium text-slate-600">Aucune recommandation pour le moment.</p>
           <p className="mt-1 text-xs text-slate-400">
             Les recommandations apparaîtront lorsque vous serez affecté à un projet
@@ -108,17 +115,34 @@ export function EmployeeTrainingRecommendations({
       )}
 
       {/* ── REQUIRED PROJECT section ── */}
-      {requiredProjectRecs.length > 0 && (
+      {topRequired && (
         <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <BriefcaseIcon className="h-5 w-5 text-red-500" />
-            <h3 className="text-lg font-bold text-slate-900">Formations Obligatoires (Projet)</h3>
-            <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-red-700">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-violet-100 p-2.5 text-violet-700">
+                <BriefcaseIcon className="h-5 w-5" />
+              </div>
+              <h3 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Formations Obligatoires (Projet)</h3>
+            </div>
+            <span className="rounded-full bg-red-100 px-4 py-1 text-[11px] font-semibold uppercase tracking-wider text-red-700">
               Obligatoire
             </span>
           </div>
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <PrimaryRecommendationCard rec={topRequired} onStart={onStart} startingId={startingId} />
+            <ImpactPanel rec={topRequired} />
+          </div>
+        </section>
+      )}
+
+      {remainingRequired.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <BriefcaseIcon className="h-5 w-5 text-violet-600" />
+            <h3 className="text-base font-semibold text-slate-900 md:text-lg">Autres Formations Obligatoires</h3>
+          </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {requiredProjectRecs.map((rec) => (
+            {remainingRequired.map((rec) => (
               <RecommendationCard
                 key={`project-${rec.trainingUuid}-${rec.skillName}-${rec.contextName ?? ""}`}
                 rec={rec}
@@ -127,58 +151,32 @@ export function EmployeeTrainingRecommendations({
                 accentClass="border-red-200 hover:shadow-red-200/40"
                 badgeClass="bg-red-100 text-red-700"
                 badgeLabel="Obligatoire"
-                buttonGradient="from-red-600 to-rose-600"
-                buttonShadow="shadow-[0_8px_18px_rgba(220,38,38,0.35)]"
+                buttonGradient="from-blue-600 to-indigo-600"
+                buttonShadow="shadow-[0_8px_18px_rgba(37,99,235,0.28)]"
               />
             ))}
           </div>
         </section>
       )}
 
-      {/* ── MANDATORY / COOLDOWN section ── */}
-      {cooldownRecs.length > 0 && (
+      {secondaryRecs.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <BoltIcon className="h-5 w-5 text-amber-500" />
-            <h3 className="text-lg font-bold text-slate-900">Formations en cooldown</h3>
+            <ArrowTrendingUpIcon className="h-5 w-5 text-violet-600" />
+            <h3 className="text-base font-semibold text-slate-900 md:text-lg">Autres recommandations pour vous</h3>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {cooldownRecs.map((rec) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {secondaryRecs.map((rec) => (
               <RecommendationCard
-                key={`mandatory-${rec.trainingUuid}-${rec.skillName}`}
+                key={`secondary-${rec.trainingUuid}-${rec.skillName}-${rec.contextName ?? ""}`}
                 rec={rec}
                 onStart={onStart}
                 startingId={startingId}
-                accentClass="border-amber-200 hover:shadow-amber-200/40"
-                badgeClass="bg-amber-100 text-amber-700"
-                badgeLabel="À refaire plus tard"
-                buttonGradient="from-amber-600 to-orange-600"
-                buttonShadow="shadow-[0_8px_18px_rgba(217,119,6,0.35)]"
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── OTHER section ── */}
-      {otherRecs.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <ArrowTrendingUpIcon className="h-5 w-5 text-violet-500" />
-            <h3 className="text-lg font-bold text-slate-900">Autres Formations Recommandées</h3>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {otherRecs.map((rec) => (
-              <RecommendationCard
-                key={`progression-${rec.trainingUuid}-${rec.skillName}`}
-                rec={rec}
-                onStart={onStart}
-                startingId={startingId}
-                accentClass="border-violet-100 hover:shadow-violet-200/40"
-                badgeClass="bg-violet-100 text-violet-700"
-                badgeLabel="PROGRESSION"
-                buttonGradient="from-violet-600 to-indigo-600"
-                buttonShadow="shadow-[0_8px_18px_rgba(79,70,229,0.35)]"
+                accentClass={rec.mandatory ? "border-amber-200 hover:shadow-amber-200/40" : "border-blue-100 hover:shadow-blue-200/40"}
+                badgeClass={rec.mandatory ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}
+                badgeLabel={rec.mandatory ? "À refaire plus tard" : "Progression"}
+                buttonGradient="from-blue-600 to-indigo-600"
+                buttonShadow="shadow-[0_8px_18px_rgba(37,99,235,0.28)]"
               />
             ))}
           </div>
@@ -229,12 +227,12 @@ function RecommendationCard({
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(255,255,255,0.2),transparent_60%)]" />
         <div className="relative flex w-full items-center justify-between">
-          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${badgeClass}`}>
+          <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeClass}`}>
             {badgeLabel}
           </span>
           {rec.priority === "HIGH" && (
-            <span className="flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-              <BoltIcon className="h-3 w-3" /> HAUTE PRIORITÉ
+            <span className="flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+              <BoltIcon className="h-3 w-3 text-violet-200" /> HAUTE PRIORITÉ
             </span>
           )}
         </div>
@@ -243,7 +241,7 @@ function RecommendationCard({
       {/* Body */}
       <div className="space-y-3 p-5">
         <div>
-          <h4 className="line-clamp-2 text-base font-semibold text-slate-900">
+          <h4 className="line-clamp-2 text-sm font-semibold text-slate-900 md:text-base">
             {rec.trainingTitle}
           </h4>
           <p className="mt-0.5 text-xs text-slate-500">{rec.skillName}</p>
@@ -258,14 +256,14 @@ function RecommendationCard({
 
         {/* Project name */}
         {rec.contextName && (
-          <div className="flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700">
-            <BriefcaseIcon className="h-3.5 w-3.5 shrink-0" />
+          <div className="flex items-center gap-1.5 rounded-lg bg-violet-50 px-2.5 py-1.5 text-xs text-violet-700">
+            <BriefcaseIcon className="h-3.5 w-3.5 shrink-0 text-violet-600" />
             <span className="truncate font-medium">{rec.contextName}</span>
           </div>
         )}
 
         {/* Message */}
-        <p className="text-[13px] leading-relaxed text-slate-600">{rec.message}</p>
+          <p className="text-xs leading-relaxed text-slate-600 md:text-sm">{rec.message}</p>
 
         {/* Action button */}
         <button
@@ -306,5 +304,74 @@ function LevelBadge({
         {level}
       </span>
     </div>
+  );
+}
+
+function PrimaryRecommendationCard({
+  rec,
+  onStart,
+  startingId,
+}: {
+  rec: TrainingRecommendation;
+  onStart: (rec: TrainingRecommendation) => void;
+  startingId: string | null;
+}) {
+  return (
+    <article className="rounded-2xl border border-violet-100 bg-white p-6 shadow-[0_8px_22px_rgba(124,58,237,0.08)]">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-red-700">Obligatoire</span>
+        {rec.priority === "HIGH" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-700">
+            <BoltIcon className="h-3.5 w-3.5 text-violet-600" /> Haute priorité
+          </span>
+        )}
+      </div>
+
+      <h4 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">{rec.trainingTitle}</h4>
+      <p className="mt-3 text-sm leading-relaxed text-slate-600 md:text-base">{rec.message}</p>
+
+      <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-6">
+        {rec.contextName ? (
+          <span className="inline-flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 md:text-sm">
+            <TagIcon className="h-4 w-4" />
+            {rec.contextName}
+          </span>
+        ) : (
+          <span />
+        )}
+        <button
+          type="button"
+          onClick={() => onStart(rec)}
+          disabled={startingId === rec.trainingUuid}
+          className="rounded-xl bg-violet-600 px-8 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(124,58,237,0.28)] transition hover:bg-violet-500 disabled:opacity-60 md:text-base"
+        >
+          {startingId === rec.trainingUuid ? "Ouverture..." : "Commencer la formation"}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function ImpactPanel({ rec }: { rec: TrainingRecommendation }) {
+  return (
+    <aside className="space-y-4">
+      <div className="rounded-2xl border border-violet-100 bg-white p-6 shadow-[0_8px_22px_rgba(124,58,237,0.08)]">
+        <div className="flex items-center gap-2">
+          <ChartBarSquareIcon className="h-5 w-5 text-violet-600" />
+          <h4 className="text-lg font-semibold text-slate-900 md:text-xl">Impact projet</h4>
+        </div>
+        <p className="mt-4 text-sm leading-relaxed text-slate-600 md:text-base">
+          L'achèvement de cette formation renforcera votre niveau sur <span className="font-semibold text-slate-900">{rec.skillName}</span>
+          {rec.contextName ? <> dans le projet <span className="font-semibold text-slate-900">{rec.contextName}</span></> : null}.
+        </p>
+      </div>
+      <div className="relative overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-slate-900 via-violet-800 to-indigo-800 p-5 text-white shadow-[0_10px_25px_rgba(15,23,42,0.25)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.22),transparent_42%)]" />
+        <p className="relative text-sm font-semibold md:text-base">Apprentissage recommandé</p>
+        <p className="relative mt-2 text-xs text-blue-100 md:text-sm">
+          Démarrez cette formation pour accélérer votre progression sur les objectifs du moment.
+        </p>
+      </div>
+    </aside>
   );
 }

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useKeycloak } from "@react-keycloak/web";
-import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ClipboardDocumentCheckIcon,
   Squares2X2Icon,
   BriefcaseIcon,
@@ -14,6 +12,7 @@ import {
 import { meApi } from "../api/meApi";
 import { ManagerBreadcrumbs } from "./manager/ManagerBreadcrumbs";
 import { AdminHeader } from "./admin/AdminHeader";
+import { DashboardSidebar, DashboardSidebarNavItem } from "../components/DashboardSidebar";
 
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 
@@ -70,214 +69,14 @@ export default function ManagerPage() {
         onClick={() => setSidebarOpen(false)}
       />
 
-      {/* Sidebar manager avec le meme style que l'admin */}
-      <aside
-        className={`admin-sidebar flex flex-col ${
-          sidebarOpen ? " open" : ""
-        }${sidebarCollapsed ? " collapsed" : ""}`}
-      >
-        {/* Header sidebar : logo + fleche */}
-        <div
-          className={`admin-sidebar-header h-16 shrink-0 ${
-            sidebarCollapsed ? "justify-center px-0" : "justify-between px-3"
-          } flex items-center`}
-        >
-          <div className="admin-sidebar-logo flex items-center justify-center overflow-hidden min-w-0 flex-1">
-            <img src="/logo.png" alt="Logo" className="h-9 w-auto object-contain" />
-          </div>
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed((c) => !c)}
-            className="admin-sidebar-toggle flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-200 ease-in-out hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
-            aria-label={sidebarCollapsed ? "Ouvrir le menu" : "Reduire le menu"}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRightIcon className="w-5 h-5" strokeWidth={2} />
-            ) : (
-              <ChevronLeftIcon className="w-5 h-5" strokeWidth={2} />
-            )}
-          </button>
-        </div>
-
-        {/* Navigation manager : tableau de bord + quiz + projets + correspondances */}
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-2.5 py-5">
-          <NavLink
-            to="/manager"
-            end
-            className={({ isActive }) =>
-              [
-                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
-                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
-                )}
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${
-                    isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"
-                  }`}
-                >
-                  <Squares2X2Icon className="h-5 w-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Tableau de bord</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/manager/quiz"
-            className={({ isActive }) =>
-              [
-                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
-                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
-                )}
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${
-                    isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"
-                  }`}
-                >
-                  <ClipboardDocumentCheckIcon className="h-5 w-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Quiz</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/manager/projects"
-            className={({ isActive }) =>
-              [
-                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
-                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
-                )}
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${
-                    isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"
-                  }`}
-                >
-                  <ClipboardDocumentListIcon className="h-5 w-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Projets</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/manager/matching"
-            className={() =>
-              [
-                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isTalentRoute
-                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
-                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
-              ].join(" ")
-            }
-          >
-            {() => (
-              <>
-                {!sidebarCollapsed && isTalentRoute && (
-                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
-                )}
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${
-                    isTalentRoute ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"
-                  }`}
-                >
-                  <ChartBarSquareIcon className="h-5 w-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Correspondances</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/manager/assignments"
-            className={({ isActive }) =>
-              [
-                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
-                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
-                )}
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${
-                    isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"
-                  }`}
-                >
-                  <BriefcaseIcon className="h-5 w-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Affectations</span>}
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/manager/training-recommendations"
-            className={({ isActive }) =>
-              [
-                "admin-nav-item group relative flex w-full items-center rounded-xl border py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
-                sidebarCollapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
-                isActive
-                  ? "border-violet-200 bg-violet-100 text-violet-800 shadow-md shadow-violet-100/60"
-                  : "border-transparent text-slate-600 hover:bg-violet-50 hover:text-violet-700",
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {!sidebarCollapsed && isActive && (
-                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-violet-600" />
-                )}
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center ${
-                    isActive ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"
-                  }`}
-                >
-                  <SparklesIcon className="h-5 w-5" />
-                </span>
-                {!sidebarCollapsed && <span className="truncate">Formations</span>}
-              </>
-            )}
-          </NavLink>
-
-        </nav>
-      </aside>
+      <DashboardSidebar mobileOpen={sidebarOpen} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed((c) => !c)}>
+        <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/manager" end collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/manager/quiz" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/manager/projects" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Correspondances" icon={<ChartBarSquareIcon className="h-5 w-5" />} to="/manager/matching" active={isTalentRoute} collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/manager/assignments" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/manager/training-recommendations" collapsed={sidebarCollapsed} />
+      </DashboardSidebar>
 
       {/* Contenu : meme header fixe et meme padding que l'admin */}
       <div className="admin-content">

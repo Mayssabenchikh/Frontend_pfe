@@ -111,7 +111,6 @@ export type LearningPlayerStep = {
   activityResourceUrl: string | null;
   activityKind: CourseActivityKind | null;
   activitySubmissionMode: ActivitySubmissionMode | null;
-  quizCooldownUntil: string | null;
   textArticleUuid?: string | null;
   textArticleBody?: string | null;
 };
@@ -139,7 +138,6 @@ export type SubmitVideoQuizResult = {
   totalQuestions: number;
   scorePercent: number;
   programCompleted: boolean;
-  videoQuizCooldownUntil: string | null;
 };
 
 export type CompleteActivityResult = {

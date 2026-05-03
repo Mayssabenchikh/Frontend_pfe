@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
   employeeLearningProgramApi,
@@ -6,17 +6,29 @@ import {
   type LearningPlayer,
   type LearningPlayerStep,
 } from "../../api/learningProgramApi";
+import { LearningMarkdownBody } from "../../components/learning/LearningMarkdownBody";
 import { useLearningProgramBasePath } from "../../hooks/useLearningProgramBasePath";
 import {
+  AcademicCapIcon,
   ArrowLeftIcon,
   ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
   BookOpenIcon,
   CheckCircleIcon,
+  ChevronRightIcon,
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentIcon,
+  ClipboardDocumentListIcon,
+  ClockIcon,
+  CommandLineIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
   LockClosedIcon,
   PlayCircleIcon,
   QuestionMarkCircleIcon,
+  TagIcon,
 } from "../../icons/heroicons/outline";
-import { LearningMarkdownBody } from "../../components/learning/LearningMarkdownBody";
 
 function stepKey(step: LearningPlayerStep): string {
   if (step.stepKind === "VIDEO") return `v-${step.videoUuid ?? ""}`;
@@ -29,9 +41,8 @@ function partNumber(step: LearningPlayerStep): number {
 }
 
 function partTitle(step: LearningPlayerStep): string {
-  const t = step.courseTitle?.trim();
-  if (t) return t;
-  return `Module ${partNumber(step)}`;
+  const title = step.courseTitle?.trim();
+  return title || `Module ${partNumber(step)}`;
 }
 
 type TocPart = {
@@ -43,31 +54,21 @@ type TocPart = {
 function buildToc(steps: LearningPlayerStep[]): TocPart[] {
   const order: number[] = [];
   const byPart = new Map<number, { courseTitle: string; entries: TocPart["entries"] }>();
+
   for (const step of steps) {
     const pn = partNumber(step);
     if (!byPart.has(pn)) {
       byPart.set(pn, { courseTitle: partTitle(step), entries: [] });
       order.push(pn);
     }
-    const g = byPart.get(pn)!;
-    g.entries.push({ step, lessonInPart: g.entries.length + 1 });
+    const part = byPart.get(pn)!;
+    part.entries.push({ step, lessonInPart: part.entries.length + 1 });
   }
+
   return order.map((pn) => {
-    const g = byPart.get(pn)!;
-    return { partNumber: pn, courseTitle: g.courseTitle, entries: g.entries };
+    const part = byPart.get(pn)!;
+    return { partNumber: pn, courseTitle: part.courseTitle, entries: part.entries };
   });
-}
-
-function formatCooldownUntil(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
-}
-
-function isCooldownActive(iso: string | null | undefined): boolean {
-  if (!iso) return false;
-  return new Date(iso).getTime() > Date.now();
 }
 
 type ActivityDraft = { text: string; fileUrl: string };
@@ -78,27 +79,326 @@ function submissionModeLabel(mode: ActivitySubmissionMode | null | undefined): s
   return "Texte";
 }
 
-function ProgressRing({ percent }: { percent: number }) {
-  const p = Math.min(100, Math.max(0, percent));
-  const r = 20;
-  const c = 2 * Math.PI * r;
-  const offset = c * (1 - p / 100);
+function stepKindLabel(step: LearningPlayerStep): string {
+  if (step.stepKind === "VIDEO") return "Vidéo";
+  if (step.stepKind === "TEXT") return "Lecture";
+  return step.activityKind === "PRACTICAL" ? "Activité pratique" : "Exercice";
+}
+
+function stepIcon(step: LearningPlayerStep): ComponentType<React.SVGProps<SVGSVGElement>> {
+  if (step.stepKind === "VIDEO") return PlayCircleIcon;
+  if (step.stepKind === "TEXT") return BookOpenIcon;
+  if (step.activitySubmissionMode === "CODE") return CommandLineIcon;
+  if (step.activitySubmissionMode === "FILE") return ClipboardDocumentIcon;
+  return ClipboardDocumentListIcon;
+}
+
+function stepTone(step: LearningPlayerStep): {
+  label: string;
+  iconBg: string;
+  iconText: string;
+  pill: string;
+  accent: string;
+} {
+  if (step.stepKind === "VIDEO") {
+    return {
+      label: "Vidéo",
+      iconBg: "bg-violet-100",
+      iconText: "text-violet-700",
+      pill: "border-violet-200 bg-violet-50 text-violet-700",
+      accent: "from-violet-600 to-fuchsia-500",
+    };
+  }
+  if (step.stepKind === "TEXT") {
+    return {
+      label: "Lecture",
+      iconBg: "bg-blue-100",
+      iconText: "text-blue-700",
+      pill: "border-blue-200 bg-blue-50 text-blue-700",
+      accent: "from-blue-600 to-cyan-500",
+    };
+  }
+  return {
+    label: step.activityKind === "PRACTICAL" ? "Pratique" : "Exercice",
+    iconBg: "bg-emerald-100",
+    iconText: "text-emerald-700",
+    pill: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    accent: "from-emerald-600 to-teal-500",
+  };
+}
+
+function cn(...classes: Array<string | false | null | undefined>): string {
+  return classes.filter(Boolean).join(" ");
+}
+
+function Skeleton({ className }: { className: string }) {
+  return <div className={cn("animate-pulse rounded-lg bg-slate-200/80", className)} />;
+}
+
+function StatusPill({ step }: { step: LearningPlayerStep }) {
+  if (!step.unlocked) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-base font-semibold text-amber-800">
+        <LockClosedIcon className="h-3.5 w-3.5" />
+        Verrouillé
+      </span>
+    );
+  }
+  if (step.stepDone) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-base font-semibold text-emerald-800">
+        <CheckCircleIcon className="h-3.5 w-3.5" />
+        Complété
+      </span>
+    );
+  }
+  if (step.stepKind === "VIDEO" && step.quizStatus === "PENDING") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-base font-semibold text-orange-800">
+        <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
+        Quiz en cours
+      </span>
+    );
+  }
+  if (step.stepKind === "VIDEO" && step.quizStatus === "FAILED") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-base font-semibold text-rose-800">
+        <ExclamationTriangleIcon className="h-3.5 w-3.5" />
+        Quiz indisponible
+      </span>
+    );
+  }
   return (
-    <svg width="48" height="48" viewBox="0 0 48 48" className="shrink-0" aria-hidden>
-      <circle cx="24" cy="24" r={r} fill="none" stroke="#e2e8f0" strokeWidth="4" />
-      <circle
-        cx="24"
-        cy="24"
-        r={r}
-        fill="none"
-        stroke="#0ea5e9"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeDasharray={c}
-        strokeDashoffset={offset}
-        transform="rotate(-90 24 24)"
-      />
-    </svg>
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-base font-semibold text-blue-800">
+      <ClockIcon className="h-3.5 w-3.5" />À faire
+    </span>
+  );
+}
+
+function KindPill({ step }: { step: LearningPlayerStep }) {
+  const tone = stepTone(step);
+  const Icon = stepIcon(step);
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-base font-bold", tone.pill)}>
+      <Icon className="h-3.5 w-3.5" />
+      {tone.label}
+    </span>
+  );
+}
+
+function AlertBox({
+  variant,
+  children,
+  className,
+}: {
+  variant: "error" | "warning" | "info" | "success";
+  children: ReactNode;
+  className?: string;
+}) {
+  const styles = {
+    error: "border-rose-200 bg-rose-50 text-rose-900",
+    warning: "border-orange-200 bg-orange-50 text-orange-950",
+    info: "border-blue-200 bg-blue-50 text-blue-950",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-950",
+  };
+  const icons = {
+    error: ExclamationTriangleIcon,
+    warning: ClockIcon,
+    info: InformationCircleIcon,
+    success: CheckCircleIcon,
+  };
+  const Icon = icons[variant];
+
+  return (
+    <div
+      role={variant === "error" ? "alert" : "status"}
+      className={cn(
+        "flex items-start gap-3 rounded-lg border px-4 py-3 text-base leading-6 shadow-sm animate-profile-section",
+        styles[variant],
+        className,
+      )}
+    >
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+function PrimaryButton({
+  children,
+  onClick,
+  loading,
+  loadingLabel,
+  disabled,
+  icon: Icon,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  loading?: boolean;
+  loadingLabel?: string;
+  disabled?: boolean;
+  icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-5 py-2.5 text-base font-bold text-white shadow-lg shadow-violet-200 transition duration-200 hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+    >
+      {loading ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : Icon ? <Icon className="h-4 w-4" /> : null}
+      {loading ? loadingLabel ?? "Chargement..." : children}
+    </button>
+  );
+}
+
+function SecondaryButton({
+  children,
+  onClick,
+  disabled,
+  icon: Icon,
+  className,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 shadow-sm transition duration-200 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45",
+        className,
+      )}
+    >
+      {Icon ? <Icon className="h-4 w-4" /> : null}
+      {children}
+    </button>
+  );
+}
+
+function CompletedPanel({ label }: { label: string }) {
+  return (
+    <div className="flex items-start gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 animate-profile-section">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700 shadow-sm">
+        <CheckCircleIcon className="h-5 w-5" />
+      </span>
+      <div>
+        <p className="text-base font-bold">{label}</p>
+        <p className="mt-1 text-base leading-6 text-emerald-800">Cette étape est validée. Vous pouvez continuer votre parcours.</p>
+      </div>
+    </div>
+  );
+}
+
+function LockedPanel() {
+  return (
+    <section className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50 px-6 py-12 text-center animate-profile-section">
+      <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-white text-amber-700 shadow-sm">
+        <LockClosedIcon className="h-6 w-6" />
+      </span>
+      <h3 className="mt-5 text-2xl font-extrabold text-slate-950">Étape verrouillée</h3>
+      <p className="mt-2 max-w-md text-base leading-6 text-slate-600">Terminez les étapes précédentes pour débloquer ce contenu.</p>
+    </section>
+  );
+}
+
+function StepNumber({ step, selected }: { step: LearningPlayerStep; selected: boolean }) {
+  if (!step.unlocked) {
+    return (
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-400">
+        <LockClosedIcon className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
+  if (step.stepDone) {
+    return (
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm shadow-emerald-200">
+        <CheckCircleIcon className="h-4 w-4" />
+      </span>
+    );
+  }
+  const tone = stepTone(step);
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition duration-200",
+        selected ? `${tone.iconBg} ${tone.iconText} ring-2 ring-violet-200` : "bg-slate-100 text-slate-500",
+      )}
+    >
+      {selected ? <ChevronRightIcon className="h-4 w-4" /> : <span className="h-2 w-2 rounded-full bg-current" />}
+    </span>
+  );
+}
+
+function StepPlanItem({
+  step,
+  index,
+  lessonInPart,
+  selected,
+  onSelect,
+}: {
+  step: LearningPlayerStep;
+  index: number;
+  lessonInPart: number;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const Icon = stepIcon(step);
+  return (
+    <li>
+      <button
+        type="button"
+        disabled={!step.unlocked}
+        onClick={onSelect}
+        className={cn(
+          "group grid w-full grid-cols-[auto_1fr] gap-3 rounded-lg px-3 py-3 text-left transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
+          selected ? "bg-violet-50 shadow-sm ring-1 ring-violet-200" : "hover:bg-slate-50",
+          !step.unlocked && "cursor-not-allowed opacity-55",
+        )}
+      >
+        <StepNumber step={step} selected={selected} />
+        <span className="min-w-0">
+          <span
+            className={cn(
+              "block truncate text-base font-bold leading-5",
+              selected ? "text-violet-950" : step.stepDone ? "text-slate-500" : "text-slate-800",
+            )}
+          >
+            {lessonInPart}. {step.title}
+          </span>
+          <span className="mt-1 flex items-center gap-1.5 text-base text-slate-500">
+            <Icon className={cn("h-3.5 w-3.5", selected && "text-violet-700")} />
+            <span>{index + 1}</span>
+            <span className="h-1 w-1 rounded-full bg-slate-300" />
+            <span>{stepKindLabel(step)}</span>
+          </span>
+        </span>
+      </button>
+    </li>
+  );
+}
+
+function EmptyState({ backTo }: { backTo: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#f8f7ff] p-6">
+      <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <ClipboardDocumentListIcon className="mx-auto h-10 w-10 text-slate-400" />
+        <h1 className="mt-4 text-2xl font-extrabold text-slate-950">Aucune étape disponible</h1>
+        <p className="mt-2 text-base leading-6 text-slate-600">Ce programme ne contient pas encore de contenu à afficher.</p>
+        <Link
+          to={backTo}
+          className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-5 py-2.5 text-base font-bold text-white transition hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Retour
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -107,6 +407,7 @@ export function EmployeeLearningProgramPlayer() {
   const location = useLocation();
   const { enrollmentUuid } = useParams<{ enrollmentUuid: string }>();
   const backTo = (location.state as { backTo?: string } | null)?.backTo ?? `${base}/training-recommendations`;
+
   const [player, setPlayer] = useState<LearningPlayer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activityBusy, setActivityBusy] = useState<string | null>(null);
@@ -117,9 +418,9 @@ export function EmployeeLearningProgramPlayer() {
 
   const reload = useCallback(async () => {
     if (!enrollmentUuid) return null;
-    const r = await employeeLearningProgramApi.player(enrollmentUuid);
-    setPlayer(r.data);
-    return r.data;
+    const response = await employeeLearningProgramApi.player(enrollmentUuid);
+    setPlayer(response.data);
+    return response.data;
   }, [enrollmentUuid]);
 
   useEffect(() => {
@@ -127,9 +428,9 @@ export function EmployeeLearningProgramPlayer() {
     setError(null);
     employeeLearningProgramApi
       .player(enrollmentUuid)
-      .then((r) => {
-        setPlayer(r.data);
-        const first = r.data.steps.findIndex((s) => s.unlocked && !s.stepDone);
+      .then((response) => {
+        setPlayer(response.data);
+        const first = response.data.steps.findIndex((step) => step.unlocked && !step.stepDone);
         setSelectedStepIndex(first >= 0 ? first : 0);
       })
       .catch((e) => setError(e?.response?.data?.error ?? "Chargement impossible"));
@@ -139,35 +440,51 @@ export function EmployeeLearningProgramPlayer() {
 
   useEffect(() => {
     if (!player?.steps.length) return;
-    setSelectedStepIndex((i) => Math.min(Math.max(0, i), player.steps.length - 1));
+    setSelectedStepIndex((index) => Math.min(Math.max(0, index), player.steps.length - 1));
   }, [player?.steps.length]);
 
   const hasPendingVideoQuiz = useMemo(() => {
     if (!player) return false;
-    return player.steps.some((s) => s.stepKind === "VIDEO" && s.quizStatus === "PENDING");
+    return player.steps.some((step) => step.stepKind === "VIDEO" && step.quizStatus === "PENDING");
   }, [player]);
 
   useEffect(() => {
     if (!enrollmentUuid || !hasPendingVideoQuiz) return;
-    const timer = window.setInterval(() => {
-      void reload();
-    }, 5000);
+    const timer = window.setInterval(() => void reload(), 5000);
     return () => window.clearInterval(timer);
   }, [enrollmentUuid, hasPendingVideoQuiz, reload]);
 
   const activeIndex =
-    player && player.steps.length > 0
-      ? Math.min(Math.max(0, selectedStepIndex), player.steps.length - 1)
-      : 0;
+    player && player.steps.length > 0 ? Math.min(Math.max(0, selectedStepIndex), player.steps.length - 1) : 0;
   const selectedStep = player?.steps[activeIndex] ?? null;
 
-  const getDraft = (activityUuid: string): ActivityDraft =>
-    drafts[activityUuid] ?? { text: "", fileUrl: "" };
+  const prevUnlockedIndex = useMemo(() => {
+    if (!player || activeIndex <= 0) return null;
+    for (let i = activeIndex - 1; i >= 0; i -= 1) {
+      if (player.steps[i]?.unlocked) return i;
+    }
+    return null;
+  }, [activeIndex, player]);
+
+  const nextUnlockedIndex = useMemo(() => {
+    if (!player || activeIndex >= player.steps.length - 1) return null;
+    for (let i = activeIndex + 1; i < player.steps.length; i += 1) {
+      if (player.steps[i]?.unlocked) return i;
+    }
+    return null;
+  }, [activeIndex, player]);
+
+  const skillQuizHref =
+    player?.programSkillUuid != null && player.programSkillUuid !== ""
+      ? `${base}/quiz?skill=${encodeURIComponent(player.programSkillUuid)}`
+      : `${base}/quiz`;
+
+  const getDraft = (activityUuid: string): ActivityDraft => drafts[activityUuid] ?? { text: "", fileUrl: "" };
 
   const setDraft = (activityUuid: string, patch: Partial<ActivityDraft>) => {
     setDrafts((prev) => {
-      const cur = prev[activityUuid] ?? { text: "", fileUrl: "" };
-      return { ...prev, [activityUuid]: { ...cur, ...patch } };
+      const current = prev[activityUuid] ?? { text: "", fileUrl: "" };
+      return { ...prev, [activityUuid]: { ...current, ...patch } };
     });
   };
 
@@ -186,6 +503,18 @@ export function EmployeeLearningProgramPlayer() {
     }
   };
 
+  const advanceAfterCompletion = (data: LearningPlayer, completedKey: string) => {
+    const curIdx = data.steps.findIndex((step) => stepKey(step) === completedKey);
+    const baseIdx = curIdx >= 0 ? curIdx : 0;
+    const next = data.steps.findIndex((step, index) => index > baseIdx && step.unlocked && !step.stepDone);
+    if (next >= 0) {
+      setSelectedStepIndex(next);
+    } else {
+      const anyLeft = data.steps.findIndex((step) => step.unlocked && !step.stepDone);
+      setSelectedStepIndex(anyLeft >= 0 ? anyLeft : Math.min(baseIdx, data.steps.length - 1));
+    }
+  };
+
   const markTextRead = async (step: LearningPlayerStep) => {
     if (!enrollmentUuid || step.textArticleUuid == null) return;
     setTextBusy(step.textArticleUuid);
@@ -194,19 +523,10 @@ export function EmployeeLearningProgramPlayer() {
       await employeeLearningProgramApi.markTextArticleRead(enrollmentUuid, step.textArticleUuid);
       const completedKey = stepKey(step);
       const data = await reload();
-      if (data) {
-        const curIdx = data.steps.findIndex((s) => stepKey(s) === completedKey);
-        const baseIdx = curIdx >= 0 ? curIdx : 0;
-        const next = data.steps.findIndex((s, i) => i > baseIdx && s.unlocked && !s.stepDone);
-        if (next >= 0) setSelectedStepIndex(next);
-        else {
-          const anyLeft = data.steps.findIndex((s) => s.unlocked && !s.stepDone);
-          setSelectedStepIndex(anyLeft >= 0 ? anyLeft : Math.min(baseIdx, data.steps.length - 1));
-        }
-      }
+      if (data) advanceAfterCompletion(data, completedKey);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } } };
-      setError(err?.response?.data?.error ?? "Impossible d’enregistrer la lecture");
+      setError(err?.response?.data?.error ?? "Impossible d'enregistrer la lecture");
     } finally {
       setTextBusy(null);
     }
@@ -215,48 +535,35 @@ export function EmployeeLearningProgramPlayer() {
   const submitActivity = async (step: LearningPlayerStep) => {
     if (!enrollmentUuid || step.activityUuid == null) return;
     const mode: ActivitySubmissionMode = step.activitySubmissionMode ?? "TEXT";
-    const d = getDraft(step.activityUuid);
-    const textTrim = d.text.trim();
+    const draft = getDraft(step.activityUuid);
+    const textTrim = draft.text.trim();
 
-    if (mode === "TEXT") {
-      if (textTrim.length < 1) {
-        setError("Saisissez une réponse avant de valider.");
-        return;
-      }
-    } else if (mode === "CODE") {
-      if (textTrim.length < 5) {
-        setError("Collez au moins 5 caractères de code ou de contenu technique.");
-        return;
-      }
-    } else if (mode === "FILE") {
-      if (!d.fileUrl.trim()) {
-        setError("Téléversez un fichier puis validez.");
-        return;
-      }
+    if (mode === "TEXT" && textTrim.length < 1) {
+      setError("Saisissez une réponse avant de valider.");
+      return;
+    }
+    if (mode === "CODE" && textTrim.length < 5) {
+      setError("Collez au moins 5 caractères de code ou de contenu technique.");
+      return;
+    }
+    if (mode === "FILE" && !draft.fileUrl.trim()) {
+      setError("Téléversez un fichier puis validez.");
+      return;
     }
 
     setActivityBusy(step.activityUuid);
     setError(null);
     try {
       await employeeLearningProgramApi.submitActivity(enrollmentUuid, step.activityUuid, {
-        text: mode === "FILE" ? (textTrim.length ? textTrim : null) : d.text,
-        fileUrl: mode === "FILE" ? d.fileUrl.trim() : null,
+        text: mode === "FILE" ? (textTrim.length ? textTrim : null) : draft.text,
+        fileUrl: mode === "FILE" ? draft.fileUrl.trim() : null,
       });
       const completedKey = stepKey(step);
       const data = await reload();
-      if (data) {
-        const curIdx = data.steps.findIndex((s) => stepKey(s) === completedKey);
-        const baseIdx = curIdx >= 0 ? curIdx : 0;
-        const next = data.steps.findIndex((s, i) => i > baseIdx && s.unlocked && !s.stepDone);
-        if (next >= 0) setSelectedStepIndex(next);
-        else {
-          const anyLeft = data.steps.findIndex((s) => s.unlocked && !s.stepDone);
-          setSelectedStepIndex(anyLeft >= 0 ? anyLeft : Math.min(baseIdx, data.steps.length - 1));
-        }
-      }
+      if (data) advanceAfterCompletion(data, completedKey);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } } };
-      setError(err?.response?.data?.error ?? "Impossible de valider l’activité");
+      setError(err?.response?.data?.error ?? "Impossible de valider l'activité");
     } finally {
       setActivityBusy(null);
     }
@@ -264,211 +571,228 @@ export function EmployeeLearningProgramPlayer() {
 
   if (error && !player) {
     return (
-      <div className="p-6">
-        <p className="text-rose-700">{error}</p>
-        <Link to={backTo} className="text-indigo-600 text-sm mt-2 inline-block">
-          ← Retour
-        </Link>
+      <div className="flex min-h-screen items-center justify-center bg-[#f8f7ff] p-6">
+        <div className="w-full max-w-md rounded-lg border border-rose-200 bg-white p-8 shadow-lg shadow-rose-100">
+          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
+            <ExclamationTriangleIcon className="h-6 w-6" />
+          </span>
+          <h1 className="mt-5 text-2xl font-extrabold text-slate-950">Chargement impossible</h1>
+          <p className="mt-2 text-base leading-6 text-rose-700">{error}</p>
+          <Link
+            to={backTo}
+            className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            Retour
+          </Link>
+        </div>
       </div>
     );
   }
 
   if (!player) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center bg-slate-50 text-slate-500 text-sm">
-        Chargement…
+      <div className="min-h-screen bg-[#f8f7ff]">
+        <div className="border-b border-slate-200 bg-white px-5 py-4">
+          <div className="mx-auto flex max-w-none items-center justify-between gap-4">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-10 w-36" />
+          </div>
+        </div>
+        <div className="mx-auto grid max-w-none gap-5 px-4 py-5 lg:grid-cols-[360px_minmax(0,1fr)_360px]">
+          <aside className="hidden rounded-lg border border-slate-200 bg-white p-4 lg:block">
+            <Skeleton className="h-20 w-full" />
+            <div className="mt-6 space-y-3">
+              {Array.from({ length: 7 }).map((_, index) => (
+                <Skeleton key={index} className="h-14 w-full" />
+              ))}
+            </div>
+          </aside>
+          <main className="rounded-lg border border-slate-200 bg-white p-5">
+            <Skeleton className="h-7 w-2/3" />
+            <Skeleton className="mt-4 h-4 w-1/3" />
+            <Skeleton className="mt-8 h-[360px] w-full" />
+            <Skeleton className="mt-6 h-11 w-40" />
+          </main>
+          <aside className="hidden space-y-4 lg:block">
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </aside>
+        </div>
       </div>
     );
   }
 
-  const skillQuizHref =
-    player.programSkillUuid != null && player.programSkillUuid !== ""
-      ? `${base}/quiz?skill=${encodeURIComponent(player.programSkillUuid)}`
-      : `${base}/quiz`;
+  if (player.steps.length === 0) return <EmptyState backTo={backTo} />;
+
+  const doneCount = player.steps.filter((step) => step.stepDone).length;
+  const pct = Math.max(0, Math.min(100, player.progressPercent));
+  const tone = selectedStep ? stepTone(selectedStep) : null;
+  const SelectedIcon = selectedStep ? stepIcon(selectedStep) : ClipboardDocumentListIcon;
 
   return (
-    <div className="min-h-screen bg-[#eef1f8] text-slate-900">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-4 px-4 py-3 sm:px-6">
+    <div className="min-h-screen bg-[#f8f7ff] text-slate-950">
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex min-h-14 w-full max-w-none items-center gap-4 px-5 py-2 sm:px-8">
           <Link
             to={backTo}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-base font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           >
-            <ArrowLeftIcon className="h-3.5 w-3.5" />
+            <ArrowLeftIcon className="h-4 w-4" />
             Retour
           </Link>
+
+          <div className="hidden h-8 w-px bg-slate-200 sm:block" />
+
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{player.programTitle}</h1>
-            {player.programSkillName != null && (
-              <p className="mt-0.5 truncate text-xs text-slate-500">
-                Compétence : {player.programSkillName} · niveau {player.programTargetSkillLevel}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <ProgressRing percent={player.progressPercent} />
-            <p className="text-sm font-medium text-slate-600">
-              <span className="text-slate-900">{player.progressPercent}%</span>
-              <span className="hidden sm:inline"> de progression</span>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="hidden h-2.5 w-2.5 rounded-full bg-violet-600 sm:block" />
+              <h1 className="truncate text-base font-extrabold text-slate-950 sm:text-xl">{player.programTitle}</h1>
+              <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-base font-bold uppercase tracking-wide text-violet-800 md:inline-flex">
+                {player.status}
+              </span>
+            </div>
+            <p className="mt-0.5 hidden truncate text-base text-slate-500 sm:block">
+              {player.programSkillName ? (
+                <>
+                  {player.programSkillName}
+                  <span className="mx-2 text-slate-300">/</span>
+                </>
+              ) : null}
+              Niveau cible {player.programTargetSkillLevel}
             </p>
+          </div>
+
+          <div className="hidden items-center gap-3 md:flex">
+            <div className="text-right">
+              <p className="text-base font-extrabold text-slate-950">{pct}%</p>
+              <p className="text-base text-slate-500">
+                {doneCount}/{player.steps.length} étapes
+              </p>
+            </div>
+            <div className="h-2 w-36 overflow-hidden rounded-full bg-violet-100">
+              <div className="h-full rounded-full bg-violet-700 transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
+            </div>
           </div>
         </div>
       </header>
 
-      {error && (
-        <div className="mx-auto max-w-[1600px] px-4 pt-4 sm:px-6">
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" role="alert">
-            {error}
-          </div>
+      {player.suggestSkillValidationQuiz ? (
+        <div className="mx-auto w-full max-w-none px-5 pt-5 sm:px-8">
+          <section className="grid gap-4 rounded-lg border border-violet-200 bg-violet-700 p-5 text-white shadow-xl shadow-violet-200 animate-profile-section md:grid-cols-[1fr_auto] md:items-center">
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/15">
+                <AcademicCapIcon className="h-6 w-6" />
+              </span>
+              <div>
+                <p className="text-base font-extrabold">Parcours terminé</p>
+                <p className="mt-1 text-base leading-6 text-violet-100">Vous pouvez maintenant lancer le quiz de validation de compétence.</p>
+              </div>
+            </div>
+            <Link
+              to={skillQuizHref}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-base font-extrabold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-700"
+            >
+              <QuestionMarkCircleIcon className="h-4 w-4" />
+              Quiz de compétence
+            </Link>
+          </section>
         </div>
-      )}
+      ) : null}
 
-      <div className="mx-auto flex max-w-[1600px] min-h-[calc(100vh-4.5rem)]">
-        <aside className="hidden w-[min(100%,320px)] shrink-0 border-r border-slate-200/90 bg-white lg:block lg:sticky lg:top-[57px] lg:max-h-[calc(100vh-57px)] lg:overflow-y-auto">
-          <div className="border-b border-slate-100 px-4 py-3">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Table des matières</h2>
-          </div>
-          <nav className="pb-8">
+      {error ? (
+        <div className="mx-auto w-full max-w-none px-5 pt-5 sm:px-8">
+          <AlertBox variant="error">{error}</AlertBox>
+        </div>
+      ) : null}
+
+      <div className="mx-auto grid w-full max-w-none items-stretch gap-6 px-5 pb-6 pt-3 sm:px-8 lg:grid-cols-[380px_minmax(0,1fr)_380px]">
+        <aside className="hidden h-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
+          <nav className="space-y-5" aria-label="Plan du programme">
             {toc.map((part) => (
-              <div key={part.partNumber} className="mb-1">
-                <div className="bg-sky-100 px-3 py-2.5 text-[11px] font-bold uppercase leading-snug tracking-wide text-sky-950">
-                  Partie {part.partNumber} : {part.courseTitle}
+              <section key={part.partNumber}>
+                <div className="mb-2 px-1">
+                  <p className="text-base font-extrabold uppercase tracking-wide text-violet-700">Module {part.partNumber}</p>
+                  <h2 className="mt-1 text-base font-extrabold leading-5 text-slate-950">{part.courseTitle}</h2>
                 </div>
-                <ul className="py-1">
+                <ol className="space-y-1">
                   {part.entries.map(({ step, lessonInPart }) => {
-                    const globalIdx = player.steps.indexOf(step);
-                    const isSel = globalIdx === activeIndex;
-                    const isVideo = step.stepKind === "VIDEO";
-                    const isText = step.stepKind === "TEXT";
+                    const globalIndex = player.steps.indexOf(step);
                     return (
-                      <li key={stepKey(step)}>
-                        <button
-                          type="button"
-                          disabled={!step.unlocked}
-                          onClick={() => {
-                            if (step.unlocked) setSelectedStepIndex(globalIdx);
-                          }}
-                          className={`flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors ${
-                            isSel ? "bg-slate-200/90 font-medium text-slate-900" : "text-slate-700 hover:bg-slate-50"
-                          } ${!step.unlocked ? "cursor-not-allowed opacity-50" : ""}`}
-                        >
-                          <span className="mt-0.5 shrink-0 text-slate-400">
-                            {!step.unlocked ? (
-                              <LockClosedIcon className="h-4 w-4" />
-                            ) : isVideo ? (
-                              <PlayCircleIcon className={`h-4 w-4 ${step.stepDone ? "text-emerald-600" : "text-sky-600"}`} />
-                            ) : isText ? (
-                              <BookOpenIcon className={`h-4 w-4 ${step.stepDone ? "text-emerald-600" : "text-indigo-600"}`} />
-                            ) : step.stepDone ? (
-                              <CheckCircleIcon className="h-4 w-4 text-emerald-600" />
-                            ) : (
-                              <span className="flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-[10px] font-bold text-slate-500">
-                                {lessonInPart}
-                              </span>
-                            )}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="mr-1.5 tabular-nums text-slate-400">{lessonInPart}.</span>
-                            <span className="text-[13px] leading-snug">
-                              {isVideo ? (
-                                <>
-                                  {step.title}
-                                  <span className="ml-1 text-[10px] font-semibold uppercase text-sky-700">Vidéo</span>
-                                </>
-                              ) : isText ? (
-                                <>
-                                  {step.title}
-                                  <span className="ml-1 text-[10px] font-semibold uppercase text-indigo-700">Lecture</span>
-                                </>
-                              ) : (
-                                <>
-                                  {step.title}
-                                  <span className="ml-1 text-[10px] font-semibold uppercase text-teal-700">
-                                    {step.activityKind === "PRACTICAL" ? "Pratique" : "Exercice"}
-                                  </span>
-                                </>
-                              )}
-                              {isVideo && step.quizStatus === "READY" && (
-                                <span className="ml-1 text-[10px] font-semibold uppercase text-violet-700">Quiz</span>
-                              )}
-                              {isVideo && step.quizStatus === "PENDING" && (
-                                <span className="ml-1 text-[10px] font-semibold uppercase text-amber-700">
-                                  Quiz · préparation
-                                </span>
-                              )}
-                            </span>
-                          </span>
-                        </button>
-                      </li>
+                      <StepPlanItem
+                        key={stepKey(step)}
+                        step={step}
+                        index={globalIndex}
+                        lessonInPart={lessonInPart}
+                        selected={globalIndex === activeIndex}
+                        onSelect={() => {
+                          if (step.unlocked) setSelectedStepIndex(globalIndex);
+                        }}
+                      />
                     );
                   })}
-                </ul>
-              </div>
+                </ol>
+              </section>
             ))}
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
-          <div className="mb-4 lg:hidden">
-            <label className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Leçon</label>
+        <main className="flex min-w-0 flex-col space-y-5">
+          <div className="lg:hidden">
+            <label htmlFor="step-selector" className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-500">
+              Étape du parcours
+            </label>
             <select
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              id="step-selector"
               value={activeIndex}
               onChange={(e) => setSelectedStepIndex(Number(e.target.value))}
+              className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-base font-bold text-slate-800 shadow-sm focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
             >
-              {player.steps.map((s, i) => (
-                <option key={stepKey(s)} value={i} disabled={!s.unlocked}>
-                  {i + 1}. {s.title} {!s.unlocked ? "(verrouillé)" : ""}
+              {player.steps.map((step, index) => (
+                <option key={stepKey(step)} value={index} disabled={!step.unlocked}>
+                  {index + 1}. {step.title} {!step.unlocked ? "(verrouillé)" : step.stepDone ? "(complété)" : ""}
                 </option>
               ))}
             </select>
           </div>
 
-          {player.suggestSkillValidationQuiz && (
-            <div className="mb-6 rounded-xl border border-indigo-200 bg-indigo-50/90 px-4 py-3 text-sm text-indigo-950">
-              <p className="font-medium">Parcours terminé — valider votre niveau</p>
-              <Link
-                to={skillQuizHref}
-                className="mt-2 inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-              >
-                Quiz de compétence
-              </Link>
-            </div>
-          )}
+          {selectedStep ? (
+            <article key={stepKey(selectedStep)} className="flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm animate-profile-section">
+              <div className={cn("h-1.5 bg-gradient-to-r", tone?.accent)} />
+              <header className="border-b border-slate-200 p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <KindPill step={selectedStep} />
+                    <StatusPill step={selectedStep} />
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-base font-semibold text-slate-600">
+                      Module {partNumber(selectedStep)}
+                    </span>
+                  </div>
+                  <span className="text-base font-bold text-slate-500">
+                    Étape {activeIndex + 1} sur {player.steps.length}
+                  </span>
+                </div>
 
-          {selectedStep && (
-            <article className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
-              <div className="border-b border-slate-100 bg-slate-50/80 px-5 py-4 sm:px-8 sm:py-5">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  Partie {partNumber(selectedStep)} ·{" "}
-                  {selectedStep.stepKind === "VIDEO"
-                    ? "Vidéo & quiz"
-                    : selectedStep.stepKind === "TEXT"
-                      ? "Contenu texte"
-                      : "Activité"}
-                </p>
-                <h2 className="mt-1 text-xl font-semibold leading-tight text-slate-900 sm:text-2xl">{selectedStep.title}</h2>
-              </div>
+                <div className="mt-5 flex items-start gap-4">
+                  <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-lg", tone?.iconBg, tone?.iconText)}>
+                    <SelectedIcon className="h-6 w-6" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-3xl font-black leading-tight text-slate-950">{selectedStep.title}</h2>
+                    <p className="mt-2 text-base leading-6 text-slate-600">{partTitle(selectedStep)}</p>
+                  </div>
+                </div>
+              </header>
 
-              <div className="px-5 py-6 sm:px-8 sm:py-8">
+              <div className="flex-1 p-5 sm:p-6">
                 {selectedStep.stepKind === "VIDEO" ? (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {!selectedStep.unlocked ? (
-                      <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        Complétez les étapes précédentes pour débloquer cette leçon.
-                      </p>
+                      <LockedPanel />
                     ) : (
                       <>
-                        {isCooldownActive(selectedStep.quizCooldownUntil) && !selectedStep.stepDone && (
-                          <div className="flex gap-3 rounded-lg border border-amber-100 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
-                            <QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-amber-700" />
-                            <p>
-                              Quiz temporairement indisponible après un échec. Prochain essai :{" "}
-                              <strong>{formatCooldownUntil(selectedStep.quizCooldownUntil) ?? "—"}</strong>.
-                            </p>
-                          </div>
-                        )}
-                        <div className="overflow-hidden rounded-lg border border-slate-200 bg-black shadow-md ring-1 ring-slate-900/5">
+                        <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-950 shadow-lg shadow-slate-200">
                           <div className="aspect-video w-full">
                             {selectedStep.uploadedVideoUrl ? (
                               <video title={selectedStep.title} className="h-full w-full" controls src={selectedStep.uploadedVideoUrl} />
@@ -483,207 +807,375 @@ export function EmployeeLearningProgramPlayer() {
                             )}
                           </div>
                         </div>
+
                         <div className="flex flex-wrap items-center gap-3">
                           <a
                             href={selectedStep.uploadedVideoUrl ?? `https://www.youtube.com/watch?v=${selectedStep.youtubeVideoId}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-sm font-medium text-sky-700 hover:underline"
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                           >
-                            {selectedStep.uploadedVideoUrl ? "Ouvrir la vidéo" : "Ouvrir sur YouTube"}
+                            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                            {selectedStep.uploadedVideoUrl ? "Ouvrir la vidéo" : "Voir sur YouTube"}
                           </a>
+
                           {selectedStep.quizStatus === "READY" &&
-                            !selectedStep.stepDone &&
-                            !isCooldownActive(selectedStep.quizCooldownUntil) &&
-                            selectedStep.videoUuid != null && (
-                              <Link
-                                to={`${base}/learning-programs/quiz/${player.enrollmentUuid}/${selectedStep.videoUuid}`}
-                                className="inline-flex items-center rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
-                              >
-                                Passer le quiz
-                              </Link>
-                            )}
-                          {selectedStep.quizStatus === "PENDING" && !selectedStep.stepDone && (
-                            <button
-                              type="button"
-                              disabled
-                              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-600"
+                          !selectedStep.stepDone &&
+                          selectedStep.videoUuid != null ? (
+                            <Link
+                              to={`${base}/learning-programs/quiz/${player.enrollmentUuid}/${selectedStep.videoUuid}`}
+                              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-5 py-2.5 text-base font-extrabold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
                             >
+                              <QuestionMarkCircleIcon className="h-4 w-4" />
+                              Passer le quiz
+                            </Link>
+                          ) : null}
+
+                          {selectedStep.quizStatus === "PENDING" && !selectedStep.stepDone ? (
+                            <span className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2.5 text-base font-bold text-orange-800">
                               <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                              Génération du quiz...
-                            </button>
-                          )}
-                          {selectedStep.quizStatus === "FAILED" && selectedStep.uploadedVideoUrl && !selectedStep.stepDone && (
-                            <span className="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900">
-                              Quiz non implémenté pour cette vidéo (upload/url).
+                              Quiz en génération
                             </span>
-                          )}
-                          {selectedStep.stepDone && (
-                            <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700">
-                              <CheckCircleIcon className="h-4 w-4" /> Quiz validé
-                            </span>
-                          )}
+                          ) : null}
                         </div>
-                        <aside className="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                          <QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-slate-400" />
-                          <p>
-                            Regardez la vidéo puis validez vos acquis avec le quiz. En cas d’échec, un délai de 15 jours
-                            s’applique avant le prochain essai.
-                          </p>
-                        </aside>
+
+                        {selectedStep.quizStatus === "FAILED" && selectedStep.uploadedVideoUrl && !selectedStep.stepDone ? (
+                          <AlertBox variant="warning">Quiz non disponible pour cette vidéo uploadée.</AlertBox>
+                        ) : null}
+
+                        {selectedStep.stepDone ? <CompletedPanel label="Quiz validé" /> : null}
                       </>
                     )}
                   </div>
-                ) : selectedStep.stepKind === "TEXT" ? (
-                  <div className="space-y-6">
+                ) : null}
+
+                {selectedStep.stepKind === "TEXT" ? (
+                  <div className="space-y-5">
                     {!selectedStep.unlocked ? (
-                      <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        Complétez les étapes précédentes pour accéder à ce contenu.
-                      </p>
+                      <LockedPanel />
                     ) : (
                       <>
-                        <div className="max-w-none text-sm leading-relaxed text-slate-800">
-                          <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-4">
+                        <section className="rounded-lg border border-slate-200 bg-slate-50 p-5 sm:p-7">
+                          <div className="prose prose-slate max-w-none prose-headings:text-slate-950 prose-p:leading-7 prose-a:text-violet-700">
                             {selectedStep.textArticleBody?.trim() ? (
                               <LearningMarkdownBody markdown={selectedStep.textArticleBody} />
                             ) : (
-                              <p className="text-sm text-slate-500">Aucun contenu renseigné pour cette lecture.</p>
+                              <p className="text-base italic text-slate-500">Aucun contenu renseigné pour cette lecture.</p>
                             )}
                           </div>
-                        </div>
+                        </section>
+
                         {selectedStep.stepDone ? (
-                          <p className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-                            <CheckCircleIcon className="h-4 w-4" /> Lecture validée
-                          </p>
+                          <CompletedPanel label="Lecture validée" />
                         ) : (
-                          <button
-                            type="button"
-                            disabled={textBusy === selectedStep.textArticleUuid}
+                          <PrimaryButton
                             onClick={() => void markTextRead(selectedStep)}
-                            className="rounded-lg bg-indigo-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800 disabled:opacity-50"
+                            loading={textBusy === selectedStep.textArticleUuid}
+                            loadingLabel="Enregistrement..."
+                            icon={CheckCircleIcon}
                           >
-                            {textBusy === selectedStep.textArticleUuid ? "Enregistrement…" : "J’ai lu — continuer"}
-                          </button>
+                            Marquer comme lu
+                          </PrimaryButton>
                         )}
                       </>
                     )}
                   </div>
-                ) : (
-                  <div className="space-y-6">
+                ) : null}
+
+                {selectedStep.stepKind === "ACTIVITY" ? (
+                  <div className="space-y-5">
                     {!selectedStep.unlocked ? (
-                      <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        Complétez les étapes précédentes pour accéder à cette activité.
-                      </p>
+                      <LockedPanel />
                     ) : (
                       <>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                          <span className="rounded-full bg-teal-50 px-2 py-0.5 font-semibold uppercase text-teal-800 ring-1 ring-teal-100">
-                            {selectedStep.activityKind === "PRACTICAL" ? "Pratique" : "Exercice"}
+                        <div className="flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-base font-bold text-emerald-800">
+                            {selectedStep.activityKind === "PRACTICAL" ? "Activité pratique" : "Exercice"}
                           </span>
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-base font-bold text-slate-700">
                             {submissionModeLabel(selectedStep.activitySubmissionMode)}
                           </span>
-                          {selectedStep.stepDone && (
-                            <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
-                              <CheckCircleIcon className="h-3.5 w-3.5" /> Validée
-                            </span>
-                          )}
                         </div>
-                        {selectedStep.activityInstructions != null && selectedStep.activityInstructions.trim() !== "" && (
-                          <div className="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
-                            <QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-slate-400" />
-                            <div className="min-w-0 leading-relaxed">
-                              <LearningMarkdownBody markdown={selectedStep.activityInstructions} linkBehavior="download" />
-                            </div>
-                          </div>
-                        )}
-                        {selectedStep.activityResourceUrl != null && selectedStep.activityResourceUrl.trim() !== "" && (
+
+                        {selectedStep.activityInstructions?.trim() ? (
+                          <section className="rounded-lg border border-blue-200 bg-blue-50 p-5 text-base leading-6 text-slate-800">
+                            <LearningMarkdownBody markdown={selectedStep.activityInstructions} linkBehavior="download" />
+                          </section>
+                        ) : null}
+
+                        {selectedStep.activityResourceUrl?.trim() ? (
                           <a
                             href={selectedStep.activityResourceUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex text-sm font-semibold text-sky-700 hover:underline"
+                            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-base font-bold text-violet-800 transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                           >
-                            Ressource / consignes en ligne →
+                            <TagIcon className="h-4 w-4" />
+                            Ressource / consignes en ligne
+                            <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
                           </a>
-                        )}
-                        {!selectedStep.stepDone && selectedStep.activityUuid != null && (
-                          <div className="space-y-4 rounded-xl border border-teal-100 bg-teal-50/30 p-4 sm:p-5">
-                            {(selectedStep.activitySubmissionMode ?? "TEXT") === "FILE" && (
-                              <div className="space-y-3">
-                                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                  Fichier
-                                  <input
-                                    type="file"
-                                    className="mt-1.5 block w-full text-sm text-slate-600"
-                                    disabled={uploadBusy === selectedStep.activityUuid}
-                                    onChange={(e) => {
-                                      const f = e.target.files?.[0];
-                                      if (f) void uploadFile(selectedStep.activityUuid!, f);
-                                      e.target.value = "";
-                                    }}
-                                  />
-                                </label>
-                                {uploadBusy === selectedStep.activityUuid && (
-                                  <p className="text-xs text-slate-500">Téléversement…</p>
-                                )}
-                                {getDraft(selectedStep.activityUuid).fileUrl && (
-                                  <p className="text-xs font-medium text-emerald-800">Fichier prêt pour validation.</p>
-                                )}
-                                <label className="block text-xs font-semibold text-slate-600">
-                                  Commentaire (optionnel)
+                        ) : null}
+
+                        {selectedStep.stepDone ? (
+                          <CompletedPanel label="Activité validée" />
+                        ) : selectedStep.activityUuid != null ? (
+                          <section className="rounded-lg border border-violet-200 bg-violet-50 p-5">
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                              <div>
+                                <h3 className="text-base font-extrabold text-violet-950">Votre soumission</h3>
+                                <p className="mt-1 text-base text-violet-800">Complétez le format demandé pour valider l'étape.</p>
+                              </div>
+                              <ClipboardDocumentCheckIcon className="h-5 w-5 shrink-0 text-violet-700" />
+                            </div>
+
+                            {(selectedStep.activitySubmissionMode ?? "TEXT") === "FILE" ? (
+                              <div className="space-y-4">
+                                <div className="rounded-lg border-2 border-dashed border-violet-200 bg-white p-6 text-center transition hover:border-violet-400">
+                                  <ClipboardDocumentIcon className="mx-auto h-9 w-9 text-violet-500" />
+                                  <p className="mt-3 text-base font-bold text-slate-800">Sélectionnez un fichier à téléverser</p>
+                                  <label className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg bg-violet-700 px-5 py-2.5 text-base font-bold text-white transition hover:bg-violet-800 focus-within:ring-2 focus-within:ring-violet-600 focus-within:ring-offset-2">
+                                    Choisir un fichier
+                                    <input
+                                      type="file"
+                                      className="sr-only"
+                                      disabled={uploadBusy === selectedStep.activityUuid}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) void uploadFile(selectedStep.activityUuid!, file);
+                                        e.target.value = "";
+                                      }}
+                                    />
+                                  </label>
+                                  {uploadBusy === selectedStep.activityUuid ? (
+                                    <p className="mt-3 inline-flex items-center gap-2 text-base font-bold text-violet-700">
+                                      <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
+                                      Téléversement en cours...
+                                    </p>
+                                  ) : null}
+                                  {getDraft(selectedStep.activityUuid).fileUrl ? (
+                                    <p className="mt-3 inline-flex items-center gap-2 text-base font-bold text-emerald-700">
+                                      <CheckCircleIcon className="h-3.5 w-3.5" />
+                                      Fichier prêt pour validation
+                                    </p>
+                                  ) : null}
+                                </div>
+
+                                <div>
+                                  <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">
+                                    Commentaire optionnel
+                                  </label>
                                   <textarea
-                                    className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                                    rows={2}
+                                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                                    rows={3}
                                     value={getDraft(selectedStep.activityUuid).text}
                                     onChange={(e) => setDraft(selectedStep.activityUuid!, { text: e.target.value })}
+                                    placeholder="Ajoutez un commentaire si besoin..."
                                   />
-                                </label>
+                                </div>
                               </div>
-                            )}
-                            {(selectedStep.activitySubmissionMode ?? "TEXT") === "TEXT" && (
-                              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                Votre réponse
+                            ) : null}
+
+                            {(selectedStep.activitySubmissionMode ?? "TEXT") === "TEXT" ? (
+                              <div>
+                                <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">Votre réponse</label>
                                 <textarea
-                                  className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                                  rows={6}
+                                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                                  rows={8}
                                   value={getDraft(selectedStep.activityUuid).text}
                                   onChange={(e) => setDraft(selectedStep.activityUuid!, { text: e.target.value })}
-                                  placeholder="Rédigez votre réponse ici."
+                                  placeholder="Rédigez votre réponse ici..."
                                 />
-                              </label>
-                            )}
-                            {(selectedStep.activitySubmissionMode ?? "TEXT") === "CODE" && (
-                              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                Code (min. 5 caractères)
-                                <textarea
-                                  className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-xs leading-relaxed"
-                                  rows={12}
-                                  spellCheck={false}
-                                  value={getDraft(selectedStep.activityUuid).text}
-                                  onChange={(e) => setDraft(selectedStep.activityUuid!, { text: e.target.value })}
-                                  placeholder="Collez votre code ici."
-                                />
-                              </label>
-                            )}
-                            <button
-                              type="button"
-                              disabled={activityBusy === selectedStep.activityUuid}
-                              onClick={() => void submitActivity(selectedStep)}
-                              className="rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-800 disabled:opacity-50"
-                            >
-                              {activityBusy === selectedStep.activityUuid ? "Validation…" : "Valider l’activité"}
-                            </button>
-                          </div>
-                        )}
+                              </div>
+                            ) : null}
+
+                            {(selectedStep.activitySubmissionMode ?? "TEXT") === "CODE" ? (
+                              <div>
+                                <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">
+                                  Code ou contenu technique
+                                </label>
+                                <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950 shadow-lg">
+                                  <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-900 px-4 py-2">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+                                    <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
+                                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                                    <span className="ml-2 text-base font-bold text-slate-400">submission.ts</span>
+                                  </div>
+                                  <textarea
+                                    className="w-full bg-slate-950 px-4 py-4 font-mono text-base leading-6 text-emerald-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-violet-500"
+                                    rows={12}
+                                    spellCheck={false}
+                                    value={getDraft(selectedStep.activityUuid).text}
+                                    onChange={(e) => setDraft(selectedStep.activityUuid!, { text: e.target.value })}
+                                    placeholder="// Collez votre code ici..."
+                                  />
+                                </div>
+                              </div>
+                            ) : null}
+
+                            <div className="mt-5">
+                              <PrimaryButton
+                                onClick={() => void submitActivity(selectedStep)}
+                                loading={activityBusy === selectedStep.activityUuid}
+                                loadingLabel="Validation en cours..."
+                                icon={CheckCircleIcon}
+                              >
+                                Valider l'activité
+                              </PrimaryButton>
+                            </div>
+                          </section>
+                        ) : null}
                       </>
                     )}
                   </div>
-                )}
+                ) : null}
               </div>
+
+              <footer className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <SecondaryButton
+                  icon={ArrowLeftIcon}
+                  disabled={prevUnlockedIndex == null}
+                  onClick={() => {
+                    if (prevUnlockedIndex != null) setSelectedStepIndex(prevUnlockedIndex);
+                  }}
+                >
+                  Précédent
+                </SecondaryButton>
+
+                <SecondaryButton
+                  disabled={nextUnlockedIndex == null}
+                  onClick={() => {
+                    if (nextUnlockedIndex != null) setSelectedStepIndex(nextUnlockedIndex);
+                  }}
+                  className="sm:ml-auto"
+                >
+                  Suivant
+                  <ChevronRightIcon className="h-4 w-4" />
+                </SecondaryButton>
+              </footer>
             </article>
-          )}
+          ) : null}
         </main>
+
+        {selectedStep ? (
+          <aside className="flex h-full flex-col space-y-4 lg:sticky lg:top-16">
+            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className={cn("flex h-10 w-10 items-center justify-center rounded-lg", tone?.iconBg, tone?.iconText)}>
+                  <SelectedIcon className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-950">Focus étape</h3>
+                  <p className="text-base text-slate-500">{stepKindLabel(selectedStep)}</p>
+                </div>
+              </div>
+              <p className="mt-4 text-base leading-6 text-slate-600">
+                {selectedStep.stepKind === "TEXT"
+                  ? "Lisez le contenu puis confirmez la lecture pour débloquer la suite."
+                  : selectedStep.stepKind === "VIDEO"
+                    ? "Regardez la vidéo puis lancez le quiz associé dès qu'il est disponible."
+                    : "Suivez les consignes, préparez votre soumission et validez l'activité."}
+              </p>
+            </section>
+
+            <section
+              className={cn(
+                "rounded-lg border p-5 shadow-sm",
+                selectedStep.unlocked ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50",
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm">
+                  {selectedStep.unlocked ? (
+                    <CheckCircleIcon className="h-5 w-5 text-emerald-700" />
+                  ) : (
+                    <LockClosedIcon className="h-5 w-5 text-orange-700" />
+                  )}
+                </span>
+                <div>
+                  <h3 className={cn("text-base font-extrabold", selectedStep.unlocked ? "text-emerald-950" : "text-orange-950")}>
+                    Accès
+                  </h3>
+                  <p className={cn("text-base font-bold", selectedStep.unlocked ? "text-emerald-700" : "text-orange-700")}>
+                    {selectedStep.unlocked ? "Disponible" : "Verrouillé"}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-base font-extrabold text-slate-950">Ressources</h3>
+              <div className="mt-4 space-y-2">
+                {selectedStep.stepKind === "VIDEO" ? (
+                  <a
+                    href={selectedStep.uploadedVideoUrl ?? `https://www.youtube.com/watch?v=${selectedStep.youtubeVideoId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                  >
+                    <span className="flex items-center gap-2">
+                      <PlayCircleIcon className="h-4 w-4" />
+                      Vidéo source
+                    </span>
+                    <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+                  </a>
+                ) : null}
+
+                {selectedStep.activityResourceUrl?.trim() ? (
+                  <a
+                    href={selectedStep.activityResourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                  >
+                    <span className="flex items-center gap-2">
+                      <DocumentTextIcon className="h-4 w-4" />
+                      Document associé
+                    </span>
+                    <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+                  </a>
+                ) : null}
+
+                {selectedStep.stepKind === "VIDEO" && selectedStep.quizStatus === "READY" && selectedStep.videoUuid != null ? (
+                  <Link
+                    to={`${base}/learning-programs/quiz/${player.enrollmentUuid}/${selectedStep.videoUuid}`}
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                  >
+                    <span className="flex items-center gap-2">
+                      <QuestionMarkCircleIcon className="h-4 w-4" />
+                      Quiz vidéo
+                    </span>
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Link>
+                ) : null}
+
+                {selectedStep.stepKind !== "VIDEO" && !selectedStep.activityResourceUrl?.trim() ? (
+                  <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-center text-base text-slate-500">
+                    Aucune ressource additionnelle
+                  </p>
+                ) : null}
+              </div>
+            </section>
+
+            <section className="mt-auto rounded-lg border border-violet-200 bg-white p-5 shadow-sm">
+              <p className="text-base font-extrabold uppercase tracking-wide text-violet-700">Prochaine étape</p>
+              {nextUnlockedIndex != null ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedStepIndex(nextUnlockedIndex)}
+                  className="mt-3 w-full rounded-lg bg-violet-50 p-4 text-left transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                >
+                  <p className="text-base font-extrabold leading-5 text-slate-950">{player.steps[nextUnlockedIndex]?.title}</p>
+                  <p className="mt-2 flex items-center gap-2 text-base font-bold text-violet-700">
+                    {stepKindLabel(player.steps[nextUnlockedIndex]!)}
+                    <ChevronRightIcon className="h-3.5 w-3.5" />
+                  </p>
+                </button>
+              ) : (
+                <p className="mt-3 rounded-lg bg-slate-50 p-4 text-base leading-6 text-slate-600">Vous êtes sur la dernière étape débloquée.</p>
+              )}
+            </section>
+          </aside>
+        ) : null}
       </div>
     </div>
   );

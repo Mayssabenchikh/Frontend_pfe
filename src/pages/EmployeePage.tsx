@@ -270,16 +270,16 @@ export default function EmployeePage() {
           <div
             className={
               isProfilePage
-                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
+                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
                 : isQuizPage
-                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
+                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"
                 : isAssignmentsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"
                 : isLearningPage || isRecommendationsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-6"
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-4 py-4 sm:px-6 sm:py-6"
                 : isProjectsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
-                : "dashboard-padding"
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"
+                : "dashboard-padding bg-[#f8f7ff]"
             }
           >
             <Outlet context={{ employeeAvatarUrl: avatarUrl, employeeName: displayName, employeeEmail: email, currentPath: location.pathname, onAvatarUpdate: setAvatarUrl }} />

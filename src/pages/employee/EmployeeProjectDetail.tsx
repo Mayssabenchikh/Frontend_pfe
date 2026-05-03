@@ -1,16 +1,111 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { employeeProjectsApi, type ProjectDto } from "../../api/projectsApi";
 import type { AssignmentDto } from "../../api/assignmentsApi";
-import { ArrowLeftIcon, InboxStackIcon, SparklesIcon, UserCircleIcon } from "../../icons/heroicons/outline";
-import { getAvatarColor, getDisplayNameInitials } from "../admin/utils";
+import { employeeProjectsApi, type ProjectDto, type ProjectRequirementDto } from "../../api/projectsApi";
+import {
+  ArrowLeftIcon,
+  BriefcaseIcon,
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EnvelopeIcon,
+  ExclamationCircleIcon,
+  InboxStackIcon,
+  InformationCircleIcon,
+  SparklesIcon,
+  UserCircleIcon,
+  UserGroupIcon,
+} from "../../icons/heroicons/outline";
 import { getUserFacingApiMessage } from "../../utils/apiUserMessage";
+import { getAvatarColor, getDisplayNameInitials } from "../admin/utils";
+import { getSkillIconUrl } from "../admin/skillIcons";
 
-function Badge({ children }: { children: React.ReactNode }) {
+function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function statusMeta(status?: string | null) {
+  if (status === "ACTIVE") return { label: "En cours", cls: "border-violet-200 bg-violet-50 text-violet-700", dot: "bg-violet-600" };
+  if (status === "CLOSED") return { label: "Terminé", cls: "border-emerald-200 bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" };
+  return { label: "Brouillon", cls: "border-slate-200 bg-slate-50 text-slate-600", dot: "bg-slate-400" };
+}
+
+function priorityMeta(priority?: string | null) {
+  if (priority === "HIGH") return { label: "Haute priorité", cls: "border-orange-200 bg-orange-50 text-orange-700" };
+  if (priority === "LOW") return { label: "Priorité basse", cls: "border-blue-200 bg-blue-50 text-blue-700" };
+  if (priority === "MEDIUM") return { label: "Priorité moyenne", cls: "border-violet-200 bg-violet-50 text-violet-700" };
+  return { label: "Priorité non définie", cls: "border-slate-200 bg-slate-50 text-slate-600" };
+}
+
+function assignmentStatusMeta(status?: string | null) {
+  if (status === "ACCEPTED") return { label: "Affecté", cls: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+  if (status === "PENDING") return { label: "En attente", cls: "border-orange-200 bg-orange-50 text-orange-700" };
+  if (status === "REFUSED") return { label: "Refusé", cls: "border-rose-200 bg-rose-50 text-rose-700" };
+  return { label: "Retiré", cls: "border-slate-200 bg-slate-50 text-slate-600" };
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "Non renseignée";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+}
+
+function DetailSkeleton() {
   return (
-    <span className="inline-flex items-center rounded-md border border-violet-200 bg-violet-50 px-2.5 py-0.5 text-[11px] font-semibold text-violet-700">
-      {children}
-    </span>
+    <div className="w-full px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto grid w-full max-w-[1680px] gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-5">
+          <div className="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" />
+          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-white" />
+        </div>
+        <div className="h-[520px] animate-pulse rounded-lg border border-slate-200 bg-white" />
+      </div>
+    </div>
+  );
+}
+
+function InfoTile({ icon: Icon, label, value }: { icon: typeof CalendarDaysIcon; label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+        <Icon className="h-4 w-4 text-violet-600" />
+        {label}
+      </div>
+      <p className="mt-2 text-base font-extrabold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function RequirementCard({ requirement }: { requirement: ProjectRequirementDto }) {
+  const iconUrl = getSkillIconUrl(requirement.skillName);
+
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60">
+      <div className="flex items-start gap-3">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-violet-100 bg-violet-50 p-2">
+          {iconUrl ? (
+            <img
+              src={iconUrl}
+              alt=""
+              className="h-full w-full object-contain contrast-125 saturate-125"
+              loading="lazy"
+            />
+          ) : (
+            <SparklesIcon className="h-7 w-7 text-violet-700" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-lg font-extrabold text-slate-950">{requirement.skillName}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-500">{requirement.categoryName || "Catégorie non renseignée"}</p>
+            </div>
+            <span className="shrink-0 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">Niveau {requirement.levelMin}</span>
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -59,229 +154,181 @@ export function EmployeeProjectDetail() {
     });
   }, [team]);
 
-  if (loading) {
-    return <div className="px-4 py-8 text-sm text-slate-500 sm:px-6">Chargement…</div>;
-  }
+  if (loading) return <DetailSkeleton />;
 
   if (error || !project) {
     return (
-      <div className="px-4 py-8 sm:px-6">
-        <p className="text-sm font-semibold text-red-600">{error ?? "Projet introuvable"}</p>
-        <Link to="/employee/projects" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 hover:text-violet-800">
-          <ArrowLeftIcon className="h-4 w-4" />
-          Retour à mes projets
-        </Link>
+      <div className="min-h-full w-full bg-[#f8f7ff] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl rounded-lg border border-rose-200 bg-white p-6 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-rose-50">
+              <ExclamationCircleIcon className="h-6 w-6 text-rose-600" />
+            </div>
+            <div>
+              <p className="text-lg font-extrabold text-slate-950">Projet indisponible</p>
+              <p className="mt-1 text-sm font-semibold text-rose-700">{error ?? "Projet introuvable"}</p>
+              <Link
+                to="/employee/projects"
+                className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-4 text-sm font-bold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+              >
+                <ArrowLeftIcon className="h-4 w-4" />
+                Retour aux projets
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const currentStatus = (() => {
-    const s = project.status ?? "DRAFT";
-    if (s === "ACTIVE") {
-      return {
-        label: "En cours",
-        cls: "border-violet-200 bg-violet-50 text-violet-700",
-        dot: "bg-violet-600",
-      };
-    }
-    if (s === "CLOSED") {
-      return {
-        label: "Terminé",
-        cls: "border-emerald-200 bg-emerald-50 text-emerald-700",
-        dot: "bg-emerald-600",
-      };
-    }
-    return {
-      label: "Brouillon",
-      cls: "border-slate-200 bg-slate-50 text-slate-600",
-      dot: "bg-slate-400",
-    };
-  })();
-
-  const currentPriority = (() => {
-    const p = project.priority ?? "MEDIUM";
-    if (p === "HIGH") {
-      return { label: "Haute", cls: "border-amber-200 bg-amber-50 text-amber-700", icon: "⚡" };
-    }
-    if (p === "LOW") {
-      return { label: "Basse", cls: "border-slate-200 bg-slate-50 text-slate-600", icon: "↓" };
-    }
-    return { label: "Moyenne", cls: "border-indigo-200 bg-indigo-50 text-indigo-700", icon: "•" };
-  })();
+  const status = statusMeta(project.status);
+  const priority = priorityMeta(project.priority);
+  const requirements = project.requirements ?? [];
 
   return (
-    <div className="min-h-full w-full bg-[#f8f7ff] px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-        {/* Topbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-1">
+    <section className="min-h-full w-full bg-[#f8f7ff]">
+      <div className="w-full px-4 py-5 sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-5">
           <Link
             to="/employee/projects"
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700"
+            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
           >
             <ArrowLeftIcon className="h-4 w-4" />
-            Retour à mes projets
+            Retour aux projets
           </Link>
-        </div>
 
-        {/* Main grid */}
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          {/* Left */}
-          <section className="flex flex-col gap-4 xl:col-span-8">
-            {/* Hero card */}
-            <article className="overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-sm">
-              <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-violet-500 to-pink-500" />
-              <div className="p-4 sm:p-5">
-                <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500">Détails du projet</p>
-                    <h1 className="mt-1 truncate text-xl font-bold text-slate-800 sm:text-2xl">{project.name}</h1>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${currentStatus.cls}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${currentStatus.dot}`} />
-                      {currentStatus.label}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${currentPriority.cls}`}>
-                      <span className="text-[10px]">{currentPriority.icon}</span>
-                      {currentPriority.label}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Stats strip */}
-                <div className="mb-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-blue-50 px-4 py-3 text-center">
-                    <p className="text-xl font-bold text-blue-600">{project.requirements?.length ?? 0}</p>
-                    <p className="text-xs text-blue-400">Compétences</p>
-                  </div>
-                  <div className="rounded-2xl bg-violet-50 px-4 py-3 text-center">
-                    <p className="text-xl font-bold text-violet-600">{project.teamSize ?? 1}</p>
-                    <p className="text-xs text-violet-400">Membres</p>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <h2 className="text-sm font-semibold text-slate-800">À propos du projet</h2>
-                <p className="mt-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                  {project.description || "Aucune description disponible."}
-                </p>
-              </div>
-            </article>
-
-            {/* Team members */}
-            <article className="rounded-3xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
-                    <UserCircleIcon className="h-4 w-4 text-blue-600" />
-                  </span>
-                  Équipe du projet
-                </h2>
-                <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                  {teamMembers.length} membre{teamMembers.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-
-              {teamMembers.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-6 py-16 text-center shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 shadow-sm">
-                    <InboxStackIcon className="h-8 w-8 text-violet-700" />
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm font-bold text-violet-900">Aucun membre</p>
-                    <p className="text-xs text-violet-400">L'équipe apparaîtra ici</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {teamMembers.map((m) => {
-                    const name = m.employeeName || m.employeeEmail || "—";
-                    const seed = m.employeeEmail || name;
-                    const initials = getDisplayNameInitials(name);
-                    const gradient = getAvatarColor(seed);
-                    return (
-                      <div
-                        key={m.employeeKeycloakId}
-                        className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm transition hover:-translate-y-px hover:border-violet-200 hover:shadow-md"
-                      >
-                        {m.employeeAvatarUrl ? (
-                          <img
-                            src={m.employeeAvatarUrl}
-                            alt={name}
-                            className="h-12 w-12 shrink-0 rounded-2xl border border-violet-100 object-cover shadow-sm"
-                          />
-                        ) : (
-                          <div
-                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[11px] font-bold text-white shadow-sm ring-1 ring-white/40"
-                            style={{
-                              background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`,
-                              boxShadow: `0 10px 22px ${gradient[0]}20`,
-                            }}
-                          >
-                            {initials}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-slate-900">{name}</p>
-                              <p className="truncate text-xs text-slate-500">{m.employeeEmail}</p>
-                            </div>
-                            <span className="shrink-0 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                              Affecté
-                            </span>
-                          </div>
-                        </div>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <main className="flex min-w-0 flex-col gap-5">
+              <header className="overflow-hidden rounded-lg border border-violet-100 bg-white shadow-sm">
+                <div className="h-1.5 bg-gradient-to-r from-violet-700 via-blue-500 to-rose-500" />
+                <div className="p-5 sm:p-6">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-800">
+                          <BriefcaseIcon className="h-4 w-4" />
+                          Détail projet
+                        </span>
+                        <span className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-bold", status.cls)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", status.dot)} />
+                          {status.label}
+                        </span>
+                        <span className={cn("inline-flex rounded-md border px-2.5 py-1 text-xs font-bold", priority.cls)}>{priority.label}</span>
                       </div>
-                    );
-                  })}
+                      <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">{project.name}</h1>
+                      <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">{project.description || "Aucune description disponible pour ce projet."}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <InfoTile icon={CalendarDaysIcon} label="Début" value={formatDate(project.startDate)} />
+                    <InfoTile icon={ClockIcon} label="Échéance" value={formatDate(project.dueDate)} />
+                    <InfoTile icon={SparklesIcon} label="Compétences" value={requirements.length} />
+                    <InfoTile icon={UserGroupIcon} label="Taille équipe" value={project.teamSize ?? "Non renseignée"} />
+                  </div>
                 </div>
-              )}
-            </article>
-          </section>
+              </header>
 
-          {/* Right */}
-          <aside className="flex flex-col gap-4 xl:col-span-4">
-            <article className="rounded-3xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-800">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50">
-                  <SparklesIcon className="h-4 w-4 text-violet-600" />
-                </span>
-                Informations
-              </h2>
-
-              <div className="grid grid-cols-1 gap-3">
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Lead</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">{project.leadName || "—"}</p>
-                  <p className="text-xs text-slate-500">{project.leadEmail || "—"}</p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Dates</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">
-                    {project.startDate ?? "—"} → {project.dueDate ?? "—"}
-                  </p>
+              <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-slate-950">Exigences en compétences</h2>
+                  </div>
+                  <span className="w-fit rounded-md border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-bold text-violet-700">
+                    {requirements.length} compétence{requirements.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Taille d'équipe</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">{project.teamSize ?? "—"}</p>
+                {requirements.length === 0 ? (
+                  <div className="flex min-h-[280px] flex-col items-center justify-center gap-3 p-8 text-center">
+                    <InboxStackIcon className="h-12 w-12 text-violet-300" />
+                    <p className="text-base font-bold text-slate-900">Aucune exigence renseignée</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 p-5 md:grid-cols-2">
+                    {requirements.map((requirement) => (
+                      <RequirementCard key={requirement.uuid} requirement={requirement} />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-slate-950">Membres d'équipe</h2>
+                  </div>
+                  <span className="w-fit rounded-md border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">
+                    {teamMembers.length} membre{teamMembers.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ma participation</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">
-                    <Badge>Affecté au projet</Badge>
-                  </p>
+                {teamMembers.length === 0 ? (
+                  <div className="flex min-h-[280px] flex-col items-center justify-center gap-3 p-8 text-center">
+                    <UserGroupIcon className="h-12 w-12 text-violet-300" />
+                    <p className="text-base font-bold text-slate-900">Aucun membre d'équipe</p>
+                    <p className="max-w-md text-sm leading-6 text-slate-500">Aucun membre accepté n'est renvoyé pour ce projet.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 p-5 md:grid-cols-2">
+                    {teamMembers.map((member) => {
+                      const name = member.employeeName || member.employeeEmail || "Membre";
+                      const seed = member.employeeEmail || name;
+                      const initials = getDisplayNameInitials(name);
+                      const gradient = getAvatarColor(seed);
+                      const memberStatus = assignmentStatusMeta(member.status);
+                      return (
+                        <article
+                          key={member.uuid}
+                          className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60"
+                        >
+                          <div className="flex items-start gap-3">
+                            {member.employeeAvatarUrl ? (
+                              <img src={member.employeeAvatarUrl} alt={name} className="h-14 w-14 shrink-0 rounded-lg border border-slate-200 object-cover" />
+                            ) : (
+                              <div
+                                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-sm font-extrabold text-white"
+                                style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
+                              >
+                                {initials}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="truncate text-lg font-extrabold text-slate-950">{name}</p>
+                                  <p className="mt-1 truncate text-sm text-slate-500">{member.employeeEmail}</p>
+                                </div>
+                                <span className={cn("rounded-md border px-2.5 py-1 text-xs font-bold", memberStatus.cls)}>{memberStatus.label}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            </main>
+
+            <aside className="flex flex-col gap-5">
+              <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="flex items-center gap-2 text-xl font-extrabold text-slate-950">
+                  <InformationCircleIcon className="h-6 w-6 text-violet-700" />
+                  Informations
+                </h2>
+                <div className="mt-5 space-y-3">
+                  <InfoTile icon={UserCircleIcon} label="Lead" value={project.leadName || "Non renseigné"} />
+                  <InfoTile icon={EnvelopeIcon} label="Email lead" value={project.leadEmail || "Non renseigné"} />
+                  <InfoTile icon={CheckCircleIcon} label="Statut" value={status.label} />
+                  <InfoTile icon={SparklesIcon} label="Priorité" value={priority.label} />
                 </div>
-              </div>
-            </article>
-          </aside>
+              </section>
+
+            </aside>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
-

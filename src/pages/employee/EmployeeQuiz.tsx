@@ -494,7 +494,7 @@ export function EmployeeQuiz() {
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; }
 
-    .eq-wrap { background: #F9F8FF; display: flex; flex: 1; flex-direction: column; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+    .eq-wrap { background: #f8f7ff; display: flex; flex: 1; flex-direction: column; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
     .eq-body  { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 0 !important; }
     .eq-body > *:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; }
     .eq-browser { display: flex; flex: 1; min-height: 0; flex-direction: column; }
@@ -748,7 +748,7 @@ export function EmployeeQuiz() {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 12px; color: #9CA3AF;
       padding: 5px 11px;
-      background: #F9F8FF; border: 1px solid #EDE9FE;
+      background: #f8f7ff; border: 1px solid #EDE9FE;
       border-radius: 99px; margin-top: 4px;
     }
     .eq-empty-hint svg { width: 11px; height: 11px; color: #7C3AED; }
