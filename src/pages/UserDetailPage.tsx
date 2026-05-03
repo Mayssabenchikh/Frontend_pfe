@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   ArrowLeftIcon,
+  CameraIcon,
   BriefcaseIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
@@ -9,12 +11,15 @@ import {
   ClockIcon,
   EnvelopeIcon,
   InformationCircleIcon,
+  PencilSquareIcon,
   PhoneIcon,
   ShieldCheckIcon,
   SparklesIcon,
   UserGroupIcon,
 } from "../icons/heroicons/outline";
+import { http } from "../api/http";
 import { userDetailApi, type UserDetailDto, type UserSkillDetailDto } from "../api/userDetailApi";
+import { ADMIN_API_PATHS } from "./admin/adminApiPaths";
 import { getAvatarColor, getDisplayNameInitials } from "./admin/utils";
 import { getSkillIconUrl } from "./admin/skillIcons";
 import { getUserFacingApiMessage } from "../utils/apiUserMessage";
@@ -23,6 +28,8 @@ type Source = "admin" | "manager-project" | "employee-project";
 
 type Props = {
   source: Source;
+  refreshKey?: number;
+  onAdminSaved?: () => void;
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -31,6 +38,10 @@ const ROLE_LABELS: Record<string, string> = {
   EMPLOYEE: "Employé",
   TRAINING_MANAGER: "Responsable formation",
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^[+\d][\d\s\-().]{6,19}$/;
+const NAME_RE = /^[\p{L}\s'-]{2,60}$/u;
 
 function formatDate(value?: string | null) {
   if (!value) return "—";
@@ -42,6 +53,32 @@ function formatDate(value?: string | null) {
 function formatRoleLabel(role?: string | null) {
   if (!role) return "—";
   return ROLE_LABELS[role] ?? role;
+}
+
+function validateAdminFields(fields: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  hireDate: string;
+  department: string;
+  jobTitle: string;
+}) {
+  if (!fields.email.trim()) return "L'email est requis.";
+  if (!EMAIL_RE.test(fields.email.trim())) return "Format d'email invalide.";
+  if (!fields.firstName.trim()) return "Le prénom est requis.";
+  if (!NAME_RE.test(fields.firstName.trim())) return "Prénom invalide.";
+  if (!fields.lastName.trim()) return "Le nom est requis.";
+  if (!NAME_RE.test(fields.lastName.trim())) return "Nom invalide.";
+  if (fields.phone.trim() && !PHONE_RE.test(fields.phone.trim())) return "Format de téléphone invalide.";
+  if (fields.hireDate) {
+    const parsed = new Date(fields.hireDate);
+    if (Number.isNaN(parsed.getTime())) return "Date d'embauche invalide.";
+    if (parsed > new Date()) return "La date d'embauche ne peut pas être dans le futur.";
+  }
+  if (fields.department.trim().length > 100) return "Le département ne peut pas dépasser 100 caractères.";
+  if (fields.jobTitle.trim().length > 100) return "Le poste ne peut pas dépasser 100 caractères.";
+  return null;
 }
 
 function assignmentStatusBadge(status?: string | null) {
@@ -138,13 +175,27 @@ function UserDetailSkeleton() {
   );
 }
 
-export function UserDetailPage({ source }: Props) {
+export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) {
   const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<UserDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editEmail, setEditEmail] = useState("");
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editRole, setEditRole] = useState("EMPLOYEE");
+  const [editDepartment, setEditDepartment] = useState("");
+  const [editJobTitle, setEditJobTitle] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editHireDate, setEditHireDate] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const projectId = params.projectId ?? params.id ?? "";
   const employeeId = params.employeeId ?? "";
@@ -185,7 +236,121 @@ export function UserDetailPage({ source }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [adminUserId, employeeId, projectId, source]);
+  }, [adminUserId, employeeId, projectId, refreshKey, source]);
+
+  useEffect(() => {
+    if (source !== "admin" || !user || isEditing) return;
+    setEditEmail(user.email ?? "");
+    setEditFirstName(user.firstName ?? "");
+    setEditLastName(user.lastName ?? "");
+    setEditRole(user.role ?? "EMPLOYEE");
+    setEditDepartment(user.department ?? "");
+    setEditJobTitle(user.jobTitle ?? "");
+    setEditPhone(user.phone ?? "");
+    setEditHireDate(user.hireDate ?? "");
+  }, [isEditing, source, user]);
+
+  useEffect(() => {
+    setAvatarUrl(user?.avatarUrl ?? null);
+  }, [user?.avatarUrl]);
+
+  const beginEdit = () => {
+    if (!user || source !== "admin") return;
+    setSaveError(null);
+    setEditEmail(user.email ?? "");
+    setEditFirstName(user.firstName ?? "");
+    setEditLastName(user.lastName ?? "");
+    setEditRole(user.role ?? "EMPLOYEE");
+    setEditDepartment(user.department ?? "");
+    setEditJobTitle(user.jobTitle ?? "");
+    setEditPhone(user.phone ?? "");
+    setEditHireDate(user.hireDate ?? "");
+    setIsEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setSaveError(null);
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || source !== "admin") return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner une image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 5 Mo.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => setAvatarUrl(event.target?.result as string);
+    reader.readAsDataURL(file);
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await http.post<{ avatarUrl: string }>(ADMIN_API_PATHS.userAvatar(user.keycloakId), formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setAvatarUrl(response.data.avatarUrl);
+      setUser((prev) => (prev ? { ...prev, avatarUrl: response.data.avatarUrl } : prev));
+      onAdminSaved?.();
+      toast.success("Photo de profil mise à jour.");
+    } catch (err) {
+      setAvatarUrl(user.avatarUrl ?? null);
+      toast.error(getUserFacingApiMessage(err, "Erreur lors de l'upload de la photo."));
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleSaveAdminChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || source !== "admin") return;
+
+    const validationError = validateAdminFields({
+      email: editEmail,
+      firstName: editFirstName,
+      lastName: editLastName,
+      phone: editPhone,
+      hireDate: editHireDate,
+      department: editDepartment,
+      jobTitle: editJobTitle,
+    });
+    if (validationError) {
+      setSaveError(validationError);
+      return;
+    }
+
+    setSaveLoading(true);
+    setSaveError(null);
+    try {
+      const payload = {
+        email: editEmail.trim(),
+        firstName: editFirstName.trim(),
+        lastName: editLastName.trim(),
+        role: editRole,
+        department: editDepartment.trim() || null,
+        jobTitle: editJobTitle.trim() || null,
+        phone: editPhone.trim() || null,
+        hireDate: editHireDate || null,
+      };
+      await http.put(`/api/admin/users/${encodeURIComponent(user.keycloakId)}`, payload);
+      setUser((prev) => (prev ? { ...prev, ...payload, role: editRole } : prev));
+      setIsEditing(false);
+      onAdminSaved?.();
+      toast.success("Utilisateur mis à jour.");
+    } catch (err) {
+      setSaveError(getUserFacingApiMessage(err, "Échec de la mise à jour."));
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
   if (loading) return <UserDetailSkeleton />;
 
@@ -194,7 +359,7 @@ export function UserDetailPage({ source }: Props) {
       <div className="min-h-full bg-[#fbfaff] px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-[1320px] rounded-3xl border border-rose-200 bg-white p-6 shadow-sm">
           <p className="font-bold text-rose-700">{error ?? "Profil introuvable"}</p>
-          <button type="button" onClick={() => navigate(backTo)} className="mt-4 inline-flex items-center rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-800">
+          <button type="button" onClick={() => (source === "admin" ? navigate("/admin", { state: { view: "users" } }) : navigate(backTo))} className="mt-4 inline-flex items-center rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-800">
             Retour
           </button>
         </div>
@@ -213,37 +378,170 @@ export function UserDetailPage({ source }: Props) {
   ].filter(Boolean) as { label: string; value: string; icon: ReactNode }[];
   const validatedSkills = user.skills.filter((skill) => skill.status === "VALIDATED").length;
   const totalAssignments = user.assignments.length;
+  const pageTitle = source === "admin" ? "Détail utilisateur" : "Profil collaborateur";
+  const pageDescription =
+    source === "admin"
+      ? "Vue complète de l'utilisateur créé, avec ses informations, ses compétences validées et ses affectations projets."
+      : "Vue claire et structurée destinée aux équipes d’ingénierie pour consulter rapidement l’identité, les compétences validées et les affectations projets.";
+  const fieldClass = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15";
+  const labelClass = "text-[11px] font-black uppercase tracking-[0.16em] text-slate-400";
 
   return (
     <div className="min-h-full overflow-y-auto bg-[#fbfaff] px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1320px] space-y-5">
         <div className="flex flex-wrap items-center gap-3 px-0 py-0">
-          <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-violet-800">
+          <button
+            type="button"
+            onClick={() => (source === "admin" ? navigate("/admin", { state: { view: "users" } }) : navigate(-1))}
+            className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-violet-800"
+          >
             <ArrowLeftIcon className="h-5 w-5" />
             {backLabel}
           </button>
-          {source === "admin" ? (
-            <>
-              <span className="h-5 w-px bg-slate-200" />
-              <Link to={backTo} className="text-sm font-bold text-slate-400 transition hover:text-violet-700">
-                Utilisateurs
-              </Link>
-            </>
-          ) : null}
         </div>
 
         <div className="flex flex-col gap-2">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-violet-500">Fiche interne</p>
-          <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Profil collaborateur</h1>
-          <p className="max-w-3xl text-sm leading-6 text-slate-500">
-            Vue claire et structurée destinée aux équipes d’ingénierie pour consulter rapidement l’identité, les compétences validées et les affectations projets.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">{pageTitle}</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">{pageDescription}</p>
+            </div>
+            {source === "admin" && !isEditing ? (
+              <button
+                type="button"
+                onClick={beginEdit}
+                className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-violet-800 hover:shadow-md"
+              >
+                <PencilSquareIcon className="h-4 w-4" />
+                Modifier
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
           <article className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="h-1.5 bg-gradient-to-r from-violet-700 via-fuchsia-500 to-blue-500" />
-            <div className="bg-gradient-to-br from-white via-white to-violet-50/50 p-5 sm:p-6">
+            {source === "admin" && isEditing ? (
+              <form onSubmit={handleSaveAdminChanges} className="bg-gradient-to-br from-white via-white to-violet-50/50 p-5 sm:p-6">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-violet-500">Édition inline</p>
+                    <h2 className="mt-2 text-2xl font-black text-slate-950">Modifier les informations du collaborateur</h2>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                      Les champs ci-dessous se modifient directement sur la page, sans fenêtre pop-up.
+                    </p>
+                  </div>
+                  <div className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide ${user.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                    {user.enabled ? "Actif" : "Inactif"}
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                  <div className="min-w-0 space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className={labelClass}>Email</span>
+                        <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className={fieldClass} type="email" />
+                      </label>
+                      <label className="block">
+                        <span className={labelClass}>Rôle</span>
+                        <select value={editRole} onChange={(e) => setEditRole(e.target.value)} className={fieldClass}>
+                          {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className={labelClass}>Prénom</span>
+                        <input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} className={fieldClass} />
+                      </label>
+                      <label className="block">
+                        <span className={labelClass}>Nom</span>
+                        <input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} className={fieldClass} />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className={labelClass}>Département</span>
+                        <input value={editDepartment} onChange={(e) => setEditDepartment(e.target.value)} className={fieldClass} placeholder="Ingénierie Logicielle" />
+                      </label>
+                      <label className="block">
+                        <span className={labelClass}>Poste</span>
+                        <input value={editJobTitle} onChange={(e) => setEditJobTitle(e.target.value)} className={fieldClass} placeholder="Ingénieur Java" />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className={labelClass}>Téléphone</span>
+                        <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className={fieldClass} placeholder="+216 20 123 456" />
+                      </label>
+                      <label className="block">
+                        <span className={labelClass}>Date d'embauche</span>
+                        <input value={editHireDate} onChange={(e) => setEditHireDate(e.target.value)} className={fieldClass} type="date" />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-violet-100 bg-white p-4 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="relative shrink-0 rounded-3xl bg-white p-2 shadow-sm ring-1 ring-violet-100">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt={fullName} className="h-24 w-24 rounded-2xl object-cover shadow-sm ring-1 ring-violet-100" />
+                        ) : (
+                          <div
+                            className="flex h-24 w-24 items-center justify-center rounded-2xl text-2xl font-black text-white shadow-sm ring-1 ring-violet-100"
+                            style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
+                          >
+                            {initials}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingAvatar}
+                          className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-xl border border-white bg-violet-700 text-white shadow-md transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60"
+                          aria-label="Changer la photo de profil"
+                        >
+                          <CameraIcon className={`h-4 w-4 ${uploadingAvatar ? "animate-pulse" : ""}`} />
+                        </button>
+                        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-950">{fullName}</p>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">{roleLabel}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Aperçu</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-700">{editEmail}</p>
+                      <p className="mt-1 text-xs text-slate-500">Les autres sections se mettent à jour après enregistrement.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {saveError ? <p className="mt-4 text-sm font-semibold text-rose-600">{saveError}</p> : null}
+
+                <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+                  <button type="button" onClick={cancelEdit} className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">
+                    Annuler
+                  </button>
+                  <button type="submit" disabled={saveLoading} className="inline-flex items-center justify-center rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60">
+                    {saveLoading ? "Enregistrement..." : "Enregistrer"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+            <div className={`${isEditing ? "hidden" : ""} bg-gradient-to-br from-white via-white to-violet-50/50 p-5 sm:p-6`}>
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex min-w-0 flex-1 items-start gap-5">
                   <div className="relative shrink-0 rounded-3xl bg-white p-2 shadow-sm ring-1 ring-violet-100">
@@ -257,7 +555,6 @@ export function UserDetailPage({ source }: Props) {
                         {initials}
                       </div>
                     )}
-                    <span className={`absolute bottom-3 right-3 h-6 w-6 rounded-full border-4 border-white ${user.enabled ? "bg-emerald-500" : "bg-slate-400"}`} />
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -311,6 +608,7 @@ export function UserDetailPage({ source }: Props) {
                 </div>
               ) : null}
             </div>
+            )}
           </article>
 
           <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">

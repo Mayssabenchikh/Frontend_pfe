@@ -8,7 +8,6 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { AG_GRID_LOCALE_FR } from "@ag-grid-community/locale";
 import {
-  PencilSquareIcon,
   ArchiveBoxIcon,
   NoSymbolIcon,
   PowerIcon,
@@ -29,7 +28,6 @@ type Props = {
   users: UserListDto[]; loading: boolean; error: string | null;
   togglingId: string | null;
   archivingId: string | null;
-  onEdit: (user: UserListDto) => void;
   onView: (user: UserListDto) => void;
   onToggleEnabled: (user: UserListDto) => void;
   onArchive: (user: UserListDto) => void;
@@ -66,7 +64,7 @@ function SkeletonRow() {
   );
 }
 
-export function UsersTable({ users, loading, error, togglingId, archivingId, onEdit, onView, onToggleEnabled, onArchive }: Props) {
+export function UsersTable({ users, loading, error, togglingId, archivingId, onView, onToggleEnabled, onArchive }: Props) {
   const gridRef = useRef<AgGridReact<UserListDto> | null>(null);
 
   const columnDefs = useMemo<ColDef<UserListDto>[]>(() => [
@@ -166,9 +164,6 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
             <button type="button" title="Voir les détails" onClick={() => onView(u)} className={`${btnCls} text-slate-600 hover:bg-slate-100 hover:border-slate-200 hover:text-slate-900 hover:-translate-y-px hover:shadow-md`}>
               <EyeIcon className="w-3.5 h-3.5" />
             </button>
-            <button type="button" title="Modifier" onClick={() => onEdit(u)} disabled={false} className={`${btnCls} text-indigo-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 hover:-translate-y-px hover:shadow-md`}>
-              {isTog ? loadingSpan : <PencilSquareIcon className="w-3.5 h-3.5" />}
-            </button>
             {u.enabled ? (
               <button type="button" title="Désactiver" onClick={() => onToggleEnabled(u)} disabled={isTog} className={`${btnCls} text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}>
                 {isTog ? loadingSpan : <NoSymbolIcon className="w-3.5 h-3.5" />}
@@ -185,7 +180,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onE
         );
       },
     },
-  ], [onEdit, onView, onToggleEnabled, onArchive, togglingId, archivingId]);
+  ], [onView, onToggleEnabled, onArchive, togglingId, archivingId]);
 
   const defaultColDef: ColDef = useMemo(() => ({ resizable: true, sortable: true, flex: 1, minWidth: 100, suppressHeaderMenuButton: true }), []);
 

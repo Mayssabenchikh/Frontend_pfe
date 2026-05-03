@@ -25,7 +25,6 @@ import { AdminProfile } from "./admin/AdminProfile";
 import { AdminAssignmentsAudit } from "./admin/AdminAssignmentsAudit";
 import { AdminProjectsReadonly } from "./admin/AdminProjectsReadonly";
 import { CreateUserModal } from "./admin/CreateUserModal";
-import { EditUserModal } from "./admin/EditUserModal";
 import { FiltersPanel } from "../components/FiltersPanel";
 import { ArchiveBoxIcon } from "../icons/heroicons/outline";
 
@@ -126,17 +125,7 @@ export default function AdminPage() {
   const [createPhone, setCreatePhone] = useState("");
   const [createHireDate, setCreateHireDate] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
-
-  const [editingUser, setEditingUser] = useState<UserListDto | null>(null);
-  const [editEmail, setEditEmail] = useState("");
-  const [editFirstName, setEditFirstName] = useState("");
-  const [editLastName, setEditLastName] = useState("");
-  const [editRole, setEditRole] = useState<AdminRole>("EMPLOYEE");
-  const [editDepartment, setEditDepartment] = useState("");
-  const [editJobTitle, setEditJobTitle] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editHireDate, setEditHireDate] = useState("");
-  const [editLoading, setEditLoading] = useState(false);
+  const [userDetailRefreshKey, setUserDetailRefreshKey] = useState(0);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [archivedUsers, setArchivedUsers] = useState<ArchivedUserDto[]>([]);
@@ -212,40 +201,6 @@ export default function AdminPage() {
       .catch((err) => toast.error("Échec de l'opération", { description: getApiError(err, MESSAGES.errorGeneric) }))
       .finally(() => setTogglingId(null));
   }, [loadUsers]);
-
-  const startEdit = useCallback((u: UserListDto) => {
-    setEditingUser(u);
-    setEditEmail(u.email);
-    setEditFirstName(u.firstName);
-    setEditLastName(u.lastName);
-    setEditRole(
-      (u.role === "MANAGER" ? "MANAGER" : u.role === "TRAINING_MANAGER" ? "TRAINING_MANAGER" : "EMPLOYEE") as AdminRole,
-    );
-    setEditDepartment(u.department ?? "");
-    setEditJobTitle(u.jobTitle ?? "");
-    setEditPhone(u.phone ?? "");
-    setEditHireDate(u.hireDate ?? "");
-  }, []);
-
-  const handleUpdateUser = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingUser) return;
-    setEditLoading(true);
-    http.put(`${USERS_API}/${editingUser.uuid}`, {
-      email: editEmail, firstName: editFirstName, lastName: editLastName, role: editRole,
-      department: editDepartment || null, jobTitle: editJobTitle || null,
-      phone: editPhone || null, hireDate: editHireDate || null,
-    })
-      .then(() => {
-        loadUsers();
-        setEditingUser(null);
-        toast.success("Modifications enregistrées", {
-          description: `Le profil de ${editFirstName} ${editLastName} a été mis à jour.`,
-        });
-      })
-      .catch((err) => toast.error("Échec de la mise à jour", { description: getApiError(err, MESSAGES.errorGeneric) }))
-      .finally(() => setEditLoading(false));
-  }, [editingUser, editEmail, editFirstName, editLastName, editRole, editDepartment, editJobTitle, editPhone, editHireDate, loadUsers]);
 
   const handleArchiveUser = useCallback((u: UserListDto) => {
     setArchivingId(u.uuid);
@@ -338,8 +293,20 @@ export default function AdminPage() {
   }, []);
   const roleLabel = ROLE_LABELS[getPrimaryRole(token ?? undefined) ?? ""] ?? "—";
 
+  const handleUserDetailSaved = useCallback(() => {
+    loadUsers();
+    setUserDetailRefreshKey((key) => key + 1);
+  }, [loadUsers]);
+
+  useEffect(() => {
+    const requestedView = (location.state as { view?: NavId } | null)?.view;
+    if (!isUserDetailRoute && requestedView) {
+      setCurrentView(requestedView);
+    }
+  }, [isUserDetailRoute, location.state]);
+
   const handleNavChange = (view: NavId) => {
-    if (isUserDetailRoute) navigate("/admin");
+    if (isUserDetailRoute) navigate("/admin", { state: { view } });
     setCurrentView(view);
     setSidebarOpen(false);
   };
@@ -374,10 +341,18 @@ export default function AdminPage() {
         />
 
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <AdminBreadcrumbs currentView={isUserDetailRoute ? "users" : currentView} onNavigate={handleNavChange} />
+          <AdminBreadcrumbs
+            currentView={isUserDetailRoute ? "users" : currentView}
+            detailLabel={isUserDetailRoute ? "Détail utilisateur" : undefined}
+            onNavigate={handleNavChange}
+          />
 
           {isUserDetailRoute ? (
-            <UserDetailPage source="admin" />
+            <UserDetailPage
+              source="admin"
+              refreshKey={userDetailRefreshKey}
+              onAdminSaved={handleUserDetailSaved}
+            />
           ) : currentView === "dashboard" && <div className="dashboard-padding" />}
 
           {!isUserDetailRoute && currentView === "profile" && (
@@ -606,7 +581,6 @@ export default function AdminPage() {
                       error={usersError}
                       togglingId={togglingId}
                       archivingId={archivingId}
-                      onEdit={startEdit}
                       onView={handleViewUser}
                       onToggleEnabled={handleToggleEnabled}
                       onArchive={handleArchiveUser}
@@ -629,17 +603,6 @@ export default function AdminPage() {
         onPhoneChange={setCreatePhone} onHireDateChange={setCreateHireDate}
         loading={createLoading} onSubmit={handleCreateUser}
       />
-
-      {editingUser && (
-        <EditUserModal
-          user={editingUser} email={editEmail} firstName={editFirstName} lastName={editLastName} role={editRole}
-          department={editDepartment} jobTitle={editJobTitle} phone={editPhone} hireDate={editHireDate}
-          onEmailChange={setEditEmail} onFirstNameChange={setEditFirstName} onLastNameChange={setEditLastName} onRoleChange={setEditRole}
-          onDepartmentChange={setEditDepartment} onJobTitleChange={setEditJobTitle}
-          onPhoneChange={setEditPhone} onHireDateChange={setEditHireDate}
-          loading={editLoading} onClose={() => setEditingUser(null)} onSubmit={handleUpdateUser}
-        />
-      )}
 
       <ConfirmModal
         open={!!deleteConfirmUser}

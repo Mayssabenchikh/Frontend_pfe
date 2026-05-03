@@ -16,11 +16,13 @@ const LABELS: Record<NavId, string> = {
 type Props = {
   currentView: NavId;
   onNavigate: (view: NavId) => void;
+  detailLabel?: string;
 };
 
-export function AdminBreadcrumbs({ currentView, onNavigate }: Props) {
+export function AdminBreadcrumbs({ currentView, onNavigate, detailLabel }: Props) {
   const label = LABELS[currentView];
   const isHome = currentView === "dashboard";
+  const showDetail = currentView === "users" && !!detailLabel;
 
   return (
     <nav
@@ -38,7 +40,19 @@ export function AdminBreadcrumbs({ currentView, onNavigate }: Props) {
       {!isHome && (
         <>
           <ChevronRightIcon className="w-3.5 h-3.5 text-slate-300" />
-          <span className="font-medium text-slate-700">{label}</span>
+          <button
+            type="button"
+            onClick={() => onNavigate(currentView)}
+            className={`font-medium transition-colors hover:text-violet-600 ${showDetail ? "text-slate-600" : "text-slate-700"}`}
+          >
+            {label}
+          </button>
+          {showDetail ? (
+            <>
+              <ChevronRightIcon className="w-3.5 h-3.5 text-slate-300" />
+              <span className="font-medium text-slate-700">{detailLabel}</span>
+            </>
+          ) : null}
         </>
       )}
     </nav>
