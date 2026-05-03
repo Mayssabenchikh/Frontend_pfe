@@ -31,7 +31,7 @@ type QuizPhase = "setup" | "in_progress" | "submitted";
 
 const QUESTION_COUNT = 20;
 const TIME_LIMIT_SECONDS = 15 * 60;
-const SKILLS_PAGE_SIZE = 12;
+const SKILLS_PAGE_SIZE = 8;
 const REVIEW_PAGE_SIZE = 4;
 const MIN_START_LOADING_MS = 600;
 const QUIZ_FAIL_COOLDOWN_DAYS = 15;
@@ -772,7 +772,7 @@ export function EmployeeQuiz() {
     /* ── Skills grid ── */
     .eq-skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
     @media (min-width: 1280px) {
-      .eq-skills-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .eq-skills-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
     .eq-pagination {
       margin-top: auto;
