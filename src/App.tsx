@@ -22,6 +22,7 @@ import { EmployeeAssignments } from "./pages/employee/EmployeeAssignments";
 import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
 import { EmployeeProjectDetail } from "./pages/employee/EmployeeProjectDetail";
 import { EmployeeTrainingRecommendations } from "./pages/employee/EmployeeTrainingRecommendations";
+import { UserDetailPage } from "./pages/UserDetailPage";
 import { TrainingManagerPrograms } from "./pages/employee/TrainingManagerPrograms";
 import { TrainingManagerProgramEditor } from "./pages/employee/TrainingManagerProgramEditor";
 import TrainingManagerPage from "./pages/training-manager/TrainingManagerPage";
@@ -113,7 +114,7 @@ function App() {
         />
 
         <Route
-          path="/admin"
+          path="/admin/*"
           element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
               <AdminPage />
@@ -145,6 +146,7 @@ function App() {
           <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />
           <Route path="projects/:id/matches" element={<RedirectProjectMatchesToTalent />} />
           <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
+          <Route path="projects/:projectId/team/:employeeId" element={<UserDetailPage source="manager-project" />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="profile" element={<ManagerProfile />} />
         </Route>
@@ -178,6 +180,7 @@ function App() {
           <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />
           <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />
           <Route path="projects" element={<EmployeeProjects />} />
+          <Route path="projects/:projectId/team/:employeeId" element={<UserDetailPage source="employee-project" />} />
           <Route path="projects/:id" element={<EmployeeProjectDetail />} />
           <Route path="profile" element={<EmployeeMyProfile />} />
         </Route>

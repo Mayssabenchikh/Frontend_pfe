@@ -5,7 +5,6 @@ import {
   ClipboardDocumentCheckIcon,
   DocumentTextIcon,
   Squares2X2Icon,
-  UserCircleIcon,
   BriefcaseIcon,
   ClipboardDocumentListIcon,
   SparklesIcon,
@@ -75,7 +74,6 @@ export default function EmployeePage() {
         <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/employee/assignments" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/employee/training-recommendations" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Mes projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/employee/projects" collapsed={sidebarCollapsed} />
-        <DashboardSidebarNavItem label="Mon profil" icon={<UserCircleIcon className="h-5 w-5" />} to="/employee/profile" collapsed={sidebarCollapsed} />
       </DashboardSidebar>
 
       {/* Contenu : même header fixe et même padding que manager/admin */}

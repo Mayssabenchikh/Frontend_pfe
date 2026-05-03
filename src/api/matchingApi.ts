@@ -66,6 +66,7 @@ export type EmployeeMatchRowDto = {
   employee_keycloak_id: string;
   display_name: string;
   email: string;
+  avatar_url?: string | null;
   match_score: number;
   confidence_score: number;
   meets_mandatory: boolean;

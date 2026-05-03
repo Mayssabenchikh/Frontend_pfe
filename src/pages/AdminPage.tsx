@@ -1,23 +1,17 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useKeycloak } from "@react-keycloak/web";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { http } from "../api/http";
 import { getPrimaryRole } from "../auth/roles";
 import {
   PlusIcon,
-  XMarkIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  BuildingOffice2Icon,
-  BriefcaseIcon,
-  CalendarDaysIcon,
-  CheckCircleIcon,
-  NoSymbolIcon,
 } from "../icons/heroicons/outline";
+import { UserDetailPage } from "./UserDetailPage";
 
 import type { UserListDto, ArchivedUserDto, NavId, AdminRole, TokenParsed } from "./admin/types";
 import { ROLE_LABELS, ROLE_OPTIONS, MESSAGES } from "./admin/constants";
-import { getDisplayName, getInitials, getApiError, ensureArray, getAvatarColor } from "./admin/utils";
+import { getDisplayName, getInitials, getApiError, ensureArray } from "./admin/utils";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminHeader } from "./admin/AdminHeader";
@@ -99,7 +93,10 @@ function fetchArchivedUsersDeduped(
 
 export default function AdminPage() {
   const { keycloak } = useKeycloak();
+  const location = useLocation();
+  const navigate = useNavigate();
   const token = keycloak.tokenParsed as TokenParsed | undefined;
+  const isUserDetailRoute = /^\/admin\/users\/[^/]+\/?$/.test(location.pathname);
 
   const [currentView, setCurrentView] = useState<NavId>("dashboard");
   const adminAvatarKey = keycloak.subject ? `admin_avatar_${keycloak.subject}` : null;
@@ -155,9 +152,13 @@ export default function AdminPage() {
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<ArchivedUserDto | null>(null);
-  const [viewUser, setViewUser] = useState<UserListDto | null>(null);
 
   const usersList = useMemo(() => ensureArray(users), [users]);
+
+  const handleViewUser = useCallback((user: UserListDto) => {
+    navigate(`/admin/users/${encodeURIComponent(user.uuid)}`);
+  }, [navigate]);
+
   const loadUsers = useCallback((filters?: Partial<typeof usersFilters>) => {
     const f = { ...usersFilters, ...(filters ?? {}) };
     setUsersLoading(true);
@@ -338,6 +339,7 @@ export default function AdminPage() {
   const roleLabel = ROLE_LABELS[getPrimaryRole(token ?? undefined) ?? ""] ?? "—";
 
   const handleNavChange = (view: NavId) => {
+    if (isUserDetailRoute) navigate("/admin");
     setCurrentView(view);
     setSidebarOpen(false);
   };
@@ -367,16 +369,18 @@ export default function AdminPage() {
           avatarSeed={(token?.email ?? keycloak.subject ?? getDisplayName(token)) || null}
           roleLabel={roleLabel}
           onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
-          onNavigate={setCurrentView}
+          onNavigate={handleNavChange}
           onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
 
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <AdminBreadcrumbs currentView={currentView} onNavigate={handleNavChange} />
+          <AdminBreadcrumbs currentView={isUserDetailRoute ? "users" : currentView} onNavigate={handleNavChange} />
 
-          {currentView === "dashboard" && <div className="dashboard-padding" />}
+          {isUserDetailRoute ? (
+            <UserDetailPage source="admin" />
+          ) : currentView === "dashboard" && <div className="dashboard-padding" />}
 
-          {currentView === "profile" && (
+          {!isUserDetailRoute && currentView === "profile" && (
             <AdminProfile
               token={token}
               adminKeycloakId={keycloak.subject}
@@ -388,33 +392,33 @@ export default function AdminPage() {
             />
           )}
 
-          {currentView === "skills" && (
+          {!isUserDetailRoute && currentView === "skills" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <SkillsCatalog />
             </section>
           )}
 
-          {currentView === "skillCategories" && (
+          {!isUserDetailRoute && currentView === "skillCategories" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <SkillCategories />
             </section>
           )}
 
-          {currentView === "skillRequests" && (
+          {!isUserDetailRoute && currentView === "skillRequests" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <PendingSkillRequests />
             </section>
           )}
 
-          {currentView === "assignments" && (
+          {!isUserDetailRoute && currentView === "assignments" && (
             <AdminAssignmentsAudit />
           )}
 
-          {currentView === "projects" && (
+          {!isUserDetailRoute && currentView === "projects" && (
             <AdminProjectsReadonly />
           )}
 
-          {currentView === "archives" && (
+          {!isUserDetailRoute && currentView === "archives" && (
             <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-3 py-3 sm:px-6 sm:py-4">
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
@@ -503,7 +507,7 @@ export default function AdminPage() {
             </section>
           )}
 
-          {currentView === "users" && (
+          {!isUserDetailRoute && currentView === "users" && (
             <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
               <div className="users-toolbar flex w-full shrink-0 items-center justify-end border-b border-violet-500/10 px-3 py-3 sm:px-6 sm:py-3.5">
                 <button
@@ -603,7 +607,7 @@ export default function AdminPage() {
                       togglingId={togglingId}
                       archivingId={archivingId}
                       onEdit={startEdit}
-                      onView={setViewUser}
+                      onView={handleViewUser}
                       onToggleEnabled={handleToggleEnabled}
                       onArchive={handleArchiveUser}
                     />
@@ -635,135 +639,6 @@ export default function AdminPage() {
           onPhoneChange={setEditPhone} onHireDateChange={setEditHireDate}
           loading={editLoading} onClose={() => setEditingUser(null)} onSubmit={handleUpdateUser}
         />
-      )}
-
-      {viewUser && (
-        <div
-          onClick={() => setViewUser(null)}
-          className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md overflow-hidden rounded-2xl border border-violet-500/20 bg-white shadow-[0_32px_80px_rgba(109,40,217,0.15)] max-h-[90vh] flex flex-col animate-[modalIn_0.25s_cubic-bezier(0.16,1,0.3,1)_both]"
-          >
-            <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
-
-            {/* Bandeau gradient + en-tête */}
-            <div className="shrink-0 border-b border-slate-100 bg-gradient-to-br from-violet-50 to-white">
-              <div className="flex items-start justify-between gap-3 px-6 pt-6 pb-4">
-                <div className="flex min-w-0 flex-1 items-start gap-4">
-                  <div className="relative shrink-0">
-                    {viewUser.avatarUrl ? (
-                      <img
-                        src={viewUser.avatarUrl}
-                        alt={`${viewUser.firstName} ${viewUser.lastName}`}
-                        className="h-16 w-16 rounded-2xl border-2 border-violet-100 object-cover shadow-lg"
-                      />
-                    ) : (
-                      <div
-                        className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-violet-100 text-2xl font-bold text-white shadow-lg"
-                        style={{
-                          background: `linear-gradient(135deg, ${getAvatarColor(viewUser.email)[0]}, ${getAvatarColor(viewUser.email)[1]})`,
-                        }}
-                      >
-                        {((viewUser.firstName?.[0] ?? "") + (viewUser.lastName?.[0] ?? "")).trim().toUpperCase() || "U"}
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-bold text-slate-900 truncate">
-                      {`${viewUser.firstName} ${viewUser.lastName}`.trim() || viewUser.email}
-                    </h2>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
-                      <EnvelopeIcon className="h-4 w-4 shrink-0 text-violet-400" />
-                      <span className="truncate">{viewUser.email}</span>
-                    </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800">
-                        {ROLE_LABELS[viewUser.role] ?? viewUser.role}
-                      </span>
-                      {viewUser.enabled ? (
-                        <span className="inline-flex items-center gap-1 rounded-lg border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
-                          <CheckCircleIcon className="h-3.5 w-3.5" />
-                          Actif
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                          <NoSymbolIcon className="h-3.5 w-3.5" />
-                          Inactif
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setViewUser(null)}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
-                  aria-label="Fermer"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Corps : champs avec icônes */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                Informations professionnelles
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
-                    <BuildingOffice2Icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Département</p>
-                    <p className="mt-0.5 text-sm font-medium text-slate-800">{viewUser.department || "—"}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
-                    <BriefcaseIcon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Poste</p>
-                    <p className="mt-0.5 text-sm font-medium text-slate-800">{viewUser.jobTitle || "—"}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
-                    <PhoneIcon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Téléphone</p>
-                    <p className="mt-0.5 text-sm font-medium text-slate-800">{viewUser.phone || "—"}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
-                    <CalendarDaysIcon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Date d&apos;embauche</p>
-                    <p className="mt-0.5 text-sm font-medium text-slate-800">
-                      {viewUser.hireDate
-                        ? new Date(viewUser.hireDate).toLocaleDateString("fr-FR", {
-                            year: "numeric",
-                            month: "long",
-                            day: "2-digit",
-                          })
-                        : "—"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
       )}
 
       <ConfirmModal

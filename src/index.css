@@ -232,7 +232,7 @@
 .admin-header-fixed {
   position: fixed;
   top: 0; right: 0; left: 280px;
-  z-index: 40;
+  z-index: 70;
   height: 80px;
   display: flex;
   align-items: center;

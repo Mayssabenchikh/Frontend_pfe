@@ -7,7 +7,6 @@ import {
   Squares2X2Icon,
   BriefcaseIcon,
   ClipboardDocumentListIcon,
-  ChartBarSquareIcon,
   SparklesIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
@@ -32,12 +31,11 @@ export default function ManagerPage() {
   const location = useLocation();
   const isCvExtractionPage = location.pathname.startsWith("/manager/cv-extraction");
   const isQuizPage = location.pathname.startsWith("/manager/quiz");
-  const isTalentRoute = /^\/manager\/matching(\/|$)/.test(location.pathname);
   const isFullBleed =
     location.pathname.startsWith("/manager/projects") ||
     isCvExtractionPage ||
     isQuizPage ||
-    isTalentRoute;
+    location.pathname.startsWith("/manager/matching");
 
   useEffect(() => {
     meApi
@@ -77,7 +75,6 @@ export default function ManagerPage() {
         <DashboardSidebarNavItem label="Extraction CV" icon={<DocumentTextIcon className="h-5 w-5" />} to="/manager/cv-extraction" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/manager/quiz" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/manager/projects" collapsed={sidebarCollapsed} />
-        <DashboardSidebarNavItem label="Correspondances" icon={<ChartBarSquareIcon className="h-5 w-5" />} to="/manager/matching" active={isTalentRoute} collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/manager/assignments" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/manager/training-recommendations" collapsed={sidebarCollapsed} />
       </DashboardSidebar>

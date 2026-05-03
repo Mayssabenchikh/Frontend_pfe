@@ -30,6 +30,14 @@ function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string 
     return [{ label: "Mes projets" }];
   }
 
+  if (parts[1] === "projects" && parts[3] === "team" && parts.length >= 5) {
+    return [
+      { label: "Mes projets", to: "/employee/projects" },
+      { label: "Détails du projet", to: `/employee/projects/${parts[2]}` },
+      { label: "Profil collaborateur" },
+    ];
+  }
+
   if (parts[1] === "projects" && parts.length >= 3) {
     return [{ label: "Mes projets", to: "/employee/projects" }, { label: "Détails du projet" }];
   }

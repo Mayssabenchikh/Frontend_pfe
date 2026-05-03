@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import type { AssignmentDto } from "../../api/assignmentsApi";
 import { employeeProjectsApi, type ProjectDto, type ProjectRequirementDto } from "../../api/projectsApi";
 import {
@@ -111,6 +111,7 @@ function RequirementCard({ requirement }: { requirement: ProjectRequirementDto }
 
 export function EmployeeProjectDetail() {
   const { id: projectUuid } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [project, setProject] = useState<ProjectDto | null>(null);
   const [team, setTeam] = useState<AssignmentDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +154,11 @@ export function EmployeeProjectDetail() {
       return an.localeCompare(bn);
     });
   }, [team]);
+
+  const openMemberDetail = (member: AssignmentDto) => {
+    if (!projectUuid) return;
+    navigate(`/employee/projects/${encodeURIComponent(projectUuid)}/team/${encodeURIComponent(member.employeeKeycloakId)}`);
+  };
 
   if (loading) return <DetailSkeleton />;
 
@@ -278,9 +284,11 @@ export function EmployeeProjectDetail() {
                       const gradient = getAvatarColor(seed);
                       const memberStatus = assignmentStatusMeta(member.status);
                       return (
-                        <article
+                        <button
+                          type="button"
                           key={member.uuid}
-                          className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60"
+                          onClick={() => openMemberDetail(member)}
+                          className="rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                         >
                           <div className="flex items-start gap-3">
                             {member.employeeAvatarUrl ? (
@@ -303,7 +311,7 @@ export function EmployeeProjectDetail() {
                               </div>
                             </div>
                           </div>
-                        </article>
+                        </button>
                       );
                     })}
                   </div>

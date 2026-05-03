@@ -40,6 +40,15 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
     return [{ label: "Formations", to: "/manager/training-recommendations" }, { label: "Quiz parcours" }];
   }
 
+  // /manager/projects/:id/team/:employeeId
+  if (parts[1] === "projects" && parts[3] === "team" && parts.length >= 5) {
+    return [
+      { label: "Projets", to: "/manager/projects" },
+      { label: "Détail du projet", to: `/manager/projects/${parts[2]}` },
+      { label: "Profil collaborateur" },
+    ];
+  }
+
   // /manager/matching (hub)
   if (parts[1] === "matching" && parts.length === 2) {
     return [{ label: "Correspondances" }];
@@ -94,8 +103,7 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
   // /manager/projects/:id
   if (parts[1] === "projects" && parts.length >= 3) {
     return [
-      { label: "Projets", to: "/manager/projects" },
-      { label: "Détail du projet" },
+      { label: "Retour", to: "/manager/projects" },
     ];
   }
 
@@ -109,7 +117,7 @@ export function ManagerBreadcrumbs() {
 
   return (
     <nav
-      className="admin-breadcrumbs flex h-10 min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 pt-1 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8"
+      className="admin-breadcrumbs flex h-10 min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap bg-transparent px-3 pt-1 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8"
       aria-label="Fil d'Ariane manager"
     >
       <Link
