@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Bars3Icon } from "../../../icons/heroicons/outline";
+import { Bars3Icon, TrashIcon } from "../../../icons/heroicons/outline";
 import type { LearningCourseDetail } from "../../../api/learningProgramApi";
 
 function SortableRow({
@@ -70,6 +70,7 @@ type Props = {
   onSelectCourse: (uuid: string) => void;
   onReorder: (orderedUuids: string[]) => Promise<void>;
   onRenameCourse: (courseUuid: string, title: string) => Promise<void>;
+  onDeleteCourse: (courseUuid: string, title: string) => Promise<void>;
 };
 
 export function SortableCoursesList({
@@ -79,6 +80,7 @@ export function SortableCoursesList({
   onSelectCourse,
   onReorder,
   onRenameCourse,
+  onDeleteCourse,
 }: Props) {
   const sorted = useMemo(() => [...courses].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title)), [courses]);
 
@@ -115,7 +117,7 @@ export function SortableCoursesList({
               <SortableRow course={c} disabled={disabled} selected={selectedCourseUuid === c.uuid}>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Titre du module
+                    Titre de la partie
                     <input
                       defaultValue={c.title}
                       key={c.uuid + c.title}
@@ -127,22 +129,33 @@ export function SortableCoursesList({
                       className="tm-input rounded-lg font-normal normal-case"
                     />
                   </label>
-                  <label
-                    className={`inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
-                      selectedCourseUuid === c.uuid
-                        ? "border-violet-300 bg-violet-50 text-violet-800"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="activeCourse"
-                      checked={selectedCourseUuid === c.uuid}
-                      onChange={() => onSelectCourse(c.uuid)}
-                      className="h-4 w-4 accent-violet-600"
-                    />
-                    {selectedCourseUuid === c.uuid ? "Module sélectionné" : "Sélectionner ce module"}
-                  </label>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <label
+                      className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                        selectedCourseUuid === c.uuid
+                          ? "border-violet-300 bg-violet-50 text-violet-800"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="activeCourse"
+                        checked={selectedCourseUuid === c.uuid}
+                        onChange={() => onSelectCourse(c.uuid)}
+                        className="h-4 w-4 accent-violet-600"
+                      />
+                      {selectedCourseUuid === c.uuid ? "Partie sélectionnée" : "Sélectionner"}
+                    </label>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => void onDeleteCourse(c.uuid, c.title)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                      Supprimer
+                    </button>
+                  </div>
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
                   {c.videos.length} vidéo(s) · {(c.textArticles?.length ?? 0)} texte(s) · {(c.activities?.length ?? 0)} activité(s)

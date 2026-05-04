@@ -175,10 +175,13 @@ export const learningProgramApi = {
   }) => http.post<LearningProgramDetail>("/api/training-manager/trainings", payload),
   managerPatch: (uuid: string, payload: Partial<{ title: string; description: string | null; skillUuid: string | null; targetSkillLevel: number; published: boolean }>) =>
     http.patch<LearningProgramDetail>(`/api/training-manager/trainings/${uuid}`, payload),
+  managerDelete: (uuid: string) => http.delete<{ uuid: string; deleted: boolean | string }>(`/api/training-manager/trainings/${uuid}`),
   managerAddCourse: (programUuid: string, payload: { title: string; sortOrder?: number | null }) =>
     http.post<LearningProgramDetail>(`/api/training-manager/trainings/${programUuid}/courses`, payload),
   managerPatchCourse: (programUuid: string, courseUuid: string, payload: { title?: string; sortOrder?: number }) =>
     http.patch<LearningProgramDetail>(`/api/training-manager/trainings/${programUuid}/courses/${courseUuid}`, payload),
+  managerDeleteCourse: (programUuid: string, courseUuid: string) =>
+    http.delete<LearningProgramDetail>(`/api/training-manager/trainings/${programUuid}/courses/${courseUuid}`),
   managerAddVideo: (programUuid: string, courseUuid: string, payload: AddLearningVideoPayload) =>
     http.post<LearningProgramDetail>(`/api/training-manager/trainings/${programUuid}/courses/${courseUuid}/videos`, payload),
   managerPatchVideo: (

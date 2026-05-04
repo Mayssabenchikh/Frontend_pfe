@@ -17,7 +17,11 @@ import type { SkillDto } from "../admin/types";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
+  FolderIcon,
+  PencilSquareIcon,
   SparklesIcon,
+  TrashIcon,
+  XMarkIcon,
 } from "../../icons/heroicons/outline";
 import { CourseStepsSortable } from "./components/CourseStepsSortable";
 import { SortableCoursesList } from "./components/SortableCoursesList";
@@ -60,6 +64,31 @@ function SourceBadge({ type }: { type: "RECOMMENDATION" | "MANUAL" }) {
   return <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-700">Manuel</span>;
 }
 
+function mergeCourseContentForTree(course: LearningProgramDetail["courses"][number]) {
+  const rows: Array<{ key: string; type: "Vidéo" | "Lecture" | "Activité"; title: string; sortOrder: number; quizStatus?: QuizGenerationStatus }> = [
+    ...course.videos.map((v) => ({
+      key: `video:${v.uuid}`,
+      type: "Vidéo" as const,
+      title: v.title,
+      sortOrder: v.sortOrder,
+      quizStatus: v.quizStatus,
+    })),
+    ...(course.textArticles ?? []).map((t) => ({
+      key: `text:${t.uuid}`,
+      type: "Lecture" as const,
+      title: t.title,
+      sortOrder: t.sortOrder,
+    })),
+    ...course.activities.map((a) => ({
+      key: `activity:${a.uuid}`,
+      type: "Activité" as const,
+      title: a.title,
+      sortOrder: a.sortOrder,
+    })),
+  ];
+  return rows.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
 export function TrainingManagerProgramEditor() {
   const { uuid } = useParams<{ uuid: string }>();
   const navigate = useNavigate();
@@ -80,6 +109,10 @@ export function TrainingManagerProgramEditor() {
   const [skillsError, setSkillsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savingMeta, setSavingMeta] = useState(false);
+  const [showMetaEditor, setShowMetaEditor] = useState(false);
+  const [showTreeView, setShowTreeView] = useState(false);
+  const [confirmDeleteProgram, setConfirmDeleteProgram] = useState(false);
+  const [deletingProgram, setDeletingProgram] = useState(false);
   const [generatingQuiz, setGeneratingQuiz] = useState<string | null>(null);
   const [actKind, setActKind] = useState<CourseActivityKind>("EXERCISE");
   const [actSubmissionMode, setActSubmissionMode] = useState<ActivitySubmissionMode>("TEXT");
@@ -190,7 +223,7 @@ export function TrainingManagerProgramEditor() {
 
   const uploadTextAssetAndInsert = async (file: File, target: "new" | "edit" | "activity" | "activityEdit") => {
     if (!uuid || isNew) {
-      toast.error("Enregistrez d’abord le parcours");
+      toast.error("Enregistrez d’abord la formation");
       return;
     }
     try {
@@ -223,7 +256,7 @@ export function TrainingManagerProgramEditor() {
 
   const uploadVideoAssetAndFill = async (file: File) => {
     if (!uuid || isNew) {
-      toast.error("Enregistrez d’abord le parcours");
+      toast.error("Enregistrez d’abord la formation");
       return;
     }
     try {
@@ -322,7 +355,7 @@ export function TrainingManagerProgramEditor() {
         targetSkillLevel: targetLevel,
         published,
       });
-      toast.success("Parcours créé");
+      toast.success("Formation créée");
       navigate(`/training-manager/programs/${data.uuid}`, { replace: true });
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } } };
@@ -343,12 +376,31 @@ export function TrainingManagerProgramEditor() {
         published,
       });
       setDetail(data);
+      setShowMetaEditor(false);
       toast.success("Enregistré");
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } } };
       setError(err?.response?.data?.error ?? "Enregistrement impossible");
     } finally {
       setSavingMeta(false);
+    }
+  };
+
+  const deleteProgram = async () => {
+    if (!uuid || isNew) return;
+    setDeletingProgram(true);
+    setError(null);
+    try {
+      await learningProgramApi.managerDelete(uuid);
+      toast.success("Formation supprimée");
+      navigate("/training-manager/programs", { replace: true });
+    } catch (e: unknown) {
+      const msg = getUserFacingApiMessage(e, "Suppression impossible");
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setDeletingProgram(false);
+      setConfirmDeleteProgram(false);
     }
   };
 
@@ -420,6 +472,26 @@ export function TrainingManagerProgramEditor() {
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } } };
       setError(err?.response?.data?.error ?? "Renommage impossible");
+    }
+  };
+
+  const removeCourse = async (courseUuid: string, courseName: string) => {
+    if (!uuid || isNew) return;
+    const confirmed = window.confirm(`Supprimer "${courseName}" et tous ses contenus ?`);
+    if (!confirmed) return;
+    setError(null);
+    try {
+      const { data } = await learningProgramApi.managerDeleteCourse(uuid, courseUuid);
+      setDetail(data);
+      if (selectedCourseUuid === courseUuid) {
+        const next = data.courses.slice().sort((a, b) => a.sortOrder - b.sortOrder)[0]?.uuid ?? null;
+        setSelectedCourseUuid(next);
+      }
+      toast.success("Partie supprimée de la formation");
+    } catch (e: unknown) {
+      const msg = getUserFacingApiMessage(e, "Suppression impossible");
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -611,12 +683,12 @@ export function TrainingManagerProgramEditor() {
           className="inline-flex items-center gap-1.5 rounded-lg px-1 py-0.5 text-sm font-semibold text-violet-800 transition hover:bg-violet-50 hover:text-violet-950"
         >
           <ArrowLeftIcon className="h-4 w-4" />
-          Mes parcours
+          Mes formations
         </Link>
         <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-[0_24px_60px_-28px_rgba(99,102,241,0.35)] ring-1 ring-slate-900/[0.04]">
           <div className="relative bg-gradient-to-br from-violet-700 via-indigo-800 to-slate-950 px-6 py-9 text-white sm:px-8 sm:py-10">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.12),transparent_55%)]" aria-hidden />
-            <p className="relative text-[10px] font-bold uppercase tracking-[0.22em] text-violet-200/95">Nouveau parcours</p>
+            <p className="relative text-[10px] font-bold uppercase tracking-[0.22em] text-violet-200/95">Nouvelle formation</p>
             <h1 className="relative mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Créer une formation</h1>
             <p className="relative mt-2 max-w-lg text-sm leading-relaxed text-violet-100/92">
               Définissez le titre, la compétence cible et le niveau. Vous pourrez ensuite structurer modules et vidéos
@@ -627,7 +699,7 @@ export function TrainingManagerProgramEditor() {
             {error && <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</div>}
             {skillsError && <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{skillsError}</div>}
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Titre du parcours</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Titre de la formation</span>
               <input
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-slate-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
                 value={title}
@@ -685,7 +757,7 @@ export function TrainingManagerProgramEditor() {
                   <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-4 w-4 accent-violet-600" />
                   <div>
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ${st.tone}`}>{st.text}</span>
-                    <p className="mt-1 text-xs text-slate-500">Les parcours publiés apparaissent au catalogue employés.</p>
+                    <p className="mt-1 text-xs text-slate-500">Les formations publiées apparaissent au catalogue employés.</p>
                   </div>
                 </label>
               </div>
@@ -697,7 +769,7 @@ export function TrainingManagerProgramEditor() {
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-md hover:opacity-95 sm:flex-none"
               >
                 <SparklesIcon className="h-4 w-4" />
-                Créer le parcours
+                Créer la formation
               </button>
               <Link
                 to="/training-manager/programs"
@@ -713,7 +785,6 @@ export function TrainingManagerProgramEditor() {
   }
 
   const st = statusLabel(published);
-
   return (
     <div className="relative w-full flex-col px-4 py-3 sm:px-5 xl:py-4 [&_.text-xs]:text-sm [&_.text-\[11px\]]:text-sm [&_.text-\[10px\]]:text-xs">
       <div className="mb-4 shrink-0 flex flex-col gap-3 rounded-2xl border border-slate-200/60 bg-white/90 p-4 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:p-5 xl:mb-3">
@@ -723,42 +794,280 @@ export function TrainingManagerProgramEditor() {
             className="inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-violet-800 transition hover:bg-violet-50 hover:text-violet-950"
           >
             <ArrowLeftIcon className="h-4 w-4 shrink-0" />
-            Mes parcours
+            Mes formations
           </Link>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title || "Parcours"}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title || "Formation"}</h1>
             <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1 ${st.tone}`}>{st.text}</span>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-            Modules, ordre des étapes, contenus et quiz — tout est éditable depuis cette page.
+            Structure, contenus, quiz et ordre de lecture — tout est géré dans cette formation.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void saveMeta()}
-          disabled={savingMeta}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-violet-700/20 ring-1 ring-white/10 transition hover:brightness-110 disabled:opacity-50"
-        >
-          {savingMeta ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : null}
-          {savingMeta ? "Enregistrement…" : "Enregistrer"}
-        </button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setShowMetaEditor(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-800 transition hover:bg-violet-100"
+          >
+            <PencilSquareIcon className="h-4 w-4" />
+            Modifier formation
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowTreeView(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-bold text-indigo-800 transition hover:bg-indigo-100"
+          >
+            <FolderIcon className="h-4 w-4" />
+            Vue arborescence
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmDeleteProgram(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 transition hover:bg-rose-100"
+          >
+            <TrashIcon className="h-4 w-4" />
+            Supprimer
+          </button>
+        </div>
       </div>
 
       {error && (
         <div className="mb-3 shrink-0 rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-sm text-rose-900 shadow-sm">{error}</div>
       )}
 
+      {showMetaEditor && (
+        <div className="app-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
+          <div className="absolute inset-0" onClick={() => setShowMetaEditor(false)} aria-hidden="true" />
+          <div className="relative max-h-[min(88dvh,760px)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-violet-100 bg-white shadow-2xl shadow-violet-950/15">
+            <div className="flex items-start justify-between gap-4 border-b border-violet-100 bg-gradient-to-r from-violet-50 via-white to-indigo-50 px-5 py-4 sm:px-6">
+              <div>
+                <h2 className="text-lg font-bold text-violet-950">Modifier la formation</h2>
+                <p className="mt-1 text-sm text-slate-500">Informations générales, compétence cible, niveau et statut.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMetaEditor(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-violet-100 bg-white text-slate-500 hover:bg-rose-50 hover:text-rose-500"
+                aria-label="Fermer"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-5 p-5 sm:p-6">
+              {skillsError && <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{skillsError}</div>}
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Titre de la formation</span>
+                <input
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-slate-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="ex. Maîtriser Kubernetes pour l’équipe plateforme"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Description</span>
+                <textarea
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Objectifs, public visé, prérequis…"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Compétence associée</span>
+                <select
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                  value={skillUuid}
+                  onChange={(e) => setSkillUuid(e.target.value)}
+                >
+                  <option value="">— Aucune —</option>
+                  {skillGroups.map(([cat, list]) => (
+                    <optgroup key={cat} label={cat}>
+                      {list.map((s) => (
+                        <option key={s.uuid} value={s.uuid}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Niveau cible (1–5)</span>
+                  <select
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+                    value={targetLevel}
+                    onChange={(e) => setTargetLevel(Number(e.target.value))}
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        Niveau {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="flex flex-col justify-end gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Statut</span>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3">
+                    <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-4 w-4 accent-violet-600" />
+                    <div>
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ${st.tone}`}>{st.text}</span>
+                      <p className="mt-1 text-xs text-slate-500">Les formations publiées apparaissent au catalogue employés.</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <div className="flex flex-wrap justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowMetaEditor(false)}
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void saveMeta()}
+                  disabled={savingMeta}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-md hover:brightness-110 disabled:opacity-50"
+                >
+                  {savingMeta ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : null}
+                  {savingMeta ? "Enregistrement…" : "Enregistrer la formation"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTreeView && detail && (
+        <div className="app-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
+          <div className="absolute inset-0" onClick={() => setShowTreeView(false)} aria-hidden="true" />
+          <div className="relative max-h-[min(90dvh,820px)] w-full max-w-4xl overflow-y-auto rounded-3xl border border-violet-100 bg-white shadow-2xl shadow-violet-950/15">
+            <div className="flex items-start justify-between gap-4 border-b border-violet-100 bg-gradient-to-r from-violet-50 via-white to-indigo-50 px-5 py-4 sm:px-6">
+              <div>
+                <h2 className="text-lg font-bold text-violet-950">Vue arborescence</h2>
+                <p className="mt-1 text-sm text-slate-500">Formation, modules et contenus dans une seule structure.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTreeView(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-violet-100 bg-white text-slate-500 hover:bg-rose-50 hover:text-rose-500"
+                aria-label="Fermer"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 sm:p-6">
+              <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-violet-700">Formation</p>
+                    <p className="mt-1 text-base font-bold text-slate-950">{detail.title}</p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1 ${statusLabel(detail.published).tone}`}>
+                    {statusLabel(detail.published).text}
+                  </span>
+                </div>
+                <ul className="mt-4 space-y-3">
+                  {detail.courses.length === 0 ? (
+                    <li className="rounded-xl border border-dashed border-violet-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
+                      Aucun module dans cette formation.
+                    </li>
+                  ) : (
+                    [...detail.courses]
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .map((course) => (
+                        <li key={course.uuid} className="rounded-xl border border-violet-100 bg-white p-4 shadow-sm">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-violet-600">Module</p>
+                              <p className="mt-1 text-sm font-bold text-slate-900">{course.title}</p>
+                            </div>
+                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-500">
+                              ordre {course.sortOrder + 1}
+                            </span>
+                          </div>
+                          <ul className="mt-3 space-y-2 border-l border-violet-100 pl-4">
+                            {mergeCourseContentForTree(course).length === 0 ? (
+                              <li className="text-sm text-slate-400">Aucun contenu dans ce module.</li>
+                            ) : (
+                              mergeCourseContentForTree(course).map((item) => (
+                                <li key={item.key} className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                                  <span
+                                    className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                      item.type === "Vidéo"
+                                        ? "bg-sky-100 text-sky-800"
+                                        : item.type === "Lecture"
+                                          ? "bg-indigo-100 text-indigo-800"
+                                          : "bg-teal-100 text-teal-800"
+                                    }`}
+                                  >
+                                    {item.type}
+                                  </span>
+                                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">{item.title}</span>
+                                  {item.quizStatus && <QuizStatusPill status={item.quizStatus} />}
+                                </li>
+                              ))
+                            )}
+                          </ul>
+                        </li>
+                      ))
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDeleteProgram && (
+        <div className="app-modal-backdrop fixed inset-0 z-[130] flex items-center justify-center p-3 sm:p-4">
+          <div className="absolute inset-0" onClick={() => setConfirmDeleteProgram(false)} aria-hidden="true" />
+          <div className="relative w-full max-w-md rounded-3xl border border-rose-200 bg-white p-5 shadow-2xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
+              <TrashIcon className="h-5 w-5" />
+            </div>
+            <h2 className="mt-4 text-lg font-bold text-slate-950">Supprimer la formation</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Cette action supprimera définitivement <span className="font-semibold text-slate-900">« {title || "cette formation"} »</span>.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteProgram(false)}
+                disabled={deletingProgram}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteProgram()}
+                disabled={deletingProgram}
+                className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+              >
+                {deletingProgram ? "Suppression…" : "Supprimer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4">
         <div className="flex min-w-0 flex-col">
           <div className="space-y-6 pb-6 pr-1 xl:pb-2">
-          <section className="rounded-2xl border border-slate-200/70 bg-white/95 p-2 shadow-sm ring-1 ring-slate-900/[0.02]">
+          <section className="rounded-2xl border border-violet-100 bg-white/95 p-2 shadow-sm ring-1 ring-violet-100/60">
             <div className="mb-3 rounded-xl border border-violet-100 bg-violet-50/70 px-3 py-2 text-xs text-violet-900">
               {selectedCourse ? (
                 <span>
-                  Module actif : <span className="font-semibold">{selectedCourse.title}</span>
+                  Élément de structure sélectionné : <span className="font-semibold">{selectedCourse.title}</span>
                 </span>
               ) : (
-                <span>Sélectionnez un module dans l’onglet « Modules » pour éditer ses contenus.</span>
+                <span>Commencez par créer une partie de formation, puis ajoutez ses vidéos, lectures, activités et quiz.</span>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -771,7 +1080,7 @@ export function TrainingManagerProgramEditor() {
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                Modules
+                Structure
               </button>
               <button
                 type="button"
@@ -819,17 +1128,17 @@ export function TrainingManagerProgramEditor() {
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                Ordre du parcours
+                Ordre de la formation
               </button>
             </div>
           </section>
           {editorWorkspaceTab === "modules" && (
             <div className="grid gap-6">
-              <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
+              <section className="tm-section rounded-2xl border border-violet-100 bg-gradient-to-b from-white via-white to-violet-50/30 p-5 shadow-[0_2px_12px_rgba(99,102,241,0.06)] ring-1 ring-violet-100/60 backdrop-blur-sm sm:p-6">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Modules (cours)</h2>
-                    <p className="mt-1 text-xs text-slate-500">Glissez l’icône à gauche pour réordonner. Cochez « Module sélectionné » pour le module actif.</p>
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-700">Structure de la formation</h2>
+                    <p className="mt-1 text-xs text-slate-500">Ajoutez les parties de la formation, sélectionnez-en une, puis gérez ses contenus dans les onglets suivants.</p>
                   </div>
                 </div>
                 <div className="mt-4">
@@ -841,6 +1150,7 @@ export function TrainingManagerProgramEditor() {
                       onSelectCourse={setSelectedCourseUuid}
                       onReorder={reorderCourses}
                       onRenameCourse={renameCourse}
+                      onDeleteCourse={removeCourse}
                     />
                   )}
                 </div>
@@ -849,10 +1159,10 @@ export function TrainingManagerProgramEditor() {
                     className="min-w-[200px] flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm"
                     value={courseTitle}
                     onChange={(e) => setCourseTitle(e.target.value)}
-                    placeholder="Titre du nouveau module"
+                    placeholder="Titre de la nouvelle partie"
                   />
               <button type="button" onClick={() => void addCourse()} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:brightness-110">
-                    Ajouter un module
+                    Ajouter à la formation
                   </button>
                 </div>
               </section>
@@ -1097,7 +1407,7 @@ export function TrainingManagerProgramEditor() {
               <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Contenu texte (lecture)</h2>
               <p className="mt-1 text-xs text-slate-500">
                 Articles et synthèses en Markdown : titres, listes, liens, code, tableaux (GFM), images. Chaque bloc existant peut être modifié ou
-                supprimé depuis la liste. L’ordre dans le parcours se règle dans « Ordre du parcours ».
+                supprimé depuis la liste. L’ordre dans la formation se règle dans « Ordre de la formation ».
               </p>
               <div className="mt-4 space-y-4 rounded-2xl border border-indigo-200/70 bg-gradient-to-b from-indigo-50/60 to-white p-4 shadow-sm ring-1 ring-indigo-100/80 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
@@ -1347,7 +1657,7 @@ export function TrainingManagerProgramEditor() {
             <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Exercices &amp; activités pratiques</h2>
               <p className="mt-1 text-xs text-slate-500">
-                L’ordre se règle dans « Ordre du parcours ». L’employé soumet une réponse (texte, code ou fichier) pour valider une activité. Vous
+                L’ordre se règle dans « Ordre de la formation ». L’employé soumet une réponse (texte, code ou fichier) pour valider une activité. Vous
                 pouvez modifier titre, type, mode de réponse, consignes et lien depuis la liste ci-dessous.
               </p>
               <div className="mt-4 space-y-4 rounded-2xl border border-teal-200/70 bg-gradient-to-b from-teal-50/60 to-white p-4 shadow-sm ring-1 ring-teal-100/80 sm:p-5">
@@ -1617,7 +1927,7 @@ export function TrainingManagerProgramEditor() {
               <div className="p-5 sm:p-0 sm:pt-2">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-600">Ordre du parcours</h2>
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-600">Ordre de la formation</h2>
                     <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
                       Module <span className="font-semibold text-slate-700">« {selectedCourse.title} »</span> — glissez les cartes pour définir
                       l’ordre exact vu par l’employé (vidéos, lectures, activités mélangées).
