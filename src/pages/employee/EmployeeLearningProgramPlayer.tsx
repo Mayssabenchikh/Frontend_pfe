@@ -336,7 +336,7 @@ function CompletedPanel({ label }: { label: string }) {
       </span>
       <div>
         <p className="text-base font-bold">{label}</p>
-        <p className="mt-1 text-base leading-6 text-emerald-800">Cette étape est validée. Vous pouvez continuer votre parcours.</p>
+        <p className="mt-1 text-base leading-6 text-emerald-800">Cette étape est validée. Vous pouvez continuer votre formation.</p>
       </div>
     </div>
   );
@@ -838,7 +838,7 @@ export function EmployeeLearningProgramPlayer() {
                 <AcademicCapIcon className="h-6 w-6" />
               </span>
               <div>
-                <p className="text-base font-extrabold">Parcours terminé</p>
+                <p className="text-base font-extrabold">Formation terminée</p>
                 <p className="mt-1 text-base leading-6 text-violet-100">Vous pouvez maintenant lancer le quiz de validation de compétence.</p>
               </div>
             </div>
@@ -988,7 +988,7 @@ export function EmployeeLearningProgramPlayer() {
         <main className="flex min-w-0 flex-col space-y-5">
           <div className="lg:hidden">
             <label htmlFor="step-selector" className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-500">
-              Étape du parcours
+              Étape de la formation
             </label>
             <select
               id="step-selector"

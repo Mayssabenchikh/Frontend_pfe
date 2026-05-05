@@ -8,7 +8,7 @@ export function TrainingManagerDashboard() {
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-violet-700/90">Responsable formation</p>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Tableau de bord</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-          Gere vos parcours, suivez les soumissions et utilisez l'IA pour accelerer les corrections.
+          Gère vos formations, suivez les soumissions et utilisez l'IA pour accélérer les corrections.
         </p>
       </header>
 
@@ -44,7 +44,7 @@ export function TrainingManagerDashboard() {
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-900">Mes formations</p>
-              <p className="text-xs text-slate-500">Creer, publier et maintenir vos parcours.</p>
+              <p className="text-xs text-slate-500">Créer, publier et maintenir vos formations.</p>
             </div>
           </div>
         </Link>

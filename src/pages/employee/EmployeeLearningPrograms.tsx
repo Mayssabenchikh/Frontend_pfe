@@ -47,20 +47,20 @@ export function EmployeeLearningPrograms() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-10">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Parcours guidés</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Formations guidées</h1>
         <p className="text-slate-600 mt-1 text-sm">
-          Inscrivez-vous à un parcours, visionnez les vidéos et validez chaque étape par un quiz.
+          Inscrivez-vous à une formation, visionnez les vidéos et validez chaque étape par un quiz.
         </p>
       </header>
 
       {error && <div className="rounded-lg bg-rose-50 text-rose-800 px-4 py-2 text-sm">{error}</div>}
 
       <section>
-        <h2 className="text-lg font-medium text-slate-800 mb-3">Mes parcours</h2>
+        <h2 className="text-lg font-medium text-slate-800 mb-3">Mes formations</h2>
         {loading ? (
           <p className="text-slate-500 text-sm">Chargement…</p>
         ) : mine.length === 0 ? (
-          <p className="text-slate-500 text-sm">Aucun parcours commencé pour le moment.</p>
+          <p className="text-slate-500 text-sm">Aucune formation commencée pour le moment.</p>
         ) : (
           <ul className="space-y-2">
             {mine.map((e) => (
@@ -84,11 +84,11 @@ export function EmployeeLearningPrograms() {
       </section>
 
       <section>
-        <h2 className="text-lg font-medium text-slate-800 mb-3">Parcours publiés</h2>
+        <h2 className="text-lg font-medium text-slate-800 mb-3">Formations publiées</h2>
         {loading ? (
           <p className="text-slate-500 text-sm">Chargement…</p>
         ) : published.length === 0 ? (
-          <p className="text-slate-500 text-sm">Aucun parcours publié.</p>
+          <p className="text-slate-500 text-sm">Aucune formation publiée.</p>
         ) : (
           <ul className="space-y-2">
             {published.map((p) => (

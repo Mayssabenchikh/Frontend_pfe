@@ -26,6 +26,22 @@ function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string 
     return [{ label: "Affectations" }];
   }
 
+  if (parts[1] === "training-recommendations") {
+    return [{ label: "Formations" }];
+  }
+
+  if (parts[1] === "learning-programs" && parts.length === 2) {
+    return [{ label: "Formations", to: "/employee/training-recommendations" }, { label: "Mes formations" }];
+  }
+
+  if (parts[1] === "learning-programs" && parts[2] === "play") {
+    return [{ label: "Formations", to: "/employee/training-recommendations" }, { label: "Formation guidée" }];
+  }
+
+  if (parts[1] === "learning-programs" && parts[2] === "quiz") {
+    return [{ label: "Formations", to: "/employee/training-recommendations" }, { label: "Quiz formation" }];
+  }
+
   if (parts[1] === "projects" && parts.length === 2) {
     return [{ label: "Mes projets" }];
   }

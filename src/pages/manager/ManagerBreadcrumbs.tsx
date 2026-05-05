@@ -33,11 +33,11 @@ function getManagerBreadcrumbs(pathname: string): { label: string; to?: string }
   }
 
   if (parts[1] === "learning-programs" && parts[2] === "play") {
-    return [{ label: "Formations", to: "/manager/training-recommendations" }, { label: "Parcours guidé" }];
+    return [{ label: "Formations", to: "/manager/training-recommendations" }, { label: "Formation guidée" }];
   }
 
   if (parts[1] === "learning-programs" && parts[2] === "quiz") {
-    return [{ label: "Formations", to: "/manager/training-recommendations" }, { label: "Quiz parcours" }];
+    return [{ label: "Formations", to: "/manager/training-recommendations" }, { label: "Quiz formation" }];
   }
 
   // /manager/projects/:id/team/:employeeId

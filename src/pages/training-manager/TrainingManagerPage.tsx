@@ -10,6 +10,7 @@ import {
 import { AdminHeader } from "../admin/AdminHeader";
 import { trainingManagerApi } from "../../api/trainingManagerApi";
 import { DashboardSidebar, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
+import { TrainingManagerBreadcrumbs } from "./TrainingManagerBreadcrumbs";
 
 const ROOT = `${window.location.origin}/`;
 export default function TrainingManagerPage() {
@@ -66,6 +67,7 @@ export default function TrainingManagerPage() {
           onLogout={() => keycloak.logout({ redirectUri: ROOT })}
         />
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <TrainingManagerBreadcrumbs />
           <div className="dashboard-padding training-manager-app flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="tm-scroll-area relative flex min-h-0 flex-1 flex-col overflow-auto">
               <Outlet context={{ onAvatarUpdate: setAvatarUrl }} />

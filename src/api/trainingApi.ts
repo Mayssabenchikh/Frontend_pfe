@@ -27,7 +27,7 @@ export type PlaylistVideo = {
 };
 
 export const trainingApi = {
-  /** Recommandations pour l’éditeur de parcours (responsable formation uniquement). */
+  /** Recommandations pour l’éditeur de formation (responsable formation uniquement). */
   trainingManagerRecommendTop3: (payload: RecommendationRequest) =>
     http.post<RecommendationItem[]>("/api/training-manager/training/recommend", payload),
   trainingManagerPlaylistVideos: (playlistUrl: string) =>

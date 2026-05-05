@@ -5,7 +5,7 @@ import {
   trainingRecommendationApi,
   type TrainingRecommendation,
 } from "../../api/trainingRecommendationApi";
-import { employeeLearningProgramApi } from "../../api/learningProgramApi";
+import { employeeLearningProgramApi, type LearningEnrollmentSummary } from "../../api/learningProgramApi";
 import {
   BoltIcon,
   RocketLaunchIcon,
@@ -26,6 +26,7 @@ export function EmployeeTrainingRecommendations({
 }: EmployeeTrainingRecommendationsProps) {
   const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState<TrainingRecommendation[]>([]);
+  const [enrollmentsByProgramUuid, setEnrollmentsByProgramUuid] = useState<Record<string, LearningEnrollmentSummary>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [startingId, setStartingId] = useState<string | null>(null);
@@ -33,9 +34,28 @@ export function EmployeeTrainingRecommendations({
   useEffect(() => {
     setLoading(true);
     setError(false);
-    trainingRecommendationApi
-      .getRecommendations()
-      .then((res) => setRecommendations(Array.isArray(res.data) ? res.data : []))
+    void Promise.all([
+      trainingRecommendationApi.getRecommendations(),
+      employeeLearningProgramApi.my().catch(() => null),
+    ])
+      .then(([recsRes, myRes]) => {
+        setRecommendations(Array.isArray(recsRes.data) ? recsRes.data : []);
+        const enrollments = Array.isArray(myRes?.data) ? myRes?.data : [];
+        const byProgram: Record<string, LearningEnrollmentSummary> = {};
+        for (const e of enrollments) {
+          const existing = byProgram[e.programUuid];
+          if (!existing) {
+            byProgram[e.programUuid] = e;
+            continue;
+          }
+          const existingTs = Date.parse(existing.updatedAt ?? existing.startedAt ?? "");
+          const currentTs = Date.parse(e.updatedAt ?? e.startedAt ?? "");
+          if (!Number.isNaN(currentTs) && (Number.isNaN(existingTs) || currentTs >= existingTs)) {
+            byProgram[e.programUuid] = e;
+          }
+        }
+        setEnrollmentsByProgramUuid(byProgram);
+      })
       .catch(() => {
         setError(true);
         toast.error("Impossible de charger les recommandations.");
@@ -46,7 +66,19 @@ export function EmployeeTrainingRecommendations({
   async function onStart(rec: TrainingRecommendation) {
     setStartingId(rec.trainingUuid);
     try {
+      const existingEnrollment = enrollmentsByProgramUuid[rec.trainingUuid];
+      if (existingEnrollment?.enrollmentUuid) {
+        navigate(`${basePath}/learning-programs/play/${existingEnrollment.enrollmentUuid}`, {
+          state: { fromRecommendations: true, backTo: `${basePath}/training-recommendations` },
+        });
+        return;
+      }
+
       const { data } = await employeeLearningProgramApi.enroll(rec.trainingUuid);
+      setEnrollmentsByProgramUuid((prev) => ({
+        ...prev,
+        [rec.trainingUuid]: data,
+      }));
       navigate(`${basePath}/learning-programs/play/${data.enrollmentUuid}`, {
         state: { fromRecommendations: true, backTo: `${basePath}/training-recommendations` },
       });
@@ -128,7 +160,12 @@ export function EmployeeTrainingRecommendations({
             </span>
           </div>
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <PrimaryRecommendationCard rec={topRequired} onStart={onStart} startingId={startingId} />
+            <PrimaryRecommendationCard
+              rec={topRequired}
+              enrollment={enrollmentsByProgramUuid[topRequired.trainingUuid] ?? null}
+              onStart={onStart}
+              startingId={startingId}
+            />
             <ImpactPanel rec={topRequired} />
           </div>
           {remainingRequired.length > 0 && (
@@ -137,6 +174,7 @@ export function EmployeeTrainingRecommendations({
                 <UnifiedRecommendationCard
                   key={`project-${rec.trainingUuid}-${rec.skillName}-${rec.contextName ?? ""}`}
                   rec={rec}
+                  enrollment={enrollmentsByProgramUuid[rec.trainingUuid] ?? null}
                   onStart={onStart}
                   startingId={startingId}
                   badgeClass="bg-red-100 text-red-700"
@@ -162,6 +200,7 @@ export function EmployeeTrainingRecommendations({
               <UnifiedRecommendationCard
                 key={`cooldown-${rec.trainingUuid}-${rec.skillName}-${rec.contextName ?? ""}`}
                 rec={rec}
+                enrollment={enrollmentsByProgramUuid[rec.trainingUuid] ?? null}
                 onStart={onStart}
                 startingId={startingId}
                 badgeClass="bg-amber-100 text-amber-700"
@@ -185,6 +224,7 @@ export function EmployeeTrainingRecommendations({
               <UnifiedRecommendationCard
                 key={`other-${rec.trainingUuid}-${rec.skillName}-${rec.contextName ?? ""}`}
                 rec={rec}
+                enrollment={enrollmentsByProgramUuid[rec.trainingUuid] ?? null}
                 onStart={onStart}
                 startingId={startingId}
                 badgeClass="bg-violet-100 text-violet-700"
@@ -204,6 +244,7 @@ export function EmployeeTrainingRecommendations({
 
 type UnifiedRecommendationCardProps = {
   rec: TrainingRecommendation;
+  enrollment: LearningEnrollmentSummary | null;
   onStart: (rec: TrainingRecommendation) => void;
   startingId: string | null;
   badgeClass: string;
@@ -213,18 +254,32 @@ type UnifiedRecommendationCardProps = {
 
 function UnifiedRecommendationCard({
   rec,
+  enrollment,
   onStart,
   startingId,
   badgeClass,
   badgeLabel,
   secondaryBadgeLabel,
 }: UnifiedRecommendationCardProps) {
+  const status = String(enrollment?.status ?? "").toUpperCase();
+  const isCompleted = status === "COMPLETED";
+  const isInProgress = status === "IN_PROGRESS";
+
   return (
     <article className="rounded-2xl border border-violet-100 bg-white p-5 shadow-[0_8px_22px_rgba(124,58,237,0.08)]">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeClass}`}>
           {badgeLabel}
         </span>
+        {isCompleted ? (
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+            Terminé
+          </span>
+        ) : isInProgress ? (
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800">
+            En cours
+          </span>
+        ) : null}
         {secondaryBadgeLabel && (
           <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
             {secondaryBadgeLabel}
@@ -262,7 +317,13 @@ function UnifiedRecommendationCard({
           disabled={startingId === rec.trainingUuid}
           className="rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(124,58,237,0.28)] transition hover:bg-violet-500 disabled:opacity-60"
         >
-          {startingId === rec.trainingUuid ? "Ouverture..." : "Commencer la formation"}
+          {startingId === rec.trainingUuid
+            ? "Ouverture..."
+            : isCompleted
+              ? "Consulter la formation"
+              : isInProgress
+                ? "Continuer la formation"
+                : "Commencer la formation"}
         </button>
       </div>
     </article>
@@ -299,17 +360,32 @@ function LevelBadge({
 
 function PrimaryRecommendationCard({
   rec,
+  enrollment,
   onStart,
   startingId,
 }: {
   rec: TrainingRecommendation;
+  enrollment: LearningEnrollmentSummary | null;
   onStart: (rec: TrainingRecommendation) => void;
   startingId: string | null;
 }) {
+  const status = String(enrollment?.status ?? "").toUpperCase();
+  const isCompleted = status === "COMPLETED";
+  const isInProgress = status === "IN_PROGRESS";
+
   return (
     <article className="rounded-2xl border border-violet-100 bg-white p-6 shadow-[0_8px_22px_rgba(124,58,237,0.08)]">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-red-700">Obligatoire</span>
+        {isCompleted ? (
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+            Terminé
+          </span>
+        ) : isInProgress ? (
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800">
+            En cours
+          </span>
+        ) : null}
         {rec.priority === "HIGH" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-700">
             <BoltIcon className="h-3.5 w-3.5 text-violet-600" /> Haute priorité
@@ -335,7 +411,13 @@ function PrimaryRecommendationCard({
           disabled={startingId === rec.trainingUuid}
           className="rounded-xl bg-violet-600 px-8 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(124,58,237,0.28)] transition hover:bg-violet-500 disabled:opacity-60 md:text-base"
         >
-          {startingId === rec.trainingUuid ? "Ouverture..." : "Commencer la formation"}
+          {startingId === rec.trainingUuid
+            ? "Ouverture..."
+            : isCompleted
+              ? "Consulter la formation"
+              : isInProgress
+                ? "Continuer la formation"
+                : "Commencer la formation"}
         </button>
       </div>
     </article>
