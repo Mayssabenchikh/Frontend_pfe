@@ -148,6 +148,7 @@ export function TrainingManagerProgramEditor() {
   const [published, setPublished] = useState(false);
   const [courseTitle, setCourseTitle] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
   const [selectedCourseUuid, setSelectedCourseUuid] = useState<string | null>(null);
   const [manualCategory, setManualCategory] = useState("developpement");
   const [manualSkillName, setManualSkillName] = useState("java");
@@ -324,6 +325,8 @@ export function TrainingManagerProgramEditor() {
     try {
       const { data } = await learningProgramApi.managerUploadVideoAsset(uuid, file);
       setVideoUrl(data.fileUrl);
+      const fallbackTitle = file.name.replace(/\.[a-z0-9]+$/i, "").trim();
+      setVideoTitle(fallbackTitle);
       toast.success("Vidéo uploadée. Cliquez sur « Ajouter au module » pour créer l’étape.");
     } catch (e: unknown) {
       const msg = getUserFacingApiMessage(e, "Upload vidéo impossible");
@@ -504,6 +507,7 @@ export function TrainingManagerProgramEditor() {
       const { data } = await learningProgramApi.managerAddVideo(uuid, selectedCourseUuid, payload);
       setDetail(data);
       setVideoUrl("");
+      setVideoTitle("");
       toast.success("Vidéo ajoutée au module");
     } catch (e: unknown) {
       const msg = getUserFacingApiMessage(e, "Erreur vidéo");
@@ -1406,6 +1410,12 @@ export function TrainingManagerProgramEditor() {
                 placeholder="https://www.youtube.com/watch?v=…"
               />
               <input
+                className="min-w-[220px] flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                placeholder="Titre de la vidéo (obligatoire si upload)"
+              />
+              <input
                 ref={videoAssetInputRef}
                 type="file"
                 accept="video/*"
@@ -1427,14 +1437,22 @@ export function TrainingManagerProgramEditor() {
               <button
                 type="button"
                 disabled={!selectedCourseUuid}
-                onClick={() =>
+                onClick={() => {
+                  const url = videoUrl.trim();
+                  if (!url) return;
+                  const isYoutube = isLikelyYoutubeInput(url);
+                  const trimmedTitle = videoTitle.trim();
+                  if (!isYoutube && trimmedTitle.length === 0) {
+                    toast.error("Le titre est obligatoire pour une vidéo uploadée.");
+                    return;
+                  }
                   void addVideo({
                     sourceType: "MANUAL",
-                    youtubeVideoIdOrUrl: videoUrl.trim(),
-                    title: isLikelyYoutubeInput(videoUrl) ? undefined : `Vidéo uploadée — ${new Date().toLocaleDateString("fr-FR")}`,
-                    sourcePlaylistUrl: isLikelyYoutubeInput(videoUrl) ? undefined : videoUrl.trim(),
-                  })
-                }
+                    youtubeVideoIdOrUrl: url,
+                    title: trimmedTitle.length > 0 ? trimmedTitle : undefined,
+                    sourcePlaylistUrl: isYoutube ? undefined : url,
+                  });
+                }}
                 className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:brightness-110 disabled:opacity-40"
               >
                 Ajouter au module
