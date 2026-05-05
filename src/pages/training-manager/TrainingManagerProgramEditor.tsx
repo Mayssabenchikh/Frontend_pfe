@@ -32,6 +32,8 @@ import { ProgramEditorRecommendations } from "./components/ProgramEditorRecommen
 import { PLACEHOLDER_THUMB, youtubeThumbUrl } from "./utils/youtube";
 import { getUserFacingApiMessage } from "../../utils/apiUserMessage";
 import { LearningMarkdownBody } from "../../components/learning/LearningMarkdownBody";
+import { AlertBanner } from "../../components/AlertBanner";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 const LAST_EDITED_PROGRAM_KEY = "tm:lastEditedProgramUuid";
 
@@ -160,6 +162,7 @@ export function TrainingManagerProgramEditor() {
   const [showTreeView, setShowTreeView] = useState(false);
   const [confirmDeleteProgram, setConfirmDeleteProgram] = useState(false);
   const [deletingProgram, setDeletingProgram] = useState(false);
+  const [courseDeleteConfirm, setCourseDeleteConfirm] = useState<{ courseUuid: string; courseName: string } | null>(null);
   const [generatingQuiz, setGeneratingQuiz] = useState<string | null>(null);
   const [actKind, setActKind] = useState<CourseActivityKind>("EXERCISE");
   const [actSubmissionMode, setActSubmissionMode] = useState<ActivitySubmissionMode>("TEXT");
@@ -175,6 +178,8 @@ export function TrainingManagerProgramEditor() {
   const [aiActivityStatus, setAiActivityStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [aiActivityError, setAiActivityError] = useState<string | null>(null);
   const [aiActivitySuggestion, setAiActivitySuggestion] = useState<AiActivitySuggestionResponse | null>(null);
+  const [aiOverwriteConfirmOpen, setAiOverwriteConfirmOpen] = useState(false);
+  const [pendingAiActivitySuggestion, setPendingAiActivitySuggestion] = useState<AiActivitySuggestionResponse | null>(null);
   const [aiActivityHistory, setAiActivityHistory] = useState<AiActivitySuggestionResponse[]>([]);
   const [textArtTitle, setTextArtTitle] = useState("");
   const [textArtBody, setTextArtBody] = useState("");
@@ -559,8 +564,11 @@ export function TrainingManagerProgramEditor() {
 
   const removeCourse = async (courseUuid: string, courseName: string) => {
     if (!uuid || isNew) return;
-    const confirmed = window.confirm(`Supprimer "${courseName}" et tous ses contenus ?`);
-    if (!confirmed) return;
+    if (!courseDeleteConfirm || courseDeleteConfirm.courseUuid !== courseUuid) {
+      setCourseDeleteConfirm({ courseUuid, courseName });
+      return;
+    }
+    setCourseDeleteConfirm(null);
     setError(null);
     try {
       const { data } = await learningProgramApi.managerDeleteCourse(uuid, courseUuid);
@@ -590,8 +598,9 @@ export function TrainingManagerProgramEditor() {
         actTotalPoints !== ""
     );
     if (confirmOverwrite && hasDraft) {
-      const confirmed = window.confirm("Des champs sont déjà remplis. Voulez-vous les remplacer par la suggestion IA ?");
-      if (!confirmed) return false;
+      setPendingAiActivitySuggestion(suggestion);
+      setAiOverwriteConfirmOpen(true);
+      return false;
     }
     setActTitle(suggestion.title?.trim() || actTitle);
     setActInstr(suggestion.instructions?.trim() || formatAiSuggestionAsInstructions(suggestion));
@@ -603,6 +612,14 @@ export function TrainingManagerProgramEditor() {
     setActEvaluationCriteria(suggestion.evaluationCriteria ?? []);
     setActTotalPoints(suggestion.totalPoints > 0 ? suggestion.totalPoints : "");
     return true;
+  };
+
+  const confirmAiOverwrite = () => {
+    if (!pendingAiActivitySuggestion) return;
+    const suggestion = pendingAiActivitySuggestion;
+    setAiOverwriteConfirmOpen(false);
+    setPendingAiActivitySuggestion(null);
+    applyAiActivitySuggestion(suggestion, false);
   };
 
   const requestAiActivitySuggestion = async () => {
@@ -895,8 +912,8 @@ export function TrainingManagerProgramEditor() {
             </p>
           </div>
           <div className="space-y-5 bg-slate-50/40 p-6 sm:p-8">
-            {error && <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</div>}
-            {skillsError && <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{skillsError}</div>}
+            {error && <AlertBanner message={error} variant="error" />}
+            {skillsError && <AlertBanner message={skillsError} variant="warning" />}
             <label className="block">
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Titre de la formation</span>
               <input
@@ -1054,7 +1071,7 @@ export function TrainingManagerProgramEditor() {
               </button>
             </div>
             <div className="space-y-5 p-5 sm:p-6">
-              {skillsError && <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{skillsError}</div>}
+              {skillsError && <AlertBanner message={skillsError} variant="warning" />}
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Titre de la formation</span>
                 <input
@@ -1259,6 +1276,32 @@ export function TrainingManagerProgramEditor() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={Boolean(courseDeleteConfirm)}
+        title="Supprimer la partie"
+        message={courseDeleteConfirm ? `Supprimer "${courseDeleteConfirm.courseName}" et tous ses contenus ?` : "Supprimer cette partie et tous ses contenus ?"}
+        confirmLabel="Supprimer"
+        variant="danger"
+        onConfirm={() => {
+          if (!courseDeleteConfirm) return;
+          void removeCourse(courseDeleteConfirm.courseUuid, courseDeleteConfirm.courseName);
+        }}
+        onCancel={() => setCourseDeleteConfirm(null)}
+      />
+
+      <ConfirmModal
+        open={aiOverwriteConfirmOpen}
+        title="Remplacer les champs"
+        message="Des champs sont déjà remplis. Voulez-vous les remplacer par la suggestion IA ?"
+        confirmLabel="Remplacer"
+        variant="primary"
+        onConfirm={confirmAiOverwrite}
+        onCancel={() => {
+          setAiOverwriteConfirmOpen(false);
+          setPendingAiActivitySuggestion(null);
+        }}
+      />
 
       <div className="grid grid-cols-1 gap-4">
         <div className="flex min-w-0 flex-col">
@@ -1973,10 +2016,6 @@ export function TrainingManagerProgramEditor() {
             <div className="min-w-0">
             <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Exercices &amp; activités pratiques</h2>
-              <p className="mt-1 text-xs text-slate-500">
-                L’ordre se règle dans « Ordre de la formation ». L’employé soumet une réponse (texte, code ou fichier) pour valider une activité. Vous
-                pouvez modifier titre, type, mode de réponse, consignes et lien depuis la liste ci-dessous.
-              </p>
 
               <div className="mt-4 space-y-4 rounded-2xl border border-teal-200/70 bg-gradient-to-b from-teal-50/60 to-white p-4 shadow-sm ring-1 ring-teal-100/80 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-100 pb-3">
@@ -1993,10 +2032,6 @@ export function TrainingManagerProgramEditor() {
                           Validation humaine obligatoire
                         </span>
                       </div>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        Génère une proposition avec Ollama à partir de la formation, de la compétence et de la partie sélectionnée. Vous pouvez tout modifier
-                        avant l’ajout final.
-                      </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
