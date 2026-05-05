@@ -11,6 +11,23 @@ import {
   BoltIcon,
   QuestionMarkCircleIcon,
 } from "../../icons/heroicons/outline";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowRotateRight,
+  faBoltLightning,
+  faCircleCheck,
+  faCircleInfo,
+  faFilter,
+  faMagnifyingGlass,
+  faRotateRight,
+  faSignature,
+  faTriangleExclamation,
+  faUserClock,
+  faUsers,
+  faXmark,
+  faWandMagicSparkles,
+  faCodeMerge,
+} from "@fortawesome/free-solid-svg-icons";
 import { toast } from "sonner";
 import { skillsApi } from "../../api/skillsApi";
 import type { PendingSkillRequestDto, SkillCategoryDto, SkillDto } from "./types";
@@ -324,6 +341,30 @@ export function PendingSkillRequests() {
     resolveLoading ||
     (resolveAction === "MERGE" && !resolveSkillId);
 
+  const resolveActionMeta = {
+    APPROVE: {
+      title: "Créer une nouvelle compétence",
+      description: "Générer une entrée propre dans le référentiel.",
+      icon: faCircleCheck,
+      accent: "from-emerald-500 to-teal-500",
+      tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    },
+    MERGE: {
+      title: "Fusionner avec une compétence existante",
+      description: "Rattacher la demande à une compétence déjà présente.",
+      icon: faCodeMerge,
+      accent: "from-indigo-500 to-violet-600",
+      tone: "border-indigo-200 bg-indigo-50 text-indigo-700",
+    },
+    REJECT: {
+      title: "Rejeter la demande",
+      description: "Clore la demande avec une explication interne.",
+      icon: faTriangleExclamation,
+      accent: "from-rose-500 to-red-500",
+      tone: "border-rose-200 bg-rose-50 text-rose-700",
+    },
+  }[resolveAction];
+
   return (
     <section className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
       <style>{`
@@ -335,24 +376,30 @@ export function PendingSkillRequests() {
       `}</style>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
-            <div className="grid grid-cols-1 items-end gap-3 px-4 py-3 lg:grid-cols-[1fr_220px_auto]">
+          <div className="rounded-3xl border border-violet-100/70 bg-white shadow-[0_8px_24px_rgba(124,58,237,0.06)]">
+            <div className="grid grid-cols-1 items-end gap-3 px-4 py-4 lg:grid-cols-[1fr_220px_auto] lg:px-5">
               <div className="min-w-0">
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Rechercher</label>
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                  <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" />
+                  Rechercher
+                </label>
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Rechercher…"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                  className="mt-1 w-full rounded-2xl border border-violet-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
                 />
               </div>
 
               <div className="w-full">
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Statut</label>
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                  <FontAwesomeIcon icon={faFilter} className="h-3 w-3" />
+                  Statut
+                </label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="mt-1 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                  className="mt-1 w-full cursor-pointer rounded-2xl border border-violet-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
                 >
                   {STATUS_FILTERS.map((s) => (
                     <option key={s} value={s}>
@@ -369,16 +416,17 @@ export function PendingSkillRequests() {
                     setSearch("");
                     setStatusFilter("ALL");
                   }}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
                   title="Réinitialiser"
                 >
+                  <FontAwesomeIcon icon={faRotateRight} className="h-4 w-4" />
                   Réinitialiser
                 </button>
 
                 <button
                   type="button"
                   onClick={refresh}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
                 >
                   <ArrowPathIcon className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                   Actualiser
@@ -387,7 +435,7 @@ export function PendingSkillRequests() {
             </div>
           </div>
 
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-violet-100/70 bg-white shadow-[0_8px_30px_rgba(124,58,237,0.07)]">
             <div className="relative min-h-0 flex-1 overflow-auto px-3 py-3 md:px-4 lg:px-6">
 
               {loading && (
@@ -417,37 +465,37 @@ export function PendingSkillRequests() {
                   {filteredRequests.map((req, index) => (
                     <article
                       key={req.uuid}
-                      className="fade-up group relative overflow-hidden rounded-xl border border-violet-500/10 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md hover:shadow-violet-100"
+                      className="fade-up group relative overflow-hidden rounded-2xl border border-violet-100/80 bg-gradient-to-r from-white to-violet-50/30 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-[0_10px_30px_rgba(124,58,237,0.10)]"
                       style={{ animationDelay: `${index * 35}ms` }}
                     >
-                      <div className={`absolute bottom-0 left-0 top-0 w-1 ${
+                      <div className={`absolute bottom-0 left-0 top-0 w-1.5 ${
                         req.status === "PENDING"
                           ? "bg-amber-400"
                           : req.status === "APPROVED"
                             ? "bg-emerald-400"
                             : "bg-rose-400"
                       }`} />
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0 flex-1">
-                          <div className="mb-2 flex flex-wrap items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50">
-                              <SparklesIcon className="h-3.5 w-3.5 text-violet-600" />
+                          <div className="mb-2 flex flex-wrap items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-violet-50 text-violet-600 ring-1 ring-violet-100">
+                              <FontAwesomeIcon icon={faWandMagicSparkles} className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-[13px] font-bold text-slate-900">{req.rawSkillName}</p>
+                              <p className="truncate text-[14px] font-bold text-slate-900 sm:text-[15px]">{req.rawSkillName}</p>
                               <p className="text-[11px] text-slate-500">Compétence détectée par IA</p>
                             </div>
                           </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[req.status] ?? "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                          <div className="flex flex-wrap gap-2">
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${STATUS_BADGE[req.status] ?? "border-slate-200 bg-slate-50 text-slate-700"}`}>
                               {STATUS_LABEL[req.status] ?? req.status}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
-                              <UserIcon className="h-3.5 w-3.5 text-violet-500" />
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-xs text-slate-600 ring-1 ring-slate-100">
+                              <FontAwesomeIcon icon={faUserClock} className="h-3.5 w-3.5 text-violet-500" />
                               {req.requestersCount > 1 ? `${req.requestersCount} utilisateurs` : req.requestedByName}
                             </span>
                             {req.requestersCount <= 1 ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-xs text-slate-600 ring-1 ring-slate-100">
                                 <EnvelopeIcon className="h-3.5 w-3.5 text-violet-500" />
                                 {req.requestedByEmail}
                               </span>
@@ -455,13 +503,13 @@ export function PendingSkillRequests() {
                               <button
                                 type="button"
                                 onClick={() => setRequestersModal(req)}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
                               >
-                                <EnvelopeIcon className="h-3.5 w-3.5 text-violet-500" />
+                                <FontAwesomeIcon icon={faUsers} className="h-3.5 w-3.5" />
                                 Voir les demandeurs
                               </button>
                             )}
-                            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-xs text-slate-600 ring-1 ring-slate-100">
                               <CalendarDaysIcon className="h-3.5 w-3.5 text-violet-500" />
                               {new Date(req.createdAt).toLocaleDateString("fr-FR", {
                                 day: "numeric",
@@ -471,17 +519,18 @@ export function PendingSkillRequests() {
                             </span>
                           </div>
                           {(req.adminNotes || req.resolvedAt) && req.status !== "PENDING" ? (
-                            <div className="mt-2 overflow-hidden rounded-xl border border-violet-200/70 bg-gradient-to-r from-violet-50/70 to-indigo-50/60 shadow-sm">
-                              <div className="flex items-center justify-between border-b border-violet-200/50 px-3 py-1.5">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-700">
+                            <div className="mt-3 overflow-hidden rounded-2xl border border-violet-200/70 bg-gradient-to-r from-violet-50/70 via-white to-indigo-50/60 shadow-sm">
+                              <div className="flex items-center justify-between border-b border-violet-200/50 px-3 py-2">
+                                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-700">
+                                  <FontAwesomeIcon icon={faCircleInfo} className="h-3 w-3" />
                                   Détails de traitement
                                 </span>
-                                <span className="rounded-full border border-violet-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-violet-600">
+                                <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-violet-600">
                                   {req.status === "APPROVED" ? "Approuvée" : req.status === "MERGED" ? "Fusionnée" : "Rejetée"}
                                 </span>
                               </div>
 
-                              <div className="space-y-1.5 px-3 py-2">
+                              <div className="space-y-2 px-3 py-3">
                                 {req.adminNotes ? (
                                   <p className="text-[11px] leading-relaxed text-slate-700">
                                     <span className="font-semibold text-slate-800">Note: </span>
@@ -492,7 +541,8 @@ export function PendingSkillRequests() {
                                 )}
 
                                 {req.resolvedAt ? (
-                                  <p className="inline-flex items-center rounded-md border border-white/70 bg-white/80 px-2 py-1 text-[10px] font-medium text-slate-600">
+                                  <p className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/85 px-2.5 py-1.5 text-[10px] font-medium text-slate-600">
+                                    <FontAwesomeIcon icon={faCircleCheck} className="h-3 w-3 text-emerald-500" />
                                     Traité le {new Date(req.resolvedAt).toLocaleString("fr-FR")}
                                   </p>
                                 ) : null}
@@ -505,9 +555,9 @@ export function PendingSkillRequests() {
                             <button
                               type="button"
                               onClick={() => openResolveModal(req)}
-                              className="inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-1.5 text-[11px] font-semibold text-white shadow-sm shadow-violet-300 transition hover:shadow-violet-400"
+                              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-[11px] font-semibold text-white shadow-[0_8px_18px_rgba(124,58,237,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(124,58,237,0.34)]"
                             >
-                              <BoltIcon className="h-3.5 w-3.5" />
+                              <FontAwesomeIcon icon={faBoltLightning} className="h-3.5 w-3.5" />
                               Traiter
                             </button>
                           )}
@@ -555,29 +605,35 @@ export function PendingSkillRequests() {
       {resolveModal && (
         <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => !resolveLoading && setResolveModal(null)} />
-          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
-            <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50 px-5 py-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-violet-500">Skill request</p>
-                <h3 className="text-sm font-bold text-slate-900">Traiter "{resolveModal.rawSkillName}"</h3>
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
+            <div className={`flex items-start justify-between gap-4 bg-gradient-to-r ${resolveActionMeta.accent} px-5 py-4 text-white`}>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
+                  <FontAwesomeIcon icon={resolveActionMeta.icon} className="h-5 w-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/80">Traitement de demande</p>
+                  <h3 className="mt-1 text-lg font-bold leading-tight">{resolveModal.rawSkillName}</h3>
+                  <p className="mt-1 text-sm text-white/85">{resolveActionMeta.description}</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => !resolveLoading && setResolveModal(null)}
-                className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 transition hover:bg-slate-50"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/15 text-white transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Fermer"
               >
-                <XMarkIcon className="h-4 w-4" />
+                <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="space-y-4 px-5 py-4">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">Action</label>
+            <div className="space-y-4 px-5 py-5">
+              <div className={`rounded-2xl border px-4 py-3 ${resolveActionMeta.tone}`}>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Action</label>
                 <select
                   value={resolveAction}
                   onChange={(e) => setResolveAction(e.target.value as "APPROVE" | "MERGE" | "REJECT")}
-                  className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
+                  className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-300/25"
                 >
                   <option value="APPROVE">Créer nouvelle compétence</option>
                   <option value="MERGE">Fusionner avec une compétence existante</option>
@@ -586,9 +642,10 @@ export function PendingSkillRequests() {
               </div>
 
               {resolveAction === "MERGE" && (
-                <div className="rounded-xl border border-violet-100 bg-violet-50/40 px-3 py-2 text-xs text-slate-700">
+                <div className="rounded-2xl border border-violet-100 bg-violet-50/40 px-4 py-3 text-xs text-slate-700">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-violet-700">
+                    <p className="inline-flex items-center gap-2 font-semibold text-violet-700">
+                      <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3.5 w-3.5" />
                       {mergeSuggestion
                         ? `Suggestion ${mergeSuggestion.source === "ai" ? "IA" : "auto"} appliquée à la liste`
                         : "Aucune suggestion fiable, sélection manuelle"}
@@ -600,7 +657,7 @@ export function PendingSkillRequests() {
                         void loadMergeSuggestion(resolveModal);
                       }}
                       disabled={suggestionLoading || !resolveModal}
-                      className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-white px-2 py-1 text-[11px] font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {suggestionLoading ? (
                         <>
@@ -616,12 +673,12 @@ export function PendingSkillRequests() {
               )}
 
               {resolveAction === "APPROVE" && (
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">Catégorie cible</label>
+                <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Catégorie cible</label>
                   <select
                     value={resolveCategoryId}
                     onChange={(e) => setResolveCategoryId(e.target.value)}
-                    className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
+                    className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-300/25"
                   >
                     <option value="">Sélectionner une catégorie</option>
                     {categories.map((cat) => (
@@ -632,52 +689,53 @@ export function PendingSkillRequests() {
               )}
 
               {resolveAction === "MERGE" && (
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">Compétence cible</label>
+                <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Compétence cible</label>
                   <select
                     value={resolveSkillId}
                     onChange={(e) => setResolveSkillId(e.target.value)}
                     disabled={!mergeSuggestion}
-                    className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
+                    className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-300/25 disabled:cursor-not-allowed disabled:bg-slate-50"
                   >
                     <option value="">
                       {mergeSuggestion ? "Sélectionner la suggestion" : "Aucune suggestion disponible"}
                     </option>
                     {mergeSkills.map((skill) => (
                       <option key={skill.uuid} value={skill.uuid}>
-                        ⭐ Suggestion - {skill.name} - {skill.categoryName}
+                        • Suggestion - {skill.name} - {skill.categoryName}
                       </option>
                     ))}
                   </select>
                 </div>
               )}
 
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">Note admin (optionnel)</label>
+              <div className="rounded-2xl border border-violet-100 bg-slate-50/70 p-4 shadow-sm">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Note admin (optionnel)</label>
                 <textarea
                   value={resolveNotes}
                   onChange={(e) => setResolveNotes(e.target.value)}
                   rows={3}
                   placeholder="Ajouter une note de validation ou de rejet..."
-                  className="w-full resize-none rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40"
+                  className="w-full resize-none rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-300/25"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-violet-100 px-5 py-3">
+            <div className="flex items-center justify-end gap-2 border-t border-violet-100 bg-white px-5 py-4">
               <button
                 type="button"
                 onClick={() => setResolveModal(null)}
                 disabled={resolveLoading}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
+                <FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5" />
                 Annuler
               </button>
               <button
                 type="button"
                 onClick={submitResolve}
                 disabled={isConfirmDisabled}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(124,58,237,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(124,58,237,0.34)] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {resolveLoading && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
                 Confirmer
@@ -690,7 +748,7 @@ export function PendingSkillRequests() {
       {requestersModal && (
         <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setRequestersModal(null)} />
-          <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50 px-5 py-3.5">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-violet-500">Demandeurs</p>
@@ -701,15 +759,15 @@ export function PendingSkillRequests() {
               <button
                 type="button"
                 onClick={() => setRequestersModal(null)}
-                className="rounded-xl border border-slate-200 bg-white p-1.5 text-slate-500 transition hover:bg-slate-50"
+                className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50 hover:text-violet-700"
                 aria-label="Fermer"
               >
-                <XMarkIcon className="h-4 w-4" />
+                <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
               </button>
             </div>
             <div className="max-h-[62vh] space-y-2.5 overflow-y-auto px-5 py-4">
               {requestersModal.requesters.map((r) => (
-                <div key={r.keycloakId} className="rounded-2xl border border-violet-100 bg-gradient-to-r from-white to-violet-50/60 px-3.5 py-2.5 shadow-sm">
+                <div key={r.keycloakId} className="rounded-2xl border border-violet-100 bg-gradient-to-r from-white to-violet-50/60 px-4 py-3 shadow-sm">
                   <p className="text-sm font-semibold text-slate-900">{r.name || "Utilisateur"}</p>
                   <p className="text-xs text-slate-600">{r.email}</p>
                   {r.requestedAt && (

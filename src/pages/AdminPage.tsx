@@ -13,6 +13,7 @@ import type { UserListDto, ArchivedUserDto, NavId, AdminRole, TokenParsed } from
 import { ROLE_LABELS, ROLE_OPTIONS, MESSAGES } from "./admin/constants";
 import { getDisplayName, getInitials, getApiError, ensureArray } from "./admin/utils";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { triggerTopLoadingBar } from "../components/TopLoadingBar";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminHeader } from "./admin/AdminHeader";
 import { AdminBreadcrumbs } from "./admin/AdminBreadcrumbs";
@@ -325,6 +326,7 @@ export default function AdminPage() {
   }, [currentView, isUserDetailRoute]);
 
   const handleNavChange = (view: NavId) => {
+    triggerTopLoadingBar();
     if (isUserDetailRoute) navigate("/admin", { state: { view } });
     setCurrentView(view);
     setSidebarOpen(false);
