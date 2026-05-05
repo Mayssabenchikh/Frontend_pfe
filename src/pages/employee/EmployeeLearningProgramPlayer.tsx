@@ -179,7 +179,7 @@ function cn(...classes: Array<string | false | null | undefined>): string {
 }
 
 function Skeleton({ className }: { className: string }) {
-  return <div className={cn("animate-pulse rounded-lg bg-slate-200/80", className)} />;
+  return <div className={cn("animate-pulse rounded-2xl bg-slate-200/80", className)} />;
 }
 
 function StatusPill({ step }: { step: LearningPlayerStep }) {
@@ -260,7 +260,7 @@ function AlertBox({
     <div
       role={variant === "error" ? "alert" : "status"}
       className={cn(
-        "flex items-start gap-3 rounded-lg border px-4 py-3 text-base leading-6 shadow-sm animate-profile-section",
+        "flex items-start gap-3 rounded-2xl border px-4 py-3 text-base leading-6 shadow-sm animate-profile-section",
         styles[variant],
         className,
       )}
@@ -330,8 +330,8 @@ function SecondaryButton({
 
 function CompletedPanel({ label }: { label: string }) {
   return (
-    <div className="flex items-start gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 animate-profile-section">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700 shadow-sm">
+    <div className="flex items-start gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 animate-profile-section">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm">
         <CheckCircleIcon className="h-5 w-5" />
       </span>
       <div>
@@ -344,8 +344,8 @@ function CompletedPanel({ label }: { label: string }) {
 
 function LockedPanel() {
   return (
-    <section className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50 px-6 py-12 text-center animate-profile-section">
-      <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-white text-amber-700 shadow-sm">
+    <section className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-6 py-12 text-center animate-profile-section">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-amber-700 shadow-sm">
         <LockClosedIcon className="h-6 w-6" />
       </span>
       <h3 className="mt-5 text-2xl font-extrabold text-slate-950">Étape verrouillée</h3>
@@ -433,13 +433,13 @@ function StepPlanItem({
 function EmptyState({ backTo }: { backTo: string }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#f8f7ff] p-6">
-      <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
         <ClipboardDocumentListIcon className="mx-auto h-10 w-10 text-slate-400" />
         <h1 className="mt-4 text-2xl font-extrabold text-slate-950">Aucune étape disponible</h1>
         <p className="mt-2 text-base leading-6 text-slate-600">Ce programme ne contient pas encore de contenu à afficher.</p>
         <Link
           to={backTo}
-          className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-5 py-2.5 text-base font-bold text-white transition hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
+          className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-violet-700 px-5 py-2.5 text-base font-bold text-white transition hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           Retour
@@ -712,15 +712,15 @@ export function EmployeeLearningProgramPlayer() {
   if (error && !player) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f8f7ff] p-6">
-        <div className="w-full max-w-md rounded-lg border border-rose-200 bg-white p-8 shadow-lg shadow-rose-100">
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
+        <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white p-8 shadow-lg shadow-rose-100">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
             <ExclamationTriangleIcon className="h-6 w-6" />
           </span>
           <h1 className="mt-5 text-2xl font-extrabold text-slate-950">Chargement impossible</h1>
           <p className="mt-2 text-base leading-6 text-rose-700">{error}</p>
           <Link
             to={backTo}
-            className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+            className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour
@@ -740,7 +740,7 @@ export function EmployeeLearningProgramPlayer() {
           </div>
         </div>
         <div className="grid max-w-none gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[360px_minmax(0,1fr)_360px] lg:px-8">
-          <aside className="hidden rounded-lg border border-slate-200 bg-white p-4 lg:block">
+          <aside className="hidden rounded-2xl border border-slate-200 bg-white p-4 lg:block">
             <Skeleton className="h-20 w-full" />
             <div className="mt-6 space-y-3">
               {Array.from({ length: 7 }).map((_, index) => (
@@ -748,7 +748,7 @@ export function EmployeeLearningProgramPlayer() {
               ))}
             </div>
           </aside>
-          <main className="rounded-lg border border-slate-200 bg-white p-5">
+          <main className="rounded-2xl border border-slate-200 bg-white p-5">
             <Skeleton className="h-7 w-2/3" />
             <Skeleton className="mt-4 h-4 w-1/3" />
             <Skeleton className="mt-8 h-[360px] w-full" />
@@ -832,9 +832,9 @@ export function EmployeeLearningProgramPlayer() {
 
       {player.suggestSkillValidationQuiz ? (
         <div className="w-full px-4 pt-3 sm:px-6 lg:px-8">
-          <section className="grid gap-4 rounded-lg border border-violet-200 bg-violet-700 p-5 text-white shadow-xl shadow-violet-200 animate-profile-section md:grid-cols-[1fr_auto] md:items-center">
+          <section className="grid gap-4 rounded-2xl border border-violet-200 bg-violet-700 p-5 text-white shadow-xl shadow-violet-200 animate-profile-section md:grid-cols-[1fr_auto] md:items-center">
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/15">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15">
                 <AcademicCapIcon className="h-6 w-6" />
               </span>
               <div>
@@ -844,7 +844,7 @@ export function EmployeeLearningProgramPlayer() {
             </div>
             <Link
               to={skillQuizHref}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-base font-extrabold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-700"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-base font-extrabold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-700"
             >
               <QuestionMarkCircleIcon className="h-4 w-4" />
               Quiz de compétence
@@ -855,7 +855,7 @@ export function EmployeeLearningProgramPlayer() {
 
       {programCompleted ? (
         <div className="w-full px-4 pt-3 sm:px-6 lg:px-8">
-          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-base font-extrabold text-slate-950">Avis sur la formation</p>
@@ -868,7 +868,7 @@ export function EmployeeLearningProgramPlayer() {
                   </p>
                 ) : null}
               </div>
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-slate-700">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-700">
                 <StarIcon className="h-5 w-5" />
               </span>
             </div>
@@ -883,7 +883,7 @@ export function EmployeeLearningProgramPlayer() {
                     type="button"
                     onClick={() => setReviewRating(value)}
                     className={[
-                      "inline-flex h-11 w-11 items-center justify-center rounded-lg border transition",
+                      "inline-flex h-11 w-11 items-center justify-center rounded-2xl border transition",
                       active ? "border-amber-300 bg-amber-50 text-amber-600" : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50",
                     ].join(" ")}
                     aria-label={`Noter ${value} étoile${value > 1 ? "s" : ""}`}
@@ -902,7 +902,7 @@ export function EmployeeLearningProgramPlayer() {
                 Commentaire (optionnel)
               </label>
               <textarea
-                className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
                 rows={4}
                 maxLength={2000}
                 value={reviewNote}
@@ -939,7 +939,7 @@ export function EmployeeLearningProgramPlayer() {
         )}
       >
         {modulesSidebarOpen ? (
-        <aside className="hidden h-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
+          <aside className="hidden h-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
           <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
               <p className="text-base font-extrabold text-slate-950">Modules</p>
@@ -948,7 +948,7 @@ export function EmployeeLearningProgramPlayer() {
             <button
               type="button"
               onClick={() => setModulesSidebarOpen(false)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
               aria-label="Fermer les modules"
               title="Fermer les modules"
             >
@@ -994,7 +994,7 @@ export function EmployeeLearningProgramPlayer() {
               id="step-selector"
               value={activeIndex}
               onChange={(e) => setSelectedStepIndex(Number(e.target.value))}
-              className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-base font-bold text-slate-800 shadow-sm focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base font-bold text-slate-800 shadow-sm focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
             >
               {player.steps.map((step, index) => (
                 <option key={stepKey(step)} value={index} disabled={!step.unlocked}>
@@ -1005,7 +1005,7 @@ export function EmployeeLearningProgramPlayer() {
           </div>
 
           {selectedStep ? (
-            <article key={stepKey(selectedStep)} className="flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm animate-profile-section">
+            <article key={stepKey(selectedStep)} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm animate-profile-section">
               <div className={cn("h-1.5 bg-gradient-to-r", tone?.accent)} />
               <header className="border-b border-slate-200 p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1022,7 +1022,7 @@ export function EmployeeLearningProgramPlayer() {
                 </div>
 
                 <div className="mt-5 flex items-start gap-4">
-                  <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-lg", tone?.iconBg, tone?.iconText)}>
+                  <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl", tone?.iconBg, tone?.iconText)}>
                     <SelectedIcon className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
@@ -1039,7 +1039,7 @@ export function EmployeeLearningProgramPlayer() {
                       <LockedPanel />
                     ) : (
                       <>
-                        <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-950 shadow-lg shadow-slate-200">
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-lg shadow-slate-200">
                           <div className="aspect-video w-full">
                             {selectedStep.uploadedVideoUrl ? (
                               <video title={selectedStep.title} className="h-full w-full" controls src={selectedStep.uploadedVideoUrl} />
@@ -1060,7 +1060,7 @@ export function EmployeeLearningProgramPlayer() {
                             href={selectedStep.uploadedVideoUrl ?? `https://www.youtube.com/watch?v=${selectedStep.youtubeVideoId}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                           >
                             <ArrowTopRightOnSquareIcon className="h-4 w-4" />
                             {selectedStep.uploadedVideoUrl ? "Ouvrir la vidéo" : "Voir sur YouTube"}
@@ -1071,7 +1071,7 @@ export function EmployeeLearningProgramPlayer() {
                           selectedStep.videoUuid != null ? (
                             <Link
                               to={`${base}/learning-programs/quiz/${player.enrollmentUuid}/${selectedStep.videoUuid}`}
-                              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-5 py-2.5 text-base font-extrabold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
+                              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-violet-700 px-5 py-2.5 text-base font-extrabold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
                             >
                               <QuestionMarkCircleIcon className="h-4 w-4" />
                               Passer le quiz
@@ -1079,7 +1079,7 @@ export function EmployeeLearningProgramPlayer() {
                           ) : null}
 
                           {selectedStep.quizStatus === "PENDING" && !selectedStep.stepDone ? (
-                            <span className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2.5 text-base font-bold text-orange-800">
+                            <span className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-base font-bold text-orange-800">
                               <ArrowPathIcon className="h-4 w-4 animate-spin" />
                               Quiz en génération
                             </span>
@@ -1102,7 +1102,7 @@ export function EmployeeLearningProgramPlayer() {
                       <LockedPanel />
                     ) : (
                       <>
-                        <section className="rounded-lg border border-slate-200 bg-slate-50 p-5 sm:p-7">
+                        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-7">
                           <div className="prose prose-slate max-w-none prose-headings:text-slate-950 prose-p:leading-7 prose-a:text-violet-700">
                             {selectedStep.textArticleBody?.trim() ? (
                               <LearningMarkdownBody markdown={selectedStep.textArticleBody} />
@@ -1161,7 +1161,7 @@ export function EmployeeLearningProgramPlayer() {
                         </div>
 
                         {selectedStep.activityInstructions?.trim() ? (
-                          <section className="rounded-lg border border-blue-200 bg-blue-50 p-5 text-base leading-6 text-slate-800">
+                          <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-base leading-6 text-slate-800">
                             <LearningMarkdownBody markdown={selectedStep.activityInstructions} linkBehavior="download" />
                           </section>
                         ) : null}
@@ -1171,7 +1171,7 @@ export function EmployeeLearningProgramPlayer() {
                             href={selectedStep.activityResourceUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-base font-bold text-violet-800 transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-base font-bold text-violet-800 transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                           >
                             <TagIcon className="h-4 w-4" />
                             Ressource / consignes en ligne
@@ -1183,7 +1183,7 @@ export function EmployeeLearningProgramPlayer() {
                           <div className="space-y-4">
                             <CompletedPanel label="Activité validée" />
                             {(selectedStep.activityReviewedAt || selectedStep.activityFinalFeedback || selectedStep.activityFinalScore != null) && (
-                              <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+                              <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <h3 className="text-base font-extrabold text-emerald-950">Correction du responsable formation</h3>
@@ -1214,7 +1214,7 @@ export function EmployeeLearningProgramPlayer() {
                             )}
                           </div>
                         ) : selectedStep.activityUuid != null ? (
-                          <section className="rounded-lg border border-violet-200 bg-violet-50 p-5">
+                          <section className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
                             <div className="mb-4 flex items-center justify-between gap-3">
                               <div>
                                 <h3 className="text-base font-extrabold text-violet-950">Votre soumission</h3>
@@ -1225,10 +1225,10 @@ export function EmployeeLearningProgramPlayer() {
 
                             {(selectedStep.activitySubmissionMode ?? "TEXT") === "FILE" ? (
                               <div className="space-y-4">
-                                <div className="rounded-lg border-2 border-dashed border-violet-200 bg-white p-6 text-center transition hover:border-violet-400">
+                                <div className="rounded-2xl border-2 border-dashed border-violet-200 bg-white p-6 text-center transition hover:border-violet-400">
                                   <ClipboardDocumentIcon className="mx-auto h-9 w-9 text-violet-500" />
                                   <p className="mt-3 text-base font-bold text-slate-800">Sélectionnez un fichier à téléverser</p>
-                                  <label className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg bg-violet-700 px-5 py-2.5 text-base font-bold text-white transition hover:bg-violet-800 focus-within:ring-2 focus-within:ring-violet-600 focus-within:ring-offset-2">
+                                  <label className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl bg-violet-700 px-5 py-2.5 text-base font-bold text-white transition hover:bg-violet-800 focus-within:ring-2 focus-within:ring-violet-600 focus-within:ring-offset-2">
                                     Choisir un fichier
                                     <input
                                       type="file"
@@ -1260,7 +1260,7 @@ export function EmployeeLearningProgramPlayer() {
                                     Commentaire optionnel
                                   </label>
                                   <textarea
-                                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
                                     rows={3}
                                     value={getDraft(selectedStep.activityUuid).text}
                                     onChange={(e) => setDraft(selectedStep.activityUuid!, { text: e.target.value })}
@@ -1288,7 +1288,7 @@ export function EmployeeLearningProgramPlayer() {
                                 <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">
                                   Code ou contenu technique
                                 </label>
-                                <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950 shadow-lg">
+                                <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-lg">
                                   <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-900 px-4 py-2">
                                     <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
                                     <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
@@ -1355,7 +1355,7 @@ export function EmployeeLearningProgramPlayer() {
           <aside className="flex h-full flex-col space-y-4 lg:sticky lg:top-16">
             <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <span className={cn("flex h-10 w-10 items-center justify-center rounded-lg", tone?.iconBg, tone?.iconText)}>
+                <span className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", tone?.iconBg, tone?.iconText)}>
                   <SelectedIcon className="h-5 w-5" />
                 </span>
                 <div>
@@ -1374,12 +1374,12 @@ export function EmployeeLearningProgramPlayer() {
 
             <section
               className={cn(
-                "rounded-lg border p-5 shadow-sm",
+                "rounded-2xl border p-5 shadow-sm",
                 selectedStep.unlocked ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50",
               )}
             >
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
                   {selectedStep.unlocked ? (
                     <CheckCircleIcon className="h-5 w-5 text-emerald-700" />
                   ) : (
@@ -1397,7 +1397,7 @@ export function EmployeeLearningProgramPlayer() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-base font-extrabold text-slate-950">Ressources</h3>
               <div className="mt-4 space-y-2">
                 {selectedStep.stepKind === "VIDEO" ? (
@@ -1405,7 +1405,7 @@ export function EmployeeLearningProgramPlayer() {
                     href={selectedStep.uploadedVideoUrl ?? `https://www.youtube.com/watch?v=${selectedStep.youtubeVideoId}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
                   >
                     <span className="flex items-center gap-2">
                       <PlayCircleIcon className="h-4 w-4" />
@@ -1420,7 +1420,7 @@ export function EmployeeLearningProgramPlayer() {
                     href={selectedStep.activityResourceUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
                   >
                     <span className="flex items-center gap-2">
                       <DocumentTextIcon className="h-4 w-4" />
@@ -1433,7 +1433,7 @@ export function EmployeeLearningProgramPlayer() {
                 {selectedStep.stepKind === "VIDEO" && selectedStep.quizStatus === "READY" && selectedStep.videoUuid != null ? (
                   <Link
                     to={`${base}/learning-programs/quiz/${player.enrollmentUuid}/${selectedStep.videoUuid}`}
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
                   >
                     <span className="flex items-center gap-2">
                       <QuestionMarkCircleIcon className="h-4 w-4" />
@@ -1444,20 +1444,20 @@ export function EmployeeLearningProgramPlayer() {
                 ) : null}
 
                 {selectedStep.stepKind !== "VIDEO" && !selectedStep.activityResourceUrl?.trim() ? (
-                  <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-center text-base text-slate-500">
+                  <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-center text-base text-slate-500">
                     Aucune ressource additionnelle
                   </p>
                 ) : null}
               </div>
             </section>
 
-            <section className="mt-auto rounded-lg border border-violet-200 bg-white p-5 shadow-sm">
+            <section className="mt-auto rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
               <p className="text-base font-extrabold uppercase tracking-wide text-violet-700">Prochaine étape</p>
               {nextUnlockedIndex != null ? (
                 <button
                   type="button"
                   onClick={() => setSelectedStepIndex(nextUnlockedIndex)}
-                  className="mt-3 w-full rounded-lg bg-violet-50 p-4 text-left transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                  className="mt-3 w-full rounded-2xl bg-violet-50 p-4 text-left transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
                 >
                   <p className="text-base font-extrabold leading-5 text-slate-950">{player.steps[nextUnlockedIndex]?.title}</p>
                   <p className="mt-2 flex items-center gap-2 text-base font-bold text-violet-700">
@@ -1466,7 +1466,7 @@ export function EmployeeLearningProgramPlayer() {
                   </p>
                 </button>
               ) : (
-                <p className="mt-3 rounded-lg bg-slate-50 p-4 text-base leading-6 text-slate-600">Vous êtes sur la dernière étape débloquée.</p>
+                <p className="mt-3 rounded-2xl bg-slate-50 p-4 text-base leading-6 text-slate-600">Vous êtes sur la dernière étape débloquée.</p>
               )}
             </section>
           </aside>
