@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-
 import RoleRedirect from "./components/RoleRedirect";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { LocationTracker } from "./components/LocationTracker";
+import { TopLoadingBar } from "./components/TopLoadingBar";
 import AdminPage from "./pages/AdminPage";
 import ManagerPage from "./pages/ManagerPage";
 import { ManagerDashboard } from "./pages/manager/ManagerDashboard";
@@ -111,6 +112,7 @@ function App() {
     <BrowserRouter>
       <Suspense fallback={<div className="p-6 text-sm text-slate-500">Chargement de l'interface...</div>}>
       <LocationTracker />
+      <TopLoadingBar />
       <Routes>
         <Route
           path="/"

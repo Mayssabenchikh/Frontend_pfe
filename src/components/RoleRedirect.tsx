@@ -27,7 +27,7 @@ export default function RoleRedirect() {
     }
 
     const role = getPrimaryRole(keycloak.tokenParsed);
-    const defaultPath = role ? getRedirectPathForRole(role) : "/";
+    const defaultPath = role ? getRedirectPathForRole(role) : `${window.location.pathname}${window.location.search}${window.location.hash}` || "/";
     const normalizedRememberedPath =
       rememberedPath && rememberedPath.startsWith("/") && rememberedPath !== "/" ? rememberedPath : null;
     const path = normalizedRememberedPath ?? defaultPath;

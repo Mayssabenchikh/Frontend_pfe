@@ -28,6 +28,43 @@
   }
 }
 
+/* Top loading bar */
+.top-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.top-loading-bar.active {
+  opacity: 1;
+}
+
+.top-loading-bar__fill {
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  background: linear-gradient(90deg, #6d28d9 0%, #8b5cf6 45%, #a78bfa 100%);
+  animation: topLoadingBar 0.9s ease-out forwards;
+}
+
+@keyframes topLoadingBar {
+  0% {
+    transform: scaleX(0);
+  }
+  70% {
+    transform: scaleX(0.75);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
 /* AG Grid — clean minimal theme matching the design */
 .ag-theme-quartz {
   --ag-foreground-color: #1e293b;

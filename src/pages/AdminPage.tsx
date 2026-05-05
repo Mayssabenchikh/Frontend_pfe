@@ -31,6 +31,7 @@ import { ArchiveBoxIcon } from "../icons/heroicons/outline";
 const USERS_API = "/api/admin/users";
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 const ARCHIVED_DEDUPE_TTL_MS = 3000;
+const ADMIN_LAST_VIEW_KEY = "skillify_admin_last_view";
 
 let archivedUsersInFlight: Promise<ArchivedUserDto[]> | null = null;
 let archivedUsersInFlightKey: string | null = null;
@@ -97,7 +98,16 @@ export default function AdminPage() {
   const token = keycloak.tokenParsed as TokenParsed | undefined;
   const isUserDetailRoute = /^\/admin\/users\/[^/]+\/?$/.test(location.pathname);
 
-  const [currentView, setCurrentView] = useState<NavId>("dashboard");
+  const [currentView, setCurrentView] = useState<NavId>(() => {
+    const requestedView = (location.state as { view?: NavId } | null)?.view;
+    if (requestedView) return requestedView;
+    try {
+      const storedView = sessionStorage.getItem(ADMIN_LAST_VIEW_KEY) as NavId | null;
+      return storedView ?? "dashboard";
+    } catch {
+      return "dashboard";
+    }
+  });
   const adminAvatarKey = keycloak.subject ? `admin_avatar_${keycloak.subject}` : null;
   const [adminAvatarUrl, setAdminAvatarUrl] = useState<string | null>(
     adminAvatarKey ? (localStorage.getItem(adminAvatarKey) ?? null) : null
@@ -304,6 +314,15 @@ export default function AdminPage() {
       setCurrentView(requestedView);
     }
   }, [isUserDetailRoute, location.state]);
+
+  useEffect(() => {
+    if (isUserDetailRoute) return;
+    try {
+      sessionStorage.setItem(ADMIN_LAST_VIEW_KEY, currentView);
+    } catch {
+      // ignore storage errors
+    }
+  }, [currentView, isUserDetailRoute]);
 
   const handleNavChange = (view: NavId) => {
     if (isUserDetailRoute) navigate("/admin", { state: { view } });

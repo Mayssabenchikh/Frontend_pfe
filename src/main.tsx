@@ -55,7 +55,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         checkLoginIframe: false,
         silentCheckSsoFallback: false,
         // Must match Keycloak "Valid Redirect URIs".
-        // We redirect to `/` then the app replays the original deep-link (stored in sessionStorage).
         redirectUri: `${window.location.origin}/`,
       }}
     >
