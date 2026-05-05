@@ -56,10 +56,10 @@ function DetailSkeleton() {
     <div className="w-full px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-full max-w-[1680px] gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
-          <div className="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" />
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-white" />
+          <div className="h-72 animate-pulse rounded-[10px] border border-slate-200 bg-white" />
+          <div className="h-96 animate-pulse rounded-[10px] border border-slate-200 bg-white" />
         </div>
-        <div className="h-[520px] animate-pulse rounded-lg border border-slate-200 bg-white" />
+        <div className="h-[520px] animate-pulse rounded-[10px] border border-slate-200 bg-white" />
       </div>
     </div>
   );
@@ -67,7 +67,7 @@ function DetailSkeleton() {
 
 function InfoTile({ icon: Icon, label, value }: { icon: typeof CalendarDaysIcon; label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
         <Icon className="h-4 w-4 text-violet-600" />
         {label}
@@ -81,9 +81,9 @@ function RequirementCard({ requirement }: { requirement: ProjectRequirementDto }
   const iconUrl = getSkillIconUrl(requirement.skillName);
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60">
+    <article className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60">
       <div className="flex items-start gap-3">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-violet-100 bg-violet-50 p-2">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[10px] border border-violet-100 bg-violet-50 p-2">
           {iconUrl ? (
             <img
               src={iconUrl}
@@ -165,9 +165,9 @@ export function EmployeeProjectDetail() {
   if (error || !project) {
     return (
       <div className="min-h-full w-full bg-[#f8f7ff] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-lg border border-rose-200 bg-white p-6 shadow-sm">
+        <div className="mx-auto max-w-3xl rounded-[10px] border border-rose-200 bg-white p-6 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-rose-50">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-rose-50">
               <ExclamationCircleIcon className="h-6 w-6 text-rose-600" />
             </div>
             <div>
@@ -175,7 +175,7 @@ export function EmployeeProjectDetail() {
               <p className="mt-1 text-sm font-semibold text-rose-700">{error ?? "Projet introuvable"}</p>
               <Link
                 to="/employee/projects"
-                className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-violet-700 px-4 text-sm font-bold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+                className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-[10px] bg-violet-700 px-4 text-sm font-bold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
               >
                 <ArrowLeftIcon className="h-4 w-4" />
                 Retour aux projets
@@ -197,7 +197,7 @@ export function EmployeeProjectDetail() {
         <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-5">
           <Link
             to="/employee/projects"
-            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-[10px] border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour aux projets
@@ -205,13 +205,13 @@ export function EmployeeProjectDetail() {
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
             <main className="flex min-w-0 flex-col gap-5">
-              <header className="overflow-hidden rounded-lg border border-violet-100 bg-white shadow-sm">
+              <header className="overflow-hidden rounded-[10px] border border-violet-100 bg-white shadow-sm">
                 <div className="h-1.5 bg-gradient-to-r from-violet-700 via-blue-500 to-rose-500" />
                 <div className="p-5 sm:p-6">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-800">
+                        <span className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-800">
                           <BriefcaseIcon className="h-4 w-4" />
                           Détail projet
                         </span>
@@ -235,7 +235,7 @@ export function EmployeeProjectDetail() {
                 </div>
               </header>
 
-              <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+              <section className="rounded-[10px] border border-slate-200 bg-white shadow-sm">
                 <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-xl font-extrabold text-slate-950">Exigences en compétences</h2>
@@ -259,7 +259,7 @@ export function EmployeeProjectDetail() {
                 )}
               </section>
 
-              <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+              <section className="rounded-[10px] border border-slate-200 bg-white shadow-sm">
                 <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-xl font-extrabold text-slate-950">Membres d'équipe</h2>
@@ -288,14 +288,14 @@ export function EmployeeProjectDetail() {
                           type="button"
                           key={member.uuid}
                           onClick={() => openMemberDetail(member)}
-                          className="rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                          className="rounded-[10px] border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                         >
                           <div className="flex items-start gap-3">
                             {member.employeeAvatarUrl ? (
-                              <img src={member.employeeAvatarUrl} alt={name} className="h-14 w-14 shrink-0 rounded-lg border border-slate-200 object-cover" />
+                              <img src={member.employeeAvatarUrl} alt={name} className="h-14 w-14 shrink-0 rounded-[10px] border border-slate-200 object-cover" />
                             ) : (
                               <div
-                                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-sm font-extrabold text-white"
+                                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[10px] text-sm font-extrabold text-white"
                                 style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
                               >
                                 {initials}
@@ -320,7 +320,7 @@ export function EmployeeProjectDetail() {
             </main>
 
             <aside className="flex flex-col gap-5">
-              <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <section className="rounded-[10px] border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 className="flex items-center gap-2 text-xl font-extrabold text-slate-950">
                   <InformationCircleIcon className="h-6 w-6 text-violet-700" />
                   Informations

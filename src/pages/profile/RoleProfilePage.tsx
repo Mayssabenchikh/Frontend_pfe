@@ -1036,7 +1036,7 @@ function ProfileEditableField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+          className="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
         />
       </div>
     </label>
@@ -1591,7 +1591,7 @@ function LuxuryPasswordField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="w-full rounded-lg border bg-white px-3.5 py-2.5 pr-10 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+          className="w-full rounded-[10px] border bg-white px-3.5 py-2.5 pr-10 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
           style={{
             background: error ? "rgba(239, 68, 68, 0.05)" : "#ffffff",
             borderColor: error ? "var(--luxury-error)" : "#dbe3f0",
@@ -1600,7 +1600,7 @@ function LuxuryPasswordField({
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition-colors duration-300 hover:bg-violet-50 hover:text-violet-700"
+          className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[10px] text-slate-400 transition-colors duration-300 hover:bg-violet-50 hover:text-violet-700"
         >
           {show ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
         </button>

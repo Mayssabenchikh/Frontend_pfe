@@ -87,7 +87,7 @@ function AssignmentRow({ assignment, onOpenProfile }: { assignment: AssignmentDt
       <button
         type="button"
         onClick={onOpenProfile}
-        className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-100 bg-white px-3 py-3 text-left transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+        className="flex w-full items-center justify-between gap-3 rounded-[10px] border border-slate-100 bg-white px-3 py-3 text-left transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-100/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
       >
       <div className="flex min-w-0 items-center gap-3">
         {assignment.employeeAvatarUrl ? (
@@ -137,14 +137,14 @@ function MatchCard({
   const score = toPercentNumber(row.match_score);
 
   return (
-    <article className="grid overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md lg:grid-cols-[1fr_124px]">
+    <article className="grid overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md lg:grid-cols-[1fr_124px]">
       <button type="button" onClick={onView} className="min-w-0 p-3 text-left">
         <div className="flex min-w-0 gap-2.5">
           {avatarUrl ? (
-            <img src={avatarUrl} alt={row.display_name || row.email} className="h-10 w-10 shrink-0 rounded-lg object-cover shadow-sm" />
+            <img src={avatarUrl} alt={row.display_name || row.email} className="h-10 w-10 shrink-0 rounded-[10px] object-cover shadow-sm" />
           ) : (
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white shadow-sm"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-[11px] font-bold text-white shadow-sm"
               style={{ background: `linear-gradient(135deg, ${avatar[0]}, ${avatar[1]})` }}
             >
               {initials}
@@ -528,10 +528,10 @@ export function ProjectDetail() {
     return (
       <div className="min-h-full bg-slate-50 p-6">
         <div className="w-full space-y-4">
-          <div className="h-24 animate-pulse rounded-lg bg-white" />
+          <div className="h-24 animate-pulse rounded-[10px] bg-white" />
           <div className="grid gap-5 lg:grid-cols-[380px_1fr]">
-            <div className="h-96 animate-pulse rounded-lg bg-white" />
-            <div className="h-96 animate-pulse rounded-lg bg-white" />
+            <div className="h-96 animate-pulse rounded-[10px] bg-white" />
+            <div className="h-96 animate-pulse rounded-[10px] bg-white" />
           </div>
         </div>
       </div>
@@ -543,7 +543,7 @@ export function ProjectDetail() {
   }
 
   const controlClass =
-    "h-10 rounded-md border border-violet-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100";
+    "h-10 rounded-[10px] border border-violet-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100";
 
   return (
     <div className="min-h-full overflow-y-auto bg-slate-50 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
@@ -564,7 +564,7 @@ export function ProjectDetail() {
                 <input
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  className="mt-4 w-full max-w-3xl rounded-md border border-violet-200 bg-white px-3 py-2 text-3xl font-black text-slate-950 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                  className="mt-4 w-full max-w-3xl rounded-[10px] border border-violet-200 bg-white px-3 py-2 text-3xl font-black text-slate-950 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
                   placeholder="Nom du projet"
                 />
               ) : (
@@ -591,7 +591,7 @@ export function ProjectDetail() {
                       hydrateForm(project);
                       setIsEditing(false);
                     }}
-                    className="inline-flex items-center gap-2 rounded-md border border-violet-200 bg-white px-5 py-3 text-sm font-bold text-violet-800 transition hover:bg-violet-50"
+                    className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-white px-5 py-3 text-sm font-bold text-violet-800 transition hover:bg-violet-50"
                   >
                     <XMarkIcon className="h-4 w-4" />
                     Annuler
@@ -600,7 +600,7 @@ export function ProjectDetail() {
                     type="button"
                     onClick={handleSave}
                     disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-md bg-violet-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900 disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-[10px] bg-violet-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900 disabled:opacity-60"
                   >
                     <PencilSquareIcon className="h-4 w-4" />
                     {saving ? "Enregistrement..." : "Enregistrer"}
@@ -610,7 +610,7 @@ export function ProjectDetail() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 rounded-md bg-violet-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900"
+                  className="inline-flex items-center gap-2 rounded-[10px] bg-violet-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900"
                 >
                   <PencilSquareIcon className="h-4 w-4" />
                   Modifier le projet
@@ -622,14 +622,14 @@ export function ProjectDetail() {
 
         <div className="grid w-full gap-6 xl:grid-cols-[minmax(360px,420px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(400px,460px)_minmax(0,1fr)]">
           <aside className="space-y-6">
-            <section className="rounded-lg border border-violet-100 bg-violet-50/40 p-6 shadow-sm">
+            <section className="rounded-[10px] border border-violet-100 bg-violet-50/40 p-6 shadow-sm">
               <h2 className="text-2xl font-bold text-slate-950">Résumé</h2>
               {isEditing ? (
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
                   rows={6}
-                  className="mt-5 w-full rounded-md border border-violet-200 bg-white px-3 py-3 text-sm leading-6 text-slate-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                  className="mt-5 w-full rounded-[10px] border border-violet-200 bg-white px-3 py-3 text-sm leading-6 text-slate-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
                   placeholder="Description du projet"
                 />
               ) : (
@@ -637,7 +637,7 @@ export function ProjectDetail() {
               )}
 
               <div className="mt-6 grid gap-3">
-                <div className="flex items-center justify-between rounded-md bg-violet-50 px-4 py-4">
+                <div className="flex items-center justify-between rounded-[10px] bg-violet-50 px-4 py-4">
                   <span className="inline-flex items-center gap-3 text-sm text-slate-700">
                     <ClockIcon className="h-5 w-5 text-violet-700" />
                     Date de début
@@ -654,7 +654,7 @@ export function ProjectDetail() {
                     <span className="font-bold text-violet-900">{formatDate(project.startDate)}</span>
                   )}
                 </div>
-                <div className="flex items-center justify-between rounded-md bg-violet-50 px-4 py-4">
+                <div className="flex items-center justify-between rounded-[10px] bg-violet-50 px-4 py-4">
                   <span className="inline-flex items-center gap-3 text-sm text-slate-700">
                     <UserGroupIcon className="h-5 w-5 text-violet-700" />
                     Taille d'équipe
@@ -672,7 +672,7 @@ export function ProjectDetail() {
                   )}
                 </div>
                 {isEditing ? (
-                  <div className="grid gap-3 rounded-md border border-violet-100 bg-white p-4">
+                  <div className="grid gap-3 rounded-[10px] border border-violet-100 bg-white p-4">
                     <label className="text-sm font-semibold text-slate-600">
                       Statut
                       <select
@@ -712,15 +712,15 @@ export function ProjectDetail() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-2xl font-bold text-slate-950">Compétences requises</h2>
                 {isEditing ? (
-                  <button
+                    <button
                     type="button"
                     onClick={addRequirement}
                     disabled={skills.length === 0 || form.requirements.length >= skills.length}
-                    className="inline-flex items-center gap-2 rounded-md border border-violet-200 bg-white px-3 py-2 text-sm font-bold text-violet-800 hover:bg-violet-50 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-white px-3 py-2 text-sm font-bold text-violet-800 hover:bg-violet-50 disabled:opacity-50"
                   >
                     <PlusIcon className="h-4 w-4" />
                     Ajouter
@@ -735,7 +735,7 @@ export function ProjectDetail() {
                     const used = new Set(form.requirements.map((r) => r.skillUuid));
                     used.delete(req.skillUuid);
                     return (
-                      <div key={req.skillUuid} className="min-w-0 rounded-lg border border-violet-100 bg-white p-3 shadow-sm">
+                      <div key={req.skillUuid} className="min-w-0 rounded-[10px] border border-violet-100 bg-white p-3 shadow-sm">
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <div className="min-w-0">
                             <p className="text-xs font-black uppercase tracking-[0.12em] text-violet-500">Compétence</p>
@@ -744,7 +744,7 @@ export function ProjectDetail() {
                           <button
                             type="button"
                             onClick={() => setForm((prev) => ({ ...prev, requirements: prev.requirements.filter((r) => r.skillUuid !== req.skillUuid) }))}
-                            className="shrink-0 rounded-md border border-red-100 bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700 transition hover:border-red-200 hover:bg-red-100"
+                            className="shrink-0 rounded-[10px] border border-red-100 bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700 transition hover:border-red-200 hover:bg-red-100"
                           >
                             Retirer
                           </button>
@@ -783,7 +783,7 @@ export function ProjectDetail() {
                     );
                   })}
                   {!form.requirements.length ? (
-                    <p className="rounded-md border border-dashed border-violet-200 bg-violet-50/50 px-4 py-6 text-center text-sm text-slate-500">
+                    <p className="rounded-[10px] border border-dashed border-violet-200 bg-violet-50/50 px-4 py-6 text-center text-sm text-slate-500">
                       Aucune compétence dans le formulaire.
                     </p>
                   ) : null}
@@ -799,7 +799,7 @@ export function ProjectDetail() {
               )}
             </section>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-2xl font-bold text-slate-950">Équipe projet</h2>
                 <span className="text-sm font-bold text-violet-800">{assignedCount}/{teamCapacity}</span>
@@ -831,14 +831,14 @@ export function ProjectDetail() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-4 rounded-md border border-dashed border-violet-200 bg-violet-50/40 px-4 py-8 text-center text-sm text-slate-500">
+                <p className="mt-4 rounded-[10px] border border-dashed border-violet-200 bg-violet-50/40 px-4 py-8 text-center text-sm text-slate-500">
                   Aucun membre affecté pour le moment.
                 </p>
               )}
 
             </section>
 
-            <section className="rounded-lg border border-violet-100 bg-violet-50/60 p-6 shadow-sm">
+            <section className="rounded-[10px] border border-violet-100 bg-violet-50/60 p-6 shadow-sm">
               <h2 className="text-xl font-black text-violet-950">Comment lire les scores ?</h2>
               <div className="mt-4 space-y-4 text-sm leading-6 text-slate-700">
                 <p>
@@ -851,7 +851,7 @@ export function ProjectDetail() {
                   <span className="font-bold text-slate-950">Score confiance :</span> indique la fiabilité des données utilisées. Il augmente quand la compétence est validée par quiz, récente et cohérente avec le niveau attendu.
                 </p>
               </div>
-              <div className="mt-5 rounded-lg border border-violet-200 bg-white p-4">
+              <div className="mt-5 rounded-[10px] border border-violet-200 bg-white p-4">
                 <p className="text-sm font-black text-violet-900">Formules</p>
                 <div className="mt-3 space-y-2 text-xs leading-5 text-slate-600">
                   <p>
@@ -892,7 +892,7 @@ export function ProjectDetail() {
                 {loadingMatches ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-56 animate-pulse rounded-lg border border-slate-200 bg-white" />
+                      <div key={i} className="h-56 animate-pulse rounded-[10px] border border-slate-200 bg-white" />
                     ))}
                   </div>
                 ) : matches?.employees?.length ? (
@@ -908,7 +908,7 @@ export function ProjectDetail() {
                     />
                   ))
                 ) : !matchingError ? (
-                  <div className="rounded-lg border border-dashed border-violet-200 bg-violet-50/50 px-6 py-16 text-center">
+                  <div className="rounded-[10px] border border-dashed border-violet-200 bg-violet-50/50 px-6 py-16 text-center">
                     <UserCircleIcon className="mx-auto h-10 w-10 text-violet-300" />
                     <p className="mt-4 font-bold text-slate-900">Aucun candidat correspondant</p>
                     <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
@@ -919,7 +919,7 @@ export function ProjectDetail() {
               </div>
 
               {matches && matches.total_pages > 1 ? (
-                <div className="mt-5 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
+                <div className="mt-5 flex items-center justify-between rounded-[10px] border border-slate-200 bg-white px-4 py-3">
                   <p className="text-sm font-semibold text-slate-500">
                     Page {matches.page} sur {matches.total_pages}
                   </p>
@@ -951,7 +951,7 @@ export function ProjectDetail() {
                 </div>
                 {teamError ? <AlertBanner message={teamError} /> : null}
                 {loadingTeam ? (
-                  <div className="h-56 animate-pulse rounded-lg border border-slate-200 bg-white" />
+                  <div className="h-56 animate-pulse rounded-[10px] border border-slate-200 bg-white" />
                 ) : suggestedTeam?.members?.length ? (
                   <TeamCard
                     members={suggestedTeam.members}
@@ -961,7 +961,7 @@ export function ProjectDetail() {
                     compact
                   />
                 ) : !teamError ? (
-                  <div className="rounded-lg border border-dashed border-violet-200 bg-violet-50/50 px-6 py-12 text-center">
+                  <div className="rounded-[10px] border border-dashed border-violet-200 bg-violet-50/50 px-6 py-12 text-center">
                     <UserGroupIcon className="mx-auto h-10 w-10 text-violet-300" />
                     <p className="mt-4 font-bold text-slate-900">Aucune équipe suggérée</p>
                     <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
