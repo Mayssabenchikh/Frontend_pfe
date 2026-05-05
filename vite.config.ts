@@ -27,5 +27,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/matching-api/, ""),
       },
     },
+    middlewareMode: false,
+    historyApiFallback: true,
   },
 });

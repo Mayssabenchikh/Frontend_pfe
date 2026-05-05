@@ -17,6 +17,13 @@ http.interceptors.request.use(async (config) => {
     try {
       await keycloak.updateToken(30);
     } catch {
+      // Save current location before redirecting to Keycloak login
+      try {
+        const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        sessionStorage.setItem("skillify_post_login_redirect", currentUrl);
+      } catch {
+        // ignore storage errors
+      }
       keycloak.login({ redirectUri: ROOT_REDIRECT_URI });
     }
 

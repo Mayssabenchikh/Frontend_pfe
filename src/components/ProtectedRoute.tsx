@@ -9,8 +9,12 @@ type Props = {
 };
 
 export default function ProtectedRoute({ children, allowedRoles }: Props) {
-  const { keycloak } = useKeycloak();
+  const { keycloak, initialized } = useKeycloak();
   const location = useLocation();
+
+  if (!initialized) {
+    return null;
+  }
 
   if (!keycloak.authenticated) {
     return <Navigate to="/" state={{ from: location }} replace />;

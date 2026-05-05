@@ -3,6 +3,7 @@ import { useKeycloak } from "@react-keycloak/web";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import RoleRedirect from "./components/RoleRedirect";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { LocationTracker } from "./components/LocationTracker";
 import AdminPage from "./pages/AdminPage";
 import ManagerPage from "./pages/ManagerPage";
 import { ManagerDashboard } from "./pages/manager/ManagerDashboard";
@@ -97,11 +98,19 @@ function App() {
     return null;
   }
 
-  const handleLogin = () => keycloak.login({ redirectUri: ROOT_REDIRECT_URI });
+  const handleLogin = () => {
+    try {
+      sessionStorage.setItem("skillify_post_login_redirect", `${window.location.pathname}${window.location.search}${window.location.hash}`);
+    } catch {
+      // ignore
+    }
+    return keycloak.login({ redirectUri: ROOT_REDIRECT_URI });
+  };
 
   return (
     <BrowserRouter>
       <Suspense fallback={<div className="p-6 text-sm text-slate-500">Chargement de l'interface...</div>}>
+      <LocationTracker />
       <Routes>
         <Route
           path="/"
