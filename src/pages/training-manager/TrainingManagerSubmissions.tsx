@@ -76,6 +76,17 @@ export function TrainingManagerSubmissions() {
         finalFeedback: finalFeedback.trim() || null,
       });
       setDetail(data);
+      setSubmissions((prev) =>
+        prev.map((item) =>
+          item.submissionUuid === selectedId
+            ? {
+                ...item,
+                humanReviewed: true,
+                finalScore: data.finalScore ?? finalScore,
+              }
+            : item,
+        ),
+      );
       toast.success("Validation enregistrée");
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } } };
