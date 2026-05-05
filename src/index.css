@@ -239,11 +239,12 @@
   min-width: 72px;
 }
 .admin-sidebar.collapsed .admin-sidebar-logo {
-  display: none;
+  display: flex;
+  justify-content: center;
 }
 .admin-sidebar.collapsed .admin-sidebar-header {
   justify-content: center;
-  padding: 0;
+  padding: 12px 0;
 }
 .admin-sidebar-toggle {
   flex-shrink: 0;

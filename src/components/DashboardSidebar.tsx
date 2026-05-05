@@ -65,18 +65,30 @@ function DashboardSidebarNavContent({ label, icon, active, collapsed, subtitle }
 export function DashboardSidebar({ mobileOpen, collapsed = false, onToggleCollapse, children }: DashboardSidebarProps) {
   return (
     <aside className={`admin-sidebar flex flex-col${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
-      <div className={`admin-sidebar-header flex h-20 shrink-0 items-center ${collapsed ? "justify-center px-0" : "justify-between px-4"}`}>
-        <div className="admin-sidebar-logo flex min-w-0 flex-1 items-center justify-center overflow-hidden">
-          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
-        </div>
+      <div
+        className={[
+          "admin-sidebar-header relative flex shrink-0 items-center",
+          collapsed ? "h-20 justify-center px-0" : "h-20 justify-between px-4",
+        ].join(" ")}
+      >
+        {!collapsed ? (
+          <div className="admin-sidebar-logo flex min-w-0 flex-1 items-center justify-center overflow-hidden">
+            <img src="/logo.png" alt="Logo" className="h-[70px] max-h-full w-auto object-contain" />
+          </div>
+        ) : null}
         {onToggleCollapse ? (
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="admin-sidebar-toggle flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-violet-100 bg-white text-slate-500 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
+            className={[
+              "admin-sidebar-toggle flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30",
+              collapsed
+                ? "border-violet-200 bg-violet-50 text-violet-700 shadow-violet-100/80 hover:bg-violet-100"
+                : "border-violet-100 bg-white text-slate-500 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700",
+            ].join(" ")}
             aria-label={collapsed ? "Ouvrir le menu" : "Réduire le menu"}
           >
-            {collapsed ? <ChevronRightIcon className="h-5 w-5" strokeWidth={2} /> : <ChevronLeftIcon className="h-5 w-5" strokeWidth={2} />}
+            {collapsed ? <ChevronRightIcon className="h-5 w-5" strokeWidth={2.5} /> : <ChevronLeftIcon className="h-5 w-5" strokeWidth={2.5} />}
           </button>
         ) : null}
       </div>

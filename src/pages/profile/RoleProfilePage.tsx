@@ -1321,18 +1321,18 @@ function CVSection({
               <button
                 type="button"
                 onClick={() => cvInputRef.current?.click()}
-                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-2xl border border-violet-200 bg-white px-5 text-base font-bold text-[#2b087f] transition hover:border-violet-300 hover:bg-violet-50"
+                className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-xl border border-violet-200 bg-white px-4 text-sm font-bold text-[#2b087f] transition hover:border-violet-300 hover:bg-violet-50"
               >
-                <DocumentTextIcon className="h-5 w-5" />
+                <DocumentTextIcon className="h-4 w-4" />
                 <span>Choisir un fichier</span>
               </button>
               <button
                 type="button"
                 onClick={onExtract}
                 disabled={extracting}
-                className="inline-flex min-h-[80px] items-center justify-center gap-3 rounded-2xl bg-[#3b007d] px-6 text-base font-bold text-white shadow-[0_14px_24px_rgba(59,0,125,0.22)] transition hover:bg-[#31006a] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-xl bg-[#3b007d] px-5 text-sm font-bold text-white shadow-[0_10px_18px_rgba(59,0,125,0.2)] transition hover:bg-[#31006a] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {extracting ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
+                {extracting ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <SparklesIcon className="h-4 w-4" />}
                 <span>{extracting ? "Extraction..." : "Extraire"}</span>
               </button>
             </div>
