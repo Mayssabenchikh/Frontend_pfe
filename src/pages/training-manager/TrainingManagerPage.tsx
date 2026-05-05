@@ -5,7 +5,6 @@ import {
   Squares2X2Icon,
   ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
-  UserCircleIcon,
 } from "../../icons/heroicons/outline";
 import { AdminHeader } from "../admin/AdminHeader";
 import { trainingManagerApi } from "../../api/trainingManagerApi";
@@ -52,7 +51,6 @@ export default function TrainingManagerPage() {
         <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/training-manager" end collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Mes formations" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/training-manager/programs" active={isProgramsSection} collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Soumissions" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/training-manager/submissions" active={isSubmissionsSection} collapsed={sidebarCollapsed} />
-        <DashboardSidebarNavItem label="Profil" icon={<UserCircleIcon className="h-5 w-5" />} to="/training-manager/profile" collapsed={sidebarCollapsed} />
       </DashboardSidebar>
 
       <div className="admin-content">

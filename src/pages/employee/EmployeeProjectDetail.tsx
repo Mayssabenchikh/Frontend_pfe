@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useKeycloak } from "@react-keycloak/web";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { AssignmentDto } from "../../api/assignmentsApi";
 import { employeeProjectsApi, type ProjectDto, type ProjectRequirementDto } from "../../api/projectsApi";
@@ -111,6 +112,7 @@ function RequirementCard({ requirement }: { requirement: ProjectRequirementDto }
 
 export function EmployeeProjectDetail() {
   const { id: projectUuid } = useParams<{ id: string }>();
+  const { keycloak } = useKeycloak();
   const navigate = useNavigate();
   const [project, setProject] = useState<ProjectDto | null>(null);
   const [team, setTeam] = useState<AssignmentDto[]>([]);
@@ -157,6 +159,10 @@ export function EmployeeProjectDetail() {
 
   const openMemberDetail = (member: AssignmentDto) => {
     if (!projectUuid) return;
+    if (member.employeeKeycloakId === keycloak.subject) {
+      navigate("/employee/profile");
+      return;
+    }
     navigate(`/employee/projects/${encodeURIComponent(projectUuid)}/team/${encodeURIComponent(member.employeeKeycloakId)}`);
   };
 
