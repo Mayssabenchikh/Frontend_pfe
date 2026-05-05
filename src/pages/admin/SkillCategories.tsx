@@ -538,7 +538,7 @@ interface ModalProps {
 
 function Modal({ title, subtitle, icon, onClose, children }: ModalProps) {
   return (
-    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/20 bg-white/[0.97] shadow-[0_32px_80px_rgba(109,40,217,0.2),0_8px_32px_rgba(109,40,217,0.1),inset_0_0_0_1px_rgba(255,255,255,0.8)] backdrop-blur-[32px]">

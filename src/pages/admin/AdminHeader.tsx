@@ -38,7 +38,7 @@ export function AdminHeader({
   const safeRole = roleLabel?.trim() || "Administrateur";
 
   return (
-    <header className="admin-header-fixed z-40 flex items-center justify-between border-b border-violet-100/80 px-3 shadow-[0_10px_34px_-30px_rgba(76,29,149,0.65)] backdrop-blur-xl sm:px-4 md:px-6 lg:px-8">
+    <header className="admin-header-fixed z-[120] flex items-center justify-between border-b border-violet-100/80 px-3 shadow-[0_10px_34px_-30px_rgba(76,29,149,0.65)] backdrop-blur-xl sm:px-4 md:px-6 lg:px-8">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <button
           type="button"
@@ -89,8 +89,8 @@ export function AdminHeader({
 
         {menuOpen && (
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-            <div className="fixed left-3 right-3 top-[calc(5rem+env(safe-area-inset-top,0px)+8px)] z-50 max-h-[min(70vh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-2xl border border-violet-100 bg-white p-2 shadow-2xl shadow-violet-200/50 sm:absolute sm:left-auto sm:right-0 sm:top-16 sm:max-h-none sm:min-w-[250px] sm:overflow-visible">
+            <div className="fixed inset-0 z-[110]" onClick={() => setMenuOpen(false)} />
+            <div className="fixed left-3 right-3 top-[calc(5rem+env(safe-area-inset-top,0px)+8px)] z-[130] max-h-[min(70vh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-2xl border border-violet-100 bg-white p-2 shadow-2xl shadow-violet-200/50 sm:absolute sm:left-auto sm:right-0 sm:top-16 sm:max-h-none sm:min-w-[250px] sm:overflow-visible">
               <div className="mb-1.5 flex items-center gap-3 rounded-xl bg-violet-50/80 px-3 py-3">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={safeName} className="h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-violet-100" />

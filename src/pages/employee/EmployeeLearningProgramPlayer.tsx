@@ -733,13 +733,13 @@ export function EmployeeLearningProgramPlayer() {
   if (!player) {
     return (
       <div className="min-h-screen bg-[#f8f7ff]">
-        <div className="border-b border-slate-200 bg-white px-5 py-4">
-          <div className="mx-auto flex max-w-none items-center justify-between gap-4">
+        <div className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex max-w-none items-center justify-between gap-4">
             <Skeleton className="h-10 w-48" />
             <Skeleton className="h-10 w-36" />
           </div>
         </div>
-        <div className="mx-auto grid max-w-none gap-5 px-4 py-5 lg:grid-cols-[360px_minmax(0,1fr)_360px]">
+        <div className="grid max-w-none gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[360px_minmax(0,1fr)_360px] lg:px-8">
           <aside className="hidden rounded-lg border border-slate-200 bg-white p-4 lg:block">
             <Skeleton className="h-20 w-full" />
             <div className="mt-6 space-y-3">
@@ -773,11 +773,11 @@ export function EmployeeLearningProgramPlayer() {
 
   return (
     <div className="min-h-screen bg-[#f8f7ff] text-slate-950">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex min-h-14 w-full max-w-none items-center gap-4 px-5 py-2 sm:px-8">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="flex min-h-12 w-full items-center gap-3 px-4 py-1.5 sm:px-6 lg:px-8">
           <Link
             to={backTo}
-            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-base font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+            className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour
@@ -788,12 +788,12 @@ export function EmployeeLearningProgramPlayer() {
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
               <span className="hidden h-2.5 w-2.5 rounded-full bg-violet-600 sm:block" />
-              <h1 className="truncate text-base font-extrabold text-slate-950 sm:text-xl">{player.programTitle}</h1>
-              <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-base font-bold uppercase tracking-wide text-violet-800 md:inline-flex">
+              <h1 className="truncate text-base font-extrabold text-slate-950 sm:text-lg">{player.programTitle}</h1>
+              <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-violet-800 md:inline-flex">
                 {playerStatusLabel(player.status)}
               </span>
             </div>
-            <p className="mt-0.5 hidden truncate text-base text-slate-500 sm:block">
+            <p className="mt-0.5 hidden truncate text-sm text-slate-500 sm:block">
               {player.programSkillName ? (
                 <>
                   {player.programSkillName}
@@ -806,12 +806,12 @@ export function EmployeeLearningProgramPlayer() {
 
           <div className="hidden items-center gap-3 md:flex">
             <div className="text-right">
-              <p className="text-base font-extrabold text-slate-950">{pct}%</p>
-              <p className="text-base text-slate-500">
+              <p className="text-sm font-extrabold text-slate-950">{pct}%</p>
+              <p className="text-sm text-slate-500">
                 {doneCount}/{player.steps.length} étapes
               </p>
             </div>
-            <div className="h-2 w-36 overflow-hidden rounded-full bg-violet-100">
+            <div className="h-2 w-28 overflow-hidden rounded-full bg-violet-100">
               <div className="h-full rounded-full bg-violet-700 transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
             </div>
           </div>
@@ -820,7 +820,7 @@ export function EmployeeLearningProgramPlayer() {
             <button
               type="button"
               onClick={() => setModulesSidebarOpen(true)}
-              className="hidden min-h-10 shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 text-base font-bold text-violet-700 shadow-sm transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:inline-flex"
+              className="hidden min-h-9 shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 text-sm font-bold text-violet-700 shadow-sm transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:inline-flex"
               title="Afficher les modules"
             >
               <ClipboardDocumentListIcon className="h-4 w-4" />
@@ -831,7 +831,7 @@ export function EmployeeLearningProgramPlayer() {
       </header>
 
       {player.suggestSkillValidationQuiz ? (
-        <div className="mx-auto w-full max-w-none px-5 pt-5 sm:px-8">
+        <div className="w-full px-4 pt-3 sm:px-6 lg:px-8">
           <section className="grid gap-4 rounded-lg border border-violet-200 bg-violet-700 p-5 text-white shadow-xl shadow-violet-200 animate-profile-section md:grid-cols-[1fr_auto] md:items-center">
             <div className="flex items-start gap-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/15">
@@ -854,7 +854,7 @@ export function EmployeeLearningProgramPlayer() {
       ) : null}
 
       {programCompleted ? (
-        <div className="mx-auto w-full max-w-none px-5 pt-5 sm:px-8">
+        <div className="w-full px-4 pt-3 sm:px-6 lg:px-8">
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -927,14 +927,14 @@ export function EmployeeLearningProgramPlayer() {
       ) : null}
 
       {error ? (
-        <div className="mx-auto w-full max-w-none px-5 pt-5 sm:px-8">
+        <div className="w-full px-4 pt-5 sm:px-6 lg:px-8">
           <AlertBox variant="error">{error}</AlertBox>
         </div>
       ) : null}
 
       <div
         className={cn(
-          "mx-auto grid w-full max-w-none items-stretch gap-6 px-5 pb-6 pt-3 sm:px-8",
+          "grid w-full items-stretch gap-6 px-4 pb-6 pt-3 sm:px-6 lg:px-8",
           modulesSidebarOpen ? "lg:grid-cols-[380px_minmax(0,1fr)_380px]" : "lg:grid-cols-[minmax(0,1fr)_380px]",
         )}
       >

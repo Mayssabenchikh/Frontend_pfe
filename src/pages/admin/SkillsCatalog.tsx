@@ -573,7 +573,7 @@ export function SkillsCatalog() {
       />
 
       {synonymModalSkill && (
-        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setSynonymModalSkill(null)} />
           <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-500/20 bg-white shadow-[0_30px_80px_rgba(76,29,149,0.22)]">
             <div className="flex items-center justify-between border-b border-violet-500/10 bg-gradient-to-br from-violet-50 to-indigo-50 px-6 py-4">
@@ -855,7 +855,7 @@ interface SkillFormModalProps {
 
 function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFile, onSubmit, onClose, submitLoading }: SkillFormModalProps) {
   return (
-    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-violet-500/20 bg-white/[0.97] shadow-[0_32px_80px_rgba(109,40,217,0.18),0_8px_32px_rgba(109,40,217,0.1)] backdrop-blur-[32px]">

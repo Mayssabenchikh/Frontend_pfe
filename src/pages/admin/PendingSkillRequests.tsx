@@ -553,7 +553,7 @@ export function PendingSkillRequests() {
       </div>
 
       {resolveModal && (
-        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => !resolveLoading && setResolveModal(null)} />
           <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50 px-5 py-3">
@@ -688,7 +688,7 @@ export function PendingSkillRequests() {
       )}
 
       {requestersModal && (
-        <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setRequestersModal(null)} />
           <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50 px-5 py-3.5">

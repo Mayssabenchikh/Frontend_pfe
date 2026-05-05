@@ -129,13 +129,13 @@ export function EmployeeLearningProgramQuiz() {
   if (!quiz) {
     return (
       <div className="min-h-screen bg-[#f8f7ff]">
-        <header className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
-          <div className="mx-auto flex max-w-none items-center justify-between">
+        <header className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex max-w-none items-center justify-between">
             <Skeleton className="h-10 w-44" />
             <Skeleton className="h-10 w-32" />
           </div>
         </header>
-        <main className="mx-auto grid max-w-none gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <main className="grid max-w-none gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:px-8">
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="mt-3 h-4 w-2/3" />
@@ -164,11 +164,11 @@ export function EmployeeLearningProgramQuiz() {
 
   return (
     <div className="min-h-screen bg-[#f8f7ff] text-slate-950">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex min-h-14 w-full max-w-none items-center gap-4 px-5 py-2 sm:px-8">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="flex min-h-12 w-full items-center gap-3 px-4 py-1.5 sm:px-6 lg:px-8">
           <Link
             to={backHref}
-            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-base font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+            className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour
@@ -182,27 +182,27 @@ export function EmployeeLearningProgramQuiz() {
                 <QuestionMarkCircleIcon className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <h1 className="truncate text-xl font-black text-slate-950">Quiz vidéo</h1>
-                <p className="hidden text-base text-slate-500 sm:block">Validez vos acquis avant de revenir à la formation.</p>
+                <h1 className="truncate text-lg font-black text-slate-950">Quiz vidéo</h1>
+                <p className="hidden text-sm text-slate-500 sm:block">Validez vos acquis avant de revenir à la formation.</p>
               </div>
             </div>
           </div>
 
           <div className="hidden items-center gap-3 sm:flex">
             <div className="text-right">
-              <p className="text-base font-extrabold text-slate-950">{progress}%</p>
-              <p className="text-base text-slate-500">
+              <p className="text-sm font-extrabold text-slate-950">{progress}%</p>
+              <p className="text-sm text-slate-500">
                 {answeredCount}/{questionCount} réponses
               </p>
             </div>
-            <div className="h-2 w-32 overflow-hidden rounded-full bg-violet-100">
+            <div className="h-2 w-28 overflow-hidden rounded-full bg-violet-100">
               <div className="h-full rounded-full bg-violet-700 transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
             </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto grid w-full max-w-none items-stretch gap-6 px-5 pb-6 pt-3 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <main className="grid w-full items-stretch gap-6 px-4 pb-6 pt-3 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
         <section className="flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="h-1.5 bg-gradient-to-r from-violet-700 via-fuchsia-500 to-blue-500" />
 

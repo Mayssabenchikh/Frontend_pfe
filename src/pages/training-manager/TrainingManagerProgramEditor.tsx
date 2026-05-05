@@ -1032,7 +1032,7 @@ export function TrainingManagerProgramEditor() {
       )}
 
       {showMetaEditor && (
-        <div className="app-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setShowMetaEditor(false)} aria-hidden="true" />
           <div className="relative max-h-[min(88dvh,760px)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-violet-100 bg-white shadow-2xl shadow-violet-950/15">
             <div className="flex items-start justify-between gap-4 border-b border-violet-100 bg-gradient-to-r from-violet-50 via-white to-indigo-50 px-5 py-4 sm:px-6">
@@ -1139,7 +1139,7 @@ export function TrainingManagerProgramEditor() {
       )}
 
       {showTreeView && detail && (
-        <div className="app-modal-backdrop fixed inset-0 z-[120] flex justify-end">
+        <div className="app-modal-backdrop fixed inset-0 z-[200] flex justify-end">
           <div className="absolute inset-0" onClick={() => setShowTreeView(false)} aria-hidden="true" />
           <aside
             className="relative flex h-full w-full max-w-3xl flex-col overflow-hidden border-l border-violet-100 bg-white shadow-2xl shadow-violet-950/15"
@@ -1224,7 +1224,7 @@ export function TrainingManagerProgramEditor() {
       )}
 
       {confirmDeleteProgram && (
-        <div className="app-modal-backdrop fixed inset-0 z-[130] flex items-center justify-center p-3 sm:p-4">
+        <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setConfirmDeleteProgram(false)} aria-hidden="true" />
           <div className="relative w-full max-w-md rounded-3xl border border-rose-200 bg-white p-5 shadow-2xl">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">

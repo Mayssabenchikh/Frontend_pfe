@@ -136,7 +136,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
     <>
       <button
         type="button"
-        className="fixed inset-0 z-40 bg-slate-900/35 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 z-[200] bg-slate-900/35 backdrop-blur-[2px] transition-opacity"
         aria-label="Fermer"
         onClick={onClose}
       />
@@ -144,7 +144,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed inset-y-0 right-0 z-50 flex max-h-[100dvh] w-full max-w-[430px] flex-col border-l border-violet-100 bg-white shadow-[0_18px_56px_rgba(15,23,42,0.22)] pt-[env(safe-area-inset-top,0px)]"
+        className="fixed inset-y-0 right-0 z-[210] flex max-h-[100dvh] w-full max-w-[430px] flex-col border-l border-violet-100 bg-white shadow-[0_18px_56px_rgba(15,23,42,0.22)] pt-[env(safe-area-inset-top,0px)]"
       >
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">

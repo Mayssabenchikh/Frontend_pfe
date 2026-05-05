@@ -20,7 +20,7 @@ export function AlertModal({
 }: Props) {
   if (!open) return null;
   return (
-    <div className="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
       <div className="relative max-h-[min(90dvh,560px)] w-full max-w-md overflow-y-auto rounded-3xl border border-violet-500/16 bg-white/[0.9] px-5 py-5 shadow-[0_18px_48px_rgba(109,40,217,0.14)] sm:px-7 sm:py-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">

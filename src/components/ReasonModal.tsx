@@ -45,7 +45,7 @@ export function ReasonModal({
   const disabled = loading || trimmed.length === 0;
 
   const content = (
-    <div className="app-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4">
+    <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0 bg-slate-900/25" onClick={onCancel} aria-hidden="true" />
 
       <div className="relative max-h-[min(92dvh,720px)] w-full max-w-md overflow-hidden overflow-y-auto rounded-3xl border border-violet-500/16 bg-white shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
@@ -102,4 +102,3 @@ export function ReasonModal({
   if (typeof document === "undefined") return content;
   return createPortal(content, document.body);
 }
-
