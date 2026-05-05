@@ -3,6 +3,7 @@ import { useKeycloak } from "@react-keycloak/web";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Squares2X2Icon,
+  ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
   UserCircleIcon,
 } from "../../icons/heroicons/outline";
@@ -20,6 +21,7 @@ export default function TrainingManagerPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isProgramsSection = location.pathname.startsWith("/training-manager/programs");
+  const isSubmissionsSection = location.pathname.startsWith("/training-manager/submissions");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -48,6 +50,7 @@ export default function TrainingManagerPage() {
         <DashboardSidebar mobileOpen={sidebarOpen} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed((c) => !c)}>
         <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/training-manager" end collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Mes formations" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/training-manager/programs" active={isProgramsSection} collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Soumissions" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/training-manager/submissions" active={isSubmissionsSection} collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Profil" icon={<UserCircleIcon className="h-5 w-5" />} to="/training-manager/profile" collapsed={sidebarCollapsed} />
       </DashboardSidebar>
 

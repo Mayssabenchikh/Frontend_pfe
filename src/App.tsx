@@ -27,6 +27,7 @@ import { TrainingManagerPrograms } from "./pages/employee/TrainingManagerProgram
 import { TrainingManagerProgramEditor } from "./pages/employee/TrainingManagerProgramEditor";
 import TrainingManagerPage from "./pages/training-manager/TrainingManagerPage";
 import { TrainingManagerDashboard } from "./pages/training-manager/TrainingManagerDashboard";
+import { TrainingManagerSubmissions } from "./pages/training-manager/TrainingManagerSubmissions";
 import { TrainingManagerProfile } from "./pages/training-manager/TrainingManagerProfile";
 
 const EmployeeQuiz = lazy(() =>
@@ -161,6 +162,7 @@ function App() {
           <Route index element={<TrainingManagerDashboard />} />
           <Route path="programs" element={<TrainingManagerPrograms />} />
           <Route path="programs/:uuid" element={<TrainingManagerProgramEditor />} />
+          <Route path="submissions" element={<TrainingManagerSubmissions />} />
           <Route path="profile" element={<TrainingManagerProfile />} />
         </Route>
         <Route

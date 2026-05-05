@@ -1,4 +1,5 @@
 import { http } from "./http";
+import type { AiEvaluationCriterion } from "./aiApi";
 
 export type VideoSourceType = "RECOMMENDATION" | "MANUAL";
 export type QuizGenerationStatus = "PENDING" | "READY" | "FAILED";
@@ -50,6 +51,17 @@ export type LearningActivityDetail = {
   instructions: string | null;
   resourceUrl: string | null;
   sortOrder: number;
+  learningObjective?: string | null;
+  targetSkill?: string | null;
+  difficultyLevel?: string | null;
+  estimatedDuration?: string | null;
+  expectedSubmissionType?: string | null;
+  evaluationCriteria?: AiEvaluationCriterion[];
+  totalPoints?: number | null;
+  requiredResources?: string[];
+  learnerTips?: string[];
+  genericFeedback?: string | null;
+  tags?: string[];
 };
 
 export type LearningTextArticleDetail = {
@@ -219,6 +231,17 @@ export const learningProgramApi = {
       title: string;
       instructions?: string | null;
       resourceUrl?: string | null;
+      learningObjective?: string | null;
+      targetSkill?: string | null;
+      difficultyLevel?: string | null;
+      estimatedDuration?: string | null;
+      expectedSubmissionType?: string | null;
+      evaluationCriteria?: AiEvaluationCriterion[] | null;
+      totalPoints?: number | null;
+      requiredResources?: string[] | null;
+      learnerTips?: string[] | null;
+      genericFeedback?: string | null;
+      tags?: string[] | null;
       sortOrder?: number | null;
     },
   ) =>
@@ -236,6 +259,17 @@ export const learningProgramApi = {
       title: string;
       instructions: string | null;
       resourceUrl: string | null;
+      learningObjective?: string | null;
+      targetSkill?: string | null;
+      difficultyLevel?: string | null;
+      estimatedDuration?: string | null;
+      expectedSubmissionType?: string | null;
+      evaluationCriteria?: AiEvaluationCriterion[] | null;
+      totalPoints?: number | null;
+      requiredResources?: string[] | null;
+      learnerTips?: string[] | null;
+      genericFeedback?: string | null;
+      tags?: string[] | null;
       sortOrder: number;
     }>,
   ) =>

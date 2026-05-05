@@ -12,6 +12,7 @@ import {
   type QuizGenerationStatus,
   type VideoSourceType,
 } from "../../api/learningProgramApi";
+import { aiApi, type AiActivitySuggestionResponse, type AiEvaluationCriterion } from "../../api/aiApi";
 import { skillsApi } from "../../api/skillsApi";
 import type { SkillDto } from "../admin/types";
 import {
@@ -89,6 +90,60 @@ function mergeCourseContentForTree(course: LearningProgramDetail["courses"][numb
   return rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+function targetLevelLabel(level: number): string {
+  if (level <= 2) return "beginner";
+  if (level >= 4) return "advanced";
+  return "intermediate";
+}
+
+function submissionModeFromAi(value: string | null | undefined, fallback: ActivitySubmissionMode): ActivitySubmissionMode {
+  const v = (value ?? "").toLowerCase();
+  if (v.includes("code")) return "CODE";
+  if (v.includes("file") || v.includes("fichier") || v.includes("project") || v.includes("projet")) return "FILE";
+  if (v.includes("text") || v.includes("texte") || v.includes("case_study") || v.includes("analyse")) return "TEXT";
+  return fallback;
+}
+
+function formatAiSuggestionAsInstructions(suggestion: AiActivitySuggestionResponse): string {
+  const sections: string[] = [];
+  if (suggestion.description?.trim()) sections.push(`## Description\n${suggestion.description.trim()}`);
+  if (suggestion.instructions?.trim()) sections.push(`## Consigne\n${suggestion.instructions.trim()}`);
+  if (suggestion.learningObjective?.trim()) sections.push(`## Objectif pédagogique\n${suggestion.learningObjective.trim()}`);
+  if (suggestion.targetSkill?.trim()) sections.push(`## Compétence évaluée\n${suggestion.targetSkill.trim()}`);
+  if (suggestion.evaluationCriteria?.length) {
+    const criteria = suggestion.evaluationCriteria
+      .map((c) => `- ${c.criterion}${c.points ? ` (${c.points} pts)` : ""}${c.description ? ` : ${c.description}` : ""}`)
+      .join("\n");
+    sections.push(`## Critères d’évaluation\n${criteria}`);
+  }
+  if (suggestion.totalPoints > 0) sections.push(`## Barème proposé\n${suggestion.totalPoints} points`);
+  if (suggestion.requiredResources?.length) sections.push(`## Ressources nécessaires\n${suggestion.requiredResources.map((r) => `- ${r}`).join("\n")}`);
+  if (suggestion.learnerTips?.length) sections.push(`## Conseils pour l’apprenant\n${suggestion.learnerTips.map((t) => `- ${t}`).join("\n")}`);
+  if (suggestion.genericFeedback?.trim()) sections.push(`## Feedback générique\n${suggestion.genericFeedback.trim()}`);
+  return sections.join("\n\n").trim();
+}
+
+function splitListInput(value: string): string[] {
+  return value
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function joinListInput(value?: string[] | null): string {
+  return (value ?? []).filter(Boolean).join("\n");
+}
+
+function sanitizeCriteria(criteria: AiEvaluationCriterion[]): AiEvaluationCriterion[] {
+  return criteria
+    .map((c) => ({
+      criterion: c.criterion?.trim() ?? "",
+      description: c.description?.trim() ?? "",
+      points: Number.isFinite(c.points) ? c.points : 0,
+    }))
+    .filter((c) => c.criterion.length > 0);
+}
+
 export function TrainingManagerProgramEditor() {
   const { uuid } = useParams<{ uuid: string }>();
   const navigate = useNavigate();
@@ -119,6 +174,23 @@ export function TrainingManagerProgramEditor() {
   const [actTitle, setActTitle] = useState("");
   const [actInstr, setActInstr] = useState("");
   const [actUrl, setActUrl] = useState("");
+  const [actLearningObjective, setActLearningObjective] = useState("");
+  const [actTargetSkill, setActTargetSkill] = useState("");
+  const [actDifficultyLevel, setActDifficultyLevel] = useState("");
+  const [actEstimatedDuration, setActEstimatedDuration] = useState("");
+  const [actExpectedSubmissionType, setActExpectedSubmissionType] = useState("");
+  const [actTotalPoints, setActTotalPoints] = useState<number | "">("");
+  const [actEvaluationCriteria, setActEvaluationCriteria] = useState<AiEvaluationCriterion[]>([]);
+  const [actRequiredResources, setActRequiredResources] = useState("");
+  const [actLearnerTips, setActLearnerTips] = useState("");
+  const [actGenericFeedback, setActGenericFeedback] = useState("");
+  const [actTags, setActTags] = useState("");
+  const [actTargetProfile, setActTargetProfile] = useState("");
+  const [actConstraints, setActConstraints] = useState("");
+  const [aiActivityStatus, setAiActivityStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [aiActivityError, setAiActivityError] = useState<string | null>(null);
+  const [aiActivitySuggestion, setAiActivitySuggestion] = useState<AiActivitySuggestionResponse | null>(null);
+  const [aiActivityHistory, setAiActivityHistory] = useState<AiActivitySuggestionResponse[]>([]);
   const [textArtTitle, setTextArtTitle] = useState("");
   const [textArtBody, setTextArtBody] = useState("");
   const [textArtImageUrl, setTextArtImageUrl] = useState("");
@@ -147,6 +219,17 @@ export function TrainingManagerProgramEditor() {
     title: string;
     instructions: string;
     resourceUrl: string;
+    learningObjective: string;
+    targetSkill: string;
+    difficultyLevel: string;
+    estimatedDuration: string;
+    expectedSubmissionType: string;
+    evaluationCriteria: AiEvaluationCriterion[];
+    totalPoints: number | "";
+    requiredResources: string;
+    learnerTips: string;
+    genericFeedback: string;
+    tags: string;
   } | null>(null);
   const [editingVideo, setEditingVideo] = useState<{
     courseUuid: string;
@@ -495,6 +578,115 @@ export function TrainingManagerProgramEditor() {
     }
   };
 
+  const applyAiActivitySuggestion = (suggestion: AiActivitySuggestionResponse, confirmOverwrite = true) => {
+    const hasDraft = Boolean(
+      actTitle.trim() ||
+        actInstr.trim() ||
+        actUrl.trim() ||
+        actLearningObjective.trim() ||
+        actTargetSkill.trim() ||
+        actDifficultyLevel.trim() ||
+        actEstimatedDuration.trim() ||
+        actExpectedSubmissionType.trim() ||
+        actGenericFeedback.trim() ||
+        actRequiredResources.trim() ||
+        actLearnerTips.trim() ||
+        actTags.trim() ||
+        actEvaluationCriteria.length > 0 ||
+        actTotalPoints !== ""
+    );
+    if (confirmOverwrite && hasDraft) {
+      const confirmed = window.confirm("Des champs sont déjà remplis. Voulez-vous les remplacer par la suggestion IA ?");
+      if (!confirmed) return false;
+    }
+    setActTitle(suggestion.title?.trim() || actTitle);
+    setActInstr(suggestion.instructions?.trim() || formatAiSuggestionAsInstructions(suggestion));
+    setActSubmissionMode(submissionModeFromAi(suggestion.expectedSubmissionType, actSubmissionMode));
+    setActLearningObjective(suggestion.learningObjective?.trim() || "");
+    setActTargetSkill(suggestion.targetSkill?.trim() || "");
+    setActDifficultyLevel(suggestion.difficultyLevel?.trim() || "");
+    setActEstimatedDuration(suggestion.estimatedDuration?.trim() || "");
+    setActExpectedSubmissionType(suggestion.expectedSubmissionType?.trim() || "");
+    setActEvaluationCriteria(suggestion.evaluationCriteria ?? []);
+    setActTotalPoints(suggestion.totalPoints > 0 ? suggestion.totalPoints : "");
+    setActRequiredResources(joinListInput(suggestion.requiredResources));
+    setActLearnerTips(joinListInput(suggestion.learnerTips));
+    setActGenericFeedback(suggestion.genericFeedback?.trim() || "");
+    setActTags(joinListInput(suggestion.tags));
+    return true;
+  };
+
+  const requestAiActivitySuggestion = async () => {
+    if (!detail || !selectedCourse) {
+      toast.error("Sélectionnez une partie de formation avant de demander une suggestion IA.");
+      return;
+    }
+    setAiActivityStatus("loading");
+    setAiActivityError(null);
+    try {
+      const payload = {
+        formationTitle: detail.title,
+        formationDescription: detail.description ?? "",
+        skills: [detail.skillName, selectedSkill?.name].filter((s): s is string => Boolean(s?.trim())),
+        targetLevel: targetLevelLabel(detail.targetSkillLevel ?? targetLevel),
+        moduleTitle: selectedCourse.title,
+        subModuleTitle: "",
+        contentType: actKind === "PRACTICAL" ? "activité pratique" : "exercice guidé",
+        submissionType: actExpectedSubmissionType.trim() || (actSubmissionMode === "CODE" ? "code" : actSubmissionMode === "FILE" ? "file" : "text"),
+        learningObjective: actLearningObjective.trim(),
+        estimatedDuration: actEstimatedDuration.trim(),
+        constraints: actConstraints.trim(),
+        targetProfile: actTargetProfile.trim(),
+        existingInstructions: actInstr.trim() || "",
+      };
+      const { data } =
+        actKind === "EXERCISE" ? await aiApi.exerciseSuggestion(payload) : await aiApi.activitySuggestion(payload);
+      setAiActivitySuggestion(data);
+      setAiActivityHistory((prev) => [data, ...prev].slice(0, 5));
+      setAiActivityStatus("success");
+      const applied = applyAiActivitySuggestion(data, true);
+      toast.success(applied ? "Suggestion IA appliquée au formulaire" : "Suggestion IA générée, non appliquée");
+    } catch (e: unknown) {
+      const msg = getUserFacingApiMessage(e, "Ollama ne répond pas pour le moment");
+      setAiActivityStatus("error");
+      setAiActivityError(msg);
+      toast.error(msg);
+    }
+  };
+
+  const addActCriterion = () =>
+    setActEvaluationCriteria((prev) => [...prev, { criterion: "", description: "", points: 0 }]);
+
+  const updateActCriterion = (index: number, patch: Partial<AiEvaluationCriterion>) => {
+    setActEvaluationCriteria((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  };
+
+  const removeActCriterion = (index: number) => {
+    setActEvaluationCriteria((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateEditingCriterion = (index: number, patch: Partial<AiEvaluationCriterion>) => {
+    setEditingActivity((prev) => {
+      if (!prev) return null;
+      const next = prev.evaluationCriteria.map((c, i) => (i === index ? { ...c, ...patch } : c));
+      return { ...prev, evaluationCriteria: next };
+    });
+  };
+
+  const addEditingCriterion = () => {
+    setEditingActivity((prev) => {
+      if (!prev) return null;
+      return { ...prev, evaluationCriteria: [...prev.evaluationCriteria, { criterion: "", description: "", points: 0 }] };
+    });
+  };
+
+  const removeEditingCriterion = (index: number) => {
+    setEditingActivity((prev) => {
+      if (!prev) return null;
+      return { ...prev, evaluationCriteria: prev.evaluationCriteria.filter((_, i) => i !== index) };
+    });
+  };
+
   const addCourseActivity = async () => {
     if (!uuid || isNew || !selectedCourseUuid || !actTitle.trim()) return;
     setError(null);
@@ -505,11 +697,37 @@ export function TrainingManagerProgramEditor() {
         title: actTitle.trim(),
         instructions: actInstr.trim() || null,
         resourceUrl: actUrl.trim() || null,
+        learningObjective: actLearningObjective.trim() || null,
+        targetSkill: actTargetSkill.trim() || null,
+        difficultyLevel: actDifficultyLevel.trim() || null,
+        estimatedDuration: actEstimatedDuration.trim() || null,
+        expectedSubmissionType: actExpectedSubmissionType.trim() || null,
+        evaluationCriteria: actEvaluationCriteria.length > 0 ? sanitizeCriteria(actEvaluationCriteria) : null,
+        totalPoints: actTotalPoints === "" ? null : Number(actTotalPoints),
+        requiredResources: splitListInput(actRequiredResources),
+        learnerTips: splitListInput(actLearnerTips),
+        genericFeedback: actGenericFeedback.trim() || null,
+        tags: splitListInput(actTags),
       });
       setDetail(data);
       setActTitle("");
       setActInstr("");
       setActUrl("");
+      setActLearningObjective("");
+      setActTargetSkill("");
+      setActDifficultyLevel("");
+      setActEstimatedDuration("");
+      setActExpectedSubmissionType("");
+      setActEvaluationCriteria([]);
+      setActTotalPoints("");
+      setActRequiredResources("");
+      setActLearnerTips("");
+      setActGenericFeedback("");
+      setActTags("");
+      setActTargetProfile("");
+      setActConstraints("");
+      setAiActivitySuggestion(null);
+      setAiActivityStatus("idle");
       toast.success("Activité ajoutée");
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } } };
@@ -590,6 +808,17 @@ export function TrainingManagerProgramEditor() {
         title: editingActivity.title.trim(),
         instructions: editingActivity.instructions.trim() || null,
         resourceUrl: editingActivity.resourceUrl.trim() || null,
+        learningObjective: editingActivity.learningObjective.trim() || null,
+        targetSkill: editingActivity.targetSkill.trim() || null,
+        difficultyLevel: editingActivity.difficultyLevel.trim() || null,
+        estimatedDuration: editingActivity.estimatedDuration.trim() || null,
+        expectedSubmissionType: editingActivity.expectedSubmissionType.trim() || null,
+        evaluationCriteria: sanitizeCriteria(editingActivity.evaluationCriteria),
+        totalPoints: editingActivity.totalPoints === "" ? null : Number(editingActivity.totalPoints),
+        requiredResources: splitListInput(editingActivity.requiredResources),
+        learnerTips: splitListInput(editingActivity.learnerTips),
+        genericFeedback: editingActivity.genericFeedback.trim() || null,
+        tags: splitListInput(editingActivity.tags),
       });
       setDetail(data);
       setEditingActivity(null);
@@ -1666,8 +1895,108 @@ export function TrainingManagerProgramEditor() {
               </p>
               <div className="mt-4 space-y-4 rounded-2xl border border-teal-200/70 bg-gradient-to-b from-teal-50/60 to-white p-4 shadow-sm ring-1 ring-teal-100/80 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-100 pb-3">
-                  <p className="text-sm font-semibold text-teal-900">Nouvelle activité pour le module sélectionné</p>
+                  <p className="text-sm font-semibold text-teal-900">Nouvelle activité pour la partie sélectionnée</p>
                   <span className="rounded-full bg-teal-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-teal-800">Pratique</span>
+                </div>
+                <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm ring-1 ring-violet-100">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <SparklesIcon className="h-5 w-5 text-violet-600" />
+                        <p className="text-sm font-bold text-slate-900">Assistant IA</p>
+                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-800">
+                          Validation humaine obligatoire
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Génère une proposition avec Ollama à partir de la formation, de la compétence et de la partie sélectionnée. Vous pouvez tout modifier
+                        avant l’ajout final.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={!selectedCourse || aiActivityStatus === "loading"}
+                        onClick={() => void requestAiActivitySuggestion()}
+                        className="tm-btn tm-btn-primary px-3 py-1.5 text-xs"
+                      >
+                        {aiActivityStatus === "loading" ? "Génération…" : aiActivitySuggestion ? "Régénérer" : "Suggérer avec IA"}
+                      </button>
+                      {aiActivitySuggestion && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => applyAiActivitySuggestion(aiActivitySuggestion)}
+                            className="tm-btn tm-btn-ghost px-3 py-1.5 text-xs"
+                          >
+                            Appliquer au formulaire
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAiActivitySuggestion(null);
+                              setAiActivityStatus("idle");
+                              setAiActivityError(null);
+                            }}
+                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                          >
+                            Annuler
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {aiActivityStatus === "error" && aiActivityError && (
+                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{aiActivityError}</div>
+                  )}
+                  {aiActivitySuggestion && (
+                    <div className="mt-4 grid gap-3 rounded-xl border border-violet-100 bg-violet-50/50 p-3 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-violet-700">Suggestion IA à vérifier</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-900">{aiActivitySuggestion.title || "Titre proposé par l’IA"}</p>
+                        {aiActivitySuggestion.description && <p className="mt-1 text-xs leading-5 text-slate-600">{aiActivitySuggestion.description}</p>}
+                      </div>
+                      {aiActivitySuggestion.learningObjective && (
+                        <div className="rounded-lg bg-white/80 p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Objectif</p>
+                          <p className="mt-1 text-xs text-slate-700">{aiActivitySuggestion.learningObjective}</p>
+                        </div>
+                      )}
+                      {aiActivitySuggestion.totalPoints > 0 && (
+                        <div className="rounded-lg bg-white/80 p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Barème</p>
+                          <p className="mt-1 text-xs text-slate-700">{aiActivitySuggestion.totalPoints} points proposés</p>
+                        </div>
+                      )}
+                      {aiActivitySuggestion.evaluationCriteria?.length > 0 && (
+                        <div className="rounded-lg bg-white/80 p-3 sm:col-span-2">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Critères d’évaluation</p>
+                          <ul className="mt-2 space-y-1 text-xs text-slate-700">
+                            {aiActivitySuggestion.evaluationCriteria.slice(0, 4).map((criterion, index) => (
+                              <li key={`${criterion.criterion}-${index}`}>
+                                <span className="font-semibold">{criterion.criterion}</span>
+                                {criterion.points ? ` · ${criterion.points} pts` : ""}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {aiActivitySuggestion.tags?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 sm:col-span-2">
+                          {aiActivitySuggestion.tags.slice(0, 6).map((tag) => (
+                            <span key={tag} className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-violet-700 ring-1 ring-violet-100">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {aiActivityHistory.length > 1 && (
+                        <p className="text-[11px] font-medium text-slate-500 sm:col-span-2">
+                          {aiActivityHistory.length} suggestions générées pendant cette session.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <label className="text-xs text-slate-600 sm:col-span-2">
@@ -1741,6 +2070,106 @@ export function TrainingManagerProgramEditor() {
                       placeholder="https://…"
                     />
                   </label>
+                  <div className="sm:col-span-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Details pedagogiques</p>
+                      <button type="button" onClick={addActCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-[11px]">
+                        Ajouter critere
+                      </button>
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <label className="text-xs text-slate-600">
+                        Objectif pedagogique
+                        <input className="tm-input mt-1" value={actLearningObjective} onChange={(e) => setActLearningObjective(e.target.value)} />
+                      </label>
+                      <label className="text-xs text-slate-600">
+                        Competence evaluee
+                        <input className="tm-input mt-1" value={actTargetSkill} onChange={(e) => setActTargetSkill(e.target.value)} />
+                      </label>
+                      <label className="text-xs text-slate-600">
+                        Niveau de difficulte
+                        <input className="tm-input mt-1" value={actDifficultyLevel} onChange={(e) => setActDifficultyLevel(e.target.value)} placeholder="beginner / intermediate / advanced" />
+                      </label>
+                      <label className="text-xs text-slate-600">
+                        Duree estimee
+                        <input className="tm-input mt-1" value={actEstimatedDuration} onChange={(e) => setActEstimatedDuration(e.target.value)} placeholder="ex. 30 min" />
+                      </label>
+                      <label className="text-xs text-slate-600">
+                        Type de rendu attendu
+                        <input className="tm-input mt-1" value={actExpectedSubmissionType} onChange={(e) => setActExpectedSubmissionType(e.target.value)} placeholder="text / file / qcm / code / project" />
+                      </label>
+                      <label className="text-xs text-slate-600">
+                        Barème total
+                        <input
+                          className="tm-input mt-1"
+                          type="number"
+                          min={0}
+                          value={actTotalPoints}
+                          onChange={(e) => setActTotalPoints(e.target.value === "" ? "" : Number(e.target.value))}
+                        />
+                      </label>
+                      <label className="text-xs text-slate-600 sm:col-span-2">
+                        Ressources necessaires (une ligne par element)
+                        <textarea className="tm-textarea mt-1" rows={2} value={actRequiredResources} onChange={(e) => setActRequiredResources(e.target.value)} />
+                      </label>
+                      <label className="text-xs text-slate-600 sm:col-span-2">
+                        Conseils apprenant (une ligne par element)
+                        <textarea className="tm-textarea mt-1" rows={2} value={actLearnerTips} onChange={(e) => setActLearnerTips(e.target.value)} />
+                      </label>
+                      <label className="text-xs text-slate-600 sm:col-span-2">
+                        Feedback generique
+                        <textarea className="tm-textarea mt-1" rows={2} value={actGenericFeedback} onChange={(e) => setActGenericFeedback(e.target.value)} />
+                      </label>
+                      <label className="text-xs text-slate-600 sm:col-span-2">
+                        Tags (une ligne par tag)
+                        <textarea className="tm-textarea mt-1" rows={2} value={actTags} onChange={(e) => setActTags(e.target.value)} />
+                      </label>
+                      <label className="text-xs text-slate-600 sm:col-span-2">
+                        Profil cible (utilise pour l'IA)
+                        <input className="tm-input mt-1" value={actTargetProfile} onChange={(e) => setActTargetProfile(e.target.value)} />
+                      </label>
+                      <label className="text-xs text-slate-600 sm:col-span-2">
+                        Contraintes (utilise pour l'IA)
+                        <input className="tm-input mt-1" value={actConstraints} onChange={(e) => setActConstraints(e.target.value)} />
+                      </label>
+                    </div>
+
+                    {actEvaluationCriteria.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {actEvaluationCriteria.map((criterion, index) => (
+                          <div key={`crit-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1.5fr_0.4fr_auto]">
+                            <input
+                              className="tm-input"
+                              value={criterion.criterion}
+                              onChange={(e) => updateActCriterion(index, { criterion: e.target.value })}
+                              placeholder="Critere"
+                            />
+                            <input
+                              className="tm-input"
+                              value={criterion.description ?? ""}
+                              onChange={(e) => updateActCriterion(index, { description: e.target.value })}
+                              placeholder="Description"
+                            />
+                            <input
+                              className="tm-input"
+                              type="number"
+                              min={0}
+                              value={criterion.points}
+                              onChange={(e) => updateActCriterion(index, { points: Number(e.target.value) })}
+                              placeholder="Pts"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeActCriterion(index)}
+                              className="tm-btn tm-btn-danger h-10"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-end">
                   <button
@@ -1749,7 +2178,7 @@ export function TrainingManagerProgramEditor() {
                     onClick={() => void addCourseActivity()}
                     className="tm-btn tm-btn-primary"
                   >
-                    Ajouter au module sélectionné
+                    Ajouter à la partie sélectionnée
                   </button>
                 </div>
               </div>
@@ -1793,6 +2222,17 @@ export function TrainingManagerProgramEditor() {
                                           title: a.title,
                                           instructions: a.instructions ?? "",
                                           resourceUrl: a.resourceUrl ?? "",
+                                          learningObjective: a.learningObjective ?? "",
+                                          targetSkill: a.targetSkill ?? "",
+                                          difficultyLevel: a.difficultyLevel ?? "",
+                                          estimatedDuration: a.estimatedDuration ?? "",
+                                          expectedSubmissionType: a.expectedSubmissionType ?? "",
+                                          evaluationCriteria: a.evaluationCriteria ?? [],
+                                          totalPoints: a.totalPoints ?? "",
+                                          requiredResources: joinListInput(a.requiredResources),
+                                          learnerTips: joinListInput(a.learnerTips),
+                                          genericFeedback: a.genericFeedback ?? "",
+                                          tags: joinListInput(a.tags),
                                         });
                                       }}
                                     >
@@ -1893,6 +2333,142 @@ export function TrainingManagerProgramEditor() {
                                         placeholder="https://…"
                                       />
                                     </label>
+                                    <div className="sm:col-span-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-3">
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Details pedagogiques</p>
+                                        <button type="button" onClick={addEditingCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-[11px]">
+                                          Ajouter critere
+                                        </button>
+                                      </div>
+                                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                        <label className="text-xs text-slate-600">
+                                          Objectif pedagogique
+                                          <input
+                                            className="tm-input mt-1"
+                                            value={editingActivity.learningObjective}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, learningObjective: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600">
+                                          Competence evaluee
+                                          <input
+                                            className="tm-input mt-1"
+                                            value={editingActivity.targetSkill}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, targetSkill: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600">
+                                          Niveau de difficulte
+                                          <input
+                                            className="tm-input mt-1"
+                                            value={editingActivity.difficultyLevel}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, difficultyLevel: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600">
+                                          Duree estimee
+                                          <input
+                                            className="tm-input mt-1"
+                                            value={editingActivity.estimatedDuration}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, estimatedDuration: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600">
+                                          Type de rendu attendu
+                                          <input
+                                            className="tm-input mt-1"
+                                            value={editingActivity.expectedSubmissionType}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, expectedSubmissionType: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600">
+                                          Barème total
+                                          <input
+                                            className="tm-input mt-1"
+                                            type="number"
+                                            min={0}
+                                            value={editingActivity.totalPoints}
+                                            onChange={(e) =>
+                                              setEditingActivity((ed) =>
+                                                ed ? { ...ed, totalPoints: e.target.value === "" ? "" : Number(e.target.value) } : null,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600 sm:col-span-2">
+                                          Ressources necessaires
+                                          <textarea
+                                            className="tm-textarea mt-1"
+                                            rows={2}
+                                            value={editingActivity.requiredResources}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, requiredResources: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600 sm:col-span-2">
+                                          Conseils apprenant
+                                          <textarea
+                                            className="tm-textarea mt-1"
+                                            rows={2}
+                                            value={editingActivity.learnerTips}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, learnerTips: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600 sm:col-span-2">
+                                          Feedback generique
+                                          <textarea
+                                            className="tm-textarea mt-1"
+                                            rows={2}
+                                            value={editingActivity.genericFeedback}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, genericFeedback: e.target.value } : null))}
+                                          />
+                                        </label>
+                                        <label className="text-xs text-slate-600 sm:col-span-2">
+                                          Tags
+                                          <textarea
+                                            className="tm-textarea mt-1"
+                                            rows={2}
+                                            value={editingActivity.tags}
+                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, tags: e.target.value } : null))}
+                                          />
+                                        </label>
+                                      </div>
+
+                                      {editingActivity.evaluationCriteria.length > 0 && (
+                                        <div className="mt-3 space-y-2">
+                                          {editingActivity.evaluationCriteria.map((criterion, index) => (
+                                            <div key={`edit-crit-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1.5fr_0.4fr_auto]">
+                                              <input
+                                                className="tm-input"
+                                                value={criterion.criterion}
+                                                onChange={(e) => updateEditingCriterion(index, { criterion: e.target.value })}
+                                                placeholder="Critere"
+                                              />
+                                              <input
+                                                className="tm-input"
+                                                value={criterion.description ?? ""}
+                                                onChange={(e) => updateEditingCriterion(index, { description: e.target.value })}
+                                                placeholder="Description"
+                                              />
+                                              <input
+                                                className="tm-input"
+                                                type="number"
+                                                min={0}
+                                                value={criterion.points}
+                                                onChange={(e) => updateEditingCriterion(index, { points: Number(e.target.value) })}
+                                                placeholder="Pts"
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => removeEditingCriterion(index)}
+                                                className="tm-btn tm-btn-danger h-10"
+                                              >
+                                                Supprimer
+                                              </button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
                                     <div className="flex flex-wrap gap-2 sm:col-span-2">
                                       <button
                                         type="button"
