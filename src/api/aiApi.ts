@@ -17,8 +17,6 @@ export type AiActivitySuggestionRequest = {
   submissionType: string;
   learningObjective?: string | null;
   estimatedDuration?: string | null;
-  constraints?: string | null;
-  targetProfile?: string | null;
   existingInstructions?: string | null;
 };
 
@@ -33,10 +31,6 @@ export type AiActivitySuggestionResponse = {
   expectedSubmissionType: string;
   evaluationCriteria: AiEvaluationCriterion[];
   totalPoints: number;
-  requiredResources: string[];
-  learnerTips: string[];
-  genericFeedback: string;
-  tags: string[];
   requiresHumanReview: boolean;
 };
 

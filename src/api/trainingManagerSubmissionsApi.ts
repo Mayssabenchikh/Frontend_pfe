@@ -40,10 +40,6 @@ export type TrainingManagerSubmissionDetail = {
   expectedSubmissionType: string | null;
   evaluationCriteria: AiEvaluationCriterion[];
   totalPoints: number | null;
-  requiredResources: string[];
-  learnerTips: string[];
-  genericFeedback: string | null;
-  tags: string[];
   instructions: string | null;
   resourceUrl: string | null;
   learnerName: string;

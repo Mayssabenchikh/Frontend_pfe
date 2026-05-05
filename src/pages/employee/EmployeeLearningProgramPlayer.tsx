@@ -27,8 +27,46 @@ import {
   LockClosedIcon,
   PlayCircleIcon,
   QuestionMarkCircleIcon,
+  StarIcon,
   TagIcon,
 } from "../../icons/heroicons/outline";
+
+function formatTime(totalSeconds: number): string {
+  const total = Math.max(0, Math.floor(totalSeconds));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function parseEstimatedDurationSeconds(value?: string | null): number {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return 0;
+
+  // Common formats: "30 min", "30min", "1h", "1 h 30", "1h30", "90m", "15"
+  let hours = 0;
+  let minutes = 0;
+
+  const hMatch = raw.match(/(\d+(?:[.,]\d+)?)\s*h/);
+  if (hMatch?.[1]) hours = Number(hMatch[1].replace(",", ".")) || 0;
+
+  const mMatch = raw.match(/(\d+)\s*(?:min|m)\b/);
+  if (mMatch?.[1]) minutes = Number(mMatch[1]) || 0;
+
+  // "1h30" without explicit "min"
+  if (minutes === 0 && hMatch && raw.match(/h\s*(\d{1,2})\b/)) {
+    const trailing = raw.match(/h\s*(\d{1,2})\b/)?.[1];
+    if (trailing) minutes = Number(trailing) || 0;
+  }
+
+  // Plain number => minutes
+  if (!hMatch && !mMatch) {
+    const n = Number(raw.replace(",", "."));
+    if (Number.isFinite(n) && n > 0) minutes = n;
+  }
+
+  const totalMinutes = Math.max(0, Math.round(hours * 60 + minutes));
+  return totalMinutes * 60;
+}
 
 function stepKey(step: LearningPlayerStep): string {
   if (step.stepKind === "VIDEO") return `v-${step.videoUuid ?? ""}`;
@@ -425,6 +463,13 @@ export function EmployeeLearningProgramPlayer() {
   const [drafts, setDrafts] = useState<Record<string, ActivityDraft>>({});
   const [selectedStepIndex, setSelectedStepIndex] = useState(0);
   const [modulesSidebarOpen, setModulesSidebarOpen] = useState(true);
+  const [activityTimerSeconds, setActivityTimerSeconds] = useState<number | null>(null);
+  const [activityTimerTotalSeconds, setActivityTimerTotalSeconds] = useState<number | null>(null);
+  const [activityTimerExpired, setActivityTimerExpired] = useState(false);
+  const [reviewRating, setReviewRating] = useState<number>(0);
+  const [reviewNote, setReviewNote] = useState<string>("");
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewSavedAt, setReviewSavedAt] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     if (!enrollmentUuid) return null;
@@ -444,6 +489,22 @@ export function EmployeeLearningProgramPlayer() {
         setSelectedStepIndex(first >= 0 ? first : 0);
       })
       .catch((e) => setError(e?.response?.data?.error ?? "Chargement impossible"));
+  }, [enrollmentUuid]);
+
+  useEffect(() => {
+    if (!enrollmentUuid) return;
+    employeeLearningProgramApi
+      .myReview(enrollmentUuid)
+      .then((res) => {
+        const r = res.data;
+        if (!r) return;
+        setReviewRating(r.rating ?? 0);
+        setReviewNote(r.note ?? "");
+        setReviewSavedAt(r.updatedAt ?? null);
+      })
+      .catch(() => {
+        // ignore
+      });
   }, [enrollmentUuid]);
 
   const toc = useMemo(() => (player ? buildToc(player.steps) : []), [player]);
@@ -467,6 +528,46 @@ export function EmployeeLearningProgramPlayer() {
   const activeIndex =
     player && player.steps.length > 0 ? Math.min(Math.max(0, selectedStepIndex), player.steps.length - 1) : 0;
   const selectedStep = player?.steps[activeIndex] ?? null;
+  const programCompleted = player?.status === "COMPLETED";
+
+  useEffect(() => {
+    if (!enrollmentUuid || !selectedStep || selectedStep.stepKind !== "ACTIVITY" || !selectedStep.unlocked || selectedStep.stepDone || !selectedStep.activityUuid) {
+      setActivityTimerSeconds(null);
+      setActivityTimerTotalSeconds(null);
+      setActivityTimerExpired(false);
+      return;
+    }
+
+    const totalSeconds = parseEstimatedDurationSeconds(selectedStep.activityEstimatedDuration);
+    if (totalSeconds <= 0) {
+      setActivityTimerSeconds(null);
+      setActivityTimerTotalSeconds(null);
+      setActivityTimerExpired(false);
+      return;
+    }
+
+    const storageKey = `lp_act_timer:${enrollmentUuid}:${selectedStep.activityUuid}`;
+    const now = Date.now();
+    const existing = window.localStorage.getItem(storageKey);
+    let startedAtMs = existing ? Number(existing) : NaN;
+    if (!Number.isFinite(startedAtMs) || startedAtMs <= 0) {
+      startedAtMs = now;
+      window.localStorage.setItem(storageKey, String(startedAtMs));
+    }
+
+    setActivityTimerTotalSeconds(totalSeconds);
+
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - startedAtMs) / 1000);
+      const remaining = Math.max(0, totalSeconds - elapsed);
+      setActivityTimerSeconds(remaining);
+      setActivityTimerExpired(remaining === 0);
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [enrollmentUuid, selectedStep]);
 
   const prevUnlockedIndex = useMemo(() => {
     if (!player || activeIndex <= 0) return null;
@@ -568,6 +669,11 @@ export function EmployeeLearningProgramPlayer() {
         text: mode === "FILE" ? (textTrim.length ? textTrim : null) : draft.text,
         fileUrl: mode === "FILE" ? draft.fileUrl.trim() : null,
       });
+      try {
+        window.localStorage.removeItem(`lp_act_timer:${enrollmentUuid}:${step.activityUuid}`);
+      } catch {
+        // ignore
+      }
       const completedKey = stepKey(step);
       const data = await reload();
       if (data) advanceAfterCompletion(data, completedKey);
@@ -576,6 +682,30 @@ export function EmployeeLearningProgramPlayer() {
       setError(err?.response?.data?.error ?? "Impossible de valider l'activité");
     } finally {
       setActivityBusy(null);
+    }
+  };
+
+  const submitProgramReview = async () => {
+    if (!enrollmentUuid) return;
+    if (reviewRating < 1 || reviewRating > 5) {
+      setError("Veuillez sélectionner une note entre 1 et 5 étoiles.");
+      return;
+    }
+    setReviewSaving(true);
+    setError(null);
+    try {
+      const { data } = await employeeLearningProgramApi.submitReview(enrollmentUuid, {
+        rating: reviewRating,
+        note: reviewNote.trim() || null,
+      });
+      setReviewRating(data.rating ?? reviewRating);
+      setReviewNote(data.note ?? "");
+      setReviewSavedAt(data.updatedAt ?? null);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { error?: string } } };
+      setError(err?.response?.data?.error ?? "Impossible d'enregistrer l’avis");
+    } finally {
+      setReviewSaving(false);
     }
   };
 
@@ -719,6 +849,79 @@ export function EmployeeLearningProgramPlayer() {
               <QuestionMarkCircleIcon className="h-4 w-4" />
               Quiz de compétence
             </Link>
+          </section>
+        </div>
+      ) : null}
+
+      {programCompleted ? (
+        <div className="mx-auto w-full max-w-none px-5 pt-5 sm:px-8">
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-base font-extrabold text-slate-950">Avis sur la formation</p>
+                <p className="mt-1 text-base leading-6 text-slate-600">
+                  Laissez une note (étoiles) et un commentaire. Cet avis sera visible par le responsable formation.
+                </p>
+                {reviewSavedAt ? (
+                  <p className="mt-2 text-sm text-slate-500">
+                    Dernier enregistrement : {new Date(reviewSavedAt).toLocaleString("fr-FR")}
+                  </p>
+                ) : null}
+              </div>
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-slate-700">
+                <StarIcon className="h-5 w-5" />
+              </span>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {Array.from({ length: 5 }).map((_, i) => {
+                const value = i + 1;
+                const active = value <= reviewRating;
+                return (
+                  <button
+                    key={`star-${value}`}
+                    type="button"
+                    onClick={() => setReviewRating(value)}
+                    className={[
+                      "inline-flex h-11 w-11 items-center justify-center rounded-lg border transition",
+                      active ? "border-amber-300 bg-amber-50 text-amber-600" : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50",
+                    ].join(" ")}
+                    aria-label={`Noter ${value} étoile${value > 1 ? "s" : ""}`}
+                  >
+                    <StarIcon className="h-5 w-5" />
+                  </button>
+                );
+              })}
+              <span className="ml-1 text-base font-bold text-slate-700">
+                {reviewRating > 0 ? `${reviewRating}/5` : "Sélectionnez une note"}
+              </span>
+            </div>
+
+            <div className="mt-4">
+              <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">
+                Commentaire (optionnel)
+              </label>
+              <textarea
+                className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                rows={4}
+                maxLength={2000}
+                value={reviewNote}
+                onChange={(e) => setReviewNote(e.target.value)}
+                placeholder="Ex. Points forts, points à améliorer, recommandations…"
+              />
+              <p className="mt-1 text-sm text-slate-500">{reviewNote.length}/2000</p>
+            </div>
+
+            <div className="mt-4">
+              <PrimaryButton
+                onClick={() => void submitProgramReview()}
+                loading={reviewSaving}
+                loadingLabel="Enregistrement..."
+                icon={CheckCircleIcon}
+              >
+                Enregistrer mon avis
+              </PrimaryButton>
+            </div>
           </section>
         </div>
       ) : null}
@@ -939,6 +1142,22 @@ export function EmployeeLearningProgramPlayer() {
                           <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-base font-bold text-slate-700">
                             {submissionModeLabel(selectedStep.activitySubmissionMode)}
                           </span>
+                          {activityTimerTotalSeconds != null && activityTimerSeconds != null ? (
+                            <span
+                              className={[
+                                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-base font-bold",
+                                activityTimerExpired ? "border-rose-200 bg-rose-50 text-rose-700" : "border-slate-200 bg-white text-slate-700",
+                              ].join(" ")}
+                            >
+                              <ClockIcon className="h-4 w-4" />
+                              {activityTimerExpired ? "Temps écoulé" : `Temps restant : ${formatTime(activityTimerSeconds)}`}
+                            </span>
+                          ) : selectedStep.activityEstimatedDuration?.trim() ? (
+                            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-base font-bold text-slate-700">
+                              <ClockIcon className="h-4 w-4" />
+                              Durée estimée : {selectedStep.activityEstimatedDuration}
+                            </span>
+                          ) : null}
                         </div>
 
                         {selectedStep.activityInstructions?.trim() ? (
@@ -961,7 +1180,39 @@ export function EmployeeLearningProgramPlayer() {
                         ) : null}
 
                         {selectedStep.stepDone ? (
-                          <CompletedPanel label="Activité validée" />
+                          <div className="space-y-4">
+                            <CompletedPanel label="Activité validée" />
+                            {(selectedStep.activityReviewedAt || selectedStep.activityFinalFeedback || selectedStep.activityFinalScore != null) && (
+                              <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <h3 className="text-base font-extrabold text-emerald-950">Correction du responsable formation</h3>
+                                    {selectedStep.activityReviewedAt && (
+                                      <p className="mt-1 text-sm text-emerald-800">
+                                        Validée le {new Date(selectedStep.activityReviewedAt).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <ClipboardDocumentCheckIcon className="h-5 w-5 shrink-0 text-emerald-700" />
+                                </div>
+
+                                {selectedStep.activityFinalScore != null && (
+                                  <p className="mt-3 text-base font-bold text-emerald-900">
+                                    Score final : {selectedStep.activityFinalScore}
+                                    {selectedStep.activityTotalPoints != null ? ` / ${selectedStep.activityTotalPoints}` : ""}{" "}
+                                    {selectedStep.activityTotalPoints != null ? "points" : "point(s)"}
+                                  </p>
+                                )}
+                                {selectedStep.activityFinalFeedback?.trim() ? (
+                                  <p className="mt-3 whitespace-pre-line text-base leading-6 text-emerald-900">
+                                    {selectedStep.activityFinalFeedback}
+                                  </p>
+                                ) : (
+                                  <p className="mt-3 text-base text-emerald-900">Aucun feedback rédigé.</p>
+                                )}
+                              </section>
+                            )}
+                          </div>
                         ) : selectedStep.activityUuid != null ? (
                           <section className="rounded-lg border border-violet-200 bg-violet-50 p-5">
                             <div className="mb-4 flex items-center justify-between gap-3">

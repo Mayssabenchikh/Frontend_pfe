@@ -8,6 +8,7 @@ import {
   type CourseActivityKind,
   type CourseStepOrderItem,
   type LearningProgramDetail,
+  type LearningProgramReviewsSummary,
   type LearningVideoDetail,
   type QuizGenerationStatus,
   type VideoSourceType,
@@ -21,6 +22,7 @@ import {
   FolderIcon,
   PencilSquareIcon,
   SparklesIcon,
+  StarIcon,
   TrashIcon,
   XMarkIcon,
 } from "../../icons/heroicons/outline";
@@ -117,21 +119,7 @@ function formatAiSuggestionAsInstructions(suggestion: AiActivitySuggestionRespon
     sections.push(`## Critères d’évaluation\n${criteria}`);
   }
   if (suggestion.totalPoints > 0) sections.push(`## Barème proposé\n${suggestion.totalPoints} points`);
-  if (suggestion.requiredResources?.length) sections.push(`## Ressources nécessaires\n${suggestion.requiredResources.map((r) => `- ${r}`).join("\n")}`);
-  if (suggestion.learnerTips?.length) sections.push(`## Conseils pour l’apprenant\n${suggestion.learnerTips.map((t) => `- ${t}`).join("\n")}`);
-  if (suggestion.genericFeedback?.trim()) sections.push(`## Feedback générique\n${suggestion.genericFeedback.trim()}`);
   return sections.join("\n\n").trim();
-}
-
-function splitListInput(value: string): string[] {
-  return value
-    .split(/\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function joinListInput(value?: string[] | null): string {
-  return (value ?? []).filter(Boolean).join("\n");
 }
 
 function sanitizeCriteria(criteria: AiEvaluationCriterion[]): AiEvaluationCriterion[] {
@@ -150,6 +138,9 @@ export function TrainingManagerProgramEditor() {
   const isNew = uuid === "new";
 
   const [detail, setDetail] = useState<LearningProgramDetail | null>(null);
+  const [programReviews, setProgramReviews] = useState<LearningProgramReviewsSummary | null>(null);
+  const [programReviewsLoading, setProgramReviewsLoading] = useState(false);
+  const [programReviewsError, setProgramReviewsError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [skillUuid, setSkillUuid] = useState("");
@@ -178,15 +169,8 @@ export function TrainingManagerProgramEditor() {
   const [actTargetSkill, setActTargetSkill] = useState("");
   const [actDifficultyLevel, setActDifficultyLevel] = useState("");
   const [actEstimatedDuration, setActEstimatedDuration] = useState("");
-  const [actExpectedSubmissionType, setActExpectedSubmissionType] = useState("");
   const [actTotalPoints, setActTotalPoints] = useState<number | "">("");
   const [actEvaluationCriteria, setActEvaluationCriteria] = useState<AiEvaluationCriterion[]>([]);
-  const [actRequiredResources, setActRequiredResources] = useState("");
-  const [actLearnerTips, setActLearnerTips] = useState("");
-  const [actGenericFeedback, setActGenericFeedback] = useState("");
-  const [actTags, setActTags] = useState("");
-  const [actTargetProfile, setActTargetProfile] = useState("");
-  const [actConstraints, setActConstraints] = useState("");
   const [aiActivityStatus, setAiActivityStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [aiActivityError, setAiActivityError] = useState<string | null>(null);
   const [aiActivitySuggestion, setAiActivitySuggestion] = useState<AiActivitySuggestionResponse | null>(null);
@@ -223,13 +207,8 @@ export function TrainingManagerProgramEditor() {
     targetSkill: string;
     difficultyLevel: string;
     estimatedDuration: string;
-    expectedSubmissionType: string;
     evaluationCriteria: AiEvaluationCriterion[];
     totalPoints: number | "";
-    requiredResources: string;
-    learnerTips: string;
-    genericFeedback: string;
-    tags: string;
   } | null>(null);
   const [editingVideo, setEditingVideo] = useState<{
     courseUuid: string;
@@ -241,7 +220,7 @@ export function TrainingManagerProgramEditor() {
     sourcePlaylistUrl: string;
   } | null>(null);
 
-  type EditorWorkspaceTab = "modules" | "videosQuiz" | "text" | "activities" | "order";
+  type EditorWorkspaceTab = "modules" | "videosQuiz" | "text" | "activities" | "reviews" | "order";
   const [editorWorkspaceTab, setEditorWorkspaceTab] = useState<EditorWorkspaceTab>("modules");
 
   const isLikelyYoutubeInput = (value: string) => {
@@ -392,6 +371,19 @@ export function TrainingManagerProgramEditor() {
       .catch((e) => setError(e?.response?.data?.error ?? "Chargement impossible"));
   }, []);
 
+  const loadReviews = useCallback((id: string) => {
+    setProgramReviewsLoading(true);
+    setProgramReviewsError(null);
+    learningProgramApi
+      .managerReviews(id)
+      .then((r) => setProgramReviews(r.data))
+      .catch((e) => {
+        setProgramReviews(null);
+        setProgramReviewsError(e?.response?.data?.error ?? "Impossible de charger les avis");
+      })
+      .finally(() => setProgramReviewsLoading(false));
+  }, []);
+
   useEffect(() => {
     skillsApi
       .listSkills()
@@ -406,8 +398,11 @@ export function TrainingManagerProgramEditor() {
   }, []);
 
   useEffect(() => {
-    if (!isNew && uuid) load(uuid);
-  }, [uuid, isNew, load]);
+    if (!isNew && uuid) {
+      load(uuid);
+      loadReviews(uuid);
+    }
+  }, [uuid, isNew, load, loadReviews]);
 
   useEffect(() => {
     if (!isNew && uuid) {
@@ -587,11 +582,6 @@ export function TrainingManagerProgramEditor() {
         actTargetSkill.trim() ||
         actDifficultyLevel.trim() ||
         actEstimatedDuration.trim() ||
-        actExpectedSubmissionType.trim() ||
-        actGenericFeedback.trim() ||
-        actRequiredResources.trim() ||
-        actLearnerTips.trim() ||
-        actTags.trim() ||
         actEvaluationCriteria.length > 0 ||
         actTotalPoints !== ""
     );
@@ -606,13 +596,8 @@ export function TrainingManagerProgramEditor() {
     setActTargetSkill(suggestion.targetSkill?.trim() || "");
     setActDifficultyLevel(suggestion.difficultyLevel?.trim() || "");
     setActEstimatedDuration(suggestion.estimatedDuration?.trim() || "");
-    setActExpectedSubmissionType(suggestion.expectedSubmissionType?.trim() || "");
     setActEvaluationCriteria(suggestion.evaluationCriteria ?? []);
     setActTotalPoints(suggestion.totalPoints > 0 ? suggestion.totalPoints : "");
-    setActRequiredResources(joinListInput(suggestion.requiredResources));
-    setActLearnerTips(joinListInput(suggestion.learnerTips));
-    setActGenericFeedback(suggestion.genericFeedback?.trim() || "");
-    setActTags(joinListInput(suggestion.tags));
     return true;
   };
 
@@ -632,11 +617,9 @@ export function TrainingManagerProgramEditor() {
         moduleTitle: selectedCourse.title,
         subModuleTitle: "",
         contentType: actKind === "PRACTICAL" ? "activité pratique" : "exercice guidé",
-        submissionType: actExpectedSubmissionType.trim() || (actSubmissionMode === "CODE" ? "code" : actSubmissionMode === "FILE" ? "file" : "text"),
+        submissionType: actSubmissionMode === "CODE" ? "code" : actSubmissionMode === "FILE" ? "file" : "text",
         learningObjective: actLearningObjective.trim(),
         estimatedDuration: actEstimatedDuration.trim(),
-        constraints: actConstraints.trim(),
-        targetProfile: actTargetProfile.trim(),
         existingInstructions: actInstr.trim() || "",
       };
       const { data } =
@@ -701,13 +684,8 @@ export function TrainingManagerProgramEditor() {
         targetSkill: actTargetSkill.trim() || null,
         difficultyLevel: actDifficultyLevel.trim() || null,
         estimatedDuration: actEstimatedDuration.trim() || null,
-        expectedSubmissionType: actExpectedSubmissionType.trim() || null,
         evaluationCriteria: actEvaluationCriteria.length > 0 ? sanitizeCriteria(actEvaluationCriteria) : null,
         totalPoints: actTotalPoints === "" ? null : Number(actTotalPoints),
-        requiredResources: splitListInput(actRequiredResources),
-        learnerTips: splitListInput(actLearnerTips),
-        genericFeedback: actGenericFeedback.trim() || null,
-        tags: splitListInput(actTags),
       });
       setDetail(data);
       setActTitle("");
@@ -717,15 +695,8 @@ export function TrainingManagerProgramEditor() {
       setActTargetSkill("");
       setActDifficultyLevel("");
       setActEstimatedDuration("");
-      setActExpectedSubmissionType("");
       setActEvaluationCriteria([]);
       setActTotalPoints("");
-      setActRequiredResources("");
-      setActLearnerTips("");
-      setActGenericFeedback("");
-      setActTags("");
-      setActTargetProfile("");
-      setActConstraints("");
       setAiActivitySuggestion(null);
       setAiActivityStatus("idle");
       toast.success("Activité ajoutée");
@@ -812,13 +783,8 @@ export function TrainingManagerProgramEditor() {
         targetSkill: editingActivity.targetSkill.trim() || null,
         difficultyLevel: editingActivity.difficultyLevel.trim() || null,
         estimatedDuration: editingActivity.estimatedDuration.trim() || null,
-        expectedSubmissionType: editingActivity.expectedSubmissionType.trim() || null,
         evaluationCriteria: sanitizeCriteria(editingActivity.evaluationCriteria),
         totalPoints: editingActivity.totalPoints === "" ? null : Number(editingActivity.totalPoints),
-        requiredResources: splitListInput(editingActivity.requiredResources),
-        learnerTips: splitListInput(editingActivity.learnerTips),
-        genericFeedback: editingActivity.genericFeedback.trim() || null,
-        tags: splitListInput(editingActivity.tags),
       });
       setDetail(data);
       setEditingActivity(null);
@@ -1350,6 +1316,18 @@ export function TrainingManagerProgramEditor() {
                 }`}
               >
                 Exercices & activités
+              </button>
+              <button
+                type="button"
+                disabled={!detail}
+                onClick={() => setEditorWorkspaceTab("reviews")}
+                className={`rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  editorWorkspaceTab === "reviews"
+                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                Avis
               </button>
               <button
                 type="button"
@@ -1885,6 +1863,94 @@ export function TrainingManagerProgramEditor() {
             </div>
           )}
 
+          {editorWorkspaceTab === "reviews" && detail && (
+            <div className="min-w-0">
+              <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Avis sur la formation</h2>
+                    <p className="mt-1 text-xs text-slate-500">Notes et commentaires laissés par les apprenants (employés/managers).</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={programReviewsLoading || !uuid || isNew}
+                    onClick={() => uuid && loadReviews(uuid)}
+                    className="tm-btn tm-btn-ghost px-3 py-1.5 text-xs disabled:opacity-50"
+                  >
+                    {programReviewsLoading ? "Actualisation…" : "Actualiser"}
+                  </button>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                  {programReviewsLoading ? (
+                    <p className="text-xs text-slate-500">Chargement des avis…</p>
+                  ) : programReviewsError ? (
+                    <p className="text-xs font-semibold text-rose-700">{programReviewsError}</p>
+                  ) : !programReviews ? (
+                    <p className="text-xs text-slate-500">Aucune donnée.</p>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900">{programReviews.reviewCount} avis</p>
+                        <p className="mt-0.5 text-xs text-slate-600">Moyenne : {programReviews.averageRating.toFixed(2)}/5</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <StarIcon
+                            key={`avg-star-${i}`}
+                            className={[
+                              "h-4 w-4",
+                              i < Math.round(programReviews.averageRating) ? "text-amber-500" : "text-slate-300",
+                            ].join(" ")}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {!programReviewsLoading && programReviews && programReviews.items.length === 0 ? (
+                  <p className="mt-4 text-sm text-slate-500">Aucun avis pour le moment.</p>
+                ) : null}
+
+                {!programReviewsLoading && programReviews && programReviews.items.length > 0 ? (
+                  <div className="mt-5 space-y-4">
+                    {programReviews.items.map((r) => (
+                      <article key={r.uuid} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <header className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-900">
+                              {r.reviewerName || "Utilisateur"} {r.reviewerRole ? `· ${r.reviewerRole}` : ""}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">{new Date(r.updatedAt).toLocaleString("fr-FR")}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <StarIcon
+                                key={`${r.uuid}-star-${i}`}
+                                className={["h-4 w-4", i < (r.rating ?? 0) ? "text-amber-500" : "text-slate-300"].join(" ")}
+                              />
+                            ))}
+                          </div>
+                        </header>
+
+                        <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                          {r.note?.trim() ? (
+                            <div className="prose prose-slate max-w-none prose-p:leading-7">
+                              <LearningMarkdownBody markdown={r.note} />
+                            </div>
+                          ) : (
+                            <p className="text-sm text-slate-500">Aucun commentaire.</p>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            </div>
+          )}
+
           {editorWorkspaceTab === "activities" && detail && (
             <div className="min-w-0">
             <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
@@ -1893,6 +1959,7 @@ export function TrainingManagerProgramEditor() {
                 L’ordre se règle dans « Ordre de la formation ». L’employé soumet une réponse (texte, code ou fichier) pour valider une activité. Vous
                 pouvez modifier titre, type, mode de réponse, consignes et lien depuis la liste ci-dessous.
               </p>
+
               <div className="mt-4 space-y-4 rounded-2xl border border-teal-200/70 bg-gradient-to-b from-teal-50/60 to-white p-4 shadow-sm ring-1 ring-teal-100/80 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-100 pb-3">
                   <p className="text-sm font-semibold text-teal-900">Nouvelle activité pour la partie sélectionnée</p>
@@ -1981,15 +2048,6 @@ export function TrainingManagerProgramEditor() {
                           </ul>
                         </div>
                       )}
-                      {aiActivitySuggestion.tags?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 sm:col-span-2">
-                          {aiActivitySuggestion.tags.slice(0, 6).map((tag) => (
-                            <span key={tag} className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-violet-700 ring-1 ring-violet-100">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                       {aiActivityHistory.length > 1 && (
                         <p className="text-[11px] font-medium text-slate-500 sm:col-span-2">
                           {aiActivityHistory.length} suggestions générées pendant cette session.
@@ -2009,6 +2067,9 @@ export function TrainingManagerProgramEditor() {
                       <option value="EXERCISE">Exercice guidé</option>
                       <option value="PRACTICAL">Activité pratique</option>
                     </select>
+                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                      Définit la nature de l’activité dans la partie (exercice pas-à-pas ou mise en pratique).
+                    </p>
                   </label>
                   <label className="text-xs text-slate-600 sm:col-span-2">
                     Réponse attendue de l’apprenant
@@ -2021,6 +2082,9 @@ export function TrainingManagerProgramEditor() {
                       <option value="CODE">Code / extrait technique</option>
                       <option value="FILE">Fichier (téléversement)</option>
                     </select>
+                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                      Choisit le mode de rendu : l’apprenant répond en texte, fournit du code, ou téléverse un fichier.
+                    </p>
                   </label>
                   <label className="text-xs text-slate-600 sm:col-span-2">
                     Titre
@@ -2030,6 +2094,9 @@ export function TrainingManagerProgramEditor() {
                       onChange={(e) => setActTitle(e.target.value)}
                       placeholder="ex. Lab : déployer un pod Kubernetes"
                     />
+                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                      Nom affiché dans la partie sélectionnée et côté apprenant.
+                    </p>
                   </label>
                   <label className="text-xs text-slate-600 sm:col-span-2">
                     Consignes (Markdown simple ou texte)
@@ -2039,6 +2106,9 @@ export function TrainingManagerProgramEditor() {
                       value={actInstr}
                       onChange={(e) => setActInstr(e.target.value)}
                     />
+                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                      Contenu principal de l’exercice : contexte, étapes, livrables. Le Markdown simple est accepté.
+                    </p>
                   </label>
                   <div className="sm:col-span-2">
                     <input
@@ -2060,6 +2130,9 @@ export function TrainingManagerProgramEditor() {
                     >
                       Uploader pièce jointe pour consigne
                     </button>
+                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                      Ajoute une pièce jointe (image, PDF, document…) liée à la consigne.
+                    </p>
                   </div>
                   <label className="text-xs text-slate-600 sm:col-span-2">
                     Lien ressource (optionnel)
@@ -2069,6 +2142,9 @@ export function TrainingManagerProgramEditor() {
                       onChange={(e) => setActUrl(e.target.value)}
                       placeholder="https://…"
                     />
+                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                      URL vers une documentation, un dépôt, un outil ou une ressource de référence.
+                    </p>
                   </label>
                   <div className="sm:col-span-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-3">
                     <div className="flex items-center justify-between">
@@ -2077,26 +2153,29 @@ export function TrainingManagerProgramEditor() {
                         Ajouter critere
                       </button>
                     </div>
+                    <p className="mt-2 text-[11px] leading-4 text-slate-500">
+                      Sert à cadrer l’évaluation et à guider la génération IA (si utilisée).
+                    </p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <label className="text-xs text-slate-600">
                         Objectif pedagogique
                         <input className="tm-input mt-1" value={actLearningObjective} onChange={(e) => setActLearningObjective(e.target.value)} />
+                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Ce que l’apprenant doit savoir faire à la fin (formulation action + résultat).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Competence evaluee
                         <input className="tm-input mt-1" value={actTargetSkill} onChange={(e) => setActTargetSkill(e.target.value)} />
+                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Compétence principalement visée par l’activité (utile pour le suivi).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Niveau de difficulte
                         <input className="tm-input mt-1" value={actDifficultyLevel} onChange={(e) => setActDifficultyLevel(e.target.value)} placeholder="beginner / intermediate / advanced" />
+                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Niveau attendu (aligné sur le niveau cible de la formation).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Duree estimee
                         <input className="tm-input mt-1" value={actEstimatedDuration} onChange={(e) => setActEstimatedDuration(e.target.value)} placeholder="ex. 30 min" />
-                      </label>
-                      <label className="text-xs text-slate-600">
-                        Type de rendu attendu
-                        <input className="tm-input mt-1" value={actExpectedSubmissionType} onChange={(e) => setActExpectedSubmissionType(e.target.value)} placeholder="text / file / qcm / code / project" />
+                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Temps indicatif pour réaliser l’activité (aide à la planification).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Barème total
@@ -2107,30 +2186,9 @@ export function TrainingManagerProgramEditor() {
                           value={actTotalPoints}
                           onChange={(e) => setActTotalPoints(e.target.value === "" ? "" : Number(e.target.value))}
                         />
-                      </label>
-                      <label className="text-xs text-slate-600 sm:col-span-2">
-                        Ressources necessaires (une ligne par element)
-                        <textarea className="tm-textarea mt-1" rows={2} value={actRequiredResources} onChange={(e) => setActRequiredResources(e.target.value)} />
-                      </label>
-                      <label className="text-xs text-slate-600 sm:col-span-2">
-                        Conseils apprenant (une ligne par element)
-                        <textarea className="tm-textarea mt-1" rows={2} value={actLearnerTips} onChange={(e) => setActLearnerTips(e.target.value)} />
-                      </label>
-                      <label className="text-xs text-slate-600 sm:col-span-2">
-                        Feedback generique
-                        <textarea className="tm-textarea mt-1" rows={2} value={actGenericFeedback} onChange={(e) => setActGenericFeedback(e.target.value)} />
-                      </label>
-                      <label className="text-xs text-slate-600 sm:col-span-2">
-                        Tags (une ligne par tag)
-                        <textarea className="tm-textarea mt-1" rows={2} value={actTags} onChange={(e) => setActTags(e.target.value)} />
-                      </label>
-                      <label className="text-xs text-slate-600 sm:col-span-2">
-                        Profil cible (utilise pour l'IA)
-                        <input className="tm-input mt-1" value={actTargetProfile} onChange={(e) => setActTargetProfile(e.target.value)} />
-                      </label>
-                      <label className="text-xs text-slate-600 sm:col-span-2">
-                        Contraintes (utilise pour l'IA)
-                        <input className="tm-input mt-1" value={actConstraints} onChange={(e) => setActConstraints(e.target.value)} />
+                        <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                          Total de points pour la notation (idéalement égal à la somme des critères).
+                        </p>
                       </label>
                     </div>
 
@@ -2167,11 +2225,17 @@ export function TrainingManagerProgramEditor() {
                             </button>
                           </div>
                         ))}
+                        <p className="text-[11px] leading-4 text-slate-500">
+                          Les critères servent à évaluer la réponse (attendu + description optionnelle + points).
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
                 <div className="flex justify-end">
+                  <p className="mr-auto self-center text-[11px] text-slate-500">
+                    L’activité sera ajoutée à la partie sélectionnée dans la liste à gauche.
+                  </p>
                   <button
                     type="button"
                     disabled={!selectedCourseUuid || !actTitle.trim()}
@@ -2226,13 +2290,8 @@ export function TrainingManagerProgramEditor() {
                                           targetSkill: a.targetSkill ?? "",
                                           difficultyLevel: a.difficultyLevel ?? "",
                                           estimatedDuration: a.estimatedDuration ?? "",
-                                          expectedSubmissionType: a.expectedSubmissionType ?? "",
                                           evaluationCriteria: a.evaluationCriteria ?? [],
                                           totalPoints: a.totalPoints ?? "",
-                                          requiredResources: joinListInput(a.requiredResources),
-                                          learnerTips: joinListInput(a.learnerTips),
-                                          genericFeedback: a.genericFeedback ?? "",
-                                          tags: joinListInput(a.tags),
                                         });
                                       }}
                                     >
@@ -2374,14 +2433,6 @@ export function TrainingManagerProgramEditor() {
                                           />
                                         </label>
                                         <label className="text-xs text-slate-600">
-                                          Type de rendu attendu
-                                          <input
-                                            className="tm-input mt-1"
-                                            value={editingActivity.expectedSubmissionType}
-                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, expectedSubmissionType: e.target.value } : null))}
-                                          />
-                                        </label>
-                                        <label className="text-xs text-slate-600">
                                           Barème total
                                           <input
                                             className="tm-input mt-1"
@@ -2393,42 +2444,6 @@ export function TrainingManagerProgramEditor() {
                                                 ed ? { ...ed, totalPoints: e.target.value === "" ? "" : Number(e.target.value) } : null,
                                               )
                                             }
-                                          />
-                                        </label>
-                                        <label className="text-xs text-slate-600 sm:col-span-2">
-                                          Ressources necessaires
-                                          <textarea
-                                            className="tm-textarea mt-1"
-                                            rows={2}
-                                            value={editingActivity.requiredResources}
-                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, requiredResources: e.target.value } : null))}
-                                          />
-                                        </label>
-                                        <label className="text-xs text-slate-600 sm:col-span-2">
-                                          Conseils apprenant
-                                          <textarea
-                                            className="tm-textarea mt-1"
-                                            rows={2}
-                                            value={editingActivity.learnerTips}
-                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, learnerTips: e.target.value } : null))}
-                                          />
-                                        </label>
-                                        <label className="text-xs text-slate-600 sm:col-span-2">
-                                          Feedback generique
-                                          <textarea
-                                            className="tm-textarea mt-1"
-                                            rows={2}
-                                            value={editingActivity.genericFeedback}
-                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, genericFeedback: e.target.value } : null))}
-                                          />
-                                        </label>
-                                        <label className="text-xs text-slate-600 sm:col-span-2">
-                                          Tags
-                                          <textarea
-                                            className="tm-textarea mt-1"
-                                            rows={2}
-                                            value={editingActivity.tags}
-                                            onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, tags: e.target.value } : null))}
                                           />
                                         </label>
                                       </div>

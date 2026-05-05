@@ -58,10 +58,6 @@ export type LearningActivityDetail = {
   expectedSubmissionType?: string | null;
   evaluationCriteria?: AiEvaluationCriterion[];
   totalPoints?: number | null;
-  requiredResources?: string[];
-  learnerTips?: string[];
-  genericFeedback?: string | null;
-  tags?: string[];
 };
 
 export type LearningTextArticleDetail = {
@@ -123,6 +119,11 @@ export type LearningPlayerStep = {
   activityResourceUrl: string | null;
   activityKind: CourseActivityKind | null;
   activitySubmissionMode: ActivitySubmissionMode | null;
+  activityEstimatedDuration?: string | null;
+  activityTotalPoints?: number | null;
+  activityFinalScore?: number | null;
+  activityFinalFeedback?: string | null;
+  activityReviewedAt?: string | null;
   textArticleUuid?: string | null;
   textArticleBody?: string | null;
 };
@@ -169,6 +170,28 @@ export type CourseStepOrderItem = {
   kind: CourseStepOrderKind;
   uuid: string;
   sortOrder: number;
+};
+
+export type SubmitLearningProgramReviewRequest = {
+  rating: number;
+  note?: string | null;
+};
+
+export type LearningProgramReview = {
+  uuid: string;
+  rating: number;
+  note: string | null;
+  reviewerName: string;
+  reviewerRole: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LearningProgramReviewsSummary = {
+  programUuid: string;
+  averageRating: number;
+  reviewCount: number;
+  items: LearningProgramReview[];
 };
 
 export const learningProgramApi = {
@@ -222,6 +245,8 @@ export const learningProgramApi = {
       `/api/training-manager/trainings/${programUuid}/videos/${videoUuid}/regenerate-quiz`,
       {},
     ),
+  managerReviews: (programUuid: string) =>
+    http.get<LearningProgramReviewsSummary>(`/api/training-manager/trainings/${programUuid}/reviews`),
   managerAddActivity: (
     programUuid: string,
     courseUuid: string,
@@ -238,10 +263,6 @@ export const learningProgramApi = {
       expectedSubmissionType?: string | null;
       evaluationCriteria?: AiEvaluationCriterion[] | null;
       totalPoints?: number | null;
-      requiredResources?: string[] | null;
-      learnerTips?: string[] | null;
-      genericFeedback?: string | null;
-      tags?: string[] | null;
       sortOrder?: number | null;
     },
   ) =>
@@ -266,10 +287,6 @@ export const learningProgramApi = {
       expectedSubmissionType?: string | null;
       evaluationCriteria?: AiEvaluationCriterion[] | null;
       totalPoints?: number | null;
-      requiredResources?: string[] | null;
-      learnerTips?: string[] | null;
-      genericFeedback?: string | null;
-      tags?: string[] | null;
       sortOrder: number;
     }>,
   ) =>
@@ -356,4 +373,8 @@ export const employeeLearningProgramApi = {
       `/api/employee/learning-programs/enrollments/${enrollmentUuid}/text-articles/${textArticleUuid}/mark-read`,
       {},
     ),
+  myReview: (enrollmentUuid: string) =>
+    http.get<LearningProgramReview | null>(`/api/employee/learning-programs/enrollments/${enrollmentUuid}/review`),
+  submitReview: (enrollmentUuid: string, payload: SubmitLearningProgramReviewRequest) =>
+    http.post<LearningProgramReview>(`/api/employee/learning-programs/enrollments/${enrollmentUuid}/review`, payload),
 };
