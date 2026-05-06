@@ -156,7 +156,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
         const isTog = togglingId === u.uuid;
         const isArch = archivingId === u.uuid;
 
-        const btnCls = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/25 bg-transparent transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45";
+        const btnCls = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/25  transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45";
         const loadingSpan = <span className="text-[10px]">…</span>;
 
         return (
@@ -217,7 +217,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
 
       {/* ── Zone tableau (flex-1 = tout l'espace restant) ── */}
       {loading ? (
-        <div className="flex-1 overflow-auto bg-transparent pt-4">
+        <div className="flex-1 overflow-auto  pt-4">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (

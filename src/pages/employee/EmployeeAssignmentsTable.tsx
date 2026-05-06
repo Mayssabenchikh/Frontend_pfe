@@ -104,7 +104,7 @@ export function EmployeeAssignmentsTable({ rows, loading }: Props) {
     <div className="flex flex-col flex-1 overflow-hidden">
       <style>{PROJECTS_AG_THEME}</style>
       {loading ? (
-        <div className="flex-1 bg-transparent pt-3">
+        <div className="flex-1  pt-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <SkeletonRow key={i} />
           ))}

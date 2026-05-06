@@ -2,25 +2,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowPathIcon,
   EnvelopeIcon,
-  UserIcon,
   CalendarDaysIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  XMarkIcon,
-  SparklesIcon,
-  BoltIcon,
   QuestionMarkCircleIcon,
 } from "../../icons/heroicons/outline";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowRotateRight,
   faBoltLightning,
   faCircleCheck,
   faCircleInfo,
   faFilter,
   faMagnifyingGlass,
   faRotateRight,
-  faSignature,
   faTriangleExclamation,
   faUserClock,
   faUsers,
@@ -366,7 +360,7 @@ export function PendingSkillRequests() {
   }[resolveAction];
 
   return (
-    <section className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+    <section className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg">
       <style>{`
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(10px); }
@@ -374,7 +368,7 @@ export function PendingSkillRequests() {
         }
         .fade-up { animation: fadeUp 0.3s ease both; }
       `}</style>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-6 py-4">
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
           <div className="rounded-3xl border border-violet-100/70 bg-white shadow-[0_8px_24px_rgba(124,58,237,0.06)]">
             <div className="grid grid-cols-1 items-end gap-3 px-4 py-4 lg:grid-cols-[1fr_220px_auto] lg:px-5">

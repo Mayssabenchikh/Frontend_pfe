@@ -117,7 +117,7 @@ export function ManagerBreadcrumbs() {
 
   return (
     <nav
-      className="admin-breadcrumbs flex h-10 min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap bg-transparent px-3 pt-1 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8"
+      className="admin-breadcrumbs flex h-10 min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 pt-1 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8"
       aria-label="Fil d'Ariane manager"
     >
       <Link

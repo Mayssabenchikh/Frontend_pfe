@@ -189,7 +189,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center bg-[#f8f7ff] px-6 py-20 text-center">
+      <div className="flex flex-col items-center justify-center app-page-bg px-6 py-20 text-center">
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 shadow-sm">
           <ExclamationTriangleIcon className="h-7 w-7 text-red-600" />
         </div>
@@ -204,7 +204,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
 
       {/* Content */}
       {loading ? (
-        <div className="flex-1 bg-transparent pt-3">
+        <div className="flex-1  pt-3">
           {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (

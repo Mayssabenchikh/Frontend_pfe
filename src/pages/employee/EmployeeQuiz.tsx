@@ -494,7 +494,7 @@ export function EmployeeQuiz() {
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; }
 
-    .eq-wrap { background: #f8f7ff; display: flex; flex: 1; flex-direction: column; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+    .eq-wrap {  display: flex; flex: 1; flex-direction: column; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
     .eq-body  { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 0 !important; }
     .eq-body > *:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; }
     .eq-browser { display: flex; flex: 1; min-height: 0; flex-direction: column; }
@@ -1355,7 +1355,7 @@ export function EmployeeQuiz() {
 
           {/* ══════════════ IN PROGRESS ══════════════ */}
           {phase === "in_progress" && startData && currentQuestion && (
-            <section className="quiz-enter -m-3 bg-[#F5F7FB] text-slate-950">
+            <section className="quiz-enter -m-3 app-page-bg text-slate-950">
               <div>
                 <div className="grid w-full items-start gap-6 p-4 pb-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:p-8 xl:pb-6">
                   <main className="space-y-4">

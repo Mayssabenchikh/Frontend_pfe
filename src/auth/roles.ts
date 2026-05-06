@@ -21,13 +21,13 @@ export function getPrimaryRole(tokenParsed: unknown): AppRole | null {
 export function getRedirectPathForRole(role: AppRole): string {
   switch (role) {
     case "ADMIN":
-      return "/admin";
+      return "/admin/dashboard";
     case "MANAGER":
-      return "/manager";
+      return "/manager/dashboard";
     case "TRAINING_MANAGER":
-      return "/training-manager";
+      return "/training-manager/dashboard";
     case "EMPLOYEE":
-      return "/employee";
+      return "/employee/dashboard";
     default:
       return "/";
   }

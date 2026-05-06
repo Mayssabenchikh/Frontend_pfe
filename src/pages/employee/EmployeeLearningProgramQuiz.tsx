@@ -107,7 +107,7 @@ export function EmployeeLearningProgramQuiz() {
 
   if (error && !quiz) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f8f7ff] p-6">
+      <div className="flex min-h-screen items-center justify-center app-page-bg p-6">
         <section className="w-full max-w-md rounded-lg border border-rose-200 bg-white p-8 shadow-lg shadow-rose-100">
           <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
             <ExclamationTriangleIcon className="h-6 w-6" />
@@ -128,7 +128,7 @@ export function EmployeeLearningProgramQuiz() {
 
   if (!quiz) {
     return (
-      <div className="min-h-screen bg-[#f8f7ff]">
+      <div className="min-h-screen app-page-bg">
         <header className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex max-w-none items-center justify-between">
             <Skeleton className="h-10 w-44" />
@@ -163,7 +163,7 @@ export function EmployeeLearningProgramQuiz() {
   const isLastQuestion = activeQuestionIndex >= questionCount - 1;
 
   return (
-    <div className="min-h-screen bg-[#f8f7ff] text-slate-950">
+    <div className="min-h-screen app-page-bg text-slate-950">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="flex min-h-12 w-full items-center gap-3 px-4 py-1.5 sm:px-6 lg:px-8">
           <Link

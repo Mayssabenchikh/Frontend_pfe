@@ -544,7 +544,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f6f5ff] font-['Inter',sans-serif]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden app-page-bg font-['Inter',sans-serif]">
       <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
         <header className="relative shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-white px-6 py-5 shadow-[0_10px_30px_rgba(79,70,229,0.06)]">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-700 via-fuchsia-500 to-indigo-500" />
@@ -780,7 +780,7 @@ export function RoleCvExtractionPage({ config }: { config: RoleProfileConfig }) 
 
   if (!cvEnabled || !config.cvDownloadEndpoint) {
     return (
-      <div className="flex min-h-full w-full items-center justify-center bg-[#f8f7ff] p-6">
+      <div className="flex min-h-full w-full items-center justify-center app-page-bg p-6">
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
           <p className="text-base font-bold text-slate-900">Analyse du CV indisponible</p>
         </div>
@@ -789,7 +789,7 @@ export function RoleCvExtractionPage({ config }: { config: RoleProfileConfig }) 
   }
 
   return (
-    <div className="min-h-full w-full overflow-auto bg-[#f6f7fc] px-4 py-7 sm:px-6 lg:px-9">
+    <div className="min-h-full w-full overflow-auto px-4 py-7 sm:px-6 lg:px-9">
       <div className="flex w-full flex-col gap-7">
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">

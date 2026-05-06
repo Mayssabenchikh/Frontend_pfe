@@ -170,7 +170,7 @@ export function EmployeeProjectDetail() {
 
   if (error || !project) {
     return (
-      <div className="min-h-full w-full bg-[#f8f7ff] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="min-h-full w-full app-page-bg px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-[10px] border border-rose-200 bg-white p-6 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-rose-50">
@@ -198,7 +198,7 @@ export function EmployeeProjectDetail() {
   const requirements = project.requirements ?? [];
 
   return (
-    <section className="min-h-full w-full bg-[#f8f7ff]">
+    <section className="min-h-full w-full app-page-bg">
       <div className="w-full px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-5">
           <Link

@@ -289,7 +289,7 @@ function ProjectsList() {
                   e.stopPropagation();
                   navigate(`/manager/projects/${p.uuid}`);
                 }}
-                className="inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-violet-500/25 bg-transparent px-3 text-xs font-semibold text-violet-700 transition-all duration-150 hover:-translate-y-px hover:border-violet-200 hover:bg-violet-50 hover:shadow-md"
+                className="inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-violet-500/25  px-3 text-xs font-semibold text-violet-700 transition-all duration-150 hover:-translate-y-px hover:border-violet-200 hover:bg-violet-50 hover:shadow-md"
               >
                 <EyeIcon className="h-3.5 w-3.5" />
                 <span>Détails</span>
@@ -303,7 +303,7 @@ function ProjectsList() {
                   handleDeleteClick(p);
                 }}
                 disabled={isDel}
-                className={`inline-flex h-8 min-w-[92px] items-center justify-center gap-2 rounded-xl border border-violet-500/25 bg-transparent px-3 text-xs font-semibold text-red-600 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}
+                className={`inline-flex h-8 min-w-[92px] items-center justify-center gap-2 rounded-xl border border-violet-500/25  px-3 text-xs font-semibold text-red-600 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:-translate-y-px hover:shadow-md`}
               >
                 {isDel ? (
                   <>
@@ -348,8 +348,8 @@ function ProjectsList() {
 
   
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-[#f8f7ff]">
-      <div className="shrink-0 border-b border-slate-200/80 bg-[#f8f7ff] px-6 py-4">
+    <div className="flex h-full w-full flex-col overflow-hidden app-page-bg">
+      <div className="shrink-0 border-b border-slate-200/80 app-page-bg px-6 py-4">
         <div className="flex flex-wrap items-center justify-end gap-3">
           <div className="inline-flex items-center rounded-2xl border border-slate-300 bg-slate-100/80 p-1 shadow-sm">
             <button
@@ -394,7 +394,7 @@ function ProjectsList() {
       
 
       {/* ── Zone page (filtres + table) ── */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-6 py-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-6 py-4">
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
           {/* ── Barre de filtres (design comme capture) ── */}
         <FiltersPanel

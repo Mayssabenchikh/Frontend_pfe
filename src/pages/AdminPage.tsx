@@ -25,6 +25,7 @@ import { PendingSkillRequests } from "./admin/PendingSkillRequests";
 import { AdminProfile } from "./admin/AdminProfile";
 import { AdminAssignmentsAudit } from "./admin/AdminAssignmentsAudit";
 import { AdminProjectsReadonly } from "./admin/AdminProjectsReadonly";
+import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { CreateUserModal } from "./admin/CreateUserModal";
 import { FiltersPanel } from "../components/FiltersPanel";
 import { ArchiveBoxIcon } from "../icons/heroicons/outline";
@@ -314,7 +315,10 @@ export default function AdminPage() {
     if (!isUserDetailRoute && requestedView) {
       setCurrentView(requestedView);
     }
-  }, [isUserDetailRoute, location.state]);
+    if (!isUserDetailRoute && location.pathname === "/admin/dashboard") {
+      setCurrentView("dashboard");
+    }
+  }, [isUserDetailRoute, location.pathname, location.state]);
 
   useEffect(() => {
     if (isUserDetailRoute) return;
@@ -328,12 +332,15 @@ export default function AdminPage() {
   const handleNavChange = (view: NavId) => {
     triggerTopLoadingBar();
     if (isUserDetailRoute) navigate("/admin", { state: { view } });
+    if (!isUserDetailRoute && view === "dashboard" && location.pathname !== "/admin/dashboard") navigate("/admin/dashboard");
     setCurrentView(view);
     setSidebarOpen(false);
   };
 
+  const isDashboardView = !isUserDetailRoute && currentView === "dashboard";
+
   return (
-    <div className="admin-layout" data-sidebar-collapsed={sidebarCollapsed || undefined}>
+    <div className={`admin-layout${isDashboardView ? " dashboard-page" : ""}`} data-sidebar-collapsed={sidebarCollapsed || undefined}>
       {/* Mobile backdrop */}
       <div
         className={`sidebar-backdrop${sidebarOpen ? " open" : ""}`}
@@ -361,7 +368,7 @@ export default function AdminPage() {
           onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <main className={`flex min-w-0 flex-1 flex-col ${isDashboardView ? "overflow-visible" : "overflow-hidden"}`}>
           <AdminBreadcrumbs
             currentView={isUserDetailRoute ? "users" : currentView}
             detailLabel={isUserDetailRoute ? "Détail utilisateur" : undefined}
@@ -374,7 +381,7 @@ export default function AdminPage() {
               refreshKey={userDetailRefreshKey}
               onAdminSaved={handleUserDetailSaved}
             />
-          ) : currentView === "dashboard" && <div className="dashboard-padding" />}
+          ) : currentView === "dashboard" && <AdminDashboard />}
 
           {!isUserDetailRoute && currentView === "profile" && (
             <AdminProfile
@@ -389,19 +396,19 @@ export default function AdminPage() {
           )}
 
           {!isUserDetailRoute && currentView === "skills" && (
-            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
               <SkillsCatalog />
             </section>
           )}
 
           {!isUserDetailRoute && currentView === "skillCategories" && (
-            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
               <SkillCategories />
             </section>
           )}
 
           {!isUserDetailRoute && currentView === "skillRequests" && (
-            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
               <PendingSkillRequests />
             </section>
           )}
@@ -415,8 +422,8 @@ export default function AdminPage() {
           )}
 
           {!isUserDetailRoute && currentView === "archives" && (
-            <section className="flex flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-3 py-3 sm:px-6 sm:py-4">
+            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-3 py-3 sm:px-6 sm:py-4">
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
                   <div className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-gradient-to-r from-amber-400/10 to-amber-400/5 px-4 py-3 text-amber-900 shadow-sm">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-400/25 bg-amber-400/20">
@@ -504,7 +511,7 @@ export default function AdminPage() {
           )}
 
           {!isUserDetailRoute && currentView === "users" && (
-            <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+            <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg">
               <div className="users-toolbar flex w-full shrink-0 items-center justify-end border-b border-violet-500/10 px-3 py-3 sm:px-6 sm:py-3.5">
                 <button
                   type="button"
@@ -516,7 +523,7 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-3 py-3 sm:px-6 sm:py-4">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-3 py-3 sm:px-6 sm:py-4">
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
                   <FiltersPanel
                     title="Filtres"

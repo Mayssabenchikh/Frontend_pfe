@@ -154,7 +154,7 @@ export function SkillCategories() {
         .fade-up { animation: fadeUp 0.4s ease both; }
       `}</style>
 
-      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg">
         {/* ── Toolbar ── */}
         <div className="relative z-10 flex flex-wrap items-center gap-3 border-b border-violet-500/10 px-6 py-2">
           {/* Left: search */}

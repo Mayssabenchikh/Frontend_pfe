@@ -376,7 +376,7 @@ export function SkillsCatalog() {
         }
       `}</style>
 
-      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8f7ff]">
+      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg">
         {/* ── Toolbar ── */}
         <div className="relative z-10 flex flex-wrap items-center gap-3 border-b border-violet-500/10 px-6 py-2">
           {/* Left: search + category filter */}
@@ -990,7 +990,7 @@ function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full rounded-xl border border-violet-500/20 bg-violet-50/60 px-4 py-2.5 text-sm text-violet-950 placeholder:text-slate-300 transition-all duration-200 focus:border-violet-500/55 focus:bg-[#f8f7ff]/90 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+      className="w-full rounded-xl border border-violet-500/20 bg-violet-50/60 px-4 py-2.5 text-sm text-violet-950 placeholder:text-slate-300 transition-all duration-200 focus:border-violet-500/55 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
     />
   );
 }

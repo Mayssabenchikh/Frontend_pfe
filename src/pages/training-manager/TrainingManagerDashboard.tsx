@@ -1,6 +1,1 @@
-
-export function TrainingManagerDashboard() {
-  return (
-    <div></div>
-  );
-}
+export { TrainingManagerDashboard } from "../dashboards/TrainingManagerDashboard";

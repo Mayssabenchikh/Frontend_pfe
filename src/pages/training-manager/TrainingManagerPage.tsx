@@ -22,6 +22,7 @@ export default function TrainingManagerPage() {
   const location = useLocation();
   const isProgramsSection = location.pathname.startsWith("/training-manager/programs");
   const isSubmissionsSection = location.pathname.startsWith("/training-manager/submissions");
+  const isDashboardRoute = location.pathname === "/training-manager" || location.pathname === "/training-manager/dashboard";
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -41,7 +42,7 @@ export default function TrainingManagerPage() {
   }, [location.pathname]);
 
   return (
-    <div className="admin-layout tm-layout" data-sidebar-collapsed={sidebarCollapsed || undefined}>
+    <div className={`admin-layout tm-layout${isDashboardRoute ? " dashboard-page" : ""}`} data-sidebar-collapsed={sidebarCollapsed || undefined}>
       <div
         className={`sidebar-backdrop${sidebarOpen ? " open" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -64,10 +65,10 @@ export default function TrainingManagerPage() {
           onProfile={() => navigate("/training-manager/profile")}
           onLogout={() => keycloak.logout({ redirectUri: ROOT })}
         />
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-hidden"}`}>
           <TrainingManagerBreadcrumbs />
-          <div className="dashboard-padding training-manager-app flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="tm-scroll-area relative flex min-h-0 flex-1 flex-col overflow-auto">
+          <div className={`${isDashboardRoute ? "" : "dashboard-padding "}training-manager-app flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-hidden"}`}>
+            <div className={`tm-scroll-area relative flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-auto"}`}>
               <Outlet context={{ onAvatarUpdate: setAvatarUrl }} />
             </div>
           </div>

@@ -1,3 +1,1 @@
-export function ManagerDashboard() {
-  return <div className="mx-auto w-full max-w-7xl" />;
-}
+export { ManagerDashboard } from "../dashboards/ManagerDashboard";

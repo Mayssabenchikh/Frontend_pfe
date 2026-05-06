@@ -34,6 +34,7 @@ export default function EmployeePage() {
   const isLearningPage = location.pathname.startsWith("/employee/learning");
   const isRecommendationsPage = location.pathname.startsWith("/employee/training-recommendations");
   const isProjectsPage = location.pathname.startsWith("/employee/projects");
+  const isDashboardRoute = location.pathname === "/employee" || location.pathname === "/employee/dashboard";
   useEffect(() => {
     meApi
       .employee()
@@ -60,7 +61,7 @@ export default function EmployeePage() {
   }, [location.pathname]);
 
   return (
-    <div className="admin-layout" data-sidebar-collapsed={sidebarCollapsed || undefined}>
+    <div className={`admin-layout${isDashboardRoute ? " dashboard-page" : ""}`} data-sidebar-collapsed={sidebarCollapsed || undefined}>
       {/* Backdrop mobile */}
       <div
         className={`sidebar-backdrop${sidebarOpen ? " open" : ""}`}
@@ -89,21 +90,21 @@ export default function EmployeePage() {
           onLogout={() => keycloak.logout({ redirectUri: `${window.location.origin}/` })}
         />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-hidden"}`}>
           <EmployeeBreadcrumbs />
           <div
             className={
               isProfilePage
-                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
+                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
                 : isCvExtractionPage || isQuizPage
-                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"
+                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
                 : isAssignmentsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
                 : isLearningPage || isRecommendationsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-4 py-4 sm:px-6 sm:py-6"
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-4 py-4 sm:px-6 sm:py-6"
                 : isProjectsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8f7ff] px-0 py-0"
-                : "dashboard-padding bg-[#f8f7ff]"
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
+                : `flex min-w-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "dashboard-padding overflow-hidden"}`
             }
           >
             <Outlet context={{ employeeAvatarUrl: avatarUrl, employeeName: displayName, employeeEmail: email, currentPath: location.pathname, onAvatarUpdate: setAvatarUrl }} />

@@ -142,6 +142,7 @@ function App() {
           }
         >
           <Route index element={<ManagerDashboard />} />
+          <Route path="dashboard" element={<ManagerDashboard />} />
           <Route path="cv-extraction" element={<ManagerCvExtraction />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="matching/:id/workspace" element={<ProjectTalentWorkspace />} />
@@ -171,6 +172,7 @@ function App() {
           }
         >
           <Route index element={<TrainingManagerDashboard />} />
+          <Route path="dashboard" element={<TrainingManagerDashboard />} />
           <Route path="programs" element={<TrainingManagerPrograms />} />
           <Route path="programs/:uuid" element={<TrainingManagerProgramEditor />} />
           <Route path="submissions" element={<TrainingManagerSubmissions />} />
@@ -185,6 +187,7 @@ function App() {
           }
         >
           <Route index element={<EmployeeDashboard />} />
+          <Route path="dashboard" element={<EmployeeDashboard />} />
           <Route path="cv-extraction" element={<EmployeeCvExtraction />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="assignments" element={<EmployeeAssignments />} />

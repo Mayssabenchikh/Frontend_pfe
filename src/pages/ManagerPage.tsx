@@ -36,6 +36,7 @@ export default function ManagerPage() {
     isCvExtractionPage ||
     isQuizPage ||
     location.pathname.startsWith("/manager/matching");
+  const isDashboardRoute = location.pathname === "/manager" || location.pathname === "/manager/dashboard";
 
   useEffect(() => {
     meApi
@@ -63,7 +64,7 @@ export default function ManagerPage() {
   }, [location.pathname]);
 
   return (
-    <div className="admin-layout" data-sidebar-collapsed={sidebarCollapsed || undefined}>
+    <div className={`admin-layout${isDashboardRoute ? " dashboard-page" : ""}`} data-sidebar-collapsed={sidebarCollapsed || undefined}>
       {/* Backdrop mobile (meme comportement que l'admin) */}
       <div
         className={`sidebar-backdrop transition-opacity duration-200 ease-in-out${sidebarOpen ? " open" : ""}`}
@@ -92,13 +93,13 @@ export default function ManagerPage() {
           onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
         />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-hidden"}`}>
           <ManagerBreadcrumbs />
           <div
             className={
               isQuizPage || isCvExtractionPage
                 ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
-                : `${isFullBleed ? "" : "dashboard-padding "}flex min-w-0 flex-1 flex-col overflow-hidden`
+                : `${isFullBleed || isDashboardRoute ? "" : "dashboard-padding "}${isDashboardRoute ? "flex min-w-0 flex-1 flex-col overflow-visible" : "flex min-w-0 flex-1 flex-col overflow-hidden"}`
             }
           >
             <Outlet

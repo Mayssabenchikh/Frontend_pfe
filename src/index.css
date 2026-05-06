@@ -197,6 +197,14 @@
   background: var(--app-bg);
 }
 
+.app-page-bg {
+  background: var(--app-bg);
+}
+
+.admin-layout.dashboard-page {
+  overflow: visible;
+}
+
 /* Sidebar */
 .admin-sidebar {
   width: 280px;
@@ -261,6 +269,11 @@
   min-width: 0;
 }
 
+.admin-layout.dashboard-page .admin-content,
+.admin-layout.dashboard-page .admin-content > main {
+  overflow: visible;
+}
+
 /* Décalage sous le header fixe + encoche (notch) */
 .admin-content > main {
   padding-top: calc(5rem + env(safe-area-inset-top, 0px));
@@ -292,6 +305,7 @@
 .admin-breadcrumbs {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  background: var(--app-bg);
 }
 .admin-breadcrumbs::-webkit-scrollbar {
   height: 4px;
@@ -327,26 +341,21 @@
 .training-manager-app {
   position: relative;
   min-height: 100%;
-  background-color: #f1f5f9;
-  background-image:
-    radial-gradient(ellipse 100% 70% at 100% 0%, rgba(124, 58, 237, 0.11), transparent 55%),
-    radial-gradient(ellipse 80% 50% at 0% 100%, rgba(79, 70, 229, 0.09), transparent 50%),
-    linear-gradient(165deg, #fafbff 0%, #f8fafc 35%, #f1f5f9 100%);
+  background: transparent;
 }
 
 .tm-layout {
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow: visible;
 }
 
 .tm-scroll-area {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: visible;
 }
 
 .tm-scroll-area::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  width: initial;
+  height: initial;
 }
 
 .tm-section {

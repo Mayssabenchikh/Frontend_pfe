@@ -188,7 +188,7 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
       <style>{PROJECTS_AG_THEME}</style>
       <style>{`.ag-theme-projects .ag-row { cursor: pointer; }`}</style>
       {loading ? (
-        <div className="flex-1 bg-transparent pt-3">
+        <div className="flex-1  pt-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <SkeletonRow key={i} />
           ))}
