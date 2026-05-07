@@ -24,7 +24,7 @@ export function ProjectChat({
   input: string;
   onInput: (value: string) => void;
   onSend: () => void;
-  onUpload: (file: File) => void;
+  onUpload: (file: File) => Promise<void>;
 }) {
   const onlineCount = useMemo(() => Object.values(presence).filter((p) => p.online).length, [presence]);
 
@@ -33,7 +33,7 @@ export function ProjectChat({
       <ChatHeader project={project} onlineCount={onlineCount} />
       <div className="flex-1 space-y-3 overflow-auto px-4 py-4">
         {messages.map((message) => (
-          <ChatMessageBubble key={message.messageUuid} message={message} mine={message.senderKeycloakId === currentUserId} />
+          <ChatMessageBubble key={message.messageUuid} message={message} currentUserId={currentUserId} />
         ))}
       </div>
       <TypingIndicator users={typingUsers} />

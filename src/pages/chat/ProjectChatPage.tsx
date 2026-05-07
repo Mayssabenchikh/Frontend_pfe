@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useKeycloak } from "@react-keycloak/web";
 import { useNavigate, useParams } from "react-router-dom";
 import { chatService } from "../../services/chatService";
 import { chatSocket } from "../../services/chatSocket";
-import type { ChatMessage, PresenceEvent, ProjectConversation, TypingEvent } from "../../types/chat";
+import type { ChatMessage, PresenceEvent, ProjectConversation, ReadReceipt, TypingEvent } from "../../types/chat";
 import { ProjectConversationList } from "../../components/chat/ProjectConversationList";
 import { ProjectChatLayout } from "../../components/chat/ProjectChatLayout";
 import { ProjectChat } from "../../components/chat/ProjectChat";
@@ -13,6 +13,12 @@ import { ChatErrorState } from "../../components/chat/ChatErrorState";
 function sortAndDedupe(messages: ChatMessage[]) {
   const byId = new Map(messages.map((m) => [m.messageUuid, m]));
   return [...byId.values()].sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+}
+
+function mergeReadBy(existing: ReadReceipt[], incoming: ReadReceipt) {
+  const byReader = new Map(existing.map((receipt) => [receipt.readerKeycloakId, receipt]));
+  byReader.set(incoming.readerKeycloakId, incoming);
+  return [...byReader.values()].sort((a, b) => +new Date(a.readAt) - +new Date(b.readAt));
 }
 
 export default function ProjectChatPage({ scope }: { scope: "manager" | "employee" }) {
@@ -32,6 +38,9 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   const [typingUsers, setTypingUsers] = useState<Record<string, TypingEvent>>({});
   const [presence, setPresence] = useState<Record<string, PresenceEvent>>({});
   const unsubscribeRef = useRef<null | (() => void)>(null);
+  const readRequestsRef = useRef<Set<string>>(new Set());
+  const socketReadyRef = useRef(false);
+  const [socketReady, setSocketReady] = useState(false);
 
   const userId = keycloak.subject || "";
 
@@ -45,6 +54,35 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   const selectedProject = useMemo(
     () => projects.find((p) => p.projectUuid === selectedProjectUuid) ?? null,
     [projects, selectedProjectUuid],
+  );
+
+  const updateMessageReadReceipt = useCallback(
+    (receipt: ReadReceipt) => {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.messageUuid === receipt.messageUuid ? { ...message, readBy: mergeReadBy(message.readBy ?? [], receipt) } : message,
+        ),
+      );
+
+      if (receipt.readerKeycloakId === userId) {
+        readRequestsRef.current.delete(receipt.messageUuid);
+      }
+    },
+    [userId],
+  );
+
+  const requestMarkRead = useCallback(
+    (message: ChatMessage) => {
+      if (!socketReadyRef.current) return;
+      if (!selectedProjectUuid || message.projectUuid !== selectedProjectUuid) return;
+      if (!message.senderKeycloakId || message.senderKeycloakId === userId) return;
+      if (message.readBy?.some((receipt) => receipt.readerKeycloakId === userId)) return;
+      if (readRequestsRef.current.has(message.messageUuid)) return;
+
+      readRequestsRef.current.add(message.messageUuid);
+      chatSocket.markRead(message.projectUuid, message.messageUuid);
+    },
+    [selectedProjectUuid, userId],
   );
 
   useEffect(() => {
@@ -74,6 +112,9 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
     const projectUuid = selectedProjectUuid;
 
     let cancelled = false;
+    readRequestsRef.current = new Set();
+    socketReadyRef.current = false;
+    setSocketReady(false);
 
     async function init() {
       try {
@@ -86,14 +127,13 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
 
         unsubscribeRef.current?.();
         unsubscribeRef.current = chatSocket.subscribeToProject(projectUuid, {
-          onMessage: (message) => setMessages((prev) => sortAndDedupe([...prev, message])),
-          onRead: (receipt) => {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.messageUuid === receipt.messageUuid ? { ...m, readBy: [...m.readBy.filter((r) => r.readerKeycloakId !== receipt.readerKeycloakId), receipt] } : m,
-              ),
-            );
+          onMessage: (message) => {
+            setMessages((prev) => sortAndDedupe([...prev, message]));
+            if (message.senderKeycloakId !== userId) {
+              requestMarkRead(message);
+            }
           },
+          onRead: updateMessageReadReceipt,
           onTyping: (event) => {
             setTypingUsers((prev) => {
               const next = { ...prev };
@@ -110,6 +150,10 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
         });
 
         chatSocket.joinProject(projectUuid);
+        if (!cancelled) {
+          socketReadyRef.current = true;
+          setSocketReady(true);
+        }
       } catch (e: any) {
         if (!cancelled) {
           setError(e?.response?.data?.error || e?.message || "Impossible de charger les messages.");
@@ -123,16 +167,23 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
 
     return () => {
       cancelled = true;
+      socketReadyRef.current = false;
+      setSocketReady(false);
       chatSocket.leaveProject(projectUuid);
       unsubscribeRef.current?.();
       unsubscribeRef.current = null;
     };
-  }, [keycloak.token, selectedProjectUuid, userId]);
+  }, [keycloak.token, requestMarkRead, selectedProjectUuid, updateMessageReadReceipt, userId]);
 
   useEffect(() => {
-    const unread = messages.filter((m) => m.senderKeycloakId !== userId && !m.readBy.some((r) => r.readerKeycloakId === userId));
-    unread.forEach((m) => chatSocket.markRead(m.projectUuid, m.messageUuid));
-  }, [messages, userId]);
+    if (!socketReady || !selectedProjectUuid) return;
+
+    messages.forEach((message) => {
+      if (message.senderKeycloakId !== userId && !message.readBy.some((receipt) => receipt.readerKeycloakId === userId)) {
+        requestMarkRead(message);
+      }
+    });
+  }, [messages, requestMarkRead, selectedProjectUuid, socketReady, userId]);
 
   const sendTyping = (value: string) => {
     setInput(value);
