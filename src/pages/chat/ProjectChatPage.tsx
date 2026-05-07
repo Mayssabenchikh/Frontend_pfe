@@ -35,6 +35,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   const [selectedProjectUuid, setSelectedProjectUuid] = useState<string | null>(routeProjectUuid);
   const [query, setQuery] = useState("");
   const [input, setInput] = useState("");
+  const [selectedReplyMessage, setSelectedReplyMessage] = useState<ChatMessage | null>(null);
   const [typingUsers, setTypingUsers] = useState<Record<string, TypingEvent>>({});
   const [presence, setPresence] = useState<Record<string, PresenceEvent>>({});
   const unsubscribeRef = useRef<null | (() => void)>(null);
@@ -88,6 +89,12 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   useEffect(() => {
     setSelectedProjectUuid(routeProjectUuid);
   }, [routeProjectUuid]);
+
+  useEffect(() => {
+    setSelectedReplyMessage(null);
+    setTypingUsers({});
+    setPresence({});
+  }, [selectedProjectUuid]);
 
   useEffect(() => {
     setLoading(true);
@@ -194,16 +201,18 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
 
   const sendMessage = () => {
     if (!selectedProjectUuid || !input.trim()) return;
-    chatSocket.sendMessage(selectedProjectUuid, input.trim());
+    chatSocket.sendMessage(selectedProjectUuid, input.trim(), undefined, selectedReplyMessage?.messageUuid ?? null);
     setInput("");
     chatSocket.sendTyping(selectedProjectUuid, false);
+    setSelectedReplyMessage(null);
   };
 
   const uploadFile = async (file: File) => {
     if (!selectedProjectUuid) return;
     try {
       const upload = await chatService.uploadAttachment(selectedProjectUuid, file);
-      chatSocket.sendMessage(selectedProjectUuid, "", upload.attachmentUuid);
+      chatSocket.sendMessage(selectedProjectUuid, "", upload.attachmentUuid, selectedReplyMessage?.messageUuid ?? null);
+      setSelectedReplyMessage(null);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Upload fichier échoué");
     }
@@ -222,8 +231,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3 md:px-6">
-      <h1 className="mb-3 text-xl font-semibold text-slate-900">Chat projets</h1>
+    <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-slate-100/80 via-slate-50 to-white px-3 pb-3 pt-0 md:px-5">
       <ProjectChatLayout
         sidebar={
           <ProjectConversationList
@@ -246,9 +254,12 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
                 typingUsers={Object.values(typingUsers).map((x) => x.userName || "Membre")}
                 presence={presence}
                 input={input}
+                selectedReplyMessage={selectedReplyMessage}
                 onInput={sendTyping}
                 onSend={sendMessage}
                 onUpload={uploadFile}
+                onReply={(message) => setSelectedReplyMessage(message)}
+                onCancelReply={() => setSelectedReplyMessage(null)}
               />
             )
           ) : (

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFaceSmile, faFileArrowUp, faPaperclip, faPaperPlane, faXmark } from "@fortawesome/free-solid-svg-icons";
+import type { ChatMessage } from "../../types/chat";
 
 function formatBytes(bytes: number) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "Taille inconnue";
@@ -16,12 +17,16 @@ export function ChatInput({
   onChange,
   onSend,
   onUpload,
+  selectedReplyMessage,
+  onCancelReply,
   disabled,
 }: {
   value: string;
   onChange: (v: string) => void;
   onSend: () => void;
   onUpload: (file: File) => Promise<void>;
+  selectedReplyMessage?: ChatMessage | null;
+  onCancelReply?: () => void;
   disabled?: boolean;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -118,18 +123,40 @@ export function ChatInput({
         <EmojiPicker onEmojiClick={handleEmojiClick} width="100%" height={360} />
       </div>
 
+      {selectedReplyMessage ? (
+        <div className="mb-2 flex items-start justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-violet-700">Réponse à {selectedReplyMessage.senderName || "Utilisateur"}</p>
+            <p className="truncate text-sm text-slate-700">
+              {selectedReplyMessage.deleted
+                ? "Message original indisponible"
+                : selectedReplyMessage.content || (selectedReplyMessage.attachments?.length ? "Pièce jointe" : "Message original indisponible")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancelReply}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-slate-700"
+            aria-label="Annuler la réponse"
+            title="Annuler la réponse"
+          >
+            <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
+
       {pendingFile ? (
         <div className="mb-2 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-slate-800">{pendingFile.name}</p>
-            <p className="text-xs text-slate-500">{formatBytes(pendingFile.size)}</p>
+            <p className="truncate text-base font-medium text-slate-800">{pendingFile.name}</p>
+            <p className="text-sm text-slate-500">{formatBytes(pendingFile.size)}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleFileUpload}
               disabled={disabled || uploading}
-              className="inline-flex h-9 items-center gap-2 rounded-lg bg-violet-600 px-3 text-xs font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-violet-600 px-3 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
               title="Envoyer la pièce jointe"
             >
               {uploading ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <FontAwesomeIcon icon={faFileArrowUp} className="h-3.5 w-3.5" />}
@@ -179,7 +206,7 @@ export function ChatInput({
           }}
           placeholder="Écrivez votre message..."
           rows={1}
-          className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none disabled:bg-slate-50"
+          className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-300 px-3 py-2 text-base text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none disabled:bg-slate-50"
           disabled={disabled || uploading}
         />
         <button

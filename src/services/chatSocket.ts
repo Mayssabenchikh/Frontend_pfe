@@ -69,10 +69,10 @@ class ChatSocket {
     return () => subscriptions.forEach((s) => s.unsubscribe());
   }
 
-  sendMessage(projectUuid: string, content: string, attachmentUuid?: string) {
+  sendMessage(projectUuid: string, content: string, attachmentUuid?: string, repliedToMessageUuid?: string | null) {
     this.client?.publish({
       destination: "/app/chat.project.send",
-      body: JSON.stringify({ projectUuid, content, attachmentUuid: attachmentUuid ?? null }),
+      body: JSON.stringify({ projectUuid, content, attachmentUuid: attachmentUuid ?? null, repliedToMessageUuid: repliedToMessageUuid ?? null }),
     });
   }
 

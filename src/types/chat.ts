@@ -13,6 +13,15 @@ export type ReadReceipt = {
   readAt: string;
 };
 
+export type ReplyPreview = {
+  messageUuid: string;
+  senderKeycloakId: string;
+  senderName: string;
+  contentPreview: string;
+  hasAttachment: boolean;
+  deleted: boolean;
+};
+
 export type ChatMessage = {
   messageUuid: string;
   projectUuid: string;
@@ -28,6 +37,7 @@ export type ChatMessage = {
   createdAt: string;
   attachments: ChatAttachment[];
   readBy: ReadReceipt[];
+  replyTo?: ReplyPreview | null;
 };
 
 export type TypingEvent = {
@@ -51,6 +61,13 @@ export type UploadAttachmentResponse = {
   fileUrl: string;
   contentType: string;
   sizeBytes: number;
+};
+
+export type SendMessageRequest = {
+  projectUuid: string;
+  content: string;
+  attachmentUuid?: string | null;
+  repliedToMessageUuid?: string | null;
 };
 
 export type ProjectConversation = {

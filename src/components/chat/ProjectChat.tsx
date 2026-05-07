@@ -12,9 +12,12 @@ export function ProjectChat({
   typingUsers,
   presence,
   input,
+  selectedReplyMessage,
   onInput,
   onSend,
   onUpload,
+  onReply,
+  onCancelReply,
 }: {
   project: ProjectConversation;
   messages: ChatMessage[];
@@ -22,9 +25,12 @@ export function ProjectChat({
   typingUsers: string[];
   presence: Record<string, PresenceEvent>;
   input: string;
+  selectedReplyMessage: ChatMessage | null;
   onInput: (value: string) => void;
   onSend: () => void;
   onUpload: (file: File) => Promise<void>;
+  onReply: (message: ChatMessage) => void;
+  onCancelReply: () => void;
 }) {
   const onlineCount = useMemo(() => Object.values(presence).filter((p) => p.online).length, [presence]);
 
@@ -33,11 +39,17 @@ export function ProjectChat({
       <ChatHeader project={project} onlineCount={onlineCount} />
       <div className="flex-1 space-y-3 overflow-auto px-4 py-4">
         {messages.map((message) => (
-          <ChatMessageBubble key={message.messageUuid} message={message} currentUserId={currentUserId} />
+          <ChatMessageBubble
+            key={message.messageUuid}
+            message={message}
+            currentUserId={currentUserId}
+            isOnline={presence[message.senderKeycloakId]?.online ?? false}
+            onReply={onReply}
+          />
         ))}
       </div>
       <TypingIndicator users={typingUsers} />
-      <ChatInput value={input} onChange={onInput} onSend={onSend} onUpload={onUpload} />
+      <ChatInput value={input} onChange={onInput} onSend={onSend} onUpload={onUpload} selectedReplyMessage={selectedReplyMessage} onCancelReply={onCancelReply} />
     </section>
   );
 }
