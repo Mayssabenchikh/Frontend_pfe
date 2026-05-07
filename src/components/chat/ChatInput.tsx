@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFaceSmile, faFileArrowUp, faPaperclip, faPaperPlane, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faFaceSmile, faPaperclip, faPaperPlane, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { ChatMessage } from "../../types/chat";
 
 function formatBytes(bytes: number) {
@@ -16,15 +16,13 @@ export function ChatInput({
   value,
   onChange,
   onSend,
-  onUpload,
   selectedReplyMessage,
   onCancelReply,
   disabled,
 }: {
   value: string;
   onChange: (v: string) => void;
-  onSend: () => void;
-  onUpload: (file: File) => Promise<void>;
+  onSend: (file?: File | null) => Promise<void> | void;
   selectedReplyMessage?: ChatMessage | null;
   onCancelReply?: () => void;
   disabled?: boolean;
@@ -87,17 +85,12 @@ export function ChatInput({
     focusTextarea();
   };
 
-  const handleSend = () => {
-    if (disabled || uploading || !value.trim()) return;
-    onSend();
-  };
-
-  const handleFileUpload = async () => {
-    if (!pendingFile || disabled || uploading) return;
+  const handleSend = async () => {
+    if (disabled || uploading || (!value.trim() && !pendingFile)) return;
 
     setUploading(true);
     try {
-      await onUpload(pendingFile);
+      await onSend(pendingFile);
       setPendingFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -154,16 +147,6 @@ export function ChatInput({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleFileUpload}
-              disabled={disabled || uploading}
-              className="inline-flex h-9 items-center gap-2 rounded-lg bg-violet-600 px-3 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
-              title="Envoyer la pièce jointe"
-            >
-              {uploading ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <FontAwesomeIcon icon={faFileArrowUp} className="h-3.5 w-3.5" />}
-              Envoyer
-            </button>
-            <button
-              type="button"
               onClick={clearPendingFile}
               disabled={uploading}
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
@@ -212,11 +195,11 @@ export function ChatInput({
         <button
           type="button"
           onClick={handleSend}
-          disabled={disabled || uploading || !value.trim()}
+          disabled={disabled || uploading || (!value.trim() && !pendingFile)}
           className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
           title="Envoyer"
         >
-          <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />
+          {uploading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />}
         </button>
       </div>
       <input

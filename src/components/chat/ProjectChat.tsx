@@ -15,7 +15,6 @@ export function ProjectChat({
   selectedReplyMessage,
   onInput,
   onSend,
-  onUpload,
   onReply,
   onCancelReply,
 }: {
@@ -27,8 +26,7 @@ export function ProjectChat({
   input: string;
   selectedReplyMessage: ChatMessage | null;
   onInput: (value: string) => void;
-  onSend: () => void;
-  onUpload: (file: File) => Promise<void>;
+  onSend: (file?: File | null) => Promise<void> | void;
   onReply: (message: ChatMessage) => void;
   onCancelReply: () => void;
 }) {
@@ -49,7 +47,7 @@ export function ProjectChat({
         ))}
       </div>
       <TypingIndicator users={typingUsers} />
-      <ChatInput value={input} onChange={onInput} onSend={onSend} onUpload={onUpload} selectedReplyMessage={selectedReplyMessage} onCancelReply={onCancelReply} />
+      <ChatInput value={input} onChange={onInput} onSend={onSend} selectedReplyMessage={selectedReplyMessage} onCancelReply={onCancelReply} />
     </section>
   );
 }

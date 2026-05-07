@@ -199,23 +199,23 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
     }
   };
 
-  const sendMessage = () => {
-    if (!selectedProjectUuid || !input.trim()) return;
-    chatSocket.sendMessage(selectedProjectUuid, input.trim(), undefined, selectedReplyMessage?.messageUuid ?? null);
+  const sendMessage = async (file?: File | null) => {
+    if (!selectedProjectUuid) return;
+
+    const content = input.trim();
+    if (!content && !file) return;
+
+    try {
+      const upload = file ? await chatService.uploadAttachment(selectedProjectUuid, file) : null;
+      chatSocket.sendMessage(selectedProjectUuid, content, upload?.attachmentUuid, selectedReplyMessage?.messageUuid ?? null);
+    } catch (e: any) {
+      setError(e?.response?.data?.error || "Upload fichier échoué");
+      throw e;
+    }
+
     setInput("");
     chatSocket.sendTyping(selectedProjectUuid, false);
     setSelectedReplyMessage(null);
-  };
-
-  const uploadFile = async (file: File) => {
-    if (!selectedProjectUuid) return;
-    try {
-      const upload = await chatService.uploadAttachment(selectedProjectUuid, file);
-      chatSocket.sendMessage(selectedProjectUuid, "", upload.attachmentUuid, selectedReplyMessage?.messageUuid ?? null);
-      setSelectedReplyMessage(null);
-    } catch (e: any) {
-      setError(e?.response?.data?.error || "Upload fichier échoué");
-    }
   };
 
   if (!keycloak.token) {
@@ -257,7 +257,6 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
                 selectedReplyMessage={selectedReplyMessage}
                 onInput={sendTyping}
                 onSend={sendMessage}
-                onUpload={uploadFile}
                 onReply={(message) => setSelectedReplyMessage(message)}
                 onCancelReply={() => setSelectedReplyMessage(null)}
               />
