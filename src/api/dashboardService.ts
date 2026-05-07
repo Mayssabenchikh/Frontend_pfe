@@ -53,6 +53,11 @@ export type FilterOptionDto = {
   label: string;
 };
 
+export type DashboardFilterOptionsDto = {
+  periods?: FilterOptionDto[];
+  statuses?: FilterOptionDto[];
+};
+
 export type ProjectKpiDto = {
   key: string;
   label: string;
@@ -113,7 +118,7 @@ export type AdminDashboardDto = {
   latestTrainings: TableRowDto[];
   recentActivities: RecentActivityDto[];
   projects: ProjectDashboardDto;
-  filterOptions: FilterOptionDto[];
+  filterOptions?: DashboardFilterOptionsDto;
 };
 
 export type ManagerDashboardDto = {
@@ -127,7 +132,7 @@ export type ManagerDashboardDto = {
   recommendedTrainings: TableRowDto[];
   recentActivities: RecentActivityDto[];
   projects: ProjectDashboardDto;
-  filterOptions: FilterOptionDto[];
+  filterOptions?: DashboardFilterOptionsDto;
 };
 
 export type EmployeeDashboardDto = {
@@ -143,7 +148,7 @@ export type EmployeeDashboardDto = {
   recentQuizResults: QuizPerformanceDto[];
   feedback: RecentActivityDto[];
   projects: ProjectDashboardDto;
-  filterOptions: FilterOptionDto[];
+  filterOptions?: DashboardFilterOptionsDto;
 };
 
 export type TrainingManagerDashboardDto = {
@@ -157,7 +162,7 @@ export type TrainingManagerDashboardDto = {
   recentTrainings: TableRowDto[];
   recentActivities: RecentActivityDto[];
   projects: ProjectDashboardDto;
-  filterOptions: FilterOptionDto[];
+  filterOptions?: DashboardFilterOptionsDto;
 };
 
 export type DashboardFilters = {

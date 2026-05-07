@@ -30,6 +30,10 @@ function getEmployeeBreadcrumbs(pathname: string): { label: string; to?: string 
     return [{ label: "Formations" }];
   }
 
+  if (parts[1] === "chat") {
+    return [{ label: "Chat projets" }];
+  }
+
   if (parts[1] === "learning-programs" && parts.length === 2) {
     return [{ label: "Formations", to: "/employee/training-recommendations" }, { label: "Mes formations" }];
   }

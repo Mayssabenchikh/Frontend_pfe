@@ -9,7 +9,22 @@ import { translateDashboardText } from "./dashboardText";
 
 export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: string; data?: ProjectDashboardDto; mode?: "admin" | "manager" | "employee" | "training" }) {
   if (!data) return null;
-  const showManagerChart = mode === "admin";
+  const isAdmin = mode === "admin";
+  const isManager = mode === "manager";
+  const isEmployee = mode === "employee";
+  const isTraining = mode === "training";
+  const showOperationalProjects = isAdmin || isManager || isEmployee;
+  const showSkillDemand = isAdmin || isManager || isTraining;
+  const showCoverageChart = isAdmin || isManager || isEmployee;
+  const showStatusChart = isAdmin || isManager;
+  const showEvolutionChart = isAdmin;
+  const kpiPriority: Record<typeof mode, string[]> = {
+    admin: ["projectsTotal", "projectsActive", "projectsCompleted", "coverage"],
+    manager: ["projectsTotal", "projectsActive", "projectsWithGaps", "coverage"],
+    employee: ["projectsTotal", "projectsActive", "coverage"],
+    training: ["projectTrainings", "trainingNeeds", "projectsWithGaps", "coverage"],
+  };
+  const selectedKpis = selectKpis(data.kpis ?? [], kpiPriority[mode], isEmployee ? 3 : 4);
   const projectItems = (data.projects ?? []).map((project) => ({
     id: project.projectId,
     title: project.projectName,
@@ -30,45 +45,49 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
     <section className="dashboard-project-section dashboard-fade-up">
       {title ? <div className="dashboard-section-title">{translateDashboardText(title)}</div> : null}
 
-      <div className="dashboard-project-kpi-grid">
-        {(data.kpis ?? []).slice(0, 4).map((item) => (
-          <KpiCard key={item.key} item={{ ...item, trend: null }} />
-        ))}
+      {selectedKpis.length ? (
+        <div className="dashboard-project-kpi-grid">
+          {selectedKpis.map((item) => (
+            <KpiCard key={item.key} item={{ ...item, trend: null }} />
+          ))}
+        </div>
+      ) : null}
+
+      <div className="dashboard-chart-grid">
+        {showEvolutionChart ? <ChartCard title="Évolution des projets" data={data.projectsEvolution} type="line" /> : null}
+        {showStatusChart ? <ChartCard title="Répartition par statut" data={data.projectsByStatus} type="doughnut" /> : null}
+        {isAdmin ? <ChartCard title="Projets par responsable" data={data.projectsByManager} type="horizontalBar" /> : null}
+        {showSkillDemand ? <ChartCard title={isTraining ? "Compétences projet à couvrir" : "Compétences projet demandées"} data={data.projectSkillsDemand} type="bar" /> : null}
+        {showCoverageChart ? <ChartCard title={isEmployee ? "Couverture de mes projets" : "Couverture par projet"} data={data.projectCoverage} type="horizontalBar" /> : null}
       </div>
 
       <div className="dashboard-chart-grid">
-        <ChartCard title="Évolution des projets" data={data.projectsEvolution} type="line" />
-        <ChartCard title="Répartition par statut" data={data.projectsByStatus} type="doughnut" />
-        {showManagerChart ? <ChartCard title="Projets par responsable" data={data.projectsByManager} type="horizontalBar" /> : null}
-        <ChartCard title="Compétences projet demandées" data={data.projectSkillsDemand} type="bar" />
-        <ChartCard title="Couverture par projet" data={data.projectCoverage} type="horizontalBar" />
-      </div>
-
-      <div className="dashboard-chart-grid">
-        <article className="dashboard-card">
-          <h3 className="mb-4 text-sm font-extrabold text-slate-900">Projets et couverture</h3>
-          {data.projects?.length ? (
-            <div className="space-y-3">
-              {data.projects.slice(0, 6).map((project) => (
-                <div key={project.projectId} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition hover:border-violet-100 hover:bg-violet-50/40">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-slate-800">{project.projectName}</p>
-                      <p className="text-xs text-slate-500">{project.assignedEmployees} employé(s) affecté(s)</p>
+        {showOperationalProjects ? (
+          <article className="dashboard-card">
+            <h3 className="mb-4 text-sm font-extrabold text-slate-900">{isEmployee ? "Mes projets affectés" : "Projets et couverture"}</h3>
+            {data.projects?.length ? (
+              <div className="space-y-3">
+                {data.projects.slice(0, isEmployee ? 4 : 6).map((project) => (
+                  <div key={project.projectId} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition hover:border-violet-100 hover:bg-violet-50/40">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-slate-800">{project.projectName}</p>
+                        <p className="text-xs text-slate-500">{project.assignedEmployees} employé(s) affecté(s)</p>
+                      </div>
+                      <StatusBadge status={project.status} />
                     </div>
-                    <StatusBadge status={project.status} />
+                    <ProgressBar value={project.progress} />
                   </div>
-                  <ProgressBar value={project.progress} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState title="Aucun projet" description="Les projets liés au rôle apparaîtront ici." />
-          )}
-        </article>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Aucun projet" description={isEmployee ? "Vos projets affectés apparaîtront ici." : "Les projets liés au rôle apparaîtront ici."} />
+            )}
+          </article>
+        ) : null}
 
         <article className="dashboard-card">
-          <h3 className="mb-4 text-sm font-extrabold text-slate-900">Écarts critiques</h3>
+          <h3 className="mb-4 text-sm font-extrabold text-slate-900">{isTraining ? "Besoins de formation prioritaires" : "Écarts critiques"}</h3>
           {data.criticalSkillGaps?.length ? (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
@@ -93,15 +112,23 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
               </table>
             </div>
           ) : (
-            <EmptyState title="Aucun gap critique" description="La couverture projet est suffisante sur ce périmètre." />
+            <EmptyState title="Aucun écart critique" description={isTraining ? "Aucun besoin de formation prioritaire n'est détecté depuis les projets." : "La couverture projet est suffisante sur ce périmètre."} />
           )}
         </article>
       </div>
 
       <div className="dashboard-chart-grid">
-        <RecentActivityList title="Recommandations liées aux projets" items={recommendationItems} />
-        <RecentActivityList title="Projets récents" items={projectItems} />
+        <RecentActivityList title={isTraining ? "Actions formation suggérées" : "Recommandations liées aux projets"} items={recommendationItems} />
+        {showOperationalProjects ? <RecentActivityList title={isEmployee ? "Mes projets récents" : "Projets récents"} items={projectItems} /> : null}
       </div>
     </section>
   );
+}
+
+function selectKpis<T extends { key: string }>(items: T[], priority: string[], limit: number) {
+  const byKey = new Map(items.map((item) => [item.key, item]));
+  const selected = priority.map((key) => byKey.get(key)).filter((item): item is T => Boolean(item));
+  const selectedKeys = new Set(selected.map((item) => item.key));
+  const fallback = items.filter((item) => !selectedKeys.has(item.key));
+  return [...selected, ...fallback].slice(0, limit);
 }

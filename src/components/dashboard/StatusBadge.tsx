@@ -16,6 +16,8 @@ const statusStyles: Record<string, string> = {
   validé: "border-emerald-200 bg-emerald-50 text-emerald-700",
   validated: "border-emerald-200 bg-emerald-50 text-emerald-700",
   "en attente": "border-orange-200 bg-orange-50 text-orange-700",
+  "à renforcer": "border-amber-200 bg-amber-50 text-amber-700",
+  démarrage: "border-sky-200 bg-sky-50 text-sky-700",
 };
 
 export function StatusBadge({ status }: { status?: string | null }) {

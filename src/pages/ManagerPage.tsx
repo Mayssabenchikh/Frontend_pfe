@@ -8,6 +8,7 @@ import {
   BriefcaseIcon,
   ClipboardDocumentListIcon,
   SparklesIcon,
+  ChatBubbleLeftRightIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
 import { ManagerBreadcrumbs } from "./manager/ManagerBreadcrumbs";
@@ -77,6 +78,7 @@ export default function ManagerPage() {
         <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/manager/quiz" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/manager/projects" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/manager/assignments" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Chat projets" icon={<ChatBubbleLeftRightIcon className="h-5 w-5" />} to="/manager/chat" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/manager/training-recommendations" collapsed={sidebarCollapsed} />
       </DashboardSidebar>
 

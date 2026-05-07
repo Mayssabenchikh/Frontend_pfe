@@ -305,7 +305,11 @@
 .admin-breadcrumbs {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  background: var(--app-bg);
+  background: transparent;
+}
+
+.admin-layout.dashboard-page .admin-breadcrumbs {
+  background: #fff;
 }
 .admin-breadcrumbs::-webkit-scrollbar {
   height: 4px;

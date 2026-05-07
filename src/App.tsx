@@ -31,6 +31,7 @@ import TrainingManagerPage from "./pages/training-manager/TrainingManagerPage";
 import { TrainingManagerDashboard } from "./pages/training-manager/TrainingManagerDashboard";
 import { TrainingManagerSubmissions } from "./pages/training-manager/TrainingManagerSubmissions";
 import { TrainingManagerProfile } from "./pages/training-manager/TrainingManagerProfile";
+import ProjectChatPage from "./pages/chat/ProjectChatPage";
 
 const EmployeeQuiz = lazy(() =>
   import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
@@ -161,6 +162,8 @@ function App() {
           <Route path="projects/:id/team" element={<RedirectProjectTeamToTalent />} />
           <Route path="projects/:projectId/team/:employeeId" element={<UserDetailPage source="manager-project" />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
+          <Route path="chat" element={<ProjectChatPage scope="manager" />} />
+          <Route path="chat/:projectUuid" element={<ProjectChatPage scope="manager" />} />
           <Route path="profile" element={<ManagerProfile />} />
         </Route>
         <Route
@@ -198,6 +201,8 @@ function App() {
           <Route path="projects" element={<EmployeeProjects />} />
           <Route path="projects/:projectId/team/:employeeId" element={<UserDetailPage source="employee-project" />} />
           <Route path="projects/:id" element={<EmployeeProjectDetail />} />
+          <Route path="chat" element={<ProjectChatPage scope="employee" />} />
+          <Route path="chat/:projectUuid" element={<ProjectChatPage scope="employee" />} />
           <Route path="profile" element={<EmployeeMyProfile />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

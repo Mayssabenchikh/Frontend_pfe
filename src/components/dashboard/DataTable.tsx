@@ -5,7 +5,19 @@ import { ProgressBar } from "./ProgressBar";
 import { StatusBadge } from "./StatusBadge";
 import { translateDashboardText } from "./dashboardText";
 
-export function DataTable({ title, rows, valueLabel = "Valeur" }: { title: string; rows?: TableRowDto[]; valueLabel?: string }) {
+type ValueMode = "progress" | "number";
+
+export function DataTable({
+  title,
+  rows,
+  valueLabel = "Valeur",
+  valueMode = "progress",
+}: {
+  title: string;
+  rows?: TableRowDto[];
+  valueLabel?: string;
+  valueMode?: ValueMode;
+}) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const pageSize = 6;
@@ -44,7 +56,15 @@ export function DataTable({ title, rows, valueLabel = "Valeur" }: { title: strin
                     </td>
                     <td className="px-3 py-3"><StatusBadge status={row.status} /></td>
                     <td className="px-3 py-3">
-                      {typeof row.primaryValue === "number" ? <ProgressBar value={row.primaryValue} label="" /> : <span className="text-xs text-slate-400">—</span>}
+                      {typeof row.primaryValue === "number" ? (
+                        valueMode === "progress" ? (
+                          <ProgressBar value={row.primaryValue} label="" />
+                        ) : (
+                          <span className="text-sm font-bold tabular-nums text-slate-700">{row.primaryValue}</span>
+                        )
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-xs font-semibold text-slate-500">{formatDate(row.date)}</td>
                   </tr>

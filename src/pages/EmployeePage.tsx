@@ -8,6 +8,7 @@ import {
   BriefcaseIcon,
   ClipboardDocumentListIcon,
   SparklesIcon,
+  ChatBubbleLeftRightIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
 import { EmployeeBreadcrumbs } from "./employee/EmployeeBreadcrumbs";
@@ -74,6 +75,7 @@ export default function EmployeePage() {
         <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/employee/quiz" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/employee/assignments" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/employee/training-recommendations" collapsed={sidebarCollapsed} />
+        <DashboardSidebarNavItem label="Chat projets" icon={<ChatBubbleLeftRightIcon className="h-5 w-5" />} to="/employee/chat" collapsed={sidebarCollapsed} />
         <DashboardSidebarNavItem label="Mes projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/employee/projects" collapsed={sidebarCollapsed} />
       </DashboardSidebar>
 
