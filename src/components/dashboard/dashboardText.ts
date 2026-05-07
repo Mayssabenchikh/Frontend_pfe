@@ -17,6 +17,7 @@ const exactTranslations: Record<string, string> = {
   "skill gaps par competence": "Écarts de compétences par compétence",
   "gaps critiques": "Écarts critiques",
   completed: "Terminé",
+  active: "En cours",
   in_progress: "En cours",
   published: "Publié",
   draft: "Brouillon",

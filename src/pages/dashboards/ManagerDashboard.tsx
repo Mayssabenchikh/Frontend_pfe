@@ -9,15 +9,15 @@ import { DataTable } from "../../components/dashboard/DataTable";
 import { DashboardKpiGrid } from "../../components/dashboard/DashboardKpiGrid";
 import { ErrorState } from "../../components/dashboard/ErrorState";
 import { LoadingState } from "../../components/dashboard/LoadingState";
-import { PriorityActionsCard, type PriorityActionItem } from "../../components/dashboard/PriorityActionsCard";
 import { ProjectOverviewCard } from "../../components/dashboard/ProjectOverviewCard";
 import { RecentActivityList } from "../../components/dashboard/RecentActivityList";
+import { managerDashboardExplanations } from "../../components/dashboard/dashboardExplanations";
 
 export function ManagerDashboard() {
   const { keycloak } = useKeycloak();
   const managerId = keycloak.subject ?? "";
   const [data, setData] = useState<ManagerDashboardDto | null>(null);
-  const [filters, setFilters] = useState<DashboardFilters>({ period: "month" });
+  const [filters, setFilters] = useState<DashboardFilters>({ period: "year" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,42 +39,61 @@ export function ManagerDashboard() {
   if (loading) return <LoadingState />;
   if (error) return <DashboardLayout><ErrorState message={error} onRetry={load} /></DashboardLayout>;
 
-  const priorityItems: PriorityActionItem[] = (data?.employeesAtRisk ?? []).slice(0, 3).map((row) => ({
-    id: `risk-${row.id}`,
-    title: row.title,
-    description: row.subtitle ?? "Employé à accompagner prioritairement.",
-    status: row.status ?? "risk",
-  }));
+  const teamKpis = (data?.kpis ?? []).filter((kpi) => kpi.key !== "team_recommendations" && kpi.label !== "Recommandations équipe");
   const matchingKpis = buildMatchingKpis(data);
   const matchingScoreByProject = buildMatchingScoreByProjectChart(data);
   const matchingTopProfiles = buildMatchingTopProfilesRows(data);
 
   return (
-    <DashboardLayout>
-      <DashboardHeader title="Tableau de bord manager" subtitle="Suivi de l'équipe" actions={<DashboardFilter filters={filters} options={data?.filterOptions} onChange={setFilters} />} />
+      <DashboardLayout>
+      <DashboardHeader title="Tableau de bord manager" subtitle="Suivi de l'équipe" actions={<DashboardFilter filters={filters} onChange={setFilters} />} />
       <div className="dashboard-section-title">Vue équipe</div>
-      <DashboardKpiGrid items={data?.kpis} />
-      <PriorityActionsCard items={priorityItems} />
+      <DashboardKpiGrid items={teamKpis} explanationMap={managerDashboardExplanations} />
       <div className="dashboard-section-title">Compétences, quiz et progression</div>
       <div className="dashboard-chart-grid dashboard-chart-grid-3">
-        <ChartCard title="Niveaux des employés par compétence" data={data?.skillLevelsByEmployee} type="bar" />
-        <ChartCard title="Progression des employés" data={data?.employeeProgress} type="line" />
-        <ChartCard title="Résultats quiz par employé" data={data?.quizResultsByEmployee} type="bar" />
-        <ChartCard title="Écarts de compétences par compétence" data={data?.skillGapsBySkill} type="horizontalBar" />
+        <ChartCard 
+          title="Niveaux des employés par compétence" 
+          data={data?.skillLevelsByEmployee} 
+          type="bar"
+          xAxisTitle="Compétences"
+          yAxisTitle="Niveau moyen"
+          explanation={managerDashboardExplanations.chart_skill_levels_by_employee}
+        />
+        <ChartCard 
+          title="Progression des employés" 
+          data={data?.employeeProgress} 
+          type="line"
+          xAxisTitle="Employés"
+          yAxisTitle="Progression (%)"
+          explanation={managerDashboardExplanations.chart_employee_progress}
+        />
+        <ChartCard 
+          title="Résultats quiz par employé" 
+          data={data?.quizResultsByEmployee} 
+          type="bar"
+          xAxisTitle="Employés"
+          yAxisTitle="Score quiz (%)"
+          explanation={managerDashboardExplanations.chart_quiz_results_by_employee}
+        />
       </div>
       <div className="dashboard-chart-grid">
         <DataTable title="Employés de l'équipe" rows={data?.employees} valueLabel="Progression" />
-        <RecentActivityList title="Employés en difficulté" items={data?.employeesAtRisk} />
       </div>
-      <div className="dashboard-section-title">Matching et projets</div>
-      <DashboardKpiGrid items={matchingKpis} />
+      <div className="dashboard-section-title">Affectation des profils aux projets</div>
+      <DashboardKpiGrid items={matchingKpis} explanationMap={managerDashboardExplanations} />
       <div className="dashboard-chart-grid">
-        <ChartCard title="Score de matching par projet" data={matchingScoreByProject} type="horizontalBar" />
-        <DataTable title="Top profils recommandés par projet" rows={matchingTopProfiles} valueLabel="Score" valueMode="number" />
+        <ChartCard 
+          title="Niveau de correspondance par projet" 
+          data={matchingScoreByProject} 
+          type="horizontalBar"
+          xAxisTitle="Score de correspondance (%)"
+          yAxisTitle="Projets"
+          explanation={managerDashboardExplanations.chart_skill_levels_by_employee}
+        />
+        <DataTable title="Compétences à renforcer par projet" rows={matchingTopProfiles} valueLabel="Écart de niveau" valueMode="number" />
       </div>
       <ProjectOverviewCard title="Projets de l'équipe" data={data?.projects} mode="manager" />
       <div className="dashboard-chart-grid">
-        <RecentActivityList title="Formations recommandées" items={data?.recommendedTrainings} />
         <RecentActivityList title="Activités récentes de l'équipe" items={data?.recentActivities} />
       </div>
     </DashboardLayout>
@@ -125,9 +144,9 @@ function buildMatchingTopProfilesRows(data: ManagerDashboardDto | null) {
     .slice(0, 8)
     .map((item, index) => ({
       id: `${item.projectId}-${index}`,
-      title: item.title,
-      subtitle: item.projectName,
-      status: item.status ?? (Number(item.score ?? 0) >= 70 ? "validé" : "en attente"),
+      title: item.title.replace(/^Renforcer\s+/i, "Compétence à renforcer : "),
+      subtitle: `Projet : ${item.projectName}`,
+      status: item.status ?? null,
       primaryValue: Number(item.score ?? 0),
       date: null,
     }));

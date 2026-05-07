@@ -40,6 +40,7 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
     status: item.status,
     date: null,
   }));
+  const projectStatusCounts = data.projectStatusCounts ?? [];
 
   return (
     <section className="dashboard-project-section dashboard-fade-up">
@@ -54,17 +55,65 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
       ) : null}
 
       <div className="dashboard-chart-grid">
-        {showEvolutionChart ? <ChartCard title="Évolution des projets" data={data.projectsEvolution} type="line" /> : null}
-        {showStatusChart ? <ChartCard title="Répartition par statut" data={data.projectsByStatus} type="doughnut" /> : null}
-        {isAdmin ? <ChartCard title="Projets par responsable" data={data.projectsByManager} type="horizontalBar" /> : null}
-        {showSkillDemand ? <ChartCard title={isTraining ? "Compétences projet à couvrir" : "Compétences projet demandées"} data={data.projectSkillsDemand} type="bar" /> : null}
-        {showCoverageChart ? <ChartCard title={isEmployee ? "Couverture de mes projets" : "Couverture par projet"} data={data.projectCoverage} type="horizontalBar" /> : null}
+        {showEvolutionChart ? (
+          <ChartCard
+            title="Évolution des projets"
+            data={data.projectsEvolution}
+            type="line"
+            xAxisTitle="Mois"
+            yAxisTitle="Nombre de projets"
+          />
+        ) : null}
+        {showStatusChart ? (
+          <article className="dashboard-card dashboard-fade-up">
+            <h2 className="mb-4 text-sm font-extrabold text-slate-900">Nombre de projets par statut</h2>
+            {projectStatusCounts.length ? (
+              <div className="space-y-2">
+                {projectStatusCounts.map((item) => (
+                  <div key={item.status} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2">
+                    <span className="text-sm font-semibold text-slate-700">{translateDashboardText(item.status)}</span>
+                    <span className="text-sm font-extrabold tabular-nums text-slate-900">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Aucun statut" description="Les statuts projets apparaîtront ici." />
+            )}
+          </article>
+        ) : null}
+        {isAdmin ? (
+          <ChartCard
+            title="Projets par responsable"
+            data={data.projectsByManager}
+            type="horizontalBar"
+            xAxisTitle="Nombre de projets"
+            yAxisTitle="Responsables"
+          />
+        ) : null}
+        {showSkillDemand ? (
+          <ChartCard
+            title={isTraining ? "Compétences projet à couvrir" : "Compétences projet demandées"}
+            data={data.projectSkillsDemand}
+            type="bar"
+            xAxisTitle="Compétences"
+            yAxisTitle="Nombre de projets"
+          />
+        ) : null}
+        {showCoverageChart ? (
+          <ChartCard
+            title={isEmployee ? "Couverture de mes projets" : "Couverture par projet"}
+            data={data.projectCoverage}
+            type="horizontalBar"
+            xAxisTitle="Couverture (%)"
+            yAxisTitle="Projets"
+          />
+        ) : null}
       </div>
 
       <div className="dashboard-chart-grid">
         {showOperationalProjects ? (
           <article className="dashboard-card">
-            <h3 className="mb-4 text-sm font-extrabold text-slate-900">{isEmployee ? "Mes projets affectés" : "Projets et couverture"}</h3>
+            <h3 className="mb-4 text-sm font-extrabold text-slate-900">{isEmployee ? "Mes projets affectés" : "Détails des projets (statut et avancement)"}</h3>
             {data.projects?.length ? (
               <div className="space-y-3">
                 {data.projects.slice(0, isEmployee ? 4 : 6).map((project) => (
@@ -76,7 +125,7 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
                       </div>
                       <StatusBadge status={project.status} />
                     </div>
-                    <ProgressBar value={project.progress} />
+                    <ProgressBar value={project.progress} label="Avancement du projet" />
                   </div>
                 ))}
               </div>

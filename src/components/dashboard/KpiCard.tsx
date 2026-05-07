@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { KpiCardDto } from "../../api/dashboardService";
 import { translateDashboardText } from "./dashboardText";
+import { ExplanationTooltip } from "./ExplanationTooltip";
+import type { ExplanationContent } from "./dashboardExplanations";
 
 const colorClasses: Record<string, string> = {
   violet: "from-violet-400 to-indigo-400 text-violet-600 bg-violet-50 border-violet-100",
@@ -11,7 +13,7 @@ const colorClasses: Record<string, string> = {
   gray: "from-slate-500 to-slate-400 text-slate-600 bg-slate-50 border-slate-200",
 };
 
-export function KpiCard({ item, icon }: { item: KpiCardDto; icon?: ReactNode }) {
+export function KpiCard({ item, icon, explanation }: { item: KpiCardDto; icon?: ReactNode; explanation?: ExplanationContent | null }) {
   const classes = colorClasses[item.color ?? "violet"] ?? colorClasses.violet;
   const numericValue = Number(item.value ?? 0);
   const [displayValue, setDisplayValue] = useState(0);
@@ -40,7 +42,10 @@ export function KpiCard({ item, icon }: { item: KpiCardDto; icon?: ReactNode }) 
     <article className={`dashboard-kpi-card ${classes}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">{translateDashboardText(item.label)}</p>
+          <div className="flex items-center gap-1">
+            <p className="truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">{translateDashboardText(item.label)}</p>
+            <ExplanationTooltip explanation={explanation ?? null} position="top" />
+          </div>
           <div className="mt-3 flex items-end gap-1">
             <span className="text-3xl font-extrabold leading-none text-slate-950 tabular-nums">{displayValue}</span>
             {item.unit ? <span className="pb-0.5 text-sm font-bold text-slate-500">{item.unit}</span> : null}

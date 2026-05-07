@@ -12,12 +12,13 @@ import { LoadingState } from "../../components/dashboard/LoadingState";
 import { PriorityActionsCard, type PriorityActionItem } from "../../components/dashboard/PriorityActionsCard";
 import { ProjectOverviewCard } from "../../components/dashboard/ProjectOverviewCard";
 import { RecentActivityList } from "../../components/dashboard/RecentActivityList";
+import { trainingManagerDashboardExplanations } from "../../components/dashboard/dashboardExplanations";
 
 export function TrainingManagerDashboard() {
   const { keycloak } = useKeycloak();
   const trainingManagerId = keycloak.subject ?? "";
   const [data, setData] = useState<TrainingManagerDashboardDto | null>(null);
-  const [filters, setFilters] = useState<DashboardFilters>({ period: "month" });
+  const [filters, setFilters] = useState<DashboardFilters>({ period: "year" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,16 +49,42 @@ export function TrainingManagerDashboard() {
 
   return (
     <DashboardLayout>
-      <DashboardHeader title="Tableau de bord responsable formation" subtitle="Gestion et performance des formations" actions={<DashboardFilter filters={filters} options={data?.filterOptions} onChange={setFilters} />} />
+      <DashboardHeader title="Tableau de bord responsable formation" subtitle="Gestion et performance des formations" actions={<DashboardFilter filters={filters} onChange={setFilters} />} />
       <div className="dashboard-section-title">Vue formation</div>
-      <DashboardKpiGrid items={data?.kpis} />
+      <DashboardKpiGrid items={data?.kpis} explanationMap={trainingManagerDashboardExplanations} />
       <PriorityActionsCard items={priorityItems} />
       <div className="dashboard-section-title">Contenus, complétion et recommandations</div>
       <div className="dashboard-chart-grid dashboard-chart-grid-3">
-        <ChartCard title="Répartition des contenus par type" data={data?.contentByType} type="doughnut" />
-        <ChartCard title="Complétion par formation" data={data?.completionByTraining} type="bar" />
-        <ChartCard title="Recommandations par formation" data={data?.recommendationsByTraining} type="horizontalBar" />
-        <ChartCard title="Évolution des créations" data={data?.creationsEvolution} type="line" />
+        <ChartCard 
+          title="Répartition des contenus par type" 
+          data={data?.contentByType} 
+          type="doughnut"
+          explanation={trainingManagerDashboardExplanations.chart_content_by_type}
+        />
+        <ChartCard 
+          title="Complétion par formation" 
+          data={data?.completionByTraining} 
+          type="bar"
+          xAxisTitle="Formations"
+          yAxisTitle="Taux de complétion (%)"
+          explanation={trainingManagerDashboardExplanations.chart_completion_by_training}
+        />
+        <ChartCard 
+          title="Recommandations par formation" 
+          data={data?.recommendationsByTraining} 
+          type="horizontalBar"
+          xAxisTitle="Nombre de recommandations"
+          yAxisTitle="Formations"
+          explanation={trainingManagerDashboardExplanations.chart_recommendations_by_training}
+        />
+        <ChartCard 
+          title="Évolution des créations" 
+          data={data?.creationsEvolution} 
+          type="line"
+          xAxisTitle="Mois"
+          yAxisTitle="Nombre de créations"
+          explanation={trainingManagerDashboardExplanations.chart_creations_evolution}
+        />
       </div>
       <div className="dashboard-chart-grid">
         <DataTable title="Formations" rows={data?.trainings} valueLabel="Progression" />

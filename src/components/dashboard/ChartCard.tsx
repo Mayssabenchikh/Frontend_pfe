@@ -14,6 +14,8 @@ import {
 import { Bar, Doughnut, Line, Radar } from "react-chartjs-2";
 import type { ChartDataDto } from "../../api/dashboardService";
 import { translateDashboardText } from "./dashboardText";
+import { ExplanationTooltip } from "./ExplanationTooltip";
+import type { ExplanationContent } from "./dashboardExplanations";
 import { EmptyState } from "./EmptyState";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, RadialLinearScale, Tooltip, Legend, Filler);
@@ -35,30 +37,79 @@ const baseOptions = {
     },
   },
   scales: {
-    x: { grid: { display: false }, ticks: { color: "#64748b", font: { size: 11, weight: 600 } } },
-    y: { grid: { color: "rgba(148, 163, 184, .18)" }, ticks: { color: "#64748b", font: { size: 11, weight: 600 } } },
+    x: {
+      grid: { display: false },
+      ticks: { color: "#64748b", font: { size: 11, weight: 600 } },
+      title: { display: false, text: "", color: "#475569", font: { size: 12, weight: 700 } },
+    },
+    y: {
+      grid: { color: "rgba(148, 163, 184, .18)" },
+      ticks: { color: "#64748b", font: { size: 11, weight: 600 } },
+      title: { display: false, text: "", color: "#475569", font: { size: 12, weight: 700 } },
+    },
   },
 };
 
-export function ChartCard({ title, subtitle, data, type = "bar" }: { title: string; subtitle?: string; data?: ChartDataDto; type?: ChartKind }) {
+export function ChartCard({ 
+  title, 
+  subtitle, 
+  data, 
+  type = "bar",
+  explanation,
+  xAxisTitle,
+  yAxisTitle,
+}: { 
+  title: string; 
+  subtitle?: string; 
+  data?: ChartDataDto; 
+  type?: ChartKind;
+  explanation?: ExplanationContent | null;
+  xAxisTitle?: string;
+  yAxisTitle?: string;
+}) {
   const hasData = Boolean(data?.labels?.length && data.datasets?.some((dataset) => dataset.data?.some((value) => Number(value) > 0)));
   const normalizedData = {
-    labels: data?.labels ?? [],
+    labels: (data?.labels ?? []).map((label) => translateDashboardText(String(label)) ?? String(label)),
     datasets: (data?.datasets ?? []).map((dataset) => ({
       ...dataset,
+      label: translateDashboardText(dataset.label ?? "") ?? dataset.label ?? "",
       borderWidth: 2,
       borderRadius: type === "bar" || type === "horizontalBar" ? 8 : undefined,
       tension: type === "line" ? 0.35 : undefined,
       fill: type === "line" ? true : undefined,
     })),
   };
-  const options = (type === "horizontalBar" ? { ...baseOptions, indexAxis: "y" as const } : baseOptions) as any;
+  const isCartesian = type === "bar" || type === "line" || type === "horizontalBar";
+  const options = {
+    ...baseOptions,
+    ...(type === "horizontalBar" ? { indexAxis: "y" as const } : {}),
+    scales: isCartesian
+      ? {
+          ...baseOptions.scales,
+          x: {
+            ...baseOptions.scales.x,
+            title: xAxisTitle
+              ? { ...baseOptions.scales.x.title, display: true, text: translateDashboardText(xAxisTitle) }
+              : { ...baseOptions.scales.x.title, display: false, text: "" },
+          },
+          y: {
+            ...baseOptions.scales.y,
+            title: yAxisTitle
+              ? { ...baseOptions.scales.y.title, display: true, text: translateDashboardText(yAxisTitle) }
+              : { ...baseOptions.scales.y.title, display: false, text: "" },
+          },
+        }
+      : undefined,
+  } as any;
 
   return (
     <article className="dashboard-card dashboard-fade-up">
       <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-extrabold text-slate-900">{translateDashboardText(title)}</h2>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-extrabold text-slate-900">{translateDashboardText(title)}</h2>
+            <ExplanationTooltip explanation={explanation ?? null} position="top" />
+          </div>
           {subtitle ? <p className="mt-1 text-xs text-slate-500">{translateDashboardText(subtitle)}</p> : null}
         </div>
       </div>

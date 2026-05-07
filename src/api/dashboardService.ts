@@ -95,10 +95,16 @@ export type ProjectRecommendationDto = {
   score?: number | null;
 };
 
+export type ProjectStatusCountDto = {
+  status: string;
+  count: number;
+};
+
 export type ProjectDashboardDto = {
   kpis: ProjectKpiDto[];
   projectsEvolution: ChartDataDto;
   projectsByStatus: ChartDataDto;
+  projectStatusCounts: ProjectStatusCountDto[];
   projectsByManager: ChartDataDto;
   projectSkillsDemand: ChartDataDto;
   projectCoverage: ChartDataDto;

@@ -11,10 +11,11 @@ import { LoadingState } from "../../components/dashboard/LoadingState";
 import { PriorityActionsCard, type PriorityActionItem } from "../../components/dashboard/PriorityActionsCard";
 import { ProjectOverviewCard } from "../../components/dashboard/ProjectOverviewCard";
 import { RecentActivityList } from "../../components/dashboard/RecentActivityList";
+import { adminDashboardExplanations } from "../../components/dashboard/dashboardExplanations";
 
 export function AdminDashboard() {
   const [data, setData] = useState<AdminDashboardDto | null>(null);
-  const [filters, setFilters] = useState<DashboardFilters>({ period: "month" });
+  const [filters, setFilters] = useState<DashboardFilters>({ period: "year" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,21 +52,56 @@ export function AdminDashboard() {
 
   return (
     <DashboardLayout>
-      <DashboardHeader title="Tableau de bord admin" subtitle="Vue globale de la plateforme" actions={<DashboardFilter filters={filters} options={data?.filterOptions} onChange={setFilters} />} />
+      <DashboardHeader title="Tableau de bord admin" subtitle="Vue globale de la plateforme" actions={<DashboardFilter filters={filters} onChange={setFilters} />} />
       <div className="dashboard-section-title">Pilotage global</div>
-      <DashboardKpiGrid items={data?.kpis} />
+      <DashboardKpiGrid items={data?.kpis} explanationMap={adminDashboardExplanations} />
       <PriorityActionsCard items={priorityItems} />
 
       <div className="dashboard-chart-grid">
-        <ChartCard title="Évolution des employés" subtitle="Ajouts par mois" data={data?.employeesEvolution} type="line" />
-        <ChartCard title="Répartition utilisateurs" subtitle="Distribution par rôle" data={data?.usersByRole} type="doughnut" />
+        <ChartCard 
+          title="Évolution des employés" 
+          subtitle="Ajouts par mois" 
+          data={data?.employeesEvolution} 
+          type="line"
+          xAxisTitle="Mois"
+          yAxisTitle="Nombre d'employés"
+          explanation={adminDashboardExplanations.chart_employees_evolution}
+        />
+        <ChartCard 
+          title="Répartition utilisateurs" 
+          subtitle="Distribution par rôle" 
+          data={data?.usersByRole} 
+          type="doughnut"
+          explanation={adminDashboardExplanations.chart_users_by_role}
+        />
       </div>
 
       <div className="dashboard-section-title">Compétences, quiz et formations</div>
       <div className="dashboard-chart-grid dashboard-chart-grid-3">
-        <ChartCard title="Compétences les plus demandées" data={data?.topSkills} type="bar" />
-        <ChartCard title="Formations les plus suivies" data={data?.topTrainings} type="horizontalBar" />
-        <ChartCard title="Taux de réussite quiz par mois" data={data?.quizSuccessByMonth} type="line" />
+        <ChartCard 
+          title="Compétences les plus demandées" 
+          data={data?.topSkills} 
+          type="bar"
+          xAxisTitle="Compétences"
+          yAxisTitle="Nombre de demandes"
+          explanation={adminDashboardExplanations.chart_top_skills}
+        />
+        <ChartCard 
+          title="Formations les plus suivies" 
+          data={data?.topTrainings} 
+          type="horizontalBar"
+          xAxisTitle="Nombre d'inscriptions"
+          yAxisTitle="Formations"
+          explanation={adminDashboardExplanations.chart_top_trainings}
+        />
+        <ChartCard 
+          title="Taux de réussite quiz par mois" 
+          data={data?.quizSuccessByMonth} 
+          type="line"
+          xAxisTitle="Mois"
+          yAxisTitle="Taux de réussite (%)"
+          explanation={adminDashboardExplanations.chart_quiz_success_rate}
+        />
       </div>
 
       <div className="dashboard-chart-grid">
@@ -73,9 +109,16 @@ export function AdminDashboard() {
         <DataTable title="Dernières formations créées" rows={data?.latestTrainings} valueLabel="Modules" valueMode="number" />
       </div>
       <div className="dashboard-section-title">Projets, matching et activité</div>
-      <DashboardKpiGrid items={matchingKpis} />
+      <DashboardKpiGrid items={matchingKpis} explanationMap={adminDashboardExplanations} />
       <div className="dashboard-chart-grid">
-        <ChartCard title="Score de matching par projet" data={matchingScoreByProject} type="horizontalBar" />
+        <ChartCard 
+          title="Score de matching par projet" 
+          data={matchingScoreByProject} 
+          type="horizontalBar"
+          xAxisTitle="Score de matching (%)"
+          yAxisTitle="Projets"
+          explanation={adminDashboardExplanations.chart_matching_by_project}
+        />
         <DataTable title="Recommandations de matching" rows={matchingRows} valueLabel="Score" valueMode="number" />
       </div>
       <ProjectOverviewCard title="Projets" data={data?.projects} mode="admin" />
@@ -125,7 +168,7 @@ function buildMatchingRows(data: AdminDashboardDto | null) {
       id: `${item.projectId}-${idx}`,
       title: item.title,
       subtitle: item.projectName,
-      status: item.status ?? (Number(item.score ?? 0) >= 70 ? "validé" : "en attente"),
+      status: item.status ?? null,
       primaryValue: Number(item.score ?? 0),
       date: null,
     }));

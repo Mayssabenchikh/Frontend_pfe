@@ -3,6 +3,7 @@ import { translateDashboardText } from "./dashboardText";
 const statusStyles: Record<string, string> = {
   "terminé": "border-emerald-200 bg-emerald-50 text-emerald-700",
   completed: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  active: "border-blue-200 bg-blue-50 text-blue-700",
   "en cours": "border-blue-200 bg-blue-50 text-blue-700",
   in_progress: "border-blue-200 bg-blue-50 text-blue-700",
   recommandé: "border-violet-100 bg-violet-50 text-violet-600",
