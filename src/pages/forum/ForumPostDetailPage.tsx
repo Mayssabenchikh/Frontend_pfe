@@ -6,10 +6,8 @@ import {
   faArrowLeft,
   faBookmark,
   faFlag,
-  faWandMagicSparkles,
   faThumbtack,
   faLock,
-  faStar,
   faGraduationCap,
   faBullseye,
   faShieldHalved,
@@ -31,7 +29,6 @@ import { ForumCommentTree } from "../../components/forum/ForumCommentTree";
 import { ForumCommentEditor } from "../../components/forum/ForumCommentEditor";
 import { ForumLoadingState } from "../../components/forum/ForumLoadingState";
 import { ForumReportModal } from "../../components/forum/ForumReportModal";
-import { ForumResourcePromoteModal } from "../../components/forum/ForumResourcePromoteModal";
 
 const TYPE_LABEL: Record<string, string> = {
   QUESTION: "Question",
@@ -86,13 +83,11 @@ export function ForumPostDetailPage() {
   const tokenParsed = keycloak.tokenParsed;
   const roles = getRealmRoles(tokenParsed ?? undefined);
   const isAdmin = roles.includes("ADMIN");
-  const canPromote = roles.includes("ADMIN") || roles.includes("TRAINING_MANAGER");
 
   const [post, setPost] = useState<ForumPostDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<{ type: "POST" | "COMMENT"; comment?: ForumCommentDto } | null>(null);
-  const [promote, setPromote] = useState<{ type: "POST" | "COMMENT"; comment?: ForumCommentDto } | null>(null);
 
   const load = useCallback(async () => {
     if (!postUuid) return;
@@ -279,12 +274,6 @@ export function ForumPostDetailPage() {
                   </span>
                   <span className="text-[10px] text-slate-400">·</span>
                   <span className="text-[10px] font-medium text-slate-500">{post.category.name}</span>
-                  {post.officialResource ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-800 ring-1 ring-violet-200">
-                      <FontAwesomeIcon icon={faStar} className="h-2.5 w-2.5" />
-                      Ressource officielle
-                    </span>
-                  ) : null}
                 </div>
 
                 {/* Title */}
@@ -364,16 +353,6 @@ export function ForumPostDetailPage() {
                     <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
                     Signaler
                   </button>
-                  {canPromote ? (
-                    <button
-                      type="button"
-                      onClick={() => setPromote({ type: "POST" })}
-                      className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-800 ring-1 ring-indigo-200 hover:bg-indigo-100 transition-colors"
-                    >
-                      <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3.5 w-3.5" />
-                      Promouvoir en ressource
-                    </button>
-                  ) : null}
                 </div>
 
                 {/* Admin moderation */}
@@ -441,13 +420,11 @@ export function ForumPostDetailPage() {
               postAuthorKeycloakId={post.author.keycloakId}
               currentUserKeycloakId={subject}
               isAdmin={isAdmin}
-              canPromote={canPromote}
               locked={post.locked}
               onVote={onVoteComment}
               onReply={onReply}
               onAccept={onAccept}
               onReport={(c) => setReportTarget({ type: "COMMENT", comment: c })}
-              onPromote={(c) => setPromote({ type: "COMMENT", comment: c })}
             />
           </section>
         </div>
@@ -538,28 +515,6 @@ export function ForumPostDetailPage() {
               </div>
             ) : null}
 
-            {/* Official resource */}
-            {post.officialResource ? (
-              <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <FontAwesomeIcon icon={faStar} className="h-4 w-4 text-violet-600" />
-                  <h3 className="text-xs font-semibold text-violet-900">Ressource officielle</h3>
-                </div>
-                <p className="mt-1 text-xs text-violet-700">Ce post a été promu en ressource officielle de formation.</p>
-              </div>
-            ) : null}
-
-            {/* Promote action (visible when not yet official resource) */}
-            {canPromote && !post.officialResource ? (
-              <button
-                type="button"
-                onClick={() => setPromote({ type: "POST" })}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-800 hover:bg-indigo-100 transition-colors"
-              >
-                <FontAwesomeIcon icon={faWandMagicSparkles} className="h-4 w-4" />
-                Promouvoir en ressource
-              </button>
-            ) : null}
           </div>
         </aside>
       </div>
@@ -578,22 +533,6 @@ export function ForumPostDetailPage() {
         }}
       />
 
-      <ForumResourcePromoteModal
-        open={promote !== null}
-        onClose={() => setPromote(null)}
-        sourceType={promote?.type === "COMMENT" ? "COMMENT" : "POST"}
-        sourceUuid={promote?.type === "COMMENT" && promote.comment ? promote.comment.uuid : post.uuid}
-        defaultTitle={promote?.type === "COMMENT" && promote.comment ? `Réponse : ${post.title.slice(0, 80)}` : post.title}
-        defaultSummary={
-          promote?.type === "COMMENT" && promote.comment ? promote.comment.content.slice(0, 2000) : post.content.slice(0, 2000)
-        }
-        defaultUrl={post.externalUrl}
-        tokenParsed={tokenParsed}
-        onSubmit={async (payload) => {
-          await forumService.promoteToResource(payload);
-          await load();
-        }}
-      />
     </div>
   );
 }

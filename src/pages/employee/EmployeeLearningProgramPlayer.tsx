@@ -772,8 +772,8 @@ export function EmployeeLearningProgramPlayer() {
   const SelectedIcon = selectedStep ? stepIcon(selectedStep) : ClipboardDocumentListIcon;
 
   return (
-    <div className="min-h-screen app-page-bg text-slate-950">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <div className="flex w-full flex-col app-page-bg text-slate-950 lg:flex-1 lg:h-[calc(100dvh-10.5rem)] lg:max-h-[calc(100dvh-10.5rem)] lg:min-h-0 lg:overflow-hidden">
+      <header className="z-30 shrink-0 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="flex min-h-12 w-full items-center gap-3 px-4 py-1.5 sm:px-6 lg:px-8">
           <Link
             to={backTo}
@@ -830,6 +830,7 @@ export function EmployeeLearningProgramPlayer() {
         </div>
       </header>
 
+      <div className="shrink-0 space-y-3">
       {player.suggestSkillValidationQuiz ? (
         <div className="w-full px-4 pt-3 sm:px-6 lg:px-8">
           <section className="grid gap-4 rounded-2xl border border-violet-200 bg-violet-700 p-5 text-white shadow-xl shadow-violet-200 animate-profile-section md:grid-cols-[1fr_auto] md:items-center">
@@ -931,16 +932,17 @@ export function EmployeeLearningProgramPlayer() {
           <AlertBox variant="error">{error}</AlertBox>
         </div>
       ) : null}
+      </div>
 
       <div
         className={cn(
-          "grid w-full items-stretch gap-6 px-4 pb-6 pt-3 sm:px-6 lg:px-8",
+          "grid min-h-0 w-full flex-1 items-stretch gap-6 px-4 pb-6 pt-3 sm:px-6 lg:min-h-0 lg:overflow-hidden lg:px-8",
           modulesSidebarOpen ? "lg:grid-cols-[380px_minmax(0,1fr)_380px]" : "lg:grid-cols-[minmax(0,1fr)_380px]",
         )}
       >
         {modulesSidebarOpen ? (
-          <aside className="hidden h-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
-          <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <aside className="hidden min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:flex">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 p-4 pb-3">
             <div>
               <p className="text-base font-bold text-slate-950">Modules</p>
               <p className="text-base text-slate-500">{player.steps.length} étape{player.steps.length > 1 ? "s" : ""}</p>
@@ -955,7 +957,10 @@ export function EmployeeLearningProgramPlayer() {
               <ArrowLeftIcon className="h-4 w-4" />
             </button>
           </div>
-          <nav className="space-y-5" aria-label="Plan du programme">
+          <nav
+            className="learning-player-inner-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 pb-4 pt-2"
+            aria-label="Plan du programme"
+          >
             {toc.map((part) => (
               <section key={part.partNumber}>
                 <div className="mb-2 px-1">
@@ -985,7 +990,7 @@ export function EmployeeLearningProgramPlayer() {
         </aside>
         ) : null}
 
-        <main className="flex min-w-0 flex-col space-y-5">
+        <main className="learning-player-inner-scroll flex min-h-0 min-w-0 flex-col space-y-5 overflow-y-auto overscroll-contain">
           <div className="lg:hidden">
             <label htmlFor="step-selector" className="mb-2 block text-base font-semibold uppercase tracking-wide text-slate-500">
               Étape de la formation
@@ -1005,7 +1010,7 @@ export function EmployeeLearningProgramPlayer() {
           </div>
 
           {selectedStep ? (
-            <article key={stepKey(selectedStep)} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm animate-profile-section">
+            <article key={stepKey(selectedStep)} className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm animate-profile-section">
               <div className={cn("h-1.5 bg-gradient-to-r", tone?.accent)} />
               <header className="border-b border-slate-200 p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1352,7 +1357,7 @@ export function EmployeeLearningProgramPlayer() {
         </main>
 
         {selectedStep ? (
-          <aside className="flex h-full flex-col space-y-4 lg:sticky lg:top-16">
+          <aside className="learning-player-inner-scroll flex min-h-0 flex-col space-y-4 overflow-y-auto overscroll-contain lg:max-h-full">
             <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
                 <span className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", tone?.iconBg, tone?.iconText)}>

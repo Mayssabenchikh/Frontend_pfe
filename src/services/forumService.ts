@@ -3,7 +3,6 @@ import type {
   ForumAttachmentDto,
   ForumCategoryDto,
   ForumCommentDto,
-  ForumOfficialResourceDto,
   ForumPostDetailDto,
   ForumPostPageDto,
   ForumPostsFilters,
@@ -108,22 +107,6 @@ export const forumService = {
 
   acceptAnswer: (postUuid: string, commentUuid: string) =>
     http.post(`${BASE}/posts/${postUuid}/accept-answer/${commentUuid}`),
-
-  promoteToResource: (data: {
-    sourceType: "POST" | "COMMENT";
-    sourceUuid: string;
-    learningProgramUuid?: string | null;
-    skillUuid?: string | null;
-    title: string;
-    summary?: string | null;
-    resourceUrl?: string | null;
-  }) => http.post<ForumOfficialResourceDto>(`${BASE}/resources/promote`, data),
-
-  getOfficialByProgram: (learningProgramUuid: string) =>
-    http.get<ForumOfficialResourceDto[]>(`${BASE}/resources/learning-program/${learningProgramUuid}`),
-
-  getOfficialBySkill: (skillUuid: string) =>
-    http.get<ForumOfficialResourceDto[]>(`${BASE}/resources/skill/${skillUuid}`),
 
   getReports: () => http.get<ForumReportDto[]>(`${BASE}/admin/reports`),
 

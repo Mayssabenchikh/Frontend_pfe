@@ -7,7 +7,6 @@ import {
   faComments,
   faFileLines,
   faBookmark,
-  faStar,
   faFlag,
 } from "@fortawesome/free-solid-svg-icons";
 import { getPrimaryRole, type AppRole } from "../../auth/roles";
@@ -63,10 +62,6 @@ function getForumBreadcrumbs(pathname: string): { label: string; to?: string }[]
 
   if (parts[1] === "saved") {
     return [{ label: "Publications enregistrées" }];
-  }
-
-  if (parts[1] === "resources") {
-    return [{ label: "Ressources officielles" }];
   }
 
   if (parts[1] === "reports") {
@@ -133,12 +128,6 @@ export default function ForumShell() {
             label="Enregistrés"
             icon={<FontAwesomeIcon icon={faBookmark} className="h-4 w-4" />}
             to="/forum/saved"
-            collapsed={sidebarCollapsed}
-          />
-          <DashboardSidebarNavItem
-            label="Ressources officielles"
-            icon={<FontAwesomeIcon icon={faStar} className="h-4 w-4" />}
-            to="/forum/resources"
             collapsed={sidebarCollapsed}
           />
           {isAdmin ? (

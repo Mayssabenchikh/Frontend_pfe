@@ -3,8 +3,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFlag,
   faCircleCheck,
-  faStar,
-  faWandMagicSparkles,
   faReply,
 } from "@fortawesome/free-solid-svg-icons";
 import type { ForumCommentDto, ForumPostType, ForumVoteType } from "../../types/forum";
@@ -18,13 +16,11 @@ type Props = {
   postAuthorKeycloakId: string;
   currentUserKeycloakId: string | undefined;
   isAdmin: boolean;
-  canPromote: boolean;
   locked: boolean;
   onVote: (commentUuid: string, t: ForumVoteType) => void;
   onReply: (parentUuid: string, content: string) => Promise<void>;
   onAccept?: (commentUuid: string) => void;
   onReport?: (comment: ForumCommentDto) => void;
-  onPromote?: (comment: ForumCommentDto) => void;
 };
 
 function getAuthorInitials(name: string): string {
@@ -54,13 +50,11 @@ export function ForumCommentItem({
   postAuthorKeycloakId,
   currentUserKeycloakId,
   isAdmin,
-  canPromote,
   locked,
   onVote,
   onReply,
   onAccept,
   onReport,
-  onPromote,
 }: Props) {
   const [replyOpen, setReplyOpen] = useState(false);
   const canAccept = postType === "QUESTION" && (postAuthorKeycloakId === currentUserKeycloakId || isAdmin);
@@ -83,13 +77,11 @@ export function ForumCommentItem({
                 postAuthorKeycloakId={postAuthorKeycloakId}
                 currentUserKeycloakId={currentUserKeycloakId}
                 isAdmin={isAdmin}
-                canPromote={canPromote}
                 locked={locked}
                 onVote={onVote}
                 onReply={onReply}
                 onAccept={onAccept}
                 onReport={onReport}
-                onPromote={onPromote}
               />
             ))}
           </ul>
@@ -138,12 +130,6 @@ export function ForumCommentItem({
                   Meilleure réponse
                 </span>
               ) : null}
-              {comment.officialResource ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-800 ring-1 ring-violet-200">
-                  <FontAwesomeIcon icon={faStar} className="h-3 w-3" />
-                  Ressource officielle
-                </span>
-              ) : null}
             </div>
 
             {/* Content */}
@@ -170,16 +156,6 @@ export function ForumCommentItem({
                 >
                   <FontAwesomeIcon icon={faCircleCheck} className="h-3 w-3" />
                   Accepter cette réponse
-                </button>
-              ) : null}
-              {canPromote && onPromote && !comment.deleted ? (
-                <button
-                  type="button"
-                  onClick={() => onPromote(comment)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 transition-colors hover:text-indigo-900"
-                >
-                  <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3 w-3" />
-                  Promouvoir
                 </button>
               ) : null}
               {onReport && !comment.deleted ? (
@@ -223,13 +199,11 @@ export function ForumCommentItem({
               postAuthorKeycloakId={postAuthorKeycloakId}
               currentUserKeycloakId={currentUserKeycloakId}
               isAdmin={isAdmin}
-              canPromote={canPromote}
               locked={locked}
               onVote={onVote}
               onReply={onReply}
               onAccept={onAccept}
               onReport={onReport}
-              onPromote={onPromote}
             />
           ))}
         </ul>

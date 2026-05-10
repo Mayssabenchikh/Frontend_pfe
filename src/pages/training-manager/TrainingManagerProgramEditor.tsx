@@ -1427,7 +1427,6 @@ export function TrainingManagerProgramEditor() {
             </div>
           )}
 
-
           {editorWorkspaceTab === "videosQuiz" && (
           <>
           <div className="space-y-6">

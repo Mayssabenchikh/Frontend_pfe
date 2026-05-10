@@ -92,10 +92,10 @@ export default function EmployeePage() {
                 : isAssignmentsPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
                 : isLearningPage || isRecommendationsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-4 py-4 sm:px-6 sm:py-6"
+                  ? "flex min-h-0 w-full flex-1 flex-col overflow-auto overscroll-contain app-page-bg px-4 py-4 sm:px-6 sm:py-6"
                 : isProjectsPage || isChatPage
                   ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
-                : `flex min-w-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "dashboard-padding overflow-hidden"}`
+                : `flex min-h-0 min-w-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "dashboard-padding overflow-auto overscroll-contain"}`
             }
           >
             <Outlet context={{ employeeAvatarUrl: avatarUrl, employeeName: displayName, employeeEmail: email, currentPath: location.pathname, onAvatarUpdate: setAvatarUrl }} />

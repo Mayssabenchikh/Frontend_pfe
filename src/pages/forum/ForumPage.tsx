@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPenToSquare,
@@ -255,18 +254,6 @@ export function ForumPage() {
         }
         right={
           <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-900">Ressources issues du forum</h3>
-              <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                Les contenus promus par le responsable formation apparaissent comme ressources officielles et peuvent être consultés par formation ou compétence.
-              </p>
-              <Link
-                to="/forum/resources"
-                className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-violet-700 hover:text-violet-900 transition-colors"
-              >
-                Explorer les ressources →
-              </Link>
-            </div>
             <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-violet-950">Bonnes pratiques du forum</h3>
               <ul className="mt-3 space-y-2 text-xs text-slate-600">

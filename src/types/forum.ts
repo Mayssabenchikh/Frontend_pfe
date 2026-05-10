@@ -6,8 +6,6 @@ export type ForumReportTargetType = "POST" | "COMMENT";
 
 export type ForumReportStatus = "PENDING" | "REVIEWED" | "REJECTED";
 
-export type ForumOfficialResourceSourceType = "POST" | "COMMENT";
-
 export type ForumCategoryDto = {
   uuid: string;
   name: string;
@@ -60,7 +58,6 @@ export type ForumPostSummaryDto = {
   viewCount: number;
   pinned: boolean;
   locked: boolean;
-  officialResource: boolean;
   savedByMe: boolean;
   myVote: ForumVoteType | null;
   createdAt: string;
@@ -78,7 +75,6 @@ export type ForumCommentDto = {
   upvoteCount: number;
   downvoteCount: number;
   acceptedAnswer: boolean;
-  officialResource: boolean;
   hidden: boolean;
   deleted: boolean;
   myVote: ForumVoteType | null;
@@ -111,7 +107,6 @@ export type ForumPostDetailDto = {
   viewCount: number;
   pinned: boolean;
   locked: boolean;
-  officialResource: boolean;
   savedByMe: boolean;
   myVote: ForumVoteType | null;
   acceptedCommentUuid: string | null;
@@ -158,22 +153,6 @@ export type ForumReportDto = {
   adminNotes: string | null;
   createdAt: string;
   reviewedAt: string | null;
-};
-
-export type ForumOfficialResourceDto = {
-  uuid: string;
-  sourceType: ForumOfficialResourceSourceType;
-  sourceUuid: string;
-  createdBy: ForumAuthorDto;
-  learningProgramUuid: string | null;
-  learningProgramTitle: string | null;
-  skillUuid: string | null;
-  skillName: string | null;
-  title: string;
-  summary: string | null;
-  resourceUrl: string | null;
-  approved: boolean;
-  createdAt: string;
 };
 
 export type ForumPostsSort = "new" | "top" | "popular" | "hot";

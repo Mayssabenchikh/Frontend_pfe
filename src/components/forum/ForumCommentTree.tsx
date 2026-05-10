@@ -7,13 +7,11 @@ type Props = {
   postAuthorKeycloakId: string;
   currentUserKeycloakId: string | undefined;
   isAdmin: boolean;
-  canPromote: boolean;
   locked: boolean;
   onVote: (commentUuid: string, t: ForumVoteType) => void;
   onReply: (parentUuid: string, content: string) => Promise<void>;
   onAccept?: (commentUuid: string) => void;
   onReport?: (comment: ForumCommentDto) => void;
-  onPromote?: (comment: ForumCommentDto) => void;
 };
 
 export function ForumCommentTree({
@@ -22,26 +20,22 @@ export function ForumCommentTree({
   postAuthorKeycloakId,
   currentUserKeycloakId,
   isAdmin,
-  canPromote,
   locked,
   onVote,
   onReply,
   onAccept,
   onReport,
-  onPromote,
 }: Props) {
   const itemProps = {
     postType,
     postAuthorKeycloakId,
     currentUserKeycloakId,
     isAdmin,
-    canPromote,
     locked,
     onVote,
     onReply,
     onAccept,
     onReport,
-    onPromote,
   };
   return (
     <ul className="space-y-3">

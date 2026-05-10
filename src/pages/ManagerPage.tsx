@@ -91,7 +91,13 @@ export default function ManagerPage() {
             className={
               isQuizPage || isCvExtractionPage
                 ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
-                : `${isFullBleed || isDashboardRoute ? "" : "dashboard-padding "}${isDashboardRoute ? "flex min-w-0 flex-1 flex-col overflow-visible" : "flex min-w-0 flex-1 flex-col overflow-hidden"}`
+                : `${isFullBleed || isDashboardRoute ? "" : "dashboard-padding "}${
+                    isDashboardRoute
+                      ? "flex min-w-0 flex-1 flex-col overflow-visible"
+                      : isFullBleed
+                        ? "flex min-w-0 flex-1 flex-col overflow-hidden"
+                        : "flex min-h-0 min-w-0 flex-1 flex-col overflow-auto"
+                  }`
             }
           >
             <Outlet

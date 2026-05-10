@@ -7,7 +7,6 @@ import {
   faEye,
   faThumbtack,
   faLock,
-  faStar,
   faGraduationCap,
   faBullseye,
   faCircleQuestion,
@@ -108,12 +107,6 @@ export function ForumPostCard({ post, onVote, onSave, onReport }: Props) {
           </span>
           <span className="text-[10px] font-medium text-slate-400">·</span>
           <span className="text-[10px] font-medium text-slate-500">{post.category.name}</span>
-          {post.officialResource ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-800 ring-1 ring-violet-200">
-              <FontAwesomeIcon icon={faStar} className="h-2.5 w-2.5" />
-              Ressource officielle
-            </span>
-          ) : null}
           {post.learningProgramTitle ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700 ring-1 ring-indigo-200">
               <FontAwesomeIcon icon={faGraduationCap} className="h-2.5 w-2.5" />

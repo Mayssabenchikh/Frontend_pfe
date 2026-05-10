@@ -38,7 +38,6 @@ import { ForumPostDetailPage } from "./pages/forum/ForumPostDetailPage";
 import { MyForumPostsPage } from "./pages/forum/MyForumPostsPage";
 import { SavedForumPostsPage } from "./pages/forum/SavedForumPostsPage";
 import { ForumReportsPage } from "./pages/forum/ForumReportsPage";
-import { ForumResourcesPage } from "./pages/forum/ForumResourcesPage";
 
 const EmployeeQuiz = lazy(() =>
   import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
@@ -186,7 +185,6 @@ function App() {
           <Route path="my-posts" element={<MyForumPostsPage />} />
           <Route path="saved" element={<SavedForumPostsPage />} />
           <Route path="reports" element={<ForumReportsPage />} />
-          <Route path="resources" element={<ForumResourcesPage />} />
         </Route>
         <Route
           path="/training-manager"

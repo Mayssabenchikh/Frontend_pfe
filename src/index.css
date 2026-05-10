@@ -392,13 +392,29 @@
   overflow: visible;
 }
 
-.tm-scroll-area {
-  overflow: visible;
+/* Ne pas forcer overflow ici : TrainingManagerPage applique overflow-auto sur cette zone ;
+   une règle overflow:visible écrasait les utilitaires Tailwind et bloquait le scroll de page. */
+.tm-scroll-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.tm-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.24);
+  border-radius: 999px;
 }
 
-.tm-scroll-area::-webkit-scrollbar {
-  width: initial;
-  height: initial;
+/* Lecteur formation : zones défilantes (plan modules, contenu) — barre fine visible */
+.learning-player-inner-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.28) transparent;
+}
+.learning-player-inner-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.learning-player-inner-scroll::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.24);
+  border-radius: 999px;
 }
 
 .tm-section {

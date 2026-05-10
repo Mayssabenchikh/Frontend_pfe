@@ -330,15 +330,23 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
     setSaveLoading(true);
     setSaveError(null);
     try {
+      const hireTrim = editHireDate?.trim() ?? "";
+      const hirePayload =
+        hireTrim.length >= 10 && /^\d{4}-\d{2}-\d{2}$/.test(hireTrim.slice(0, 10)) ? hireTrim.slice(0, 10) : null;
+
+      const roleNorm = String(editRole ?? "EMPLOYEE")
+        .trim()
+        .toUpperCase();
+
       const payload = {
         email: editEmail.trim(),
         firstName: editFirstName.trim(),
         lastName: editLastName.trim(),
-        role: editRole,
+        role: roleNorm,
         department: editDepartment.trim() || null,
         jobTitle: editJobTitle.trim() || null,
         phone: editPhone.trim() || null,
-        hireDate: editHireDate || null,
+        hireDate: hirePayload,
       };
       await http.put(`/api/admin/users/${encodeURIComponent(user.keycloakId)}`, payload);
       setUser((prev) => (prev ? { ...prev, ...payload, role: editRole } : prev));
