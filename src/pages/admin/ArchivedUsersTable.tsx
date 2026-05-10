@@ -159,7 +159,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40
                 ${isRes ? "bg-green-500/10 text-green-700" : "border border-green-500/25 bg-green-500/[0.08] text-green-700 hover:-translate-y-px hover:bg-green-500/15 hover:border-green-500/40 hover:shadow-[0_2px_8px_rgba(34,197,94,0.2)]"}`}
             >
-              {isRes ? <span className="text-[10px] font-bold">···</span> : <ArrowPathIcon className="w-3.5 h-3.5" />}
+              {isRes ? <span className="text-xs font-bold">···</span> : <ArrowPathIcon className="w-3.5 h-3.5" />}
             </button>
 
             {/* Delete button */}
@@ -171,7 +171,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40
                 ${isDel ? "bg-red-500/10 text-red-800" : "border border-red-500/20 bg-red-500/[0.07] text-red-800 hover:-translate-y-px hover:bg-red-500/15 hover:border-red-500/35 hover:shadow-[0_2px_8px_rgba(239,68,68,0.18)]"}`}
             >
-              {isDel ? <span className="text-[10px] font-bold">···</span> : <TrashIcon className="w-3.5 h-3.5" />}
+              {isDel ? <span className="text-xs font-bold">···</span> : <TrashIcon className="w-3.5 h-3.5" />}
             </button>
           </div>
         );
@@ -232,7 +232,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
                     <InboxStackIcon className="h-8 w-8 text-violet-700" />
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm font-bold text-violet-900">Aucun utilisateur archivé</p>
+                    <p className="text-sm font-semibold text-violet-900">Aucun utilisateur archivé</p>
                     <p className="text-xs text-violet-400">
                       Les utilisateurs archivés apparaîtront ici
                     </p>

@@ -100,8 +100,8 @@ export function TrainingManagerSubmissions() {
     <div className="w-full space-y-8 px-4 pb-10 pt-2 sm:px-6 sm:pt-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-violet-700/90">Validation IA</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Soumissions a corriger</h1>
+          <p className="text-xs font-semibold uppercase tracking-widest text-violet-700/90">Validation IA</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-3xl">Soumissions a corriger</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
             Lancez une correction IA pour les exercices et activites soumis par les employes et managers.
             La validation finale reste humaine.
@@ -159,11 +159,11 @@ export function TrainingManagerSubmissions() {
                         <p className="mt-1 text-xs text-slate-500">{item.programTitle} · {item.courseTitle}</p>
                         <p className="mt-1 text-xs text-slate-500">{item.learnerName}</p>
                       </div>
-                      <div className="text-right text-[10px] uppercase tracking-wide text-slate-400">
+                      <div className="text-right text-xs uppercase tracking-wide text-slate-400">
                         {new Date(item.submittedAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase">
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase">
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">{item.activityKind}</span>
                       {item.aiCorrectionReady && (
                         <span className="rounded-full bg-violet-100 px-2 py-0.5 text-violet-700">IA prete</span>
@@ -254,7 +254,7 @@ export function TrainingManagerSubmissions() {
                     <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-4">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Correction IA</p>
-                        <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-violet-700">
+                        <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-violet-700">
                           Validation humaine obligatoire
                         </span>
                       </div>

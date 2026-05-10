@@ -373,7 +373,7 @@ export function PendingSkillRequests() {
           <div className="rounded-3xl border border-violet-100/70 bg-white shadow-[0_8px_24px_rgba(124,58,237,0.06)]">
             <div className="grid grid-cols-1 items-end gap-3 px-4 py-4 lg:grid-cols-[1fr_220px_auto] lg:px-5">
               <div className="min-w-0">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-500">
                   <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" />
                   Rechercher
                 </label>
@@ -386,7 +386,7 @@ export function PendingSkillRequests() {
               </div>
 
               <div className="w-full">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-500">
                   <FontAwesomeIcon icon={faFilter} className="h-3 w-3" />
                   Statut
                 </label>
@@ -476,12 +476,12 @@ export function PendingSkillRequests() {
                               <FontAwesomeIcon icon={faWandMagicSparkles} className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-[14px] font-bold text-slate-900 sm:text-[15px]">{req.rawSkillName}</p>
-                              <p className="text-[11px] text-slate-500">Compétence détectée par IA</p>
+                              <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">{req.rawSkillName}</p>
+                              <p className="text-xs text-slate-500">Compétence détectée par IA</p>
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${STATUS_BADGE[req.status] ?? "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${STATUS_BADGE[req.status] ?? "border-slate-200 bg-slate-50 text-slate-700"}`}>
                               {STATUS_LABEL[req.status] ?? req.status}
                             </span>
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-xs text-slate-600 ring-1 ring-slate-100">
@@ -515,27 +515,27 @@ export function PendingSkillRequests() {
                           {(req.adminNotes || req.resolvedAt) && req.status !== "PENDING" ? (
                             <div className="mt-3 overflow-hidden rounded-2xl border border-violet-200/70 bg-gradient-to-r from-violet-50/70 via-white to-indigo-50/60 shadow-sm">
                               <div className="flex items-center justify-between border-b border-violet-200/50 px-3 py-2">
-                                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-700">
+                                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-violet-700">
                                   <FontAwesomeIcon icon={faCircleInfo} className="h-3 w-3" />
                                   Détails de traitement
                                 </span>
-                                <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-violet-600">
+                                <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-xs font-semibold text-violet-600">
                                   {req.status === "APPROVED" ? "Approuvée" : req.status === "MERGED" ? "Fusionnée" : "Rejetée"}
                                 </span>
                               </div>
 
                               <div className="space-y-2 px-3 py-3">
                                 {req.adminNotes ? (
-                                  <p className="text-[11px] leading-relaxed text-slate-700">
+                                  <p className="text-xs leading-relaxed text-slate-700">
                                     <span className="font-semibold text-slate-800">Note: </span>
                                     {req.adminNotes}
                                   </p>
                                 ) : (
-                                  <p className="text-[11px] italic text-slate-500">Aucune note fournie.</p>
+                                  <p className="text-xs italic text-slate-500">Aucune note fournie.</p>
                                 )}
 
                                 {req.resolvedAt ? (
-                                  <p className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/85 px-2.5 py-1.5 text-[10px] font-medium text-slate-600">
+                                  <p className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/85 px-2.5 py-1.5 text-xs font-medium text-slate-600">
                                     <FontAwesomeIcon icon={faCircleCheck} className="h-3 w-3 text-emerald-500" />
                                     Traité le {new Date(req.resolvedAt).toLocaleString("fr-FR")}
                                   </p>
@@ -549,7 +549,7 @@ export function PendingSkillRequests() {
                             <button
                               type="button"
                               onClick={() => openResolveModal(req)}
-                              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-[11px] font-semibold text-white shadow-[0_8px_18px_rgba(124,58,237,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(124,58,237,0.34)]"
+                              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(124,58,237,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(124,58,237,0.34)]"
                             >
                               <FontAwesomeIcon icon={faBoltLightning} className="h-3.5 w-3.5" />
                               Traiter
@@ -606,7 +606,7 @@ export function PendingSkillRequests() {
                   <FontAwesomeIcon icon={resolveActionMeta.icon} className="h-5 w-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/80">Traitement de demande</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-white/80">Traitement de demande</p>
                   <h3 className="mt-1 text-lg font-bold leading-tight">{resolveModal.rawSkillName}</h3>
                   <p className="mt-1 text-sm text-white/85">{resolveActionMeta.description}</p>
                 </div>
@@ -623,7 +623,7 @@ export function PendingSkillRequests() {
 
             <div className="space-y-4 px-5 py-5">
               <div className={`rounded-2xl border px-4 py-3 ${resolveActionMeta.tone}`}>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Action</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Action</label>
                 <select
                   value={resolveAction}
                   onChange={(e) => setResolveAction(e.target.value as "APPROVE" | "MERGE" | "REJECT")}
@@ -651,7 +651,7 @@ export function PendingSkillRequests() {
                         void loadMergeSuggestion(resolveModal);
                       }}
                       disabled={suggestionLoading || !resolveModal}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {suggestionLoading ? (
                         <>
@@ -668,7 +668,7 @@ export function PendingSkillRequests() {
 
               {resolveAction === "APPROVE" && (
                 <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Catégorie cible</label>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Catégorie cible</label>
                   <select
                     value={resolveCategoryId}
                     onChange={(e) => setResolveCategoryId(e.target.value)}
@@ -684,7 +684,7 @@ export function PendingSkillRequests() {
 
               {resolveAction === "MERGE" && (
                 <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Compétence cible</label>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Compétence cible</label>
                   <select
                     value={resolveSkillId}
                     onChange={(e) => setResolveSkillId(e.target.value)}
@@ -704,7 +704,7 @@ export function PendingSkillRequests() {
               )}
 
               <div className="rounded-2xl border border-violet-100 bg-slate-50/70 p-4 shadow-sm">
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Note admin (optionnel)</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Note admin (optionnel)</label>
                 <textarea
                   value={resolveNotes}
                   onChange={(e) => setResolveNotes(e.target.value)}
@@ -745,8 +745,8 @@ export function PendingSkillRequests() {
           <div className="relative w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-200 bg-white shadow-[0_24px_70px_rgba(76,29,149,0.25)]">
             <div className="flex items-center justify-between border-b border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50 px-5 py-3.5">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-violet-500">Demandeurs</p>
-                <h3 className="text-sm font-bold text-slate-900">
+                <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">Demandeurs</p>
+                <h3 className="text-sm font-semibold text-slate-900">
                   {requestersModal.rawSkillName} ({requestersModal.requestersCount})
                 </h3>
               </div>
@@ -765,7 +765,7 @@ export function PendingSkillRequests() {
                   <p className="text-sm font-semibold text-slate-900">{r.name || "Utilisateur"}</p>
                   <p className="text-xs text-slate-600">{r.email}</p>
                   {r.requestedAt && (
-                    <p className="mt-1 text-[11px] text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500">
                       {new Date(r.requestedAt).toLocaleString("fr-FR")}
                     </p>
                   )}

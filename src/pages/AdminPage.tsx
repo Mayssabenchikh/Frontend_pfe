@@ -14,6 +14,7 @@ import { ROLE_LABELS, ROLE_OPTIONS, MESSAGES } from "./admin/constants";
 import { getDisplayName, getInitials, getApiError, ensureArray } from "./admin/utils";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { triggerTopLoadingBar } from "../components/TopLoadingBar";
+import { DashboardShell } from "../components/DashboardShell";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminHeader } from "./admin/AdminHeader";
 import { AdminBreadcrumbs } from "./admin/AdminBreadcrumbs";
@@ -295,14 +296,6 @@ export default function AdminPage() {
       .finally(() => setCreateLoading(false));
   }, [createEmail, createFirstName, createLastName, createRole, createDepartment, createJobTitle, createPhone, createHireDate, loadUsers, resetCreateForm]);
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
-    const handler = () => { if (mq.matches) setSidebarCollapsed(false); };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
   const roleLabel = ROLE_LABELS[getPrimaryRole(token ?? undefined) ?? ""] ?? "—";
 
   const handleUserDetailSaved = useCallback(() => {
@@ -334,30 +327,27 @@ export default function AdminPage() {
     if (isUserDetailRoute) navigate("/admin", { state: { view } });
     if (!isUserDetailRoute && view === "dashboard" && location.pathname !== "/admin/dashboard") navigate("/admin/dashboard");
     setCurrentView(view);
-    setSidebarOpen(false);
   };
 
   const isDashboardView = !isUserDetailRoute && currentView === "dashboard";
 
   return (
-    <div className={`admin-layout${isDashboardView ? " dashboard-page" : ""}`} data-sidebar-collapsed={sidebarCollapsed || undefined}>
-      {/* Mobile backdrop */}
-      <div
-        className={`sidebar-backdrop${sidebarOpen ? " open" : ""}`}
-        onClick={() => setSidebarOpen(false)}
-      />
-
-      <AdminSidebar
-        currentView={currentView}
-        onNavChange={handleNavChange}
-        displayName={getDisplayName(token)} roleLabel={roleLabel}
-        avatarUrl={token?.picture ?? null} initials={getInitials(token)}
-        mobileOpen={sidebarOpen}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
-      />
-
-      <div className="admin-content">
+    <DashboardShell
+      dashboardPage={isDashboardView}
+      renderSidebar={({ sidebarOpen, sidebarCollapsed, setSidebarOpen, toggleSidebarCollapsed }) => (
+        <AdminSidebar
+          currentView={currentView}
+          onNavChange={(view) => {
+            handleNavChange(view);
+            setSidebarOpen(false);
+          }}
+          onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
+          mobileOpen={sidebarOpen}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapsed}
+        />
+      )}
+      renderHeader={({ toggleSidebar }) => (
         <AdminHeader
           displayName={getDisplayName(token)}
           initials={getInitials(token)} avatarUrl={adminAvatarUrl}
@@ -365,10 +355,11 @@ export default function AdminPage() {
           roleLabel={roleLabel}
           onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
           onNavigate={handleNavChange}
-          onMenuToggle={() => setSidebarOpen((o) => !o)}
+          onMenuToggle={toggleSidebar}
         />
-
-        <main className={`flex min-w-0 flex-1 flex-col ${isDashboardView ? "overflow-visible" : "overflow-hidden"}`}>
+      )}
+    >
+        <main className={`flex min-w-0 flex-1 flex-col ${isDashboardView ? "overflow-auto" : "overflow-hidden"}`}>
           <AdminBreadcrumbs
             currentView={isUserDetailRoute ? "users" : currentView}
             detailLabel={isUserDetailRoute ? "Détail utilisateur" : undefined}
@@ -440,7 +431,7 @@ export default function AdminPage() {
                   >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
                       <div className="lg:col-span-2">
-                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                        <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">
                           Rechercher (nom, prénom, email)
                         </label>
                         <input
@@ -451,7 +442,7 @@ export default function AdminPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Rôle</label>
+                        <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Rôle</label>
                         <select
                           value={archivedFilters.role}
                           onChange={(e) => setArchivedFilters((p) => ({ ...p, role: e.target.value }))}
@@ -466,7 +457,7 @@ export default function AdminPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Du</label>
+                        <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Du</label>
                         <input
                           type="date"
                           value={archivedFilters.from}
@@ -475,7 +466,7 @@ export default function AdminPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Au</label>
+                        <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Au</label>
                         <input
                           type="date"
                           value={archivedFilters.to}
@@ -484,7 +475,7 @@ export default function AdminPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
+                        <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
                         <select
                           value={archivedFilters.order}
                           onChange={(e) => setArchivedFilters((p) => ({ ...p, order: e.target.value as any }))}
@@ -516,7 +507,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => { resetCreateForm(); setCreateModalOpen(true); }}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-none bg-gradient-to-br from-indigo-600 to-violet-600 px-[18px] py-2.5 text-[13px] font-semibold text-white shadow-[0_4px_16px_rgba(67,56,202,0.4)] transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(67,56,202,0.55)]"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-none bg-gradient-to-br from-indigo-600 to-violet-600 px-[18px] py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(67,56,202,0.4)] transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(67,56,202,0.55)]"
                 >
                   <PlusIcon className="w-4 h-4" />
                   Nouvel utilisateur
@@ -532,7 +523,7 @@ export default function AdminPage() {
                   >
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
                         <div className="lg:col-span-2">
-                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                          <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">
                             Rechercher (nom, prénom, email)
                           </label>
                           <input
@@ -543,7 +534,7 @@ export default function AdminPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Statut</label>
+                          <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Statut</label>
                           <select
                             value={usersFilters.status}
                             onChange={(e) => setUsersFilters((p) => ({ ...p, status: e.target.value as any }))}
@@ -555,7 +546,7 @@ export default function AdminPage() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Rôle</label>
+                          <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Rôle</label>
                           <select
                             value={usersFilters.role}
                             onChange={(e) => setUsersFilters((p) => ({ ...p, role: e.target.value }))}
@@ -570,7 +561,7 @@ export default function AdminPage() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Du</label>
+                          <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Du</label>
                           <input
                             type="date"
                             value={usersFilters.from}
@@ -579,7 +570,7 @@ export default function AdminPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Au</label>
+                          <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Au</label>
                           <input
                             type="date"
                             value={usersFilters.to}
@@ -588,7 +579,7 @@ export default function AdminPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
+                          <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
                           <select
                             value={usersFilters.order}
                             onChange={(e) => setUsersFilters((p) => ({ ...p, order: e.target.value as any }))}
@@ -619,7 +610,6 @@ export default function AdminPage() {
             </section>
           )}
         </main>
-      </div>
 
       <CreateUserModal
         open={createModalOpen} onClose={() => setCreateModalOpen(false)}
@@ -648,6 +638,6 @@ export default function AdminPage() {
         }}
         onCancel={() => setDeleteConfirmUser(null)}
       />
-    </div>
+    </DashboardShell>
   );
 }

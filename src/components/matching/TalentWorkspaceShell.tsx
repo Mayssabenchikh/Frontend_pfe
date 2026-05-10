@@ -47,17 +47,17 @@ export function TalentWorkspaceShell({
               <div className="min-w-0">
                 <div className="flex min-w-0 items-baseline gap-3">
                   {kicker && (
-                    <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-600">
+                    <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-violet-600">
                       {kicker}
                     </span>
                   )}
-                  <h1 className="truncate text-[18px] font-bold leading-tight tracking-tight text-slate-900">
+                  <h1 className="truncate text-lg font-bold leading-tight tracking-tight text-slate-900">
                     {title}
                   </h1>
                 </div>
 
                 {subtitle && (
-                  <p className="mt-1.5 text-[12px] font-medium tracking-wide text-slate-500">
+                  <p className="mt-1.5 text-xs font-medium tracking-wide text-slate-500">
                     {subtitle}
                   </p>
                 )}
@@ -72,11 +72,11 @@ export function TalentWorkspaceShell({
               {/* Identity block */}
               <div className="flex min-w-0 items-baseline gap-3">
                 {kicker && (
-                  <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-600">
+                  <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-violet-600">
                     {kicker}
                   </span>
                 )}
-                <h1 className="truncate text-[17px] font-extrabold leading-none tracking-tight text-slate-900">
+                <h1 className="truncate text-base font-bold leading-none tracking-tight text-slate-900">
                   {title}
                 </h1>
               </div>
@@ -90,7 +90,7 @@ export function TalentWorkspaceShell({
             {/* Bottom strip — subtitle / meta */}
             {subtitle && (
               <div className={`${containerClassName} px-3 pb-2.5 pt-1 sm:px-8 lg:px-12 xl:px-14`}>
-                <span className="text-[12px] font-medium text-slate-400 tracking-wide">
+                <span className="text-xs font-medium text-slate-400 tracking-wide">
                   {subtitle}
                 </span>
               </div>

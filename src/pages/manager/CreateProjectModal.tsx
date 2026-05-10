@@ -50,7 +50,7 @@ function LevelPicker({
           />
         );
       })}
-      <span className="ml-1 text-[11px] font-semibold text-slate-500 w-3">{value}</span>
+      <span className="ml-1 text-xs font-semibold text-slate-500 w-3">{value}</span>
     </div>
   );
 }
@@ -197,7 +197,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                   className="h-8 w-8 rounded-full object-cover"
                 />
               ) : (
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-[11px] font-semibold text-white">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-xs font-semibold text-white">
                   {(
                     initialProject?.leadName ||
                     initialProject?.leadEmail ||
@@ -216,7 +216,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                 <p className="text-xs font-semibold text-slate-800 truncate max-w-[120px]">
                   {initialProject?.leadName || leadName || "—"}
                 </p>
-                <p className="text-[11px] text-slate-400">Lead du projet</p>
+                <p className="text-xs text-slate-400">Lead du projet</p>
               </div>
             </div>
           )}
@@ -342,7 +342,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                 </div>
                 <span className="text-xs font-semibold text-slate-700">Compétences requises</span>
                 {requirements.length > 0 && (
-                  <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-100 px-1.5 text-[10px] font-bold text-violet-700">
+                  <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-100 px-1.5 text-xs font-bold text-violet-700">
                     {requirements.length}
                   </span>
                 )}
@@ -351,7 +351,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                 type="button"
                 onClick={addRequirement}
                 disabled={skills.length === 0 || requirements.length >= skills.length}
-                className="group flex items-center gap-1 rounded-lg border border-dashed border-slate-300 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-500 transition-all hover:border-violet-400 hover:bg-violet-50 hover:text-violet-700 disabled:pointer-events-none disabled:opacity-40"
+                className="group flex items-center gap-1 rounded-lg border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-500 transition-all hover:border-violet-400 hover:bg-violet-50 hover:text-violet-700 disabled:pointer-events-none disabled:opacity-40"
               >
                 <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M6 1v10M1 6h10" strokeLinecap="round" />
@@ -415,7 +415,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
 
                       {/* Bottom row: level label + dot picker */}
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-slate-400 font-medium">
+                        <span className="text-xs text-slate-400 font-medium">
                           Niveau minimum requis
                         </span>
                         <LevelPicker
@@ -444,7 +444,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
                       <path d="M8 5v6M5 8h6" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-xs text-slate-400">
                     Aucune compétence — <span className="text-violet-500 font-medium">cliquez pour en ajouter</span>
                   </span>
                 </button>

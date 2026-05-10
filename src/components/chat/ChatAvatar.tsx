@@ -45,7 +45,7 @@ export function ChatAvatar({
     />
   ) : (
     <div
-      className="flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-violet-100 text-[11px] font-semibold text-violet-700"
+      className="flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-violet-100 text-xs font-semibold text-violet-700"
       style={{ width: diameter, height: diameter }}
       aria-label={name || "Utilisateur"}
       title={name || "Utilisateur"}

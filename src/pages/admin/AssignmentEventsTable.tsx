@@ -195,7 +195,7 @@ export function AssignmentEventsTable({ rows, loading, error }: Props) {
                     <InboxStackIcon className="h-8 w-8 text-violet-700" />
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm font-bold text-violet-900">Aucun historique</p>
+                    <p className="text-sm font-semibold text-violet-900">Aucun historique</p>
                     <p className="text-xs text-violet-400">Les événements apparaîtront ici</p>
                   </div>
                 </div>

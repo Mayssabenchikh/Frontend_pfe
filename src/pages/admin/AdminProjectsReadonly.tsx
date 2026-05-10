@@ -84,7 +84,7 @@ export function AdminProjectsReadonly() {
   const safeTotalPages = Math.max(totalPages, 1);
 
   const columnDefs = useMemo<ColDef<ProjectDto>[]>(() => {
-    const badgeBase = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold";
+    const badgeBase = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold";
     return [
       {
         headerName: "Projet",
@@ -175,7 +175,7 @@ export function AdminProjectsReadonly() {
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
               <div className="lg:col-span-2">
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Recherche</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Recherche</label>
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -184,7 +184,7 @@ export function AdminProjectsReadonly() {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Statut</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Statut</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -197,7 +197,7 @@ export function AdminProjectsReadonly() {
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Priorité</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Priorité</label>
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
@@ -210,7 +210,7 @@ export function AdminProjectsReadonly() {
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Du</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Du</label>
                 <input
                   type="date"
                   value={from}
@@ -219,7 +219,7 @@ export function AdminProjectsReadonly() {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Au</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Au</label>
                 <input
                   type="date"
                   value={to}
@@ -228,7 +228,7 @@ export function AdminProjectsReadonly() {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Ordre</label>
                 <select
                   value={order}
                   onChange={(e) => setOrder(e.target.value as any)}
@@ -265,7 +265,7 @@ export function AdminProjectsReadonly() {
                       <FolderIcon className="h-8 w-8 text-violet-700" />
                     </div>
                     <div className="flex flex-col items-center gap-1">
-                      <p className="text-sm font-bold text-violet-900">Aucun projet</p>
+                      <p className="text-sm font-semibold text-violet-900">Aucun projet</p>
                       <p className="text-xs text-violet-400">Les projets apparaîtront ici</p>
                     </div>
                   </div>

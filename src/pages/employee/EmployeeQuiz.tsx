@@ -1070,8 +1070,14 @@ export function EmployeeQuiz() {
                           : <FontAwesomeIcon icon={faBolt} style={{ width: 20, height: 20, color: "#6D28D9" }} />;
                       })()}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="eq-sel-name">{selectedSkillForSetup.skillName}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="eq-sel-name">{selectedSkillForSetup.skillName}</div>
+                        {(() => {
+                          const b = statusBadgeConfig(selectedSkillForSetup.status, selectedSkillForSetup.validatedLevel);
+                          return <span className={`eq-pill ${b.className}`}>{b.label}</span>;
+                        })()}
+                      </div>
                       <div className="eq-sel-meta">
                         {formatSkillLevelLabel(
                           selectedSkillForSetup.level,
@@ -1081,10 +1087,16 @@ export function EmployeeQuiz() {
                         )}
                       </div>
                     </div>
-                    {(() => {
-                      const b = statusBadgeConfig(selectedSkillForSetup.status, selectedSkillForSetup.validatedLevel);
-                      return <span className={`eq-pill ${b.className}`}>{b.label}</span>;
-                    })()}
+                    {!quizCooldownActive && (
+                      <button
+                        className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(124,58,237,0.28)] transition hover:from-violet-500 hover:to-indigo-500 hover:shadow-[0_6px_18px_rgba(124,58,237,0.34)] disabled:cursor-not-allowed disabled:opacity-45"
+                        disabled={loadingSkills || starting}
+                        onClick={() => void startQuiz()}
+                      >
+                        <FontAwesomeIcon icon={faWandSparkles} style={{ width: 14, height: 14 }} />
+                        Démarrer le quiz
+                      </button>
+                    )}
                   </div>
 
                   <div className="eq-stats">
@@ -1127,23 +1139,6 @@ export function EmployeeQuiz() {
                     </div>
                   </div>
 
-                  {!quizCooldownActive && (
-                    <button
-                      className="eq-btn-primary"
-                      disabled={loadingSkills || starting}
-                      onClick={() => void startQuiz()}
-                    >
-                      {starting
-                        ? <>
-                            <FontAwesomeIcon icon={faSpinner} style={{ width: 14, height: 14, animation: "eq-spin 0.85s linear infinite" }} />
-                            Génération en cours…
-                          </>
-                        : <>
-                            <FontAwesomeIcon icon={faWandSparkles} style={{ width: 14, height: 14 }} />
-                            Démarrer le quiz
-                          </>}
-                    </button>
-                  )}
                 </div>
               )}
 
@@ -1366,20 +1361,20 @@ export function EmployeeQuiz() {
                             <FontAwesomeIcon icon={faClipboardCheck} className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="text-xl font-black">Session en cours</p>
+                            <p className="text-xl font-bold">Session en cours</p>
                             <p className="text-sm font-medium text-slate-500">{answeredCount} / {questions.length} réponses complétées</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <p className={["text-sm font-black uppercase tracking-[0.12em]", isUrgent ? "text-rose-600" : "text-rose-700"].join(" ")}>Temps restant</p>
-                            <p className={["font-mono text-3xl font-black leading-none", isUrgent ? "text-rose-700" : "text-slate-950"].join(" ")}>{formatTime(remainingSeconds)}</p>
+                            <p className={["text-sm font-semibold uppercase tracking-wide", isUrgent ? "text-rose-600" : "text-rose-700"].join(" ")}>Temps restant</p>
+                            <p className={["font-mono text-3xl font-bold leading-none", isUrgent ? "text-rose-700" : "text-slate-950"].join(" ")}>{formatTime(remainingSeconds)}</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => setQuitConfirmOpen(true)}
                             disabled={submitting}
-                            className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
                             Quitter
@@ -1430,8 +1425,8 @@ export function EmployeeQuiz() {
                     <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-5 shadow-sm shadow-violet-100/70">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-violet-700 px-3.5 py-1.5 text-sm font-black text-white">Question {activeQuestion + 1} / {questions.length}</span>
-                          <span className="rounded-full border border-violet-200 bg-slate-100 px-3.5 py-1.5 text-sm font-bold text-slate-700">{currentQuestion.category || "Compréhension"}</span>
+                          <span className="rounded-full bg-violet-700 px-3.5 py-1.5 text-sm font-semibold text-white">Question {activeQuestion + 1} / {questions.length}</span>
+                          <span className="rounded-full border border-violet-200 bg-slate-100 px-3.5 py-1.5 text-sm font-semibold text-slate-700">{currentQuestion.category || "Compréhension"}</span>
                         </div>
                         <button
                           type="button"
@@ -1449,7 +1444,7 @@ export function EmployeeQuiz() {
                         </button>
                       </div>
 
-                      <h2 className="mt-6 text-xl font-black leading-snug tracking-tight text-slate-950 md:text-2xl">
+                      <h2 className="mt-6 text-xl font-bold leading-snug tracking-tight text-slate-950 md:text-2xl">
                         {currentQuestion.question}
                       </h2>
 
@@ -1470,7 +1465,7 @@ export function EmployeeQuiz() {
                             >
                               <span
                                 className={[
-                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base font-black",
+                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base font-bold",
                                   selected ? "bg-violet-700 text-white" : "bg-slate-100 text-slate-700 group-hover:bg-violet-100 group-hover:text-violet-700",
                                 ].join(" ")}
                               >
@@ -1511,7 +1506,7 @@ export function EmployeeQuiz() {
                           setActiveQuestion((v) => Math.min(questions.length - 1, v + 1));
                         }}
                         disabled={submitting || (!isLastQuestion && !hasCurrentAnswer)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-8 py-3 text-base font-black text-white shadow-lg shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                        className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-8 py-3 text-base font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
                       >
                         {submitting ? (
                           <>
@@ -1532,24 +1527,24 @@ export function EmployeeQuiz() {
                     <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
                       <div className="flex items-center gap-3">
                         <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4 text-violet-700" />
-                        <h3 className="text-xl font-black">Aperçu</h3>
+                        <h3 className="text-xl font-bold">Aperçu</h3>
                       </div>
                       <div className="mt-4 space-y-3">
                         <div className="flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2">
                           <span className="text-base font-medium text-slate-600">Niveau estimé</span>
-                          <span className="rounded-md bg-orange-100 px-3 py-1 text-sm font-bold text-slate-900">{levelName(startData.level)}</span>
+                          <span className="rounded-md bg-orange-100 px-3 py-1 text-sm font-semibold text-slate-900">{levelName(startData.level)}</span>
                         </div>
                         <div className="flex items-center justify-between text-base">
                           <span className="font-medium text-slate-600">Réponses données</span>
-                          <span className="font-mono text-2xl font-black text-emerald-600">{String(answeredCount).padStart(2, "0")}</span>
+                          <span className="font-mono text-2xl font-bold text-emerald-600">{String(answeredCount).padStart(2, "0")}</span>
                         </div>
                         <div className="flex items-center justify-between text-base">
                           <span className="font-medium text-slate-600">Questions restantes</span>
-                          <span className="text-xl font-black text-slate-950">{unansweredCount}</span>
+                          <span className="text-xl font-bold text-slate-950">{unansweredCount}</span>
                         </div>
                         <div className="flex items-center justify-between text-base">
                           <span className="font-medium text-slate-600">Marquées</span>
-                          <span className="text-xl font-black text-amber-600">{bookmarkedCount}</span>
+                          <span className="text-xl font-bold text-amber-600">{bookmarkedCount}</span>
                         </div>
                       </div>
                     </div>
@@ -1557,7 +1552,7 @@ export function EmployeeQuiz() {
                     <div className="overflow-hidden rounded-2xl bg-violet-700 p-4 text-white shadow-lg shadow-violet-200">
                       <div className="flex items-center gap-3">
                         <FontAwesomeIcon icon={faShieldHalved} className="h-5 w-5" />
-                        <h3 className="text-xl font-black">Prêt à finir ?</h3>
+                        <h3 className="text-xl font-bold">Prêt à finir ?</h3>
                       </div>
                       <p className="mt-3 text-sm font-medium leading-relaxed text-violet-50">
                         Vous pouvez revoir vos réponses à tout moment avant de soumettre définitivement votre évaluation.
@@ -1566,7 +1561,7 @@ export function EmployeeQuiz() {
                         type="button"
                         onClick={handleSubmit}
                         disabled={submitting}
-                        className="mt-4 w-full rounded-xl bg-white px-4 py-3 text-base font-black text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:bg-violet-100"
+                        className="mt-4 w-full rounded-xl bg-white px-4 py-3 text-base font-bold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:bg-violet-100"
                       >
                         {submitting ? "Soumission..." : "Soumettre le quiz"}
                       </button>
@@ -1598,8 +1593,8 @@ export function EmployeeQuiz() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <p className="text-3xl font-black leading-none text-slate-900">{roundedScore}%</p>
-                        <p className="mt-1 text-[11px] font-black uppercase tracking-[0.08em] text-slate-400">score</p>
+                        <p className="text-3xl font-bold leading-none text-slate-900">{roundedScore}%</p>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-400">score</p>
                       </div>
                     </div>
                   </div>
@@ -1607,10 +1602,10 @@ export function EmployeeQuiz() {
                   <div className="min-w-0 flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
-                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Résultat du quiz</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Résultat du quiz</h2>
                         <span
                           className={[
-                            "rounded px-2.5 py-1 text-[10px] font-black uppercase tracking-wide",
+                            "rounded px-2.5 py-1 text-xs font-semibold uppercase tracking-wide",
                             passed ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
                           ].join(" ")}
                         >
@@ -1618,7 +1613,7 @@ export function EmployeeQuiz() {
                         </span>
                       </div>
                       <p className="mt-2 max-w-3xl text-base font-medium leading-relaxed text-slate-500">
-                        <span className="font-black text-slate-800">
+                        <span className="font-bold text-slate-800">
                           {result.result?.correctAnswers ?? 0} bonne{(result.result?.correctAnswers ?? 0) !== 1 ? "s" : ""} réponse{(result.result?.correctAnswers ?? 0) !== 1 ? "s" : ""} sur {questions.length}.
                         </span>{" "}
                         Consultez le détail ci-dessous pour identifier les notions maîtrisées et celles qui nécessitent une révision approfondie avant votre certification finale.
@@ -1628,7 +1623,7 @@ export function EmployeeQuiz() {
                       <button
                         type="button"
                         onClick={resetFlow}
-                        className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-black text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-100"
+                        className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-100"
                       >
                         <FontAwesomeIcon icon={faWandSparkles} className="h-4 w-4" />
                         Démarrer nouveau quiz
@@ -1645,8 +1640,8 @@ export function EmployeeQuiz() {
                       <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
                     </span>
                     <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-slate-400">Correctes</p>
-                      <p className="text-xl font-black leading-tight text-slate-900">{result.result?.correctAnswers ?? 0}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Correctes</p>
+                      <p className="text-xl font-bold leading-tight text-slate-900">{result.result?.correctAnswers ?? 0}</p>
                     </div>
                   </div>
                 </div>
@@ -1656,8 +1651,8 @@ export function EmployeeQuiz() {
                       <FontAwesomeIcon icon={faClipboardCheck} className="h-4 w-4" />
                     </span>
                     <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-slate-400">Questions</p>
-                      <p className="text-xl font-black leading-tight text-slate-900">{questions.length}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Questions</p>
+                      <p className="text-xl font-bold leading-tight text-slate-900">{questions.length}</p>
                     </div>
                   </div>
                 </div>
@@ -1667,8 +1662,8 @@ export function EmployeeQuiz() {
                       <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4" />
                     </span>
                     <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-slate-400">Niveau</p>
-                      <p className="text-xl font-black leading-tight text-slate-900">{levelName(result.level)}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Niveau</p>
+                      <p className="text-xl font-bold leading-tight text-slate-900">{levelName(result.level)}</p>
                     </div>
                   </div>
                 </div>
@@ -1686,7 +1681,7 @@ export function EmployeeQuiz() {
                   <div className="flex items-start gap-3">
                     <FontAwesomeIcon icon={result.passed ? faCircleCheck : faXmark} className="mt-0.5 h-4 w-4" />
                     <div>
-                      <p className="text-sm font-black">
+                      <p className="text-sm font-semibold">
                         {startData?.quizKind === "initial"
                           ? "Niveau attribué selon votre score"
                           : result.passed
@@ -1707,7 +1702,7 @@ export function EmployeeQuiz() {
                     <div className="flex items-start gap-3">
                       <FontAwesomeIcon icon={faCalendarDays} className="mt-0.5 h-4 w-4" />
                       <div>
-                        <p className="text-sm font-black">
+                        <p className="text-sm font-semibold">
                           Prochaine tentative autorisée : {formatFrenchDate(result.nextAllowedAt)}
                         </p>
                         <p className="mt-1 text-sm font-medium opacity-90">
@@ -1741,7 +1736,7 @@ export function EmployeeQuiz() {
               <div className="quiz-enter quiz-enter-delay-2 space-y-3">
                 <div className="flex items-center gap-2 text-slate-800">
                   <FontAwesomeIcon icon={faClipboardCheck} className="h-4 w-4 text-slate-600" />
-                  <h3 className="text-xl font-black">Détail des réponses</h3>
+                  <h3 className="text-xl font-bold">Détail des réponses</h3>
                 </div>
                 {displayedSubmittedCards.map((card) => {
                   const expanded = openedReviewQuestionId === card.questionId;
@@ -1757,16 +1752,16 @@ export function EmployeeQuiz() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex min-w-0 flex-1 items-start gap-3">
-                          <span className="mt-0.5 inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-slate-100 px-2 text-sm font-black text-slate-600">
+                          <span className="mt-0.5 inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-slate-100 px-2 text-sm font-semibold text-slate-600">
                             #{card.index + 1}
                           </span>
-                          <p className="min-w-0 flex-1 text-base font-black leading-relaxed text-slate-800">
+                          <p className="min-w-0 flex-1 text-base font-bold leading-relaxed text-slate-800">
                             {card.questionText}
                           </p>
                         </div>
                         <span
                           className={[
-                            "shrink-0 rounded px-3 py-1 text-[11px] font-black uppercase tracking-wide",
+                            "shrink-0 rounded px-3 py-1 text-xs font-semibold uppercase tracking-wide",
                             card.isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
                           ].join(" ")}
                         >
@@ -1778,7 +1773,7 @@ export function EmployeeQuiz() {
                         <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                           <div className="rounded border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
                             <span className="mr-2">✓</span>
-                            <span className="font-black">Bonne réponse :</span> {card.correctText}
+                            <span className="font-bold">Bonne réponse :</span> {card.correctText}
                           </div>
                           <div
                             className={[
@@ -1789,7 +1784,7 @@ export function EmployeeQuiz() {
                             ].join(" ")}
                           >
                             <span className="mr-2">{card.isCorrect ? "⊙" : "×"}</span>
-                            <span className="font-black">Votre réponse :</span> {card.userText}
+                            <span className="font-bold">Votre réponse :</span> {card.userText}
                           </div>
                           {!!card.explanation && (
                             <div className="pt-1">
@@ -1817,7 +1812,7 @@ export function EmployeeQuiz() {
                           else setReviewPage((p) => Math.max(0, p - 1));
                         }}
                         disabled={(result.questionPage ? !result.questionPage.hasPrevious : reviewPage === 0) || submitting || reviewLoading}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-45"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-45"
                       >
                         <FontAwesomeIcon icon={faChevronLeft} className="h-3.5 w-3.5" />
                         Précédent
@@ -1869,7 +1864,7 @@ export function EmployeeQuiz() {
                           else setReviewPage((p) => Math.min(reviewTotalPages - 1, p + 1));
                         }}
                         disabled={(result.questionPage ? !result.questionPage.hasNext : reviewPage >= reviewTotalPages - 1) || submitting || reviewLoading}
-                        className="inline-flex items-center gap-2 rounded-lg bg-violet-700 px-3 py-2 text-sm font-bold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-45"
+                        className="inline-flex items-center gap-2 rounded-lg bg-violet-700 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-45"
                       >
                         Suivant
                         <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5" />

@@ -10,7 +10,7 @@ export function RecentActivityList({ title, items }: { title: string; items?: It
 
   return (
     <article className="dashboard-card dashboard-fade-up">
-      <h2 className="mb-4 text-sm font-extrabold text-slate-900">{translateDashboardText(title)}</h2>
+      <h2 className="mb-4 text-base font-semibold text-slate-900">{translateDashboardText(title)}</h2>
       {uniqueItems.length ? (
         <div className="space-y-3">
           {uniqueItems.map((item) => (
@@ -18,10 +18,10 @@ export function RecentActivityList({ title, items }: { title: string; items?: It
               <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-violet-400 shadow-[0_0_0_4px_rgba(167,139,250,.18)]" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-bold text-slate-800">{translateDashboardText(item.title)}</p>
+                  <p className="font-medium text-slate-800">{translateDashboardText(item.title)}</p>
                   <StatusBadge status={item.status} />
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-400">
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-400">
                   {"type" in item && item.type ? <span>Type: {translateDashboardText(item.type)}</span> : null}
                   {("type" in item && item.type && item.date) ? <span>•</span> : null}
                   <span>{formatDate(item.date)}</span>

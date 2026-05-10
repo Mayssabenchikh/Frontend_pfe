@@ -55,7 +55,7 @@ const markdownComponents: Components = {
       );
     }
     return (
-      <code className="rounded bg-slate-200/80 px-1.5 py-0.5 font-mono text-[0.85em] text-slate-800" {...props}>
+      <code className="rounded bg-slate-200/80 px-1.5 py-0.5 font-mono text-sm text-slate-800" {...props}>
         {children}
       </code>
     );

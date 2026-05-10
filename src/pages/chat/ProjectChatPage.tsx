@@ -21,6 +21,22 @@ function mergeReadBy(existing: ReadReceipt[], incoming: ReadReceipt) {
   return [...byReader.values()].sort((a, b) => +new Date(a.readAt) - +new Date(b.readAt));
 }
 
+function getChatErrorMessage(error: unknown, fallback: string) {
+  if (typeof error === "object" && error !== null) {
+    const responseData = "response" in error ? (error as { response?: { data?: { error?: unknown } } }).response?.data : undefined;
+    if (typeof responseData?.error === "string" && responseData.error.trim()) {
+      return responseData.error;
+    }
+
+    const message = "message" in error ? (error as { message?: unknown }).message : undefined;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 export default function ProjectChatPage({ scope }: { scope: "manager" | "employee" }) {
   const { keycloak } = useKeycloak();
   const navigate = useNavigate();
@@ -36,6 +52,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   const [query, setQuery] = useState("");
   const [input, setInput] = useState("");
   const [selectedReplyMessage, setSelectedReplyMessage] = useState<ChatMessage | null>(null);
+  const [mobileProjectListOpen, setMobileProjectListOpen] = useState(false);
   const [typingUsers, setTypingUsers] = useState<Record<string, TypingEvent>>({});
   const [presence, setPresence] = useState<Record<string, PresenceEvent>>({});
   const unsubscribeRef = useRef<null | (() => void)>(null);
@@ -161,9 +178,9 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
           socketReadyRef.current = true;
           setSocketReady(true);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!cancelled) {
-          setError(e?.response?.data?.error || e?.message || "Impossible de charger les messages.");
+          setError(getChatErrorMessage(e, "Impossible de charger les messages."));
         }
       } finally {
         if (!cancelled) setLoadingMessages(false);
@@ -208,8 +225,8 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
     try {
       const upload = file ? await chatService.uploadAttachment(selectedProjectUuid, file) : null;
       chatSocket.sendMessage(selectedProjectUuid, content, upload?.attachmentUuid, selectedReplyMessage?.messageUuid ?? null);
-    } catch (e: any) {
-      setError(e?.response?.data?.error || "Upload fichier échoué");
+    } catch (e: unknown) {
+      setError(getChatErrorMessage(e, "Upload fichier échoué"));
       throw e;
     }
 
@@ -231,8 +248,10 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-slate-100/80 via-slate-50 to-white px-3 pb-3 pt-0 md:px-5">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-100/80 via-slate-50 to-white px-0 pb-0 pt-0 sm:px-3 sm:pb-3 md:px-5">
       <ProjectChatLayout
+        sidebarOpen={mobileProjectListOpen}
+        onCloseSidebar={() => setMobileProjectListOpen(false)}
         sidebar={
           <ProjectConversationList
             projects={filteredProjects}
@@ -240,6 +259,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
             query={query}
             onQueryChange={setQuery}
             onSelect={(projectUuid) => navigate(`${basePath}/${projectUuid}`)}
+            onCloseMobile={() => setMobileProjectListOpen(false)}
           />
         }
         content={
@@ -259,6 +279,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
                 onSend={sendMessage}
                 onReply={(message) => setSelectedReplyMessage(message)}
                 onCancelReply={() => setSelectedReplyMessage(null)}
+                onOpenConversations={() => setMobileProjectListOpen(true)}
               />
             )
           ) : (

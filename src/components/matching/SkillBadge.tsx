@@ -34,7 +34,7 @@ export function SkillBadge({ name, level = 0, evidence, meets, compact }: Props)
         <span className="rounded bg-white/60 px-1 font-semibold tabular-nums">{formatSkillLevel(level)}</span>
       ) : null}
       {evidence && evidence !== "none" ? (
-        <span className="rounded border border-white/40 bg-white/50 px-1 text-[10px] text-slate-600">
+        <span className="rounded border border-white/40 bg-white/50 px-1 text-xs text-slate-600">
           {evidenceLabel[evidence]}
         </span>
       ) : null}

@@ -69,11 +69,11 @@ function DetailSkeleton() {
 function InfoTile({ icon: Icon, label, value }: { icon: typeof CalendarDaysIcon; label: string; value: string | number }) {
   return (
     <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
         <Icon className="h-4 w-4 text-violet-600" />
         {label}
       </div>
-      <p className="mt-2 text-base font-extrabold text-slate-950">{value}</p>
+      <p className="mt-2 text-base font-bold text-slate-950">{value}</p>
     </div>
   );
 }
@@ -99,7 +99,7 @@ function RequirementCard({ requirement }: { requirement: ProjectRequirementDto }
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-lg font-extrabold text-slate-950">{requirement.skillName}</p>
+              <p className="truncate text-lg font-bold text-slate-950">{requirement.skillName}</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">{requirement.categoryName || "Catégorie non renseignée"}</p>
             </div>
             <span className="shrink-0 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">Niveau {requirement.levelMin}</span>
@@ -177,11 +177,11 @@ export function EmployeeProjectDetail() {
               <ExclamationCircleIcon className="h-6 w-6 text-rose-600" />
             </div>
             <div>
-              <p className="text-lg font-extrabold text-slate-950">Projet indisponible</p>
+              <p className="text-lg font-bold text-slate-950">Projet indisponible</p>
               <p className="mt-1 text-sm font-semibold text-rose-700">{error ?? "Projet introuvable"}</p>
               <Link
                 to="/employee/projects"
-                className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-[10px] bg-violet-700 px-4 text-sm font-bold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+                className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-[10px] bg-violet-700 px-4 text-sm font-semibold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
               >
                 <ArrowLeftIcon className="h-4 w-4" />
                 Retour aux projets
@@ -203,7 +203,7 @@ export function EmployeeProjectDetail() {
         <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-5">
           <Link
             to="/employee/projects"
-            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-[10px] border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-[10px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour aux projets
@@ -217,7 +217,7 @@ export function EmployeeProjectDetail() {
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-800">
+                        <span className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-800">
                           <BriefcaseIcon className="h-4 w-4" />
                           Détail projet
                         </span>
@@ -227,7 +227,7 @@ export function EmployeeProjectDetail() {
                         </span>
                         <span className={cn("inline-flex rounded-md border px-2.5 py-1 text-xs font-bold", priority.cls)}>{priority.label}</span>
                       </div>
-                      <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">{project.name}</h1>
+                      <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-3xl">{project.name}</h1>
                       <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">{project.description || "Aucune description disponible pour ce projet."}</p>
                     </div>
                   </div>
@@ -244,9 +244,9 @@ export function EmployeeProjectDetail() {
               <section className="rounded-[10px] border border-slate-200 bg-white shadow-sm">
                 <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-xl font-extrabold text-slate-950">Exigences en compétences</h2>
+                    <h2 className="text-xl font-bold text-slate-950">Exigences en compétences</h2>
                   </div>
-                  <span className="w-fit rounded-md border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-bold text-violet-700">
+                  <span className="w-fit rounded-md border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-700">
                     {requirements.length} compétence{requirements.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -268,9 +268,9 @@ export function EmployeeProjectDetail() {
               <section className="rounded-[10px] border border-slate-200 bg-white shadow-sm">
                 <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-xl font-extrabold text-slate-950">Membres d'équipe</h2>
+                    <h2 className="text-xl font-bold text-slate-950">Membres d'équipe</h2>
                   </div>
-                  <span className="w-fit rounded-md border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">
+                  <span className="w-fit rounded-md border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
                     {teamMembers.length} membre{teamMembers.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -301,7 +301,7 @@ export function EmployeeProjectDetail() {
                               <img src={member.employeeAvatarUrl} alt={name} className="h-14 w-14 shrink-0 rounded-[10px] border border-slate-200 object-cover" />
                             ) : (
                               <div
-                                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[10px] text-sm font-extrabold text-white"
+                                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[10px] text-sm font-semibold text-white"
                                 style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})` }}
                               >
                                 {initials}
@@ -310,7 +310,7 @@ export function EmployeeProjectDetail() {
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-start justify-between gap-2">
                                 <div className="min-w-0">
-                                  <p className="truncate text-lg font-extrabold text-slate-950">{name}</p>
+                                  <p className="truncate text-lg font-bold text-slate-950">{name}</p>
                                   <p className="mt-1 truncate text-sm text-slate-500">{member.employeeEmail}</p>
                                 </div>
                                 <span className={cn("rounded-md border px-2.5 py-1 text-xs font-bold", memberStatus.cls)}>{memberStatus.label}</span>
@@ -327,7 +327,7 @@ export function EmployeeProjectDetail() {
 
             <aside className="flex flex-col gap-5">
               <section className="rounded-[10px] border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="flex items-center gap-2 text-xl font-extrabold text-slate-950">
+                <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
                   <InformationCircleIcon className="h-6 w-6 text-violet-700" />
                   Informations
                 </h2>

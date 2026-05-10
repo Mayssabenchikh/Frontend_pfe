@@ -164,7 +164,7 @@ function ProjectsList() {
   const safeTotalPages = Math.max(totalPages, 1);
 
   const columnDefs = useMemo<ColDef<ProjectDto>[]>(() => {
-    const badgeBase = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold";
+    const badgeBase = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold";
 
     return [
       {
@@ -209,7 +209,7 @@ function ProjectsList() {
                 />
               ) : (
                 <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white shadow-md"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-md"
                   style={{
                     background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`,
                     boxShadow: `0 2px 8px ${gradient[0]}40`,
@@ -382,7 +382,7 @@ function ProjectsList() {
             <button
               type="button"
               onClick={() => setCreateModal(true)}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-violet-300/40 bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_10px_24px_rgba(124,58,237,0.35)] transition-all duration-150 hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(124,58,237,0.45)]"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-violet-300/40 bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(124,58,237,0.35)] transition-all duration-150 hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(124,58,237,0.45)]"
             >
               <PlusIcon className="w-4 h-4" />
               Nouveau projet
@@ -411,7 +411,7 @@ function ProjectsList() {
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
             <div className="lg:col-span-2">
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Rechercher</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Rechercher</label>
               <div className="relative mt-1">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                   <MagnifyingGlassIcon className="w-4 h-4" />
@@ -427,7 +427,7 @@ function ProjectsList() {
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Statut</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Statut</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -441,7 +441,7 @@ function ProjectsList() {
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Priorite</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Priorite</label>
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
@@ -455,7 +455,7 @@ function ProjectsList() {
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Du</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Du</label>
               <input
                 type="date"
                 value={from}
@@ -465,7 +465,7 @@ function ProjectsList() {
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Au</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Au</label>
               <input
                 type="date"
                 value={to}
@@ -475,7 +475,7 @@ function ProjectsList() {
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Ordre</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Ordre</label>
               <select
                 value={order}
                 onChange={(e) => setOrder(e.target.value as any)}
@@ -528,7 +528,7 @@ function ProjectsList() {
                       <FolderIcon className="h-8 w-8 text-violet-700" />
                     </div>
                     <div className="flex flex-col items-center gap-1">
-                      <p className="text-sm font-bold text-slate-800">Aucun projet</p>
+                      <p className="text-sm font-semibold text-slate-800">Aucun projet</p>
                       <p className="text-xs text-slate-500">
                         {search || statusFilter || priorityFilter ? "Aucun résultat pour ces filtres" : "Créez un projet pour commencer"}
                       </p>
@@ -547,7 +547,7 @@ function ProjectsList() {
                   <FolderIcon className="h-8 w-8 text-violet-700" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-bold text-slate-800">Aucun projet</p>
+                  <p className="text-sm font-semibold text-slate-800">Aucun projet</p>
                   <p className="text-xs text-slate-500">
                     {search || statusFilter || priorityFilter ? "Aucun résultat pour ces filtres" : "Créez un projet pour commencer"}
                   </p>
@@ -580,10 +580,10 @@ function ProjectsList() {
                           <div className="min-w-0">
                             <h3 className="truncate text-sm font-semibold text-slate-800">{p.name}</h3>
                             <div className="mt-1.5 flex items-center gap-1.5">
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${statusCls(p.status)}`}>
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${statusCls(p.status)}`}>
                                 {statusLabel(p.status)}
                               </span>
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${priorityCls(p.priority)}`}>
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${priorityCls(p.priority)}`}>
                                 {priorityLabel(p.priority)}
                               </span>
                             </div>
@@ -591,18 +591,18 @@ function ProjectsList() {
                         </div>
 
                         <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[10px]">
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-xs">
                             <div>
                               <p className="text-slate-400">Equipe</p>
-                              <p className="font-semibold text-slate-700 text-[11px]">{p.teamSize ?? 1} membre(s)</p>
+                              <p className="font-semibold text-slate-700 text-xs">{p.teamSize ?? 1} membre(s)</p>
                             </div>
                             <div>
                               <p className="text-slate-400">Competences</p>
-                              <p className="font-semibold text-slate-700 text-[11px]">{p.requirements?.length ?? 0}</p>
+                              <p className="font-semibold text-slate-700 text-xs">{p.requirements?.length ?? 0}</p>
                             </div>
                             <div>
                               <p className="text-slate-400">Debut</p>
-                              <p className="font-semibold text-slate-700 text-[11px] truncate">
+                              <p className="font-semibold text-slate-700 text-xs truncate">
                                 {p.startDate
                                   ? new Date(p.startDate).toLocaleDateString("fr-FR")
                                   : "—"}
@@ -610,7 +610,7 @@ function ProjectsList() {
                             </div>
                             <div>
                               <p className="text-slate-400">Echeance</p>
-                              <p className="font-semibold text-slate-700 text-[11px] truncate">
+                              <p className="font-semibold text-slate-700 text-xs truncate">
                                 {p.dueDate
                                   ? new Date(p.dueDate).toLocaleDateString("fr-FR")
                                   : "—"}
@@ -632,7 +632,7 @@ function ProjectsList() {
                             />
                           ) : (
                             <div
-                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                               style={{
                                 background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`,
                                 boxShadow: `0 2px 7px ${gradient[0]}40`,
@@ -643,7 +643,7 @@ function ProjectsList() {
                           )}
                           <div className="min-w-0">
                             <p className="truncate text-xs font-medium text-slate-700">{p.leadName || "—"}</p>
-                            <p className="truncate text-[11px] text-slate-400">{p.leadEmail || "Lead"}</p>
+                            <p className="truncate text-xs text-slate-400">{p.leadEmail || "Lead"}</p>
                           </div>
                         </div>
 
@@ -658,7 +658,7 @@ function ProjectsList() {
                             disabled={isDel}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45"
                           >
-                            {isDel ? <span className="text-[10px]">…</span> : <TrashIcon className="h-3.5 w-3.5" />}
+                            {isDel ? <span className="text-xs">…</span> : <TrashIcon className="h-3.5 w-3.5" />}
                           </button>
                         </div>
                       </article>

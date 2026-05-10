@@ -43,12 +43,12 @@ export function KpiCard({ item, icon, explanation }: { item: KpiCardDto; icon?: 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <p className="truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">{translateDashboardText(item.label)}</p>
+            <p className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">{translateDashboardText(item.label)}</p>
             <ExplanationTooltip explanation={explanation ?? null} position="top" />
           </div>
           <div className="mt-3 flex items-end gap-1">
-            <span className="text-3xl font-extrabold leading-none text-slate-950 tabular-nums">{displayValue}</span>
-            {item.unit ? <span className="pb-0.5 text-sm font-bold text-slate-500">{item.unit}</span> : null}
+            <span className="text-3xl font-bold leading-none text-slate-950 tabular-nums">{displayValue}</span>
+            {item.unit ? <span className="pb-0.5 text-sm font-medium text-slate-500">{item.unit}</span> : null}
           </div>
           {item.description ? <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-500">{translateDashboardText(item.description)}</p> : null}
         </div>

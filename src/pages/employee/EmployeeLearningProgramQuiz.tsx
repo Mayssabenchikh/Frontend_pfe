@@ -112,7 +112,7 @@ export function EmployeeLearningProgramQuiz() {
           <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
             <ExclamationTriangleIcon className="h-6 w-6" />
           </span>
-          <h1 className="mt-5 text-2xl font-extrabold text-slate-950">Quiz indisponible</h1>
+          <h1 className="mt-5 text-2xl font-bold text-slate-950">Quiz indisponible</h1>
           <p className="mt-2 text-base leading-6 text-rose-700">{error}</p>
           <Link
             to={backHref}
@@ -168,7 +168,7 @@ export function EmployeeLearningProgramQuiz() {
         <div className="flex min-h-12 w-full items-center gap-3 px-4 py-1.5 sm:px-6 lg:px-8">
           <Link
             to={backHref}
-            className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+            className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour
@@ -182,7 +182,7 @@ export function EmployeeLearningProgramQuiz() {
                 <QuestionMarkCircleIcon className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <h1 className="truncate text-lg font-black text-slate-950">Quiz vidéo</h1>
+                <h1 className="truncate text-lg font-bold text-slate-950">Quiz vidéo</h1>
                 <p className="hidden text-sm text-slate-500 sm:block">Validez vos acquis avant de revenir à la formation.</p>
               </div>
             </div>
@@ -190,7 +190,7 @@ export function EmployeeLearningProgramQuiz() {
 
           <div className="hidden items-center gap-3 sm:flex">
             <div className="text-right">
-              <p className="text-sm font-extrabold text-slate-950">{progress}%</p>
+              <p className="text-sm font-semibold text-slate-950">{progress}%</p>
               <p className="text-sm text-slate-500">
                 {answeredCount}/{questionCount} réponses
               </p>
@@ -217,7 +217,7 @@ export function EmployeeLearningProgramQuiz() {
                 Seuil 70%
               </span>
             </div>
-            <h2 className="mt-5 text-3xl font-black leading-tight text-slate-950">Répondez au quiz</h2>
+            <h2 className="mt-5 text-3xl font-bold leading-tight text-slate-950">Répondez au quiz</h2>
             <p className="mt-3 max-w-4xl text-base leading-6 text-slate-600">
               Répondez question par question, comme dans le quiz employé, avec une navigation plus guidée et professionnelle.
             </p>
@@ -257,7 +257,7 @@ export function EmployeeLearningProgramQuiz() {
                         type="button"
                         onClick={() => setActiveQuestionIndex(index)}
                         className={cn(
-                          "flex h-9 w-9 items-center justify-center rounded-lg border text-base font-black transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
+                          "flex h-9 w-9 items-center justify-center rounded-lg border text-base font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
                           active
                             ? "border-violet-700 bg-violet-700 text-white shadow-md shadow-violet-200"
                             : answered
@@ -271,7 +271,7 @@ export function EmployeeLearningProgramQuiz() {
                     );
                   })}
                 </div>
-                <span className="rounded-full border border-violet-200 bg-white px-4 py-2 text-base font-black text-violet-800">
+                <span className="rounded-full border border-violet-200 bg-white px-4 py-2 text-base font-bold text-violet-800">
                   Question {activeQuestionIndex + 1} / {questionCount}
                 </span>
               </div>
@@ -279,7 +279,7 @@ export function EmployeeLearningProgramQuiz() {
               {activeQuestion ? (
                 <fieldset key={activeQuestion.questionUuid} className="rounded-lg border border-violet-100 bg-white p-5 shadow-sm">
                   <legend className="sr-only">Question {activeQuestionIndex + 1}</legend>
-                  <h3 className="text-xl font-black leading-8 text-slate-950">{activeQuestion.text}</h3>
+                  <h3 className="text-xl font-bold leading-8 text-slate-950">{activeQuestion.text}</h3>
 
                   <div className="mt-5 grid gap-3">
                     {activeQuestion.options.map((option, optionIndex) => {
@@ -308,7 +308,7 @@ export function EmployeeLearningProgramQuiz() {
                           />
                           <span
                             className={cn(
-                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-base font-black transition",
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-base font-bold transition",
                               checked ? "border-violet-700 bg-violet-700 text-white" : "border-slate-300 bg-slate-50 text-slate-500 group-hover:border-violet-300 group-hover:text-violet-700",
                             )}
                           >
@@ -351,7 +351,7 @@ export function EmployeeLearningProgramQuiz() {
                 type="button"
                 disabled={!canSubmit}
                 onClick={() => void submit()}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-violet-700 px-7 py-3 text-base font-extrabold text-white shadow-lg shadow-violet-200 transition duration-200 hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-violet-700 px-7 py-3 text-base font-bold text-white shadow-lg shadow-violet-200 transition duration-200 hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               >
                 {submitting ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <CheckCircleIcon className="h-4 w-4" />}
                 {submitting ? "Envoi..." : "Valider le quiz"}
@@ -367,7 +367,7 @@ export function EmployeeLearningProgramQuiz() {
                 <QuestionMarkCircleIcon className="h-5 w-5" />
               </span>
               <div>
-                <h3 className="text-base font-extrabold text-violet-950">Progression</h3>
+                <h3 className="text-base font-bold text-violet-950">Progression</h3>
                 <p className="text-base font-bold text-violet-700">{answeredCount} réponses sur {questionCount}</p>
               </div>
             </div>
@@ -377,7 +377,7 @@ export function EmployeeLearningProgramQuiz() {
           </section>
 
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="text-base font-extrabold text-slate-950">Avant de valider</h3>
+            <h3 className="text-base font-bold text-slate-950">Avant de valider</h3>
             <div className="mt-4 space-y-3 text-base leading-6 text-slate-600">
               <p className="flex gap-3">
                 <CheckCircleIcon className="mt-1 h-4 w-4 shrink-0 text-emerald-600" />

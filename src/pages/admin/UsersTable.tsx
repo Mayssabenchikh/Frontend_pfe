@@ -81,7 +81,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
               <img src={u.avatarUrl} alt={fullName} className="h-8 w-8 shrink-0 rounded-full object-cover shadow-md" />
             ) : (
               <div
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white shadow-md"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-md"
                 style={{ background: `linear-gradient(135deg,${gradient[0]},${gradient[1]})`, boxShadow: `0 2px 8px ${gradient[0]}40` }}
               >
                 {initials}
@@ -130,7 +130,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
                 ? "bg-teal-500"
                 : "bg-blue-600";
         return (
-          <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[11px] font-semibold ${ROLE_CLASSES[role] ?? ROLE_CLASSES.EMPLOYEE}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${ROLE_CLASSES[role] ?? ROLE_CLASSES.EMPLOYEE}`}>
             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotCls}`} />
             {ROLE_LABELS[role] ?? role}
           </span>
@@ -142,7 +142,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
       cellRenderer: (p: ICellRendererParams<UserListDto>) => {
         const on = Boolean(p.data?.enabled);
         return (
-          <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[11px] font-semibold ${on ? "border-green-200 bg-green-50 text-green-700" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${on ? "border-green-200 bg-green-50 text-green-700" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${on ? "bg-green-500" : "bg-slate-300"}`} />
             {on ? "Actif" : "Inactif"}
           </span>
@@ -157,7 +157,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
         const isArch = archivingId === u.uuid;
 
         const btnCls = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/25  transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45";
-        const loadingSpan = <span className="text-[10px]">…</span>;
+        const loadingSpan = <span className="text-xs">…</span>;
 
         return (
           <div className="flex items-center justify-center gap-1 w-full">
@@ -267,7 +267,7 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
           </div>
 
           {/* Compteur collé en bas, au-dessus de la pagination AG Grid */}
-          <div className="absolute bottom-0 right-0 z-10 border-t border-violet-500/10 bg-white px-4 py-1.5 text-right text-[11px] font-semibold text-violet-600">
+          <div className="absolute bottom-0 right-0 z-10 border-t border-violet-500/10 bg-white px-4 py-1.5 text-right text-xs font-semibold text-violet-600">
             {users.length} utilisateur{users.length !== 1 ? "s" : ""} affiché{users.length !== 1 ? "s" : ""} sur {users.length}
           </div>
         </div>

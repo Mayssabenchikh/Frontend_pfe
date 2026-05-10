@@ -348,7 +348,7 @@ function LockedPanel() {
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-amber-700 shadow-sm">
         <LockClosedIcon className="h-6 w-6" />
       </span>
-      <h3 className="mt-5 text-2xl font-extrabold text-slate-950">Étape verrouillée</h3>
+      <h3 className="mt-5 text-2xl font-bold text-slate-950">Étape verrouillée</h3>
       <p className="mt-2 max-w-md text-base leading-6 text-slate-600">Terminez les étapes précédentes pour débloquer ce contenu.</p>
     </section>
   );
@@ -435,7 +435,7 @@ function EmptyState({ backTo }: { backTo: string }) {
     <div className="flex min-h-screen items-center justify-center app-page-bg p-6">
       <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
         <ClipboardDocumentListIcon className="mx-auto h-10 w-10 text-slate-400" />
-        <h1 className="mt-4 text-2xl font-extrabold text-slate-950">Aucune étape disponible</h1>
+        <h1 className="mt-4 text-2xl font-bold text-slate-950">Aucune étape disponible</h1>
         <p className="mt-2 text-base leading-6 text-slate-600">Ce programme ne contient pas encore de contenu à afficher.</p>
         <Link
           to={backTo}
@@ -716,7 +716,7 @@ export function EmployeeLearningProgramPlayer() {
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
             <ExclamationTriangleIcon className="h-6 w-6" />
           </span>
-          <h1 className="mt-5 text-2xl font-extrabold text-slate-950">Chargement impossible</h1>
+          <h1 className="mt-5 text-2xl font-bold text-slate-950">Chargement impossible</h1>
           <p className="mt-2 text-base leading-6 text-rose-700">{error}</p>
           <Link
             to={backTo}
@@ -777,7 +777,7 @@ export function EmployeeLearningProgramPlayer() {
         <div className="flex min-h-12 w-full items-center gap-3 px-4 py-1.5 sm:px-6 lg:px-8">
           <Link
             to={backTo}
-            className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+            className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour
@@ -788,8 +788,8 @@ export function EmployeeLearningProgramPlayer() {
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
               <span className="hidden h-2.5 w-2.5 rounded-full bg-violet-600 sm:block" />
-              <h1 className="truncate text-base font-extrabold text-slate-950 sm:text-lg">{player.programTitle}</h1>
-              <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-violet-800 md:inline-flex">
+              <h1 className="truncate text-base font-bold text-slate-950 sm:text-lg">{player.programTitle}</h1>
+              <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-violet-800 md:inline-flex">
                 {playerStatusLabel(player.status)}
               </span>
             </div>
@@ -806,7 +806,7 @@ export function EmployeeLearningProgramPlayer() {
 
           <div className="hidden items-center gap-3 md:flex">
             <div className="text-right">
-              <p className="text-sm font-extrabold text-slate-950">{pct}%</p>
+              <p className="text-sm font-semibold text-slate-950">{pct}%</p>
               <p className="text-sm text-slate-500">
                 {doneCount}/{player.steps.length} étapes
               </p>
@@ -820,7 +820,7 @@ export function EmployeeLearningProgramPlayer() {
             <button
               type="button"
               onClick={() => setModulesSidebarOpen(true)}
-              className="hidden min-h-9 shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 text-sm font-bold text-violet-700 shadow-sm transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:inline-flex"
+              className="hidden min-h-9 shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 text-sm font-semibold text-violet-700 shadow-sm transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:inline-flex"
               title="Afficher les modules"
             >
               <ClipboardDocumentListIcon className="h-4 w-4" />
@@ -838,13 +838,13 @@ export function EmployeeLearningProgramPlayer() {
                 <AcademicCapIcon className="h-6 w-6" />
               </span>
               <div>
-                <p className="text-base font-extrabold">Formation terminée</p>
+                <p className="text-base font-bold">Formation terminée</p>
                 <p className="mt-1 text-base leading-6 text-violet-100">Vous pouvez maintenant lancer le quiz de validation de compétence.</p>
               </div>
             </div>
             <Link
               to={skillQuizHref}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-base font-extrabold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-700"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-base font-bold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-700"
             >
               <QuestionMarkCircleIcon className="h-4 w-4" />
               Quiz de compétence
@@ -858,7 +858,7 @@ export function EmployeeLearningProgramPlayer() {
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-base font-extrabold text-slate-950">Avis sur la formation</p>
+                <p className="text-base font-bold text-slate-950">Avis sur la formation</p>
                 <p className="mt-1 text-base leading-6 text-slate-600">
                   Laissez une note (étoiles) et un commentaire. Cet avis sera visible par le responsable formation.
                 </p>
@@ -898,7 +898,7 @@ export function EmployeeLearningProgramPlayer() {
             </div>
 
             <div className="mt-4">
-              <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">
+              <label className="mb-2 block text-base font-semibold uppercase tracking-wide text-slate-600">
                 Commentaire (optionnel)
               </label>
               <textarea
@@ -942,7 +942,7 @@ export function EmployeeLearningProgramPlayer() {
           <aside className="hidden h-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
           <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
-              <p className="text-base font-extrabold text-slate-950">Modules</p>
+              <p className="text-base font-bold text-slate-950">Modules</p>
               <p className="text-base text-slate-500">{player.steps.length} étape{player.steps.length > 1 ? "s" : ""}</p>
             </div>
             <button
@@ -959,8 +959,8 @@ export function EmployeeLearningProgramPlayer() {
             {toc.map((part) => (
               <section key={part.partNumber}>
                 <div className="mb-2 px-1">
-                  <p className="text-base font-extrabold uppercase tracking-wide text-violet-700">Module {part.partNumber}</p>
-                  <h2 className="mt-1 text-base font-extrabold leading-5 text-slate-950">{part.courseTitle}</h2>
+                  <p className="text-base font-semibold uppercase tracking-wide text-violet-700">Module {part.partNumber}</p>
+                  <h2 className="mt-1 text-base font-bold leading-5 text-slate-950">{part.courseTitle}</h2>
                 </div>
                 <ol className="space-y-1">
                   {part.entries.map(({ step, lessonInPart }) => {
@@ -987,7 +987,7 @@ export function EmployeeLearningProgramPlayer() {
 
         <main className="flex min-w-0 flex-col space-y-5">
           <div className="lg:hidden">
-            <label htmlFor="step-selector" className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-500">
+            <label htmlFor="step-selector" className="mb-2 block text-base font-semibold uppercase tracking-wide text-slate-500">
               Étape de la formation
             </label>
             <select
@@ -1026,7 +1026,7 @@ export function EmployeeLearningProgramPlayer() {
                     <SelectedIcon className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
-                    <h2 className="text-3xl font-black leading-tight text-slate-950">{selectedStep.title}</h2>
+                    <h2 className="text-3xl font-bold leading-tight text-slate-950">{selectedStep.title}</h2>
                     <p className="mt-2 text-base leading-6 text-slate-600">{partTitle(selectedStep)}</p>
                   </div>
                 </div>
@@ -1071,7 +1071,7 @@ export function EmployeeLearningProgramPlayer() {
                           selectedStep.videoUuid != null ? (
                             <Link
                               to={`${base}/learning-programs/quiz/${player.enrollmentUuid}/${selectedStep.videoUuid}`}
-                              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-violet-700 px-5 py-2.5 text-base font-extrabold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
+                              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-violet-700 px-5 py-2.5 text-base font-bold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
                             >
                               <QuestionMarkCircleIcon className="h-4 w-4" />
                               Passer le quiz
@@ -1186,7 +1186,7 @@ export function EmployeeLearningProgramPlayer() {
                               <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
-                                    <h3 className="text-base font-extrabold text-emerald-950">Correction du responsable formation</h3>
+                                    <h3 className="text-base font-bold text-emerald-950">Correction du responsable formation</h3>
                                     {selectedStep.activityReviewedAt && (
                                       <p className="mt-1 text-sm text-emerald-800">
                                         Validée le {new Date(selectedStep.activityReviewedAt).toLocaleDateString()}
@@ -1217,7 +1217,7 @@ export function EmployeeLearningProgramPlayer() {
                           <section className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
                             <div className="mb-4 flex items-center justify-between gap-3">
                               <div>
-                                <h3 className="text-base font-extrabold text-violet-950">Votre soumission</h3>
+                                <h3 className="text-base font-bold text-violet-950">Votre soumission</h3>
                                 <p className="mt-1 text-base text-violet-800">Complétez le format demandé pour valider l'étape.</p>
                               </div>
                               <ClipboardDocumentCheckIcon className="h-5 w-5 shrink-0 text-violet-700" />
@@ -1256,7 +1256,7 @@ export function EmployeeLearningProgramPlayer() {
                                 </div>
 
                                 <div>
-                                  <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">
+                                  <label className="mb-2 block text-base font-semibold uppercase tracking-wide text-slate-600">
                                     Commentaire optionnel
                                   </label>
                                   <textarea
@@ -1272,7 +1272,7 @@ export function EmployeeLearningProgramPlayer() {
 
                             {(selectedStep.activitySubmissionMode ?? "TEXT") === "TEXT" ? (
                               <div>
-                                <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">Votre réponse</label>
+                                <label className="mb-2 block text-base font-semibold uppercase tracking-wide text-slate-600">Votre réponse</label>
                                 <textarea
                                   className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
                                   rows={8}
@@ -1285,7 +1285,7 @@ export function EmployeeLearningProgramPlayer() {
 
                             {(selectedStep.activitySubmissionMode ?? "TEXT") === "CODE" ? (
                               <div>
-                                <label className="mb-2 block text-base font-extrabold uppercase tracking-wide text-slate-600">
+                                <label className="mb-2 block text-base font-semibold uppercase tracking-wide text-slate-600">
                                   Code ou contenu technique
                                 </label>
                                 <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-lg">
@@ -1359,7 +1359,7 @@ export function EmployeeLearningProgramPlayer() {
                   <SelectedIcon className="h-5 w-5" />
                 </span>
                 <div>
-                  <h3 className="text-base font-extrabold text-slate-950">Focus étape</h3>
+                  <h3 className="text-base font-bold text-slate-950">Focus étape</h3>
                   <p className="text-base text-slate-500">{stepKindLabel(selectedStep)}</p>
                 </div>
               </div>
@@ -1387,7 +1387,7 @@ export function EmployeeLearningProgramPlayer() {
                   )}
                 </span>
                 <div>
-                  <h3 className={cn("text-base font-extrabold", selectedStep.unlocked ? "text-emerald-950" : "text-orange-950")}>
+                  <h3 className={cn("text-base font-bold", selectedStep.unlocked ? "text-emerald-950" : "text-orange-950")}>
                     Accès
                   </h3>
                   <p className={cn("text-base font-bold", selectedStep.unlocked ? "text-emerald-700" : "text-orange-700")}>
@@ -1398,7 +1398,7 @@ export function EmployeeLearningProgramPlayer() {
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-base font-extrabold text-slate-950">Ressources</h3>
+              <h3 className="text-base font-bold text-slate-950">Ressources</h3>
               <div className="mt-4 space-y-2">
                 {selectedStep.stepKind === "VIDEO" ? (
                   <a
@@ -1452,14 +1452,14 @@ export function EmployeeLearningProgramPlayer() {
             </section>
 
             <section className="mt-auto rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
-              <p className="text-base font-extrabold uppercase tracking-wide text-violet-700">Prochaine étape</p>
+              <p className="text-base font-semibold uppercase tracking-wide text-violet-700">Prochaine étape</p>
               {nextUnlockedIndex != null ? (
                 <button
                   type="button"
                   onClick={() => setSelectedStepIndex(nextUnlockedIndex)}
                   className="mt-3 w-full rounded-2xl bg-violet-50 p-4 text-left transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
                 >
-                  <p className="text-base font-extrabold leading-5 text-slate-950">{player.steps[nextUnlockedIndex]?.title}</p>
+                  <p className="text-base font-bold leading-5 text-slate-950">{player.steps[nextUnlockedIndex]?.title}</p>
                   <p className="mt-2 flex items-center gap-2 text-base font-bold text-violet-700">
                     {stepKindLabel(player.steps[nextUnlockedIndex]!)}
                     <ChevronRightIcon className="h-3.5 w-3.5" />

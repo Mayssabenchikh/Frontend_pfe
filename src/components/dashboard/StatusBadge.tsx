@@ -26,7 +26,7 @@ export function StatusBadge({ status }: { status?: string | null }) {
   const normalized = status.toLowerCase();
   const classes = statusStyles[normalized] ?? "border-slate-200 bg-slate-50 text-slate-600";
   return (
-    <span className={`inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize leading-none transition hover:-translate-y-px ${classes}`}>
+    <span className={`inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize leading-none transition hover:-translate-y-px ${classes}`}>
       {translateDashboardText(status.replaceAll("_", " ").toLowerCase())}
     </span>
   );

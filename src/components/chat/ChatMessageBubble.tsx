@@ -56,14 +56,14 @@ export function ChatMessageBubble({
   const replyText = getReplyText(message);
 
   return (
-    <div className={`group flex items-end gap-3 ${mine ? "justify-end" : "justify-start"}`}>
-      {!mine ? <ChatAvatar name={message.senderName} avatarUrl={message.senderAvatarUrl} size={36} isOnline={isOnline} /> : null}
-      <div className={`relative max-w-[78%] rounded-2xl px-4 py-2 shadow-sm ${mine ? "bg-violet-600 text-white" : "border border-slate-200 bg-white text-slate-800"}`}>
+    <div className={`group flex min-w-0 items-end gap-2 sm:gap-3 ${mine ? "justify-end" : "justify-start"}`}>
+      {!mine ? <ChatAvatar name={message.senderName} avatarUrl={message.senderAvatarUrl} size={34} isOnline={isOnline} /> : null}
+      <div className={`relative min-w-0 max-w-[85%] overflow-hidden rounded-2xl px-3 py-2 shadow-sm sm:max-w-[78%] sm:px-4 ${mine ? "bg-violet-600 text-white" : "border border-slate-200 bg-white text-slate-800"}`}>
         {onReply ? (
           <button
             type="button"
             onClick={() => onReply(message)}
-            className={`absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full border transition ${mine ? "border-white/20 bg-white/10 text-white opacity-0 hover:bg-white/20 group-hover:opacity-100" : "border-slate-200 bg-white text-slate-500 opacity-0 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 group-hover:opacity-100"}`}
+            className={`absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border transition sm:h-7 sm:w-7 ${mine ? "border-white/20 bg-white/10 text-white sm:opacity-0 sm:hover:bg-white/20 sm:group-hover:opacity-100" : "border-slate-200 bg-white text-slate-500 sm:opacity-0 sm:hover:border-violet-200 sm:hover:bg-violet-50 sm:hover:text-violet-700 sm:group-hover:opacity-100"}`}
             title="Répondre"
             aria-label="Répondre"
           >
@@ -71,17 +71,17 @@ export function ChatMessageBubble({
           </button>
         ) : null}
 
-        <div className="mb-1 text-xs font-semibold opacity-80">{message.senderName || "Utilisateur"}</div>
+        <div className="mb-1 truncate pr-9 text-xs font-semibold opacity-80">{message.senderName || "Utilisateur"}</div>
         {replyText ? (
-          <div className={`mb-2 rounded-xl border-l-4 px-3 py-2 text-xs leading-relaxed ${mine ? "border-violet-200 bg-white/10 text-white/90" : "border-violet-300 bg-violet-50 text-slate-700"}`}>
-            <p className={`font-semibold ${mine ? "text-white" : "text-violet-700"}`}>{replyText.title}</p>
-            <p className={`max-h-10 overflow-hidden whitespace-pre-wrap ${mine ? "text-white/90" : ""}`}>{replyText.content}</p>
+          <div className={`mb-2 min-w-0 rounded-xl border-l-4 px-3 py-2 text-xs leading-relaxed ${mine ? "border-violet-200 bg-white/10 text-white/90" : "border-violet-300 bg-violet-50 text-slate-700"}`}>
+            <p className={`truncate font-semibold ${mine ? "text-white" : "text-violet-700"}`}>{replyText.title}</p>
+            <p className={`max-h-10 overflow-hidden whitespace-pre-wrap break-words ${mine ? "text-white/90" : ""}`}>{replyText.content}</p>
             {replyText.hasAttachment ? <p className={`mt-0.5 font-medium ${mine ? "text-white/90" : "text-violet-700"}`}>Pièce jointe</p> : null}
           </div>
         ) : null}
-        {message.content ? <p className="whitespace-pre-wrap text-base leading-relaxed">{message.content}</p> : null}
+        {message.content ? <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.content}</p> : null}
         {message.attachments?.length ? (
-          <div className="mt-2 space-y-2">
+          <div className="mt-2 min-w-0 space-y-2">
             {message.attachments.map((attachment) => (
               <ChatAttachmentPreview key={attachment.uuid} attachment={attachment} />
             ))}
@@ -97,7 +97,7 @@ export function ChatMessageBubble({
           ) : null}
         </div>
       </div>
-      {mine ? <ChatAvatar name={message.senderName} avatarUrl={message.senderAvatarUrl} size={36} isOnline={isOnline} /> : null}
+      {mine ? <ChatAvatar name={message.senderName} avatarUrl={message.senderAvatarUrl} size={34} isOnline={isOnline} /> : null}
     </div>
   );
 }

@@ -44,17 +44,17 @@ export function ChatAttachmentPreview({ attachment }: { attachment: ChatAttachme
 
   if (isImage) {
     return (
-      <a href={attachment.fileUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <a href={attachment.fileUrl} target="_blank" rel="noreferrer" className="block max-w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
         <img
           src={attachment.fileUrl}
           alt={attachment.fileName}
-          className="max-h-48 w-full object-cover"
+          className="h-auto max-h-48 w-full max-w-full object-cover"
           onError={() => setImageFailed(true)}
         />
-        <div className="flex items-center justify-between gap-3 px-3 py-2">
+        <div className="flex min-w-0 items-center justify-between gap-3 px-3 py-2">
           <div className="min-w-0">
             <p className="truncate text-xs font-medium text-slate-800">{attachment.fileName}</p>
-            <p className="text-[11px] text-slate-500">{formatBytes(attachment.sizeBytes)}</p>
+            <p className="text-xs text-slate-500">{formatBytes(attachment.sizeBytes)}</p>
           </div>
           <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-3.5 w-3.5 text-slate-400" />
         </div>
@@ -63,14 +63,14 @@ export function ChatAttachmentPreview({ attachment }: { attachment: ChatAttachme
   }
 
   return (
-    <a href={attachment.fileUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 transition hover:border-violet-200 hover:bg-violet-50">
+    <a href={attachment.fileUrl} target="_blank" rel="noreferrer" className="flex max-w-full min-w-0 items-center justify-between gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 transition hover:border-violet-200 hover:bg-violet-50">
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-violet-700 shadow-sm ring-1 ring-slate-200">
           <FontAwesomeIcon icon={getAttachmentIcon(attachment)} className="h-4 w-4" />
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-slate-800">{attachment.fileName}</p>
-          <p className="text-[11px] text-slate-500">{formatBytes(attachment.sizeBytes)}</p>
+          <p className="text-xs text-slate-500">{formatBytes(attachment.sizeBytes)}</p>
         </div>
       </div>
       <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-3.5 w-3.5 shrink-0 text-slate-400" />

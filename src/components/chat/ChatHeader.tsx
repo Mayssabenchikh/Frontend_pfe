@@ -1,21 +1,39 @@
 import type { ProjectConversation } from "../../types/chat";
 import { ChatPresenceBar } from "./ChatPresenceBar";
+import { Bars3Icon } from "../../icons/heroicons/outline";
 
-export function ChatHeader({ project, onlineCount }: { project: ProjectConversation; onlineCount: number }) {
+export function ChatHeader({
+  project,
+  onlineCount,
+  onOpenConversations,
+}: {
+  project: ProjectConversation;
+  onlineCount: number;
+  onOpenConversations?: () => void;
+}) {
   const { label: statusLabel, classes: statusClasses } = getProjectStatusMeta(project.status);
 
   return (
-    <div className="flex items-center justify-between border-b border-slate-200/80 bg-gradient-to-r from-white to-slate-50 px-4 py-3 shadow-sm">
-      <div className="min-w-0">
-        <h2 className="truncate text-lg font-bold tracking-tight text-slate-900">{project.name}</h2>
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Statut</span>
-          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold leading-none ${statusClasses}`}>
+    <div className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white px-3 py-3 shadow-sm sm:px-4">
+      <button
+        type="button"
+        onClick={onOpenConversations}
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-violet-50 hover:text-violet-700 md:hidden"
+        aria-label="Ouvrir les conversations"
+        title="Conversations"
+      >
+        <Bars3Icon className="h-5 w-5" />
+      </button>
+      <div className="min-w-0 flex-1">
+        <h2 className="truncate text-base font-semibold text-slate-900">{project.name}</h2>
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Statut</span>
+          <span className={`inline-flex max-w-full items-center truncate rounded-full border px-2.5 py-1 text-xs font-semibold leading-none ${statusClasses}`}>
             {statusLabel}
           </span>
         </div>
       </div>
-      <div className="ml-3 shrink-0">
+      <div className="shrink-0">
         <ChatPresenceBar onlineCount={onlineCount} />
       </div>
     </div>

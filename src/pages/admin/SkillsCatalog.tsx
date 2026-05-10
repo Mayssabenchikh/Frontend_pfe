@@ -578,7 +578,7 @@ export function SkillsCatalog() {
           <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-500/20 bg-white shadow-[0_30px_80px_rgba(76,29,149,0.22)]">
             <div className="flex items-center justify-between border-b border-violet-500/10 bg-gradient-to-br from-violet-50 to-indigo-50 px-6 py-4">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-violet-500">Référentiel</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">Référentiel</p>
                 <h3 className="truncate text-base font-bold text-slate-900">
                   Synonymes de {synonymModalSkill.name}
                 </h3>
@@ -648,7 +648,7 @@ export function SkillsCatalog() {
                         className="flex items-center justify-between gap-1.5 rounded-xl border border-violet-200/80 bg-gradient-to-br from-white to-violet-50/40 px-2 py-1.5 shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-violet-300 hover:shadow-md"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-[11px] font-semibold text-slate-800">{alias}</p>
+                          <p className="truncate text-xs font-semibold text-slate-800">{alias}</p>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
@@ -817,7 +817,7 @@ function EmptyState({ icon, title, description, action }: EmptyStateProps) {
         </div>
       </div>
       <div>
-        <p className="text-sm font-bold text-violet-900">{title}</p>
+        <p className="text-sm font-semibold text-violet-900">{title}</p>
         <p className="text-xs text-violet-400 mt-1.5 max-w-[280px] leading-relaxed">{description}</p>
       </div>
       {action && (
@@ -867,7 +867,7 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-violet-500/25 bg-violet-500/10">
               <BoltIcon className="h-4 w-4 text-violet-600" />
             </div>
-            <h2 className="text-sm font-bold text-violet-950 tracking-tight">{title}</h2>
+            <h2 className="text-sm font-semibold text-violet-950 tracking-tight">{title}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer"
             className="flex items-center justify-center w-6 h-6 rounded-md
@@ -881,7 +881,7 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
         {/* Form */}
         <form onSubmit={onSubmit} className="px-7 pb-7 space-y-4">
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-violet-400">
               Nom de la compétence
             </label>
             <StyledInput
@@ -894,7 +894,7 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-violet-400">
               Catégorie
             </label>
             <div className="relative">
@@ -912,7 +912,7 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-violet-400">
                 Niveau min
               </label>
               <StyledInput
@@ -922,7 +922,7 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-violet-400">
                 Niveau max
               </label>
               <StyledInput
@@ -934,7 +934,7 @@ function SkillFormModal({ title, categories, form, setForm, iconFile, setIconFil
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-violet-400">
               Icône (optionnel)
             </label>
             <input

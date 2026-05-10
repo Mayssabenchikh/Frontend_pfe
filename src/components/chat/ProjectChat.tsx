@@ -17,6 +17,7 @@ export function ProjectChat({
   onSend,
   onReply,
   onCancelReply,
+  onOpenConversations,
 }: {
   project: ProjectConversation;
   messages: ChatMessage[];
@@ -29,13 +30,14 @@ export function ProjectChat({
   onSend: (file?: File | null) => Promise<void> | void;
   onReply: (message: ChatMessage) => void;
   onCancelReply: () => void;
+  onOpenConversations?: () => void;
 }) {
   const onlineCount = useMemo(() => Object.values(presence).filter((p) => p.online).length, [presence]);
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col bg-slate-50/40">
-      <ChatHeader project={project} onlineCount={onlineCount} />
-      <div className="flex-1 space-y-3 overflow-auto px-4 py-4">
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-50/40">
+      <ChatHeader project={project} onlineCount={onlineCount} onOpenConversations={onOpenConversations} />
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
         {messages.map((message) => (
           <ChatMessageBubble
             key={message.messageUuid}

@@ -149,13 +149,13 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-md"
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white shadow-md"
               style={{ background: `linear-gradient(135deg, ${avatar[0]}, ${avatar[1]})` }}
             >
               {initials}
             </div>
             <div className="min-w-0">
-              <h2 id={titleId} className="truncate text-xl font-black leading-tight tracking-tight text-slate-800 sm:text-2xl">
+              <h2 id={titleId} className="truncate text-xl font-bold leading-tight tracking-tight text-slate-800 sm:text-2xl">
                 {row?.display_name || "Profil"}
               </h2>
               <p className="mt-1 truncate text-sm text-slate-500">{row?.email || ""}</p>
@@ -178,8 +178,8 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-3">
                 <article className="rounded-3xl bg-violet-50 p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.11em] text-violet-600">Score de correspondance</p>
-                  <p className="mt-1 text-2xl font-black leading-none text-violet-700">{toPercent(row.match_score)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Score de correspondance</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-violet-700">{toPercent(row.match_score)}</p>
                   <div className="mt-3 h-1.5 rounded-full bg-violet-100">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-violet-700 to-fuchsia-500"
@@ -189,9 +189,9 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
                 </article>
 
                 <article className="rounded-3xl bg-slate-100/80 p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.11em] text-slate-500">Confiance</p>
-                  <p className="mt-1 text-2xl font-black leading-none text-slate-800">{toPercent(row.confidence_score)}</p>
-                  <p className="mt-2 text-[11px] text-slate-500">Basée sur le statut de validation de chaque compétence.</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Confiance</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-slate-800">{toPercent(row.confidence_score)}</p>
+                  <p className="mt-2 text-xs text-slate-500">Basée sur le statut de validation de chaque compétence.</p>
                 </article>
               </div>
 
@@ -200,14 +200,14 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
               </p>
 
               <section className="rounded-2xl border border-violet-100 bg-white p-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Écarts par rapport au projet</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Écarts par rapport au projet</h3>
                 <div className="mt-2">
                   <GapList gaps={gaps} loading={gapsLoading} />
                 </div>
               </section>
 
               <section className="rounded-2xl border border-violet-100 bg-white p-4">
-                <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Synthèse</h3>
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Synthèse</h3>
                 <ExplanationBox
                   deterministicSummary={
                     explain?.deterministic_summary ?? "Explication déterministe indisponible pour cette correspondance."

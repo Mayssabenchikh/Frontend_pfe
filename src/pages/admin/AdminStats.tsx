@@ -15,8 +15,8 @@ function Card({ label, value, icon, iconClass, iconBgClass, note }: CardProps) {
       <div className="pointer-events-none absolute -right-6 -top-6 z-0 h-24 w-24 rounded-full bg-slate-50" />
       <div className="relative z-10 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-900 sm:mb-2 sm:text-xs">{label}</p>
-          <p className="text-3xl font-extrabold leading-none tracking-tight text-violet-900 tabular-nums sm:text-4xl">{value}</p>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 sm:mb-2">{label}</p>
+          <p className="text-3xl font-bold leading-none tracking-tight text-violet-900 tabular-nums">{value}</p>
           {note && <p className="text-xs text-slate-900 mt-2">{note}</p>}
         </div>
         <div className={`min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${iconBgClass} ${iconClass}`}>

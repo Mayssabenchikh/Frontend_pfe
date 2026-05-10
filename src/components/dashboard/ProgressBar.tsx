@@ -2,7 +2,7 @@ export function ProgressBar({ value, label }: { value?: number | null; label?: s
   const safeValue = Math.max(0, Math.min(100, Number(value ?? 0)));
   return (
     <div className="min-w-[120px]">
-      <div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+      <div className="mb-1 flex items-center justify-between gap-2 text-xs font-bold text-slate-500">
         <span className="truncate">{label ?? "Progression"}</span>
         <span className="tabular-nums text-slate-700">{safeValue}%</span>
       </div>

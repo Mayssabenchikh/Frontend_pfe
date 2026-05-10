@@ -5,10 +5,12 @@ import {
   Squares2X2Icon,
   ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
+  InboxStackIcon,
 } from "../../icons/heroicons/outline";
 import { AdminHeader } from "../admin/AdminHeader";
 import { trainingManagerApi } from "../../api/trainingManagerApi";
-import { DashboardSidebar, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
+import { DashboardShell } from "../../components/DashboardShell";
+import { DashboardSidebar, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
 import { TrainingManagerBreadcrumbs } from "./TrainingManagerBreadcrumbs";
 
 const ROOT = `${window.location.origin}/`;
@@ -24,8 +26,6 @@ export default function TrainingManagerPage() {
   const isSubmissionsSection = location.pathname.startsWith("/training-manager/submissions");
   const isDashboardRoute = location.pathname === "/training-manager" || location.pathname === "/training-manager/dashboard";
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
 
   useEffect(() => {
@@ -37,35 +37,37 @@ export default function TrainingManagerPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
-
   return (
-    <div className={`admin-layout tm-layout${isDashboardRoute ? " dashboard-page" : ""}`} data-sidebar-collapsed={sidebarCollapsed || undefined}>
-      <div
-        className={`sidebar-backdrop${sidebarOpen ? " open" : ""}`}
-        onClick={() => setSidebarOpen(false)}
-      />
-
-        <DashboardSidebar mobileOpen={sidebarOpen} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed((c) => !c)}>
-        <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/training-manager" end collapsed={sidebarCollapsed} />
-        <DashboardSidebarNavItem label="Mes formations" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/training-manager/programs" active={isProgramsSection} collapsed={sidebarCollapsed} />
-        <DashboardSidebarNavItem label="Soumissions" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/training-manager/submissions" active={isSubmissionsSection} collapsed={sidebarCollapsed} />
-      </DashboardSidebar>
-
-      <div className="admin-content">
+    <DashboardShell
+      className="tm-layout"
+      dashboardPage={isDashboardRoute}
+      renderSidebar={({ sidebarOpen, sidebarCollapsed, toggleSidebarCollapsed }) => (
+        <DashboardSidebar
+          mobileOpen={sidebarOpen}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapsed}
+          footer={<DashboardSidebarLogout collapsed={sidebarCollapsed} onLogout={() => keycloak.logout({ redirectUri: ROOT })} />}
+        >
+          <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/training-manager" end collapsed={sidebarCollapsed} />
+          <DashboardSidebarNavItem label="Mes formations" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/training-manager/programs" active={isProgramsSection} collapsed={sidebarCollapsed} />
+          <DashboardSidebarNavItem label="Forum" icon={<InboxStackIcon className="h-5 w-5" />} to="/forum" collapsed={sidebarCollapsed} />
+          <DashboardSidebarNavItem label="Soumissions" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/training-manager/submissions" active={isSubmissionsSection} collapsed={sidebarCollapsed} />
+        </DashboardSidebar>
+      )}
+      renderHeader={({ toggleSidebar }) => (
         <AdminHeader
           displayName={displayName}
           initials={null}
           avatarUrl={avatarUrl}
           avatarSeed={avatarSeed}
           roleLabel="Responsable formation"
-          onMenuToggle={() => setSidebarOpen((o) => !o)}
+          onMenuToggle={toggleSidebar}
           onProfile={() => navigate("/training-manager/profile")}
           onLogout={() => keycloak.logout({ redirectUri: ROOT })}
         />
-        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-hidden"}`}>
+      )}
+    >
+        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-auto" : "overflow-hidden"}`}>
           <TrainingManagerBreadcrumbs />
           <div className={`${isDashboardRoute ? "" : "dashboard-padding "}training-manager-app flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-hidden"}`}>
             <div className={`tm-scroll-area relative flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-auto"}`}>
@@ -73,7 +75,6 @@ export default function TrainingManagerPage() {
             </div>
           </div>
         </main>
-      </div>
-    </div>
+    </DashboardShell>
   );
 }

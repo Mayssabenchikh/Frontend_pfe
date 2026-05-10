@@ -155,7 +155,7 @@ export function EmployeeTrainingRecommendations({
               </div>
               <h3 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Formations Obligatoires (Projet)</h3>
             </div>
-            <span className="rounded-full bg-red-100 px-4 py-1 text-[11px] font-semibold uppercase tracking-wider text-red-700">
+            <span className="rounded-full bg-red-100 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-red-700">
               Obligatoire
             </span>
           </div>
@@ -268,25 +268,25 @@ function UnifiedRecommendationCard({
   return (
     <article className="rounded-2xl border border-violet-100 bg-white p-5 shadow-[0_8px_22px_rgba(124,58,237,0.08)]">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeClass}`}>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${badgeClass}`}>
           {badgeLabel}
         </span>
         {isCompleted ? (
-          <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
             Terminé
           </span>
         ) : isInProgress ? (
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800">
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
             En cours
           </span>
         ) : null}
         {secondaryBadgeLabel && (
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
             {secondaryBadgeLabel}
           </span>
         )}
         {rec.priority === "HIGH" && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-violet-700">
             <BoltIcon className="h-3.5 w-3.5 text-violet-600" /> Haute priorité
           </span>
         )}
@@ -350,7 +350,7 @@ function LevelBadge({
   };
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="text-xs uppercase tracking-wider text-slate-400">{label}</span>
       <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-bold ${colors[color]}`}>
         {level}
       </span>
@@ -376,18 +376,18 @@ function PrimaryRecommendationCard({
   return (
     <article className="rounded-2xl border border-violet-100 bg-white p-6 shadow-[0_8px_22px_rgba(124,58,237,0.08)]">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-red-700">Obligatoire</span>
+        <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700">Obligatoire</span>
         {isCompleted ? (
-          <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
             Terminé
           </span>
         ) : isInProgress ? (
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800">
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
             En cours
           </span>
         ) : null}
         {rec.priority === "HIGH" && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-violet-700">
             <BoltIcon className="h-3.5 w-3.5 text-violet-600" /> Haute priorité
           </span>
         )}

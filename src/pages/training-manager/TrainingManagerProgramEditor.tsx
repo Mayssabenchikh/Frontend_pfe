@@ -54,7 +54,7 @@ function QuizStatusPill({ status }: { status: QuizGenerationStatus }) {
     FAILED: "Échec quiz",
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ${map[status]}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ring-1 ${map[status]}`}>
       {labels[status]}
     </span>
   );
@@ -63,10 +63,10 @@ function QuizStatusPill({ status }: { status: QuizGenerationStatus }) {
 function SourceBadge({ type }: { type: "RECOMMENDATION" | "MANUAL" }) {
   if (type === "RECOMMENDATION") {
     return (
-      <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-violet-800">Recommandé</span>
+      <span className="rounded bg-violet-100 px-1.5 py-0.5 text-xs font-semibold uppercase text-violet-800">Recommandé</span>
     );
   }
-  return <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-700">Manuel</span>;
+  return <span className="rounded bg-slate-200 px-1.5 py-0.5 text-xs font-semibold uppercase text-slate-700">Manuel</span>;
 }
 
 function mergeCourseContentForTree(course: LearningProgramDetail["courses"][number]) {
@@ -904,7 +904,7 @@ export function TrainingManagerProgramEditor() {
         <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-[0_24px_60px_-28px_rgba(99,102,241,0.35)] ring-1 ring-slate-900/[0.04]">
           <div className="relative bg-gradient-to-br from-violet-700 via-indigo-800 to-slate-950 px-6 py-9 text-white sm:px-8 sm:py-10">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.12),transparent_55%)]" aria-hidden />
-            <p className="relative text-[10px] font-bold uppercase tracking-[0.22em] text-violet-200/95">Nouvelle formation</p>
+            <p className="relative text-xs font-semibold uppercase tracking-widest text-violet-200/95">Nouvelle formation</p>
             <h1 className="relative mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Créer une formation</h1>
             <p className="relative mt-2 max-w-lg text-sm leading-relaxed text-violet-100/92">
               Définissez le titre, la compétence cible et le niveau. Vous pourrez ensuite structurer modules et vidéos
@@ -972,7 +972,7 @@ export function TrainingManagerProgramEditor() {
                 <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3">
                   <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-4 w-4 accent-violet-600" />
                   <div>
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ${st.tone}`}>{st.text}</span>
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold uppercase ring-1 ${st.tone}`}>{st.text}</span>
                     <p className="mt-1 text-xs text-slate-500">Les formations publiées apparaissent au catalogue employés.</p>
                   </div>
                 </label>
@@ -982,7 +982,7 @@ export function TrainingManagerProgramEditor() {
               <button
                 type="button"
                 onClick={() => void saveNew()}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-md hover:opacity-95 sm:flex-none"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:opacity-95 sm:flex-none"
               >
                 <SparklesIcon className="h-4 w-4" />
                 Créer la formation
@@ -1014,7 +1014,7 @@ export function TrainingManagerProgramEditor() {
           </Link>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title || "Formation"}</h1>
-            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1 ${st.tone}`}>{st.text}</span>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ring-1 ${st.tone}`}>{st.text}</span>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
             Structure, contenus, quiz et ordre de lecture — tout est géré dans cette formation.
@@ -1024,7 +1024,7 @@ export function TrainingManagerProgramEditor() {
           <button
             type="button"
             onClick={() => setShowMetaEditor(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-800 transition hover:bg-violet-100"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-800 transition hover:bg-violet-100"
           >
             <PencilSquareIcon className="h-4 w-4" />
             Modifier formation
@@ -1032,7 +1032,7 @@ export function TrainingManagerProgramEditor() {
           <button
             type="button"
             onClick={() => setShowTreeView(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-bold text-indigo-800 transition hover:bg-indigo-100"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-100"
           >
             <FolderIcon className="h-4 w-4" />
             Vue arborescence
@@ -1040,7 +1040,7 @@ export function TrainingManagerProgramEditor() {
           <button
             type="button"
             onClick={() => setConfirmDeleteProgram(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 transition hover:bg-rose-100"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
           >
             <TrashIcon className="h-4 w-4" />
             Supprimer
@@ -1130,7 +1130,7 @@ export function TrainingManagerProgramEditor() {
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3">
                     <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-4 w-4 accent-violet-600" />
                     <div>
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ${st.tone}`}>{st.text}</span>
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold uppercase ring-1 ${st.tone}`}>{st.text}</span>
                       <p className="mt-1 text-xs text-slate-500">Les formations publiées apparaissent au catalogue employés.</p>
                     </div>
                   </label>
@@ -1148,7 +1148,7 @@ export function TrainingManagerProgramEditor() {
                   type="button"
                   onClick={() => void saveMeta()}
                   disabled={savingMeta}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-md hover:brightness-110 disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
                 >
                   {savingMeta ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : null}
                   {savingMeta ? "Enregistrement…" : "Enregistrer la formation"}
@@ -1185,10 +1185,10 @@ export function TrainingManagerProgramEditor() {
               <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-violet-700">Formation</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Formation</p>
                     <p className="mt-1 text-base font-bold text-slate-950">{detail.title}</p>
                   </div>
-                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1 ${statusLabel(detail.published).tone}`}>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ring-1 ${statusLabel(detail.published).tone}`}>
                     {statusLabel(detail.published).text}
                   </span>
                 </div>
@@ -1204,10 +1204,10 @@ export function TrainingManagerProgramEditor() {
                         <li key={course.uuid} className="rounded-xl border border-violet-100 bg-white p-4 shadow-sm">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div>
-                              <p className="text-[10px] font-bold uppercase tracking-wide text-violet-600">Partie</p>
-                              <p className="mt-1 text-sm font-bold text-slate-900">{course.title}</p>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Partie</p>
+                              <p className="mt-1 text-sm font-semibold text-slate-900">{course.title}</p>
                             </div>
-                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-500">
+                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase text-slate-500">
                               ordre {course.sortOrder + 1}
                             </span>
                           </div>
@@ -1218,7 +1218,7 @@ export function TrainingManagerProgramEditor() {
                               mergeCourseContentForTree(course).map((item) => (
                                 <li key={item.key} className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
                                   <span
-                                    className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                    className={`rounded px-2 py-0.5 text-xs font-semibold uppercase ${
                                       item.type === "Vidéo"
                                         ? "bg-sky-100 text-sky-800"
                                         : item.type === "Lecture"
@@ -1268,7 +1268,7 @@ export function TrainingManagerProgramEditor() {
                 type="button"
                 onClick={() => void deleteProgram()}
                 disabled={deletingProgram}
-                className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
               >
                 {deletingProgram ? "Suppression…" : "Supprimer"}
               </button>
@@ -1320,7 +1320,7 @@ export function TrainingManagerProgramEditor() {
               <button
                 type="button"
                 onClick={() => setEditorWorkspaceTab("modules")}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition ${
+                className={`rounded-xl px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition ${
                   editorWorkspaceTab === "modules"
                     ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -1332,7 +1332,7 @@ export function TrainingManagerProgramEditor() {
                 type="button"
                 disabled={!selectedCourse}
                 onClick={() => setEditorWorkspaceTab("videosQuiz")}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`rounded-xl px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   editorWorkspaceTab === "videosQuiz"
                     ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -1344,7 +1344,7 @@ export function TrainingManagerProgramEditor() {
                 type="button"
                 disabled={!selectedCourse}
                 onClick={() => setEditorWorkspaceTab("text")}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`rounded-xl px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   editorWorkspaceTab === "text"
                     ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -1356,7 +1356,7 @@ export function TrainingManagerProgramEditor() {
                 type="button"
                 disabled={!selectedCourse}
                 onClick={() => setEditorWorkspaceTab("activities")}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`rounded-xl px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   editorWorkspaceTab === "activities"
                     ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -1368,7 +1368,7 @@ export function TrainingManagerProgramEditor() {
                 type="button"
                 disabled={!detail}
                 onClick={() => setEditorWorkspaceTab("reviews")}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`rounded-xl px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   editorWorkspaceTab === "reviews"
                     ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -1380,7 +1380,7 @@ export function TrainingManagerProgramEditor() {
                 type="button"
                 disabled={!selectedCourse}
                 onClick={() => setEditorWorkspaceTab("order")}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`rounded-xl px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   editorWorkspaceTab === "order"
                     ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -1395,7 +1395,7 @@ export function TrainingManagerProgramEditor() {
               <section className="tm-section rounded-2xl border border-violet-100 bg-gradient-to-b from-white via-white to-violet-50/30 p-5 shadow-[0_2px_12px_rgba(99,102,241,0.06)] ring-1 ring-violet-100/60 backdrop-blur-sm sm:p-6">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-700">Structure de la formation</h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-violet-700">Structure de la formation</h2>
                     <p className="mt-1 text-xs text-slate-500">Ajoutez les parties de la formation, sélectionnez-en une, puis gérez ses contenus dans les onglets suivants.</p>
                   </div>
                 </div>
@@ -1443,7 +1443,7 @@ export function TrainingManagerProgramEditor() {
             onAddVideo={addVideo}
           />
           <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Vidéo manuelle</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Vidéo manuelle</h2>
             <p className="mt-1 text-xs text-slate-500">Collez une URL ou un ID YouTube. Source affichée comme « Manuel ».</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <input
@@ -1506,7 +1506,7 @@ export function TrainingManagerProgramEditor() {
           {detail && (
             <div className="min-w-0">
             <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Quiz IA par vidéo</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quiz IA par vidéo</h2>
               <p className="mt-1 text-xs text-slate-500">
                 Déclenche la génération côté serveur (service IA). Vous pouvez corriger le titre, la miniature, l’URL YouTube ou la source : si
                 l’identifiant vidéo change, le quiz est relancé automatiquement.
@@ -1517,7 +1517,7 @@ export function TrainingManagerProgramEditor() {
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((c) => (
                     <li key={c.uuid} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
-                      <p className="text-xs font-bold uppercase text-slate-500">{c.title}</p>
+                      <p className="text-xs font-semibold uppercase text-slate-500">{c.title}</p>
                       <ul className="mt-2 space-y-2">
                         {c.videos
                           .slice()
@@ -1547,7 +1547,7 @@ export function TrainingManagerProgramEditor() {
                                     type="button"
                                     disabled={generatingQuiz === v.uuid || v.quizStatus === "PENDING"}
                                     onClick={() => void regenerate(v.uuid)}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-violet-800 hover:bg-violet-100 disabled:opacity-50"
                                   >
                                     {generatingQuiz === v.uuid || v.quizStatus === "PENDING" ? (
                                       <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
@@ -1638,7 +1638,7 @@ export function TrainingManagerProgramEditor() {
                                       }
                                     />
                                   </label>
-                                  <p className="text-[11px] text-amber-800">
+                                  <p className="text-xs text-amber-800">
                                     Changer l’identifiant YouTube relance la génération du quiz (statut « en cours » puis « prêt »).
                                   </p>
                                   <div className="flex flex-wrap gap-2">
@@ -1676,7 +1676,7 @@ export function TrainingManagerProgramEditor() {
           {editorWorkspaceTab === "text" && detail && (
             <div className="min-w-0">
             <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Contenu texte (lecture)</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Contenu texte (lecture)</h2>
               <p className="mt-1 text-xs text-slate-500">
                 Articles et synthèses en Markdown : titres, listes, liens, code, tableaux (GFM), images. Chaque bloc existant peut être modifié ou
                 supprimé depuis la liste. L’ordre dans la formation se règle dans « Ordre de la formation ».
@@ -1684,7 +1684,7 @@ export function TrainingManagerProgramEditor() {
               <div className="mt-4 space-y-4 rounded-2xl border border-indigo-200/70 bg-gradient-to-b from-indigo-50/60 to-white p-4 shadow-sm ring-1 ring-indigo-100/80 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
                   <p className="text-sm font-semibold text-indigo-950">Nouveau bloc pour le module sélectionné</p>
-                  <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-indigo-800">Lecture</span>
+                  <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-800">Lecture</span>
                 </div>
                 <label className="block text-xs text-slate-600">
                   Titre
@@ -1728,10 +1728,10 @@ export function TrainingManagerProgramEditor() {
                   </button>
                 </div>
                 <div className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm ring-1 ring-slate-100">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Image sous le texte</p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">URL publique en HTTPS uniquement (CDN, stockage objet, etc.).</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Image sous le texte</p>
+                  <p className="mt-0.5 text-xs text-slate-500">URL publique en HTTPS uniquement (CDN, stockage objet, etc.).</p>
                   <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
-                    <label className="min-w-0 flex-1 text-[11px] text-slate-600">
+                    <label className="min-w-0 flex-1 text-xs text-slate-600">
                       URL de l’image
                       <input
                         className="tm-input mt-1"
@@ -1742,7 +1742,7 @@ export function TrainingManagerProgramEditor() {
                         autoComplete="off"
                       />
                     </label>
-                    <label className="min-w-0 flex-1 text-[11px] text-slate-600 sm:max-w-[200px]">
+                    <label className="min-w-0 flex-1 text-xs text-slate-600 sm:max-w-[200px]">
                       Légende (alt)
                       <input
                         className="tm-input mt-1"
@@ -1762,7 +1762,7 @@ export function TrainingManagerProgramEditor() {
                 </div>
                 {textArtBody.trim() !== "" && (
                   <div className="overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-b from-white to-indigo-50/40 p-4 ring-1 ring-indigo-100/60">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-900/80">Aperçu employé</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-indigo-900/80">Aperçu employé</p>
                     <div className="mt-3 rounded-lg border border-white/80 bg-white/90 px-3 py-3 shadow-inner">
                       <LearningMarkdownBody markdown={textArtBody} />
                     </div>
@@ -1794,7 +1794,7 @@ export function TrainingManagerProgramEditor() {
                                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-800">
                                   <span>
                                     Lecture — {t.title}{" "}
-                                    <span className="text-[10px] text-slate-400">(ordre {t.sortOrder})</span>
+                                    <span className="text-xs text-slate-400">(ordre {t.sortOrder})</span>
                                   </span>
                                   <div className="flex flex-wrap gap-2">
                                     <button
@@ -1859,7 +1859,7 @@ export function TrainingManagerProgramEditor() {
                                       }}
                                     />
                                     <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
-                                      <p className="text-[11px] font-semibold text-slate-600">Insérer une image (HTTPS)</p>
+                                      <p className="text-xs font-semibold text-slate-600">Insérer une image (HTTPS)</p>
                                       <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
                                         <input
                                           className="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1.5 text-sm"
@@ -1929,7 +1929,7 @@ export function TrainingManagerProgramEditor() {
               <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Avis sur la formation</h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Avis sur la formation</h2>
                     <p className="mt-1 text-xs text-slate-500">Notes et commentaires laissés par les apprenants (employés/managers).</p>
                   </div>
                   <button
@@ -1980,7 +1980,7 @@ export function TrainingManagerProgramEditor() {
                       <article key={r.uuid} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <header className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-slate-900">
+                            <p className="text-sm font-semibold text-slate-900">
                               {r.reviewerName || "Utilisateur"} {r.reviewerRole ? `· ${r.reviewerRole}` : ""}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">{new Date(r.updatedAt).toLocaleString("fr-FR")}</p>
@@ -2015,20 +2015,20 @@ export function TrainingManagerProgramEditor() {
           {editorWorkspaceTab === "activities" && detail && (
             <div className="min-w-0">
             <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Exercices &amp; activités pratiques</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Exercices &amp; activités pratiques</h2>
 
               <div className="mt-4 space-y-4 rounded-2xl border border-teal-200/70 bg-gradient-to-b from-teal-50/60 to-white p-4 shadow-sm ring-1 ring-teal-100/80 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-100 pb-3">
                   <p className="text-sm font-semibold text-teal-900">Nouvelle activité pour la partie sélectionnée</p>
-                  <span className="rounded-full bg-teal-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-teal-800">Pratique</span>
+                  <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-teal-800">Pratique</span>
                 </div>
                 <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm ring-1 ring-violet-100">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <SparklesIcon className="h-5 w-5 text-violet-600" />
-                        <p className="text-sm font-bold text-slate-900">Assistant IA</p>
-                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-800">
+                        <p className="text-sm font-semibold text-slate-900">Assistant IA</p>
+                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-violet-800">
                           Validation humaine obligatoire
                         </span>
                       </div>
@@ -2072,25 +2072,25 @@ export function TrainingManagerProgramEditor() {
                   {aiActivitySuggestion && (
                     <div className="mt-4 grid gap-3 rounded-xl border border-violet-100 bg-violet-50/50 p-3 sm:grid-cols-2">
                       <div className="sm:col-span-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-violet-700">Suggestion IA à vérifier</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Suggestion IA à vérifier</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{aiActivitySuggestion.title || "Titre proposé par l’IA"}</p>
                         {aiActivitySuggestion.description && <p className="mt-1 text-xs leading-5 text-slate-600">{aiActivitySuggestion.description}</p>}
                       </div>
                       {aiActivitySuggestion.learningObjective && (
                         <div className="rounded-lg bg-white/80 p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Objectif</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Objectif</p>
                           <p className="mt-1 text-xs text-slate-700">{aiActivitySuggestion.learningObjective}</p>
                         </div>
                       )}
                       {aiActivitySuggestion.totalPoints > 0 && (
                         <div className="rounded-lg bg-white/80 p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Barème</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Barème</p>
                           <p className="mt-1 text-xs text-slate-700">{aiActivitySuggestion.totalPoints} points proposés</p>
                         </div>
                       )}
                       {aiActivitySuggestion.evaluationCriteria?.length > 0 && (
                         <div className="rounded-lg bg-white/80 p-3 sm:col-span-2">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Critères d’évaluation</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Critères d’évaluation</p>
                           <ul className="mt-2 space-y-1 text-xs text-slate-700">
                             {aiActivitySuggestion.evaluationCriteria.slice(0, 4).map((criterion, index) => (
                               <li key={`${criterion.criterion}-${index}`}>
@@ -2102,7 +2102,7 @@ export function TrainingManagerProgramEditor() {
                         </div>
                       )}
                       {aiActivityHistory.length > 1 && (
-                        <p className="text-[11px] font-medium text-slate-500 sm:col-span-2">
+                        <p className="text-xs font-medium text-slate-500 sm:col-span-2">
                           {aiActivityHistory.length} suggestions générées pendant cette session.
                         </p>
                       )}
@@ -2120,7 +2120,7 @@ export function TrainingManagerProgramEditor() {
                       <option value="EXERCISE">Exercice guidé</option>
                       <option value="PRACTICAL">Activité pratique</option>
                     </select>
-                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                    <p className="mt-1 text-xs leading-4 text-slate-500">
                       Définit la nature de l’activité dans la partie (exercice pas-à-pas ou mise en pratique).
                     </p>
                   </label>
@@ -2135,7 +2135,7 @@ export function TrainingManagerProgramEditor() {
                       <option value="CODE">Code / extrait technique</option>
                       <option value="FILE">Fichier (téléversement)</option>
                     </select>
-                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                    <p className="mt-1 text-xs leading-4 text-slate-500">
                       Choisit le mode de rendu : l’apprenant répond en texte, fournit du code, ou téléverse un fichier.
                     </p>
                   </label>
@@ -2147,7 +2147,7 @@ export function TrainingManagerProgramEditor() {
                       onChange={(e) => setActTitle(e.target.value)}
                       placeholder="ex. Lab : déployer un pod Kubernetes"
                     />
-                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                    <p className="mt-1 text-xs leading-4 text-slate-500">
                       Nom affiché dans la partie sélectionnée et côté apprenant.
                     </p>
                   </label>
@@ -2159,7 +2159,7 @@ export function TrainingManagerProgramEditor() {
                       value={actInstr}
                       onChange={(e) => setActInstr(e.target.value)}
                     />
-                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                    <p className="mt-1 text-xs leading-4 text-slate-500">
                       Contenu principal de l’exercice : contexte, étapes, livrables. Le Markdown simple est accepté.
                     </p>
                   </label>
@@ -2183,7 +2183,7 @@ export function TrainingManagerProgramEditor() {
                     >
                       Uploader pièce jointe pour consigne
                     </button>
-                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                    <p className="mt-1 text-xs leading-4 text-slate-500">
                       Ajoute une pièce jointe (image, PDF, document…) liée à la consigne.
                     </p>
                   </div>
@@ -2195,40 +2195,40 @@ export function TrainingManagerProgramEditor() {
                       onChange={(e) => setActUrl(e.target.value)}
                       placeholder="https://…"
                     />
-                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                    <p className="mt-1 text-xs leading-4 text-slate-500">
                       URL vers une documentation, un dépôt, un outil ou une ressource de référence.
                     </p>
                   </label>
                   <div className="sm:col-span-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-3">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Details pedagogiques</p>
-                      <button type="button" onClick={addActCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-[11px]">
+                      <button type="button" onClick={addActCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-xs">
                         Ajouter critere
                       </button>
                     </div>
-                    <p className="mt-2 text-[11px] leading-4 text-slate-500">
+                    <p className="mt-2 text-xs leading-4 text-slate-500">
                       Sert à cadrer l’évaluation et à guider la génération IA (si utilisée).
                     </p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <label className="text-xs text-slate-600">
                         Objectif pedagogique
                         <input className="tm-input mt-1" value={actLearningObjective} onChange={(e) => setActLearningObjective(e.target.value)} />
-                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Ce que l’apprenant doit savoir faire à la fin (formulation action + résultat).</p>
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Ce que l’apprenant doit savoir faire à la fin (formulation action + résultat).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Competence evaluee
                         <input className="tm-input mt-1" value={actTargetSkill} onChange={(e) => setActTargetSkill(e.target.value)} />
-                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Compétence principalement visée par l’activité (utile pour le suivi).</p>
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Compétence principalement visée par l’activité (utile pour le suivi).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Niveau de difficulte
                         <input className="tm-input mt-1" value={actDifficultyLevel} onChange={(e) => setActDifficultyLevel(e.target.value)} placeholder="beginner / intermediate / advanced" />
-                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Niveau attendu (aligné sur le niveau cible de la formation).</p>
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Niveau attendu (aligné sur le niveau cible de la formation).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Duree estimee
                         <input className="tm-input mt-1" value={actEstimatedDuration} onChange={(e) => setActEstimatedDuration(e.target.value)} placeholder="ex. 30 min" />
-                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Temps indicatif pour réaliser l’activité (aide à la planification).</p>
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Temps indicatif pour réaliser l’activité (aide à la planification).</p>
                       </label>
                       <label className="text-xs text-slate-600">
                         Barème total
@@ -2239,7 +2239,7 @@ export function TrainingManagerProgramEditor() {
                           value={actTotalPoints}
                           onChange={(e) => setActTotalPoints(e.target.value === "" ? "" : Number(e.target.value))}
                         />
-                        <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                        <p className="mt-1 text-xs leading-4 text-slate-500">
                           Total de points pour la notation (idéalement égal à la somme des critères).
                         </p>
                       </label>
@@ -2278,7 +2278,7 @@ export function TrainingManagerProgramEditor() {
                             </button>
                           </div>
                         ))}
-                        <p className="text-[11px] leading-4 text-slate-500">
+                        <p className="text-xs leading-4 text-slate-500">
                           Les critères servent à évaluer la réponse (attendu + description optionnelle + points).
                         </p>
                       </div>
@@ -2286,7 +2286,7 @@ export function TrainingManagerProgramEditor() {
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <p className="mr-auto self-center text-[11px] text-slate-500">
+                  <p className="mr-auto self-center text-xs text-slate-500">
                     L’activité sera ajoutée à la partie sélectionnée dans la liste à gauche.
                   </p>
                   <button
@@ -2314,7 +2314,7 @@ export function TrainingManagerProgramEditor() {
                                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-800">
                                   <span>
                                     {a.kind === "PRACTICAL" ? "Pratique" : "Exercice"} — {a.title}
-                                    <span className="ml-1 text-[10px] font-semibold uppercase text-slate-400">
+                                    <span className="ml-1 text-xs font-semibold uppercase text-slate-400">
                                       [
                                       {(a.submissionMode ?? "TEXT") === "CODE"
                                         ? "code"
@@ -2448,7 +2448,7 @@ export function TrainingManagerProgramEditor() {
                                     <div className="sm:col-span-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-3">
                                       <div className="flex items-center justify-between">
                                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Details pedagogiques</p>
-                                        <button type="button" onClick={addEditingCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-[11px]">
+                                        <button type="button" onClick={addEditingCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-xs">
                                           Ajouter critere
                                         </button>
                                       </div>
@@ -2575,13 +2575,13 @@ export function TrainingManagerProgramEditor() {
               <div className="p-5 sm:p-0 sm:pt-2">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-600">Ordre de la formation</h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Ordre de la formation</h2>
                     <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
                       Module <span className="font-semibold text-slate-700">« {selectedCourse.title} »</span> — glissez les cartes pour définir
                       l’ordre exact vu par l’employé (vidéos, lectures, activités mélangées).
                     </p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200/80">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200/80">
                     UX édition
                   </span>
                 </div>

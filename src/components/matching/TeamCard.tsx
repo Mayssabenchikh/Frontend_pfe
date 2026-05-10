@@ -35,7 +35,7 @@ export function TeamCard({ members, teamSize, memberMatches = {}, projectName, c
             </span>
             <div>
               <h3
-                className={`font-black leading-tight tracking-tight text-slate-800 ${
+                className={`font-bold leading-tight tracking-tight text-slate-800 ${
                   compact ? "text-sm sm:text-base" : "text-lg sm:text-2xl"
                 }`}
               >
@@ -75,7 +75,7 @@ export function TeamCard({ members, teamSize, memberMatches = {}, projectName, c
 
                     <div className="min-w-0">
                       <p
-                        className={`truncate font-black leading-tight text-slate-800 ${
+                        className={`truncate font-bold leading-tight text-slate-800 ${
                           compact ? "text-xs sm:text-sm" : "text-lg sm:text-xl"
                         }`}
                       >
@@ -83,7 +83,7 @@ export function TeamCard({ members, teamSize, memberMatches = {}, projectName, c
                       </p>
                       <p
                         className={`mt-1 font-bold uppercase text-violet-500 ${
-                          compact ? "text-[10px] tracking-[0.1em]" : "text-[11px] tracking-[0.11em]"
+                          compact ? "text-xs tracking-wide" : "text-xs tracking-wide"
                         }`}
                       >
                         Position #{position}
@@ -104,7 +104,7 @@ export function TeamCard({ members, teamSize, memberMatches = {}, projectName, c
                     />
                   </div>
                   <p
-                    className={`text-right font-black leading-none text-violet-600 ${
+                    className={`text-right font-bold leading-none text-violet-600 ${
                       compact ? "text-base" : "text-xl"
                     }`}
                   >

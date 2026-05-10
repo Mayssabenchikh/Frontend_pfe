@@ -68,7 +68,7 @@ export function GapList({ gaps, loading, suppressEmptyState }: Props) {
         >
           <div>
             <p className="font-semibold text-slate-800">{g.skill_name}</p>
-            <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${gapStyle[g.gap_type].badge}`}>
+            <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${gapStyle[g.gap_type].badge}`}>
               {gapLabel[g.gap_type]}
             </span>
           </div>

@@ -65,7 +65,7 @@ export function ReasonModal({
         </div>
 
         <div className="px-5 py-4 sm:px-7 sm:py-5">
-          <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+          <label className="text-xs font-bold uppercase tracking-wide text-slate-400">
             Motif (obligatoire)
             <textarea
               value={value}

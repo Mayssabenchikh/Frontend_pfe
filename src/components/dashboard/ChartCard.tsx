@@ -107,7 +107,7 @@ export function ChartCard({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-extrabold text-slate-900">{translateDashboardText(title)}</h2>
+            <h2 className="text-base font-semibold text-slate-900">{translateDashboardText(title)}</h2>
             <ExplanationTooltip explanation={explanation ?? null} position="top" />
           </div>
           {subtitle ? <p className="mt-1 text-xs text-slate-500">{translateDashboardText(subtitle)}</p> : null}

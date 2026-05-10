@@ -66,13 +66,13 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
         ) : null}
         {showStatusChart ? (
           <article className="dashboard-card dashboard-fade-up">
-            <h2 className="mb-4 text-sm font-extrabold text-slate-900">Nombre de projets par statut</h2>
+            <h2 className="mb-4 text-base font-semibold text-slate-900">Nombre de projets par statut</h2>
             {projectStatusCounts.length ? (
               <div className="space-y-2">
                 {projectStatusCounts.map((item) => (
                   <div key={item.status} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2">
                     <span className="text-sm font-semibold text-slate-700">{translateDashboardText(item.status)}</span>
-                    <span className="text-sm font-extrabold tabular-nums text-slate-900">{item.count}</span>
+                    <span className="text-sm font-semibold tabular-nums text-slate-900">{item.count}</span>
                   </div>
                 ))}
               </div>
@@ -113,14 +113,14 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
       <div className="dashboard-chart-grid">
         {showOperationalProjects ? (
           <article className="dashboard-card">
-            <h3 className="mb-4 text-sm font-extrabold text-slate-900">{isEmployee ? "Mes projets affectés" : "Détails des projets (statut et avancement)"}</h3>
+            <h3 className="mb-4 text-base font-semibold text-slate-900">{isEmployee ? "Mes projets affectés" : "Détails des projets (statut et avancement)"}</h3>
             {data.projects?.length ? (
               <div className="space-y-3">
                 {data.projects.slice(0, isEmployee ? 4 : 6).map((project) => (
                   <div key={project.projectId} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition hover:border-violet-100 hover:bg-violet-50/40">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-slate-800">{project.projectName}</p>
+                        <p className="truncate text-sm font-medium text-slate-800">{project.projectName}</p>
                         <p className="text-xs text-slate-500">{project.assignedEmployees} employé(s) affecté(s)</p>
                       </div>
                       <StatusBadge status={project.status} />
@@ -136,12 +136,12 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
         ) : null}
 
         <article className="dashboard-card">
-          <h3 className="mb-4 text-sm font-extrabold text-slate-900">{isTraining ? "Besoins de formation prioritaires" : "Écarts critiques"}</h3>
+          <h3 className="mb-4 text-base font-semibold text-slate-900">{isTraining ? "Besoins de formation prioritaires" : "Écarts critiques"}</h3>
           {data.criticalSkillGaps?.length ? (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                  <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <th className="px-3 py-3">Projet</th>
                     <th className="px-3 py-3">Compétence</th>
                     <th className="px-3 py-3">Niveau</th>
@@ -151,7 +151,7 @@ export function ProjectOverviewCard({ title, data, mode = "admin" }: { title?: s
                 <tbody>
                   {data.criticalSkillGaps.slice(0, 6).map((gap) => (
                     <tr key={`${gap.projectId}-${gap.skillName}`} className="border-b border-slate-50 transition hover:bg-violet-50/50">
-                      <td className="px-3 py-3 font-bold text-slate-800">{gap.projectName}</td>
+                      <td className="px-3 py-3 font-medium text-slate-800">{gap.projectName}</td>
                       <td className="px-3 py-3 text-slate-600">{gap.skillName}</td>
                       <td className="px-3 py-3 text-xs font-bold text-slate-500">{gap.bestAvailableLevel}/{gap.requiredLevel}</td>
                       <td className="px-3 py-3"><StatusBadge status={gap.status} /></td>

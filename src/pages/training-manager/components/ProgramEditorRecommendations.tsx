@@ -121,7 +121,7 @@ export function ProgramEditorRecommendations({
   return (
     <div className="tm-section tm-card flex h-full min-h-[420px] flex-col overflow-hidden bg-gradient-to-b from-white via-violet-50/20 to-slate-50/90">
       <div className="border-b border-slate-200/60 bg-white/60 px-4 py-4 backdrop-blur-sm">
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">Sources recommandées</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Sources recommandées</h3>
         <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
           Pour une vidéo simple, ajoutez directement; pour une playlist, listez puis choisissez une vidéo.
         </p>
@@ -197,10 +197,10 @@ export function ProgramEditorRecommendations({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-800">
+                      <span className="rounded-md bg-violet-100 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-violet-800">
                         Recommandé
                       </span>
-                      <span className="text-[10px] text-slate-400">{rec.courseLevel}</span>
+                      <span className="text-xs text-slate-400">{rec.courseLevel}</span>
                     </div>
                     <h4 className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{rec.courseName}</h4>
                     <div className="mt-2 flex flex-col items-start gap-2">
@@ -233,7 +233,7 @@ export function ProgramEditorRecommendations({
                               })
                               : undefined
                           }
-                          className="tm-btn tm-btn-primary px-3 py-1.5 text-[10px] uppercase tracking-wide"
+                          className="tm-btn tm-btn-primary px-3 py-1.5 text-xs uppercase tracking-wide"
                         >
                           {addingId === `${key}:${directVideoId}` ? "Ajout…" : "Ajouter directement"}
                         </button>
@@ -259,13 +259,13 @@ export function ProgramEditorRecommendations({
                         />
                         <div className="min-w-0 flex-1">
                           <p className="line-clamp-2 text-xs font-medium text-slate-800">{v.title}</p>
-                          <p className="text-[10px] text-slate-400">{v.videoId}</p>
+                          <p className="text-xs text-slate-400">{v.videoId}</p>
                         </div>
                         <button
                           type="button"
                           disabled={disabledAdd || addingId === `${key}:${v.videoId}`}
                           onClick={() => void handleAddRecommended(rec, v)}
-                          className="tm-btn tm-btn-primary shrink-0 px-2 py-1 text-[10px] uppercase tracking-wide"
+                          className="tm-btn tm-btn-primary shrink-0 px-2 py-1 text-xs uppercase tracking-wide"
                         >
                           {addingId === `${key}:${v.videoId}` ? "…" : "Ajouter"}
                         </button>

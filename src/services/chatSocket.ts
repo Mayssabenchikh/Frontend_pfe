@@ -17,7 +17,8 @@ function resolveWsUrl(): string {
   const env = import.meta.env.VITE_WS_CHAT_URL as string | undefined;
   if (env && env.trim()) return env.trim();
 
-  const apiUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:8080";
+  const apiRaw = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  const apiUrl = apiRaw && apiRaw.length > 0 ? apiRaw : "http://localhost:8080";
   const base = apiUrl.replace(/\/$/, "").replace(/^http:/, "ws:").replace(/^https:/, "wss:");
   return `${base}/ws-chat`;
 }

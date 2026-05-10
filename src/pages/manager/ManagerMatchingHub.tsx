@@ -106,23 +106,23 @@ export function ManagerMatchingHub() {
                 </div>
 
                 <div className="relative mt-5 min-w-0 flex-1">
-                  <h2 className="line-clamp-2 text-xl font-black leading-tight tracking-tight text-slate-800">{p.name}</h2>
+                  <h2 className="line-clamp-2 text-xl font-bold leading-tight tracking-tight text-slate-800">{p.name}</h2>
                   <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-slate-500">{p.description || "Aucune description disponible."}</p>
 
                   <div className="mt-4">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-slate-400">Compétences</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Compétences</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {requirements.length ? (
                         requirements.map((req, reqIdx) => (
                           <span
                             key={`${p.uuid}-${req.uuid}`}
-                            className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${requirementTagClasses[(idx + reqIdx) % requirementTagClasses.length]}`}
+                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${requirementTagClasses[(idx + reqIdx) % requirementTagClasses.length]}`}
                           >
                             {req.skillName}
                           </span>
                         ))
                       ) : (
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-500">
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500">
                           Aucune compétence définie
                         </span>
                       )}

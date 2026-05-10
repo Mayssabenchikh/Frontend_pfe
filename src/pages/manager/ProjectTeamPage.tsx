@@ -112,9 +112,9 @@ export function ProjectTeamPage() {
       <div className="grid gap-6 xl:grid-cols-[310px_minmax(0,1fr)] xl:items-start">
         <div className="space-y-4 xl:sticky xl:top-6">
           <div className="rounded-[28px] border border-violet-100 bg-white p-5 shadow-[0_12px_36px_rgba(109,40,217,0.1)]">
-            <p className="text-xl font-black tracking-tight text-slate-800">Configuration</p>
+            <p className="text-xl font-bold tracking-tight text-slate-800">Configuration</p>
 
-            <label className="mt-5 flex flex-col gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400">
+            <label className="mt-5 flex flex-col gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Taille de l'équipe
               <input
                 type="number"

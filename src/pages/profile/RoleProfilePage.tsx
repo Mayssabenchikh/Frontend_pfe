@@ -222,7 +222,7 @@ export type RoleProfileConfig = {
   profileEndpoint: string;
   profileUpdateEndpoint: string;
   extraUpdateEndpoint: string;
-  avatarEndpoint: string;
+  avatarEndpoint: string | ((userId: string) => string);
   changePasswordEndpoint: string;
   /** When false, hide CV / extraction / skills UI and do not call CV-related APIs. */
   showCvSection?: boolean;
@@ -290,11 +290,22 @@ function normalizePendingSkillsPayload(data: unknown): string[] {
     .filter(Boolean);
 }
 
-export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
+export function RoleProfilePage({
+  config,
+  initialAvatarUrl,
+  onAvatarUpdate,
+  onProfileUpdate,
+}: {
+  config: RoleProfileConfig;
+  initialAvatarUrl?: string | null;
+  onAvatarUpdate?: (url: string) => void;
+  onProfileUpdate?: (firstName: string, lastName: string) => void;
+}) {
   const { keycloak } = useKeycloak();
   const token = keycloak.tokenParsed as TokenParsed | undefined;
   const userId = keycloak.subject;
-  const { onAvatarUpdate } = useOutletContext<ProfileOutletContext>() || {};
+  const outletContext = useOutletContext<ProfileOutletContext>() || {};
+  const notifyAvatarUpdate = onAvatarUpdate ?? outletContext.onAvatarUpdate;
   const cvEnabled = isCvSectionEnabled(config);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -345,6 +356,11 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     if (cvEnabled && requested === "cv") return "cv";
     return "personal";
   });
+  const avatarEndpoint = userId
+    ? typeof config.avatarEndpoint === "function"
+      ? config.avatarEndpoint(userId)
+      : config.avatarEndpoint
+    : "";
 
   useEffect(() => {
     if (!cvEnabled && section === "cv") {
@@ -359,7 +375,7 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     const target: Section = cvEnabled && requested === "cv" ? "cv" : "personal";
     if (target !== section) setSection(target);
   }, [cvEnabled, section, searchParams, setSearchParams]);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl ?? token?.picture ?? null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -382,13 +398,14 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     try {
       await http.put(config.profileUpdateEndpoint, { firstName: fn, lastName: ln });
       setIsEditing(false);
+      onProfileUpdate?.(fn, ln);
       toast.success("Profil mis à jour.");
     } catch {
       toast.error("Erreur lors de la mise à jour du profil.");
     } finally {
       setSavingProfile(false);
     }
-  }, [config.profileUpdateEndpoint, editedFirstName, editedLastName]);
+  }, [config.profileUpdateEndpoint, editedFirstName, editedLastName, onProfileUpdate]);
 
   const handleCancelEdit = useCallback(() => {
     setEditedFirstName(firstName);
@@ -410,19 +427,19 @@ export function RoleProfilePage({ config }: { config: RoleProfileConfig }) {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await http.post<{ avatarUrl: string }>(config.avatarEndpoint, formData, {
+      const res = await http.post<{ avatarUrl: string }>(avatarEndpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAvatarUrl(res.data.avatarUrl);
-      onAvatarUpdate?.(res.data.avatarUrl);
+      notifyAvatarUpdate?.(res.data.avatarUrl);
       toast.success("Photo de profil mise à jour.");
     } catch {
       toast.error("Erreur lors de l'upload de la photo.");
-      setAvatarUrl(token?.picture ?? null);
+      setAvatarUrl(initialAvatarUrl ?? token?.picture ?? null);
     } finally {
       setUploadingAvatar(false);
     }
-  }, [config.avatarEndpoint, onAvatarUpdate, token?.picture, userId]);
+  }, [avatarEndpoint, initialAvatarUrl, notifyAvatarUpdate, token?.picture, userId]);
 
   useEffect(() => {
     if (!cvEnabled || !userId || !config.cvEndpoint) return;
@@ -908,7 +925,7 @@ function PersonalSection({
       <section className="min-h-[520px] overflow-hidden rounded-xl border border-violet-100 bg-white shadow-[0_10px_30px_rgba(79,70,229,0.05)]">
         <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-white via-violet-50/50 to-white px-6 py-5">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-violet-600">Profil</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Profil</p>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">Informations personnelles et professionnelles</h2>
           </div>
           {!isEditing ? (
@@ -983,7 +1000,7 @@ function PersonalSection({
 
       <section className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-[0_10px_30px_rgba(79,70,229,0.05)]">
         <div className="border-b border-slate-100 bg-gradient-to-r from-white via-violet-50/60 to-white px-6 py-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-violet-600">Accès</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Accès</p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">Sécurité du compte</h2>
         </div>
         <div className="px-6 py-6">
@@ -999,7 +1016,7 @@ function ProfileReadonlyItem({ icon, label, value }: { icon: React.ReactNode; la
     <div className="group min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3.5 transition hover:border-violet-100 hover:bg-white hover:shadow-sm">
       <div className="flex items-center gap-2">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-violet-700 ring-1 ring-violet-100 transition group-hover:bg-violet-50">{icon}</span>
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
       </div>
       <p className={`mt-2 truncate pl-10 text-sm font-semibold ${value === "—" ? "text-slate-400" : "text-slate-800"}`}>{value}</p>
     </div>
@@ -1025,7 +1042,7 @@ function ProfileEditableField({
 }) {
   return (
     <label className="block min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3.5">
-      <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+      <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-violet-700 ring-1 ring-violet-100">{icon}</span>
         {label}
       </span>
@@ -1309,10 +1326,10 @@ function CVSection({
           onDrop={onCvDrop}
         >
           <div className="mx-auto flex max-w-[520px] flex-col items-center">
-            <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[#e8e0fb] text-[#7c3aed]">
+            <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[#e8e0fb] text-violet-600">
               {extracting ? <ArrowPathIcon className="h-8 w-8 animate-spin" /> : <SparklesIcon className="h-8 w-8" />}
             </div>
-            <h3 className="mt-7 text-lg font-semibold text-[#2b087f]">Prêt pour l’extraction</h3>
+            <h3 className="mt-7 text-lg font-semibold text-violet-950">Prêt pour l’extraction</h3>
             <p className="mt-3 max-w-[470px] text-base leading-7 text-slate-600">
               Faites glisser votre fichier ici ou utilisez le bouton ci-dessous. Formats acceptés : PDF, DOCX (Max 10Mo).
             </p>
@@ -1321,7 +1338,7 @@ function CVSection({
               <button
                 type="button"
                 onClick={() => cvInputRef.current?.click()}
-                className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-xl border border-violet-200 bg-white px-4 text-sm font-bold text-[#2b087f] transition hover:border-violet-300 hover:bg-violet-50"
+                className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-xl border border-violet-200 bg-white px-4 text-sm font-semibold text-violet-950 transition hover:border-violet-300 hover:bg-violet-50"
               >
                 <DocumentTextIcon className="h-4 w-4" />
                 <span>Choisir un fichier</span>
@@ -1330,7 +1347,7 @@ function CVSection({
                 type="button"
                 onClick={onExtract}
                 disabled={extracting}
-                className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-xl bg-[#3b007d] px-5 text-sm font-bold text-white shadow-[0_10px_18px_rgba(59,0,125,0.2)] transition hover:bg-[#31006a] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-xl bg-[#3b007d] px-5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(59,0,125,0.2)] transition hover:bg-[#31006a] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {extracting ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <SparklesIcon className="h-4 w-4" />}
                 <span>{extracting ? "Extraction..." : "Extraire"}</span>
@@ -1343,15 +1360,15 @@ function CVSection({
                   <DocumentTextIcon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-slate-950">{cvFile?.name ?? cvFileName}</p>
-                  <p className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="truncate text-sm font-semibold text-slate-950">{cvFile?.name ?? cvFileName}</p>
+                  <p className="mt-1 truncate text-xs font-semibold uppercase tracking-wide text-slate-400">
                     {cvFile ? `${(cvFile.size / 1024 / 1024).toFixed(1)} MB` : "CV enregistré"}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleDownloadCv}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-50 hover:text-[#2b087f] disabled:opacity-50"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-50 hover:text-violet-950 disabled:opacity-50"
                   title="Télécharger"
                   disabled={!cvFileName && !cvFile}
                 >
@@ -1367,7 +1384,7 @@ function CVSection({
           <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <h3 className="text-base font-extrabold text-slate-950">Aperçu du CV</h3>
+                <h3 className="text-base font-bold text-slate-950">Aperçu du CV</h3>
                 <p className="mt-1 truncate text-xs font-semibold text-slate-400">{previewFileName}</p>
               </div>
             </div>
@@ -1377,7 +1394,7 @@ function CVSection({
               ) : (
                 <div className="flex h-[575px] w-full max-w-[520px] flex-col items-center justify-center rounded-lg bg-white p-8 text-center shadow-2xl ring-1 ring-slate-200">
                   <DocumentTextIcon className="h-16 w-16 text-slate-300" />
-                  <p className="mt-4 max-w-xs truncate text-sm font-bold text-slate-700">{previewFileName}</p>
+                  <p className="mt-4 max-w-xs truncate text-sm font-semibold text-slate-700">{previewFileName}</p>
                   <p className="mt-2 text-xs leading-5 text-slate-500">Aperçu disponible uniquement pour les fichiers PDF.</p>
                 </div>
               )}
@@ -1387,7 +1404,7 @@ function CVSection({
                 type="button"
                 onClick={handleOpenCvInNewTab}
                 disabled={!previewUrl}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#e9e1f3] px-8 py-3 text-sm font-bold text-[#2b087f] transition hover:bg-[#ded2ee] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#e9e1f3] px-8 py-3 text-sm font-semibold text-violet-950 transition hover:bg-[#ded2ee] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ArrowTopRightOnSquareIcon className="h-4 w-4" />
                 Ouvrir le CV complet
@@ -1441,22 +1458,22 @@ function ExtractionResultsSection({
     <aside className="flex min-w-0 flex-col gap-7">
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-6">
-          <h2 className="text-lg font-medium text-[#2b087f]">Compétences extraites</h2>
-          <span className="rounded-md bg-violet-100 px-2.5 py-1 text-xs font-bold text-[#6d28d9]">{employeeSkills.length}</span>
+          <h2 className="text-lg font-medium text-violet-950">Compétences extraites</h2>
+          <span className="rounded-md bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700">{employeeSkills.length}</span>
         </div>
 
         <div className="grid grid-cols-3 gap-3 border-b border-slate-100 px-6 py-7">
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-4 text-center">
-            <p className="text-[11px] font-extrabold uppercase text-emerald-900">Validées</p>
-            <p className="mt-1 text-2xl font-extrabold text-emerald-600">{validatedCount}</p>
+            <p className="text-xs font-semibold uppercase text-emerald-900">Validées</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-600">{validatedCount}</p>
           </div>
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-4 text-center">
-            <p className="text-[11px] font-extrabold uppercase text-amber-800">En attente</p>
-            <p className="mt-1 text-2xl font-extrabold text-amber-600">{pendingQuizCount}</p>
+            <p className="text-xs font-semibold uppercase text-amber-800">En attente</p>
+            <p className="mt-1 text-2xl font-bold text-amber-600">{pendingQuizCount}</p>
           </div>
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-4 text-center">
-            <p className="text-[11px] font-extrabold uppercase text-red-800">À repasser</p>
-            <p className="mt-1 text-2xl font-extrabold text-red-600">{failedCount}</p>
+            <p className="text-xs font-semibold uppercase text-red-800">À repasser</p>
+            <p className="mt-1 text-2xl font-bold text-red-600">{failedCount}</p>
           </div>
         </div>
 
@@ -1478,7 +1495,7 @@ function ExtractionResultsSection({
                   key={`skill-card-${skill.id}-${skill.skillId}-${pageOffset + idx}`}
                   className="flex min-h-[86px] items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4"
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-[#6d28d9]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
                     {skillIconUrl ? (
                       <img src={skillIconUrl} alt="" className="h-7 w-7 object-contain" />
                     ) : (
@@ -1487,10 +1504,10 @@ function ExtractionResultsSection({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-start justify-between gap-3">
-                      <p className="min-w-0 whitespace-normal text-base font-extrabold leading-5 text-slate-950">{skill.skillName}</p>
-                      <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase ${badgeClass}`}>{statusLabel}</span>
+                      <p className="min-w-0 whitespace-normal text-base font-bold leading-5 text-slate-950">{skill.skillName}</p>
+                      <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase ${badgeClass}`}>{statusLabel}</span>
                     </div>
-                    <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                       {skill.categoryName} <span className="mx-1 text-slate-300">•</span> Niveau {skill.level}
                     </p>
                   </div>
@@ -1521,7 +1538,7 @@ function ExtractionResultsSection({
             ))}
           </div>
         ) : remainingSkillsCount > 0 ? (
-          <div className="border-t border-slate-100 px-5 py-4 text-center text-sm font-bold text-[#2b087f]">
+          <div className="border-t border-slate-100 px-5 py-4 text-center text-sm font-semibold text-violet-950">
             Afficher les {remainingSkillsCount} autres compétences
           </div>
         ) : null}
@@ -1532,7 +1549,7 @@ function ExtractionResultsSection({
           <div className="mb-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <ArrowPathIcon className="h-5 w-5 text-orange-500" />
-              <h3 className="text-base font-extrabold text-slate-950">En attente de validation</h3>
+              <h3 className="text-base font-bold text-slate-950">En attente de validation</h3>
             </div>
             <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{displayedPendingSkills.length}</span>
           </div>
@@ -1545,7 +1562,7 @@ function ExtractionResultsSection({
             ))}
           </div>
 
-          <div className="mt-5 flex gap-3 rounded-lg bg-violet-50 px-4 py-4 text-sm leading-6 text-[#5b21b6]">
+          <div className="mt-5 flex gap-3 rounded-lg bg-violet-50 px-4 py-4 text-sm leading-6 text-violet-800">
             <InformationCircleIcon className="mt-1 h-4 w-4 shrink-0" />
             <p>Ces compétences n'ont pas pu être matchées avec le référentiel standard de l'entreprise. Elles nécessitent une validation manuelle par un administrateur RH pour être indexées.</p>
           </div>
@@ -1579,7 +1596,7 @@ function LuxuryPasswordField({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">
+      <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
         <LockClosedIcon className="h-3.5 w-3.5 text-violet-700" />
         {label}
       </label>

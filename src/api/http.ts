@@ -3,8 +3,14 @@ import keycloak from "../auth/keycloak";
 
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 
+/**
+ * Base URL API :
+ * - Non vide → appels directs vers ce backend (ex. http://localhost:8080).
+ * - Vide / absent → URLs relatives (même origine) : en dev, le proxy Vite envoie `/api` vers le backend (évite CORS localhost vs 127.0.0.1).
+ */
+const trimmedApi = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: trimmedApi && trimmedApi.length > 0 ? trimmedApi : undefined,
 });
 
 function attachAuthorizationHeader(config: InternalAxiosRequestConfig, token: string) {

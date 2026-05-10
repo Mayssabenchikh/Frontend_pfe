@@ -95,7 +95,7 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
         flex: 0.75,
         minWidth: 130,
         cellRenderer: (p: ICellRendererParams<ProjectDto>) => (
-          <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold ${statusCls(p.data?.status)}`}>
+          <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${statusCls(p.data?.status)}`}>
             {statusLabel(p.data?.status)}
           </span>
         ),
@@ -106,7 +106,7 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
         flex: 0.75,
         minWidth: 130,
         cellRenderer: (p: ICellRendererParams<ProjectDto>) => (
-          <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold ${priorityCls(p.data?.priority)}`}>
+          <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${priorityCls(p.data?.priority)}`}>
             {priorityLabel(p.data?.priority)}
           </span>
         ),
@@ -221,7 +221,7 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
                     <FolderIcon className="h-8 w-8 text-violet-700" />
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm font-bold text-violet-900">Aucun projet</p>
+                    <p className="text-sm font-semibold text-violet-900">Aucun projet</p>
                     <p className="text-xs text-violet-400">Les projets auxquels vous êtes affecté apparaîtront ici</p>
                   </div>
                 </div>

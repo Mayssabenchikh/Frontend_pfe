@@ -73,7 +73,7 @@ function RequirementChip({ name, level }: { name: string; level: number }) {
     <span className="inline-flex items-center gap-2 rounded-md border border-violet-100 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700">
       <SparklesIcon className="h-3.5 w-3.5" />
       {name}
-      <span className="rounded bg-white/80 px-1.5 py-0.5 text-[11px] text-violet-600">Niv. {level}</span>
+      <span className="rounded bg-white/80 px-1.5 py-0.5 text-xs text-violet-600">Niv. {level}</span>
     </span>
   );
 }
@@ -101,7 +101,7 @@ function AssignmentRow({ assignment, onOpenProfile }: { assignment: AssignmentDt
           </div>
         )}
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-slate-900">{assignment.employeeName || assignment.employeeEmail}</p>
+          <p className="truncate text-sm font-semibold text-slate-900">{assignment.employeeName || assignment.employeeEmail}</p>
           <p className="truncate text-xs text-slate-500">{assignment.employeeEmail}</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ function MatchCard({
             <img src={avatarUrl} alt={row.display_name || row.email} className="h-10 w-10 shrink-0 rounded-[10px] object-cover shadow-sm" />
           ) : (
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-[11px] font-bold text-white shadow-sm"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-xs font-bold text-white shadow-sm"
               style={{ background: `linear-gradient(135deg, ${avatar[0]}, ${avatar[1]})` }}
             >
               {initials}
@@ -152,14 +152,14 @@ function MatchCard({
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate text-sm font-bold text-slate-950 sm:text-base">{row.display_name || row.email}</h3>
+              <h3 className="truncate text-sm font-semibold text-slate-950 sm:text-base">{row.display_name || row.email}</h3>
               {row.rank === 1 ? (
-                <span className="rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-violet-700">
+                <span className="rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-xs font-bold text-violet-700">
                   Top match
                 </span>
               ) : null}
               {assigned ? (
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-700">
                   Déjà affecté
                 </span>
               ) : null}
@@ -197,7 +197,7 @@ function MatchCard({
             className="absolute inset-0 rounded-full"
             style={{ background: `conic-gradient(#6d28d9 ${score * 3.6}deg, #eee7ff 0deg)` }}
           />
-          <div className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-sm font-black text-violet-700">
+          <div className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-sm font-semibold text-violet-700">
             {toPercent(row.match_score)}
           </div>
         </div>
@@ -206,14 +206,14 @@ function MatchCard({
             type="button"
             onClick={assigned ? onView : onAssign}
             disabled={assigning || (!assigned && teamFull)}
-            className="rounded-md bg-violet-800 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-violet-900 disabled:cursor-not-allowed disabled:opacity-55"
+            className="rounded-md bg-violet-800 px-2.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-violet-900 disabled:cursor-not-allowed disabled:opacity-55"
           >
             {assigning ? "Affectation..." : assigned ? "Voir affectation" : teamFull ? "Équipe complète" : "Affecter"}
           </button>
           <button
             type="button"
             onClick={onView}
-            className="rounded-md border border-violet-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-violet-800 transition hover:bg-violet-50"
+            className="rounded-md border border-violet-200 bg-white px-2.5 py-1.5 text-xs font-bold text-violet-800 transition hover:bg-violet-50"
           >
             Voir profil
           </button>
@@ -564,18 +564,18 @@ export function ProjectDetail() {
                 <input
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  className="mt-4 w-full max-w-3xl rounded-[10px] border border-violet-200 bg-white px-3 py-2 text-3xl font-black text-slate-950 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                  className="mt-4 w-full max-w-3xl rounded-[10px] border border-violet-200 bg-white px-3 py-2 text-3xl font-bold text-slate-950 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
                   placeholder="Nom du projet"
                 />
               ) : (
-                <h1 className="mt-4 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">{project.name}</h1>
+                <h1 className="mt-4 text-3xl font-bold leading-tight text-slate-950 sm:text-3xl">{project.name}</h1>
               )}
               <div className="mt-5 flex flex-wrap items-center gap-3">
-                <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold ${currentStatus.cls}`}>
+                <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${currentStatus.cls}`}>
                   <span className={`h-2 w-2 rounded-full ${currentStatus.dot}`} />
                   {currentStatus.label}
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-sm font-bold text-slate-700">
+                <span className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-sm font-semibold text-slate-700">
                   <CalendarDaysIcon className="h-4 w-4 text-violet-700" />
                   Deadline: {formatDate(project.dueDate)}
                 </span>
@@ -591,7 +591,7 @@ export function ProjectDetail() {
                       hydrateForm(project);
                       setIsEditing(false);
                     }}
-                    className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-white px-5 py-3 text-sm font-bold text-violet-800 transition hover:bg-violet-50"
+                    className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-white px-5 py-3 text-sm font-semibold text-violet-800 transition hover:bg-violet-50"
                   >
                     <XMarkIcon className="h-4 w-4" />
                     Annuler
@@ -600,7 +600,7 @@ export function ProjectDetail() {
                     type="button"
                     onClick={handleSave}
                     disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-[10px] bg-violet-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900 disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-[10px] bg-violet-800 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900 disabled:opacity-60"
                   >
                     <PencilSquareIcon className="h-4 w-4" />
                     {saving ? "Enregistrement..." : "Enregistrer"}
@@ -610,7 +610,7 @@ export function ProjectDetail() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 rounded-[10px] bg-violet-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900"
+                  className="inline-flex items-center gap-2 rounded-[10px] bg-violet-800 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/15 transition hover:bg-violet-900"
                 >
                   <PencilSquareIcon className="h-4 w-4" />
                   Modifier le projet
@@ -720,7 +720,7 @@ export function ProjectDetail() {
                     type="button"
                     onClick={addRequirement}
                     disabled={skills.length === 0 || form.requirements.length >= skills.length}
-                      className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-white px-3 py-2 text-sm font-bold text-violet-800 hover:bg-violet-50 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-white px-3 py-2 text-sm font-semibold text-violet-800 hover:bg-violet-50 disabled:opacity-50"
                   >
                     <PlusIcon className="h-4 w-4" />
                     Ajouter
@@ -738,8 +738,8 @@ export function ProjectDetail() {
                       <div key={req.skillUuid} className="min-w-0 rounded-[10px] border border-violet-100 bg-white p-3 shadow-sm">
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-xs font-black uppercase tracking-[0.12em] text-violet-500">Compétence</p>
-                            <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{skill?.name ?? "Compétence requise"}</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-violet-500">Compétence</p>
+                            <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">{skill?.name ?? "Compétence requise"}</p>
                           </div>
                           <button
                             type="button"
@@ -802,7 +802,7 @@ export function ProjectDetail() {
             <section className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-2xl font-bold text-slate-950">Équipe projet</h2>
-                <span className="text-sm font-bold text-violet-800">{assignedCount}/{teamCapacity}</span>
+                <span className="text-sm font-semibold text-violet-800">{assignedCount}/{teamCapacity}</span>
               </div>
 
               <div className="mt-5 flex items-center gap-3 rounded-md bg-violet-50 px-3 py-3">
@@ -814,9 +814,9 @@ export function ProjectDetail() {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-slate-950">{project.leadName || managerName || "Responsable"}</p>
+                  <p className="truncate text-sm font-semibold text-slate-950">{project.leadName || managerName || "Responsable"}</p>
                   <p className="truncate text-xs text-slate-500">{project.leadEmail || managerEmail || "—"}</p>
-                  <span className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-violet-800">Chef de projet</span>
+                  <span className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-xs font-bold text-violet-800">Chef de projet</span>
                 </div>
               </div>
 
@@ -839,7 +839,7 @@ export function ProjectDetail() {
             </section>
 
             <section className="rounded-[10px] border border-violet-100 bg-violet-50/60 p-6 shadow-sm">
-              <h2 className="text-xl font-black text-violet-950">Comment lire les scores ?</h2>
+              <h2 className="text-xl font-bold text-violet-950">Comment lire les scores ?</h2>
               <div className="mt-4 space-y-4 text-sm leading-6 text-slate-700">
                 <p>
                   <span className="font-bold text-slate-950">Score compétence :</span> compare le niveau validé de l'employé avec le niveau demandé par le projet. Si le projet demande niveau 4 et que l'employé a niveau 3, la couverture est de 75%.
@@ -852,7 +852,7 @@ export function ProjectDetail() {
                 </p>
               </div>
               <div className="mt-5 rounded-[10px] border border-violet-200 bg-white p-4">
-                <p className="text-sm font-black text-violet-900">Formules</p>
+                <p className="text-sm font-semibold text-violet-900">Formules</p>
                 <div className="mt-3 space-y-2 text-xs leading-5 text-slate-600">
                   <p>
                     <span className="font-bold text-slate-800">Score compétence</span> = niveau validé employé / niveau requis, limité entre 0 et 1.
@@ -872,21 +872,21 @@ export function ProjectDetail() {
             <section>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-950">Correspondance & recommandations</h2>
+                  <h2 className="text-3xl font-bold text-slate-950">Correspondance & recommandations</h2>
                   <p className="mt-1 text-sm text-slate-500">
                     Matching intégré aux détails du projet, basé sur les données réelles du service de correspondance.
                   </p>
                 </div>
                 <div className="inline-flex w-fit rounded-md border border-slate-200 bg-white p-1">
-                  <span className="rounded bg-violet-100 px-4 py-2 text-sm font-bold text-violet-800">Profils classés</span>
-                  <span className="px-4 py-2 text-sm font-bold text-slate-400">{matches?.total_employees ?? 0} profils</span>
+                  <span className="rounded bg-violet-100 px-4 py-2 text-sm font-semibold text-violet-800">Profils classés</span>
+                  <span className="px-4 py-2 text-sm font-semibold text-slate-400">{matches?.total_employees ?? 0} profils</span>
                 </div>
               </div>
 
               <div className="mt-6 space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="h-4 w-1 rounded-full bg-violet-700" />
-                  <h3 className="text-lg font-black text-slate-950">Profils classés</h3>
+                  <h3 className="text-lg font-bold text-slate-950">Profils classés</h3>
                 </div>
                 {matchingError ? <AlertBanner message={matchingError} /> : null}
                 {loadingMatches ? (
@@ -947,7 +947,7 @@ export function ProjectDetail() {
               <div className="mt-6 space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="h-4 w-1 rounded-full bg-fuchsia-600" />
-                  <h3 className="text-lg font-black text-slate-950">Équipe suggérée</h3>
+                  <h3 className="text-lg font-bold text-slate-950">Équipe suggérée</h3>
                 </div>
                 {teamError ? <AlertBanner message={teamError} /> : null}
                 {loadingTeam ? (

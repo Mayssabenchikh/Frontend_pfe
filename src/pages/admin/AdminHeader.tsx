@@ -67,7 +67,7 @@ export function AdminHeader({
               />
             ) : (
               <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold text-white shadow-sm ring-1 ring-violet-100"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-semibold text-white shadow-sm ring-1 ring-violet-100"
                 style={{
                   background: `linear-gradient(135deg, ${getAvatarColor(seed)[0]}, ${getAvatarColor(seed)[1]})`,
                 }}
@@ -77,8 +77,8 @@ export function AdminHeader({
             )}
 
             <div className="hidden min-w-0 text-left sm:block">
-              <p className="max-w-[112px] truncate text-sm font-extrabold leading-5 text-slate-900 md:max-w-[170px]">{safeName}</p>
-              <p className="hidden max-w-[170px] truncate text-[11px] font-bold uppercase tracking-wide text-violet-600 md:block">{safeRole}</p>
+              <p className="max-w-[112px] truncate text-sm font-semibold leading-5 text-slate-900 md:max-w-[170px]">{safeName}</p>
+              <p className="hidden max-w-[170px] truncate text-xs font-medium uppercase tracking-wide text-violet-600 md:block">{safeRole}</p>
             </div>
             <ChevronDownIcon
               className={`hidden h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ease-in-out group-hover:text-violet-700 sm:block ${
@@ -91,22 +91,6 @@ export function AdminHeader({
           <>
             <div className="fixed inset-0 z-[110]" onClick={() => setMenuOpen(false)} />
             <div className="fixed left-3 right-3 top-[calc(5rem+env(safe-area-inset-top,0px)+8px)] z-[130] max-h-[min(70vh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-2xl border border-violet-100 bg-white p-2 shadow-2xl shadow-violet-200/50 sm:absolute sm:left-auto sm:right-0 sm:top-16 sm:max-h-none sm:min-w-[250px] sm:overflow-visible">
-              <div className="mb-1.5 flex items-center gap-3 rounded-xl bg-violet-50/80 px-3 py-3">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={safeName} className="h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-violet-100" />
-                ) : (
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold text-white"
-                    style={{ background: `linear-gradient(135deg, ${getAvatarColor(seed)[0]}, ${getAvatarColor(seed)[1]})` }}
-                  >
-                    {safeInitials}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-extrabold text-slate-950">{safeName}</p>
-                  <p className="truncate text-xs font-bold uppercase tracking-wide text-violet-700">{safeRole}</p>
-                </div>
-              </div>
               <div className="flex flex-col gap-1">
                 <button
                   type="button"
@@ -115,7 +99,7 @@ export function AdminHeader({
                     if (onProfile) return onProfile();
                     if (onNavigate) return onNavigate("profile" as NavId);
                   }}
-                  className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 transition-all duration-200 ease-in-out hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
+                  className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-in-out hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
                 >
                   <UserCircleIcon className="h-4 w-4" />
                   Mon profil
@@ -123,7 +107,7 @@ export function AdminHeader({
                 <button
                   type="button"
                   onClick={() => { setMenuOpen(false); onLogout(); }}
-                  className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-bold text-rose-600 transition-all duration-200 ease-in-out hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25"
+                  className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-rose-600 transition-all duration-200 ease-in-out hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25"
                 >
                   <ArrowRightOnRectangleIcon className="h-4 w-4" />
                   Déconnexion

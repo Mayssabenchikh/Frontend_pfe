@@ -228,7 +228,7 @@ export function SkillCategories() {
                 <div className="absolute inset-0 -z-10 rounded-3xl bg-violet-400/40 blur-xl" />
               </div>
               <div>
-                <p className="text-sm font-bold text-violet-900">Aucune catégorie pour l'instant</p>
+                <p className="text-sm font-semibold text-violet-900">Aucune catégorie pour l'instant</p>
                 <p className="text-xs text-violet-400 mt-1.5 max-w-[260px] leading-relaxed">
                   Créez votre première catégorie pour structurer vos compétences.
                 </p>
@@ -471,7 +471,7 @@ function CategoryCard({ category, index, isDeleting, onEdit, onDelete }: Categor
               <TagIcon className="w-5 h-5 text-violet-500" />
             )}
           </div>
-          <h3 className="text-sm font-bold text-slate-800 truncate">{category.name}</h3>
+          <h3 className="text-sm font-semibold text-slate-800 truncate">{category.name}</h3>
         </div>
         <div className="relative flex-shrink-0">
           <button
@@ -554,7 +554,7 @@ function Modal({ title, subtitle, icon, onClose, children }: ModalProps) {
               </div>
             )}
             <div>
-              <h2 className="text-sm font-bold text-violet-950 leading-none tracking-tight">
+              <h2 className="text-sm font-semibold text-violet-950 leading-none tracking-tight">
                 {title}
               </h2>
               {subtitle && (
@@ -587,7 +587,7 @@ function Modal({ title, subtitle, icon, onClose, children }: ModalProps) {
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">
+      <label className="block text-xs font-semibold uppercase tracking-wide text-violet-400">
         {label}
       </label>
       {children}

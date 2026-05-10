@@ -10,16 +10,13 @@ import {
   Squares2X2Icon,
   UsersIcon,
 } from "../../icons/heroicons/outline";
-import { DashboardSidebar, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
+import { DashboardSidebar, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
 
 type NavItem = { id: NavId; label: string; icon: ReactNode };
 type Props = {
   currentView: NavId;
   onNavChange: (view: NavId) => void;
-  displayName: string;
-  roleLabel: string;
-  avatarUrl: string | null;
-  initials: string;
+  onLogout: () => void;
   mobileOpen?: boolean;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -36,9 +33,21 @@ const NAV: NavItem[] = [
   { id: "assignments", label: "Affectations", icon: <BriefcaseIcon className="h-5 w-5" /> },
 ];
 
-export function AdminSidebar({ currentView, onNavChange, mobileOpen, collapsed = false, onToggleCollapse }: Props) {
+export function AdminSidebar({
+  currentView,
+  onNavChange,
+  onLogout,
+  mobileOpen,
+  collapsed = false,
+  onToggleCollapse,
+}: Props) {
   return (
-    <DashboardSidebar mobileOpen={mobileOpen} collapsed={collapsed} onToggleCollapse={onToggleCollapse}>
+    <DashboardSidebar
+      mobileOpen={mobileOpen}
+      collapsed={collapsed}
+      onToggleCollapse={onToggleCollapse}
+      footer={<DashboardSidebarLogout collapsed={collapsed} onLogout={onLogout} />}
+    >
       {NAV.map((item) => (
         <DashboardSidebarNavItem
           key={item.id}
@@ -49,6 +58,12 @@ export function AdminSidebar({ currentView, onNavChange, mobileOpen, collapsed =
           onClick={() => onNavChange(item.id)}
         />
       ))}
+      <DashboardSidebarNavItem
+        label="Forum"
+        icon={<InboxStackIcon className="h-5 w-5" />}
+        to="/forum"
+        collapsed={collapsed}
+      />
     </DashboardSidebar>
   );
 }

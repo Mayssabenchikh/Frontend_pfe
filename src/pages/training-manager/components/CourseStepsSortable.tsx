@@ -86,20 +86,20 @@ export function mergeCourseSteps(course: LearningCourseDetail): MergedCourseStep
 function KindBadge({ kind }: { kind: StepKind }) {
   if (kind === "VIDEO") {
     return (
-      <span className="rounded-md bg-sky-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-900 ring-1 ring-sky-200/80">
+      <span className="rounded-md bg-sky-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-sky-900 ring-1 ring-sky-200/80">
         Vidéo
       </span>
     );
   }
   if (kind === "TEXT") {
     return (
-      <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-900 ring-1 ring-indigo-200/80">
+      <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-indigo-900 ring-1 ring-indigo-200/80">
         Lecture
       </span>
     );
   }
   return (
-    <span className="rounded-md bg-teal-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal-900 ring-1 ring-teal-200/80">
+    <span className="rounded-md bg-teal-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-teal-900 ring-1 ring-teal-200/80">
       Activité
     </span>
   );
@@ -117,7 +117,7 @@ function QuizMini({ status }: { status: QuizGenerationStatus }) {
     FAILED: "Quiz",
   };
   return (
-    <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ring-1 ${map[status]}`}>{labels[status]}</span>
+    <span className={`rounded px-1.5 py-0.5 text-xs font-semibold uppercase ring-1 ${map[status]}`}>{labels[status]}</span>
   );
 }
 
@@ -238,7 +238,7 @@ export function CourseStepsSortable({ course, disabled, onReorder }: Props) {
                         <PlayCircleIcon className="hidden h-4 w-4 text-slate-400 sm:inline" aria-hidden />
                       )}
                       {step.kind === "ACTIVITY" && step.activityKind && (
-                        <span className="text-[10px] font-semibold uppercase text-teal-700">
+                        <span className="text-xs font-semibold uppercase text-teal-700">
                           {step.activityKind === "PRACTICAL" ? "Pratique" : "Exercice"}
                         </span>
                       )}

@@ -97,8 +97,8 @@ function InfoField({ label, value, icon }: { label: string; value?: string | nul
           {icon}
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
-          <p className="mt-1 truncate text-sm font-bold text-slate-950">{value}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+          <p className="mt-1 truncate text-sm font-semibold text-slate-950">{value}</p>
         </div>
       </div>
     </div>
@@ -113,11 +113,11 @@ function SectionHeader({ icon, title, meta }: { icon: ReactNode; title: string; 
           {icon}
         </span>
         <div>
-          <h2 className="text-xl font-black text-slate-950 sm:text-2xl">{title}</h2>
+          <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">{title}</h2>
           <p className="mt-1 text-sm text-slate-500">Vue consolidée pour les équipes techniques</p>
         </div>
       </div>
-      {meta ? <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-bold text-violet-700">{meta}</span> : null}
+      {meta ? <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-700">{meta}</span> : null}
     </div>
   );
 }
@@ -136,7 +136,7 @@ function SkillCard({ skill }: { skill: UserSkillDetailDto }) {
             {iconUrl ? <img src={iconUrl} alt="" className="h-7 w-7 object-contain" /> : <SparklesIcon className="h-5 w-5 text-violet-700" />}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="break-words text-sm font-black leading-5 text-slate-950 sm:text-base">{skill.skillName}</h3>
+            <h3 className="break-words text-sm font-semibold leading-5 text-slate-950 sm:text-base">{skill.skillName}</h3>
             <p className="mt-1 text-xs font-medium text-slate-500">{skill.categoryName}</p>
           </div>
         </div>
@@ -144,8 +144,8 @@ function SkillCard({ skill }: { skill: UserSkillDetailDto }) {
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Niveau</p>
-              <p className="mt-1 text-lg font-black text-slate-950">{level}/5</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Niveau</p>
+              <p className="mt-1 text-lg font-bold text-slate-950">{level}/5</p>
             </div>
             <div className="flex items-center gap-1">
               {Array.from({ length: 5 }).map((_, idx) => (
@@ -359,7 +359,7 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
       <div className="min-h-full bg-[#fbfaff] px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-[1320px] rounded-3xl border border-rose-200 bg-white p-6 shadow-sm">
           <p className="font-bold text-rose-700">{error ?? "Profil introuvable"}</p>
-          <button type="button" onClick={() => (source === "admin" ? navigate("/admin", { state: { view: "users" } }) : navigate(backTo))} className="mt-4 inline-flex items-center rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-800">
+          <button type="button" onClick={() => (source === "admin" ? navigate("/admin", { state: { view: "users" } }) : navigate(backTo))} className="mt-4 inline-flex items-center rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-800">
             Retour
           </button>
         </div>
@@ -384,7 +384,7 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
       ? "Vue complète de l'utilisateur créé, avec ses informations, ses compétences validées et ses affectations projets."
       : "Vue claire et structurée destinée aux équipes d’ingénierie pour consulter rapidement l’identité, les compétences validées et les affectations projets.";
   const fieldClass = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15";
-  const labelClass = "text-[11px] font-black uppercase tracking-[0.16em] text-slate-400";
+  const labelClass = "text-xs font-semibold uppercase tracking-wide text-slate-400";
 
   return (
     <div className="min-h-full overflow-y-auto bg-[#fbfaff] px-4 py-5 sm:px-6 lg:px-8">
@@ -393,7 +393,7 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
           <button
             type="button"
             onClick={() => (source === "admin" ? navigate("/admin", { state: { view: "users" } }) : navigate(-1))}
-            className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-violet-800"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-violet-800"
           >
             <ArrowLeftIcon className="h-5 w-5" />
             {backLabel}
@@ -401,17 +401,17 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-violet-500">Fiche interne</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">Fiche interne</p>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">{pageTitle}</h1>
+              <h1 className="text-2xl font-bold text-slate-950 sm:text-3xl">{pageTitle}</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">{pageDescription}</p>
             </div>
             {source === "admin" && !isEditing ? (
               <button
                 type="button"
                 onClick={beginEdit}
-                className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-violet-800 hover:shadow-md"
+                className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-800 hover:shadow-md"
               >
                 <PencilSquareIcon className="h-4 w-4" />
                 Modifier
@@ -427,13 +427,13 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
               <form onSubmit={handleSaveAdminChanges} className="bg-gradient-to-br from-white via-white to-violet-50/50 p-5 sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-violet-500">Édition inline</p>
-                    <h2 className="mt-2 text-2xl font-black text-slate-950">Modifier les informations du collaborateur</h2>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">Édition inline</p>
+                    <h2 className="mt-2 text-2xl font-bold text-slate-950">Modifier les informations du collaborateur</h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
                       Les champs ci-dessous se modifient directement sur la page, sans fenêtre pop-up.
                     </p>
                   </div>
-                  <div className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide ${user.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                  <div className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${user.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
                     {user.enabled ? "Actif" : "Inactif"}
                   </div>
                 </div>
@@ -498,7 +498,7 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
                           <img src={avatarUrl} alt={fullName} className="h-24 w-24 rounded-2xl object-cover shadow-sm ring-1 ring-violet-100" />
                         ) : (
                           <div
-                            className="flex h-24 w-24 items-center justify-center rounded-2xl text-2xl font-black text-white shadow-sm ring-1 ring-violet-100"
+                            className="flex h-24 w-24 items-center justify-center rounded-2xl text-2xl font-bold text-white shadow-sm ring-1 ring-violet-100"
                             style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
                           >
                             {initials}
@@ -516,13 +516,13 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
                         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-black text-slate-950">{fullName}</p>
+                        <p className="text-sm font-semibold text-slate-950">{fullName}</p>
                         <p className="mt-1 text-xs font-semibold text-slate-500">{roleLabel}</p>
                       </div>
                     </div>
 
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Aperçu</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Aperçu</p>
                       <p className="mt-2 text-sm font-semibold text-slate-700">{editEmail}</p>
                       <p className="mt-1 text-xs text-slate-500">Les autres sections se mettent à jour après enregistrement.</p>
                     </div>
@@ -532,10 +532,10 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
                 {saveError ? <p className="mt-4 text-sm font-semibold text-rose-600">{saveError}</p> : null}
 
                 <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
-                  <button type="button" onClick={cancelEdit} className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">
+                  <button type="button" onClick={cancelEdit} className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                     Annuler
                   </button>
-                  <button type="submit" disabled={saveLoading} className="inline-flex items-center justify-center rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60">
+                  <button type="submit" disabled={saveLoading} className="inline-flex items-center justify-center rounded-xl bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60">
                     {saveLoading ? "Enregistrement..." : "Enregistrer"}
                   </button>
                 </div>
@@ -549,7 +549,7 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
                       <img src={user.avatarUrl} alt={fullName} className="h-28 w-28 rounded-2xl object-cover shadow-sm ring-1 ring-violet-100 sm:h-32 sm:w-32" />
                     ) : (
                       <div
-                        className="flex h-28 w-28 items-center justify-center rounded-2xl text-3xl font-black text-white shadow-sm ring-1 ring-violet-100 sm:h-32 sm:w-32"
+                        className="flex h-28 w-28 items-center justify-center rounded-2xl text-3xl font-bold text-white shadow-sm ring-1 ring-violet-100 sm:h-32 sm:w-32"
                         style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
                       >
                         {initials}
@@ -559,8 +559,8 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{fullName}</h2>
-                      <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide ${user.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                      <h2 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-3xl">{fullName}</h2>
+                      <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${user.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
                         {user.enabled ? "Actif" : "Inactif"}
                       </span>
                     </div>
@@ -582,20 +582,20 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
 
                 <div className="grid min-w-[260px] gap-3 sm:grid-cols-2 lg:min-w-[320px] lg:grid-cols-2">
                   <div className="rounded-2xl border border-violet-100 bg-violet-50 px-4 py-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-violet-500">Compétences validées</p>
-                    <p className="mt-2 text-3xl font-black text-violet-950">{validatedSkills}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-500">Compétences validées</p>
+                    <p className="mt-2 text-3xl font-bold text-violet-950">{validatedSkills}</p>
                   </div>
                   <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-500">Affectations</p>
-                    <p className="mt-2 text-3xl font-black text-blue-950">{totalAssignments}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Affectations</p>
+                    <p className="mt-2 text-3xl font-bold text-blue-950">{totalAssignments}</p>
                   </div>
                   <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-emerald-500">Statut</p>
-                    <p className="mt-2 text-xl font-black text-emerald-950">{user.enabled ? "Actif" : "Inactif"}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500">Statut</p>
+                    <p className="mt-2 text-xl font-bold text-emerald-950">{user.enabled ? "Actif" : "Inactif"}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Créé le</p>
-                    <p className="mt-2 text-xl font-black text-slate-900">{formatDate(user.createdAt)}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Créé le</p>
+                    <p className="mt-2 text-xl font-bold text-slate-900">{formatDate(user.createdAt)}</p>
                   </div>
                 </div>
               </div>
@@ -617,16 +617,16 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
               <div className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-4">
                 <ShieldCheckIcon className="h-5 w-5 shrink-0 text-violet-700" />
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-violet-500">Rôle</p>
-                  <p className="mt-1 text-base font-black text-violet-950">{roleLabel}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-500">Rôle</p>
+                  <p className="mt-1 text-base font-bold text-violet-950">{roleLabel}</p>
                 </div>
               </div>
               {user.department ? (
                 <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
                   <BuildingOffice2Icon className="h-5 w-5 shrink-0 text-slate-500" />
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Département</p>
-                    <p className="mt-1 text-base font-black text-slate-950">{user.department}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Département</p>
+                    <p className="mt-1 text-base font-bold text-slate-950">{user.department}</p>
                   </div>
                 </div>
               ) : null}
@@ -634,19 +634,19 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
                 <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
                   <ClockIcon className="h-5 w-5 shrink-0 text-slate-500" />
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Créé le</p>
-                    <p className="mt-1 text-base font-black text-slate-950">{formatDate(user.createdAt)}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Créé le</p>
+                    <p className="mt-1 text-base font-bold text-slate-950">{formatDate(user.createdAt)}</p>
                   </div>
                 </div>
               ) : null}
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-4 text-center">
-                  <p className="text-xl font-black text-emerald-700">{validatedSkills}</p>
-                  <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-emerald-600">Validées</p>
+                  <p className="text-xl font-bold text-emerald-700">{validatedSkills}</p>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-emerald-600">Validées</p>
                 </div>
                 <div className="rounded-2xl border border-violet-100 bg-violet-50 px-3 py-4 text-center">
-                  <p className="text-xl font-black text-violet-700">{user.skills.length}</p>
-                  <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-violet-600">Compétences</p>
+                  <p className="text-xl font-bold text-violet-700">{user.skills.length}</p>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-violet-600">Compétences</p>
                 </div>
               </div>
             </div>
@@ -684,7 +684,7 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
           {user.assignments.length ? (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left">
-                <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-5 py-3 sm:px-6">Projet</th>
                     <th className="px-5 py-3 sm:px-6">Début</th>
@@ -697,11 +697,11 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
                     const meta = assignmentStatusBadge(assignment.status);
                     return (
                       <tr key={assignment.uuid} className="transition hover:bg-violet-50/40">
-                        <td className="px-5 py-4 text-sm font-bold text-slate-950 sm:px-6">{assignment.projectName}</td>
+                        <td className="px-5 py-4 text-sm font-semibold text-slate-950 sm:px-6">{assignment.projectName}</td>
                         <td className="px-5 py-4 text-sm text-slate-600 sm:px-6">{formatDate(assignment.projectStartDate)}</td>
                         <td className="px-5 py-4 text-sm text-slate-600 sm:px-6">{formatDate(assignment.projectDueDate)}</td>
                         <td className="px-5 py-4 sm:px-6">
-                          <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${meta.className}`}>{meta.label}</span>
+                          <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${meta.className}`}>{meta.label}</span>
                         </td>
                       </tr>
                     );

@@ -59,7 +59,7 @@ export function ManagerAssignmentsHistory() {
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
               <div className="lg:col-span-2">
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Projet</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Projet</label>
                 <input
                   value={projectQuery}
                   onChange={(e) => setProjectQuery(e.target.value)}
@@ -68,7 +68,7 @@ export function ManagerAssignmentsHistory() {
                 />
               </div>
               <div className="lg:col-span-2">
-                <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Employé</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Employé</label>
                 <input
                   value={employeeQuery}
                   onChange={(e) => setEmployeeQuery(e.target.value)}

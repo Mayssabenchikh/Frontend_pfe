@@ -180,10 +180,10 @@ export function ProjectTalentWorkspace() {
           ? "Chargement…"
           : (
             <span className="inline-flex flex-col items-start gap-1 font-sans sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-2">
-              <span className="text-[20px] font-extrabold leading-tight text-slate-900 sm:text-[26px] md:text-[34px]">
+              <span className="text-xl font-bold leading-tight text-slate-900 sm:text-2xl md:text-3xl">
                 Classement et équipe :
               </span>
-              <span className="text-[20px] font-extrabold leading-tight text-violet-700 sm:text-[26px] md:text-[34px]">
+              <span className="text-xl font-bold leading-tight text-violet-700 sm:text-2xl md:text-3xl">
                 {project?.name || "Projet"}
               </span>
             </span>
@@ -210,7 +210,7 @@ export function ProjectTalentWorkspace() {
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-2">
                   <div className="flex items-center gap-2.5">
                     <span className="h-4 w-[3px] rounded-full bg-violet-500" />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                       Profils classés
                     </span>
                     {!loadingMatches && (
@@ -296,7 +296,7 @@ export function ProjectTalentWorkspace() {
                 <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
                   <div className="flex h-10 items-center gap-2.5 border-b border-slate-100 px-4">
                     <span className="h-4 w-[3px] rounded-full bg-violet-500" />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                       Configuration
                     </span>
                   </div>
@@ -304,7 +304,7 @@ export function ProjectTalentWorkspace() {
                   <div className="space-y-3 p-3.5">
                     <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3.5 py-2.5">
                       <span className="text-sm text-slate-500">Taille de l'équipe</span>
-                      <span className="rounded-md bg-violet-100 px-2.5 py-0.5 text-sm font-bold text-violet-700">
+                      <span className="rounded-md bg-violet-100 px-2.5 py-0.5 text-sm font-semibold text-violet-700">
                         {teamSize}
                       </span>
                     </div>
@@ -341,7 +341,7 @@ export function ProjectTalentWorkspace() {
                 <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
                   <div className="flex h-10 items-center gap-2.5 border-b border-slate-100 px-4">
                     <span className="h-4 w-[3px] rounded-full bg-fuchsia-500" />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                       Équipe suggérée
                     </span>
                   </div>

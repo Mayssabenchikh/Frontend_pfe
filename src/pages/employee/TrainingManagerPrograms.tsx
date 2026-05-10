@@ -36,14 +36,14 @@ export function TrainingManagerPrograms() {
     <div className="w-full space-y-10 px-4 pb-0 pt-2 sm:px-6 sm:pt-4">
       <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-violet-700/90">Catalogue interne</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Mes formations</h1>
+          <p className="text-xs font-semibold uppercase tracking-widest text-violet-700/90">Catalogue interne</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-3xl">Mes formations</h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
             Créez des formations modulaires, mélangez vidéos, lectures et activités, puis publiez pour le catalogue
             employés.
           </p>
         </div>
-        <Link to="/training-manager/programs/new" className="tm-btn tm-btn-primary rounded-2xl px-6 py-3.5 text-sm font-bold">
+        <Link to="/training-manager/programs/new" className="tm-btn tm-btn-primary rounded-2xl px-6 py-3.5 text-sm font-semibold">
           <PlusIcon className="h-5 w-5" />
           Nouvelle formation
         </Link>
@@ -71,7 +71,7 @@ export function TrainingManagerPrograms() {
           <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
             Lancez votre première formation : titre, compétence cible, puis modules et contenus dans l’éditeur.
           </p>
-          <Link to="/training-manager/programs/new" className="tm-btn tm-btn-primary mt-8 rounded-2xl px-6 py-3 text-sm font-bold">
+          <Link to="/training-manager/programs/new" className="tm-btn tm-btn-primary mt-8 rounded-2xl px-6 py-3 text-sm font-semibold">
             <PlusIcon className="h-5 w-5" />
             Créer la première formation
           </Link>
@@ -94,7 +94,7 @@ export function TrainingManagerPrograms() {
                       {p.title}
                     </h2>
                     <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ring-1 ${
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ${
                         p.published
                           ? "bg-emerald-50 text-emerald-800 ring-emerald-200/80"
                           : "bg-amber-50 text-amber-900 ring-amber-200/80"

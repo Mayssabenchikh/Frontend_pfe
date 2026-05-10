@@ -1,9 +1,12 @@
 .dashboard-shell {
   min-height: auto;
   width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
   overflow: visible;
   padding: 1.25rem;
-  background: #fff;
+  background: transparent;
   animation: dashboardContentSwap 0.32s ease both;
 }
 
@@ -35,8 +38,8 @@
   border: 1px solid #e2e8f0;
   background: white;
   padding: 0.55rem 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: #334155;
   outline: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
@@ -56,6 +59,8 @@
 
 .dashboard-kpi-grid {
   display: grid;
+  width: 100%;
+  max-width: none;
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 0.875rem;
   margin-bottom: 1.25rem;
@@ -105,6 +110,8 @@
 
 .dashboard-chart-grid {
   display: grid;
+  width: 100%;
+  max-width: none;
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   margin-bottom: 1rem;
@@ -113,10 +120,10 @@
 .dashboard-section-title {
   margin: 1.25rem 0 0.75rem;
   color: #1e293b;
-  font-size: 0.85rem;
-  font-weight: 900;
+  font-size: 0.875rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 .dashboard-progress {
@@ -129,6 +136,8 @@
   border: 1px solid #e2e8f0;
   background: white;
   padding: 0.45rem 0.65rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: #475569;
   transition: background 0.18s ease, color 0.18s ease;
 }
@@ -164,6 +173,8 @@
 }
 
 .dashboard-project-section {
+  width: 100%;
+  max-width: none;
   margin: 1.25rem 0;
 }
 
@@ -173,6 +184,8 @@
 
 .dashboard-project-kpi-grid {
   display: grid;
+  width: 100%;
+  max-width: none;
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 0.875rem;
   margin-bottom: 1rem;

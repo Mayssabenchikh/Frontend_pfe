@@ -134,7 +134,7 @@ export function EmployeeAssignmentsTable({ rows, loading }: Props) {
                     <InboxStackIcon className="h-8 w-8 text-violet-700" />
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm font-bold text-violet-900">Aucune affectation</p>
+                    <p className="text-sm font-semibold text-violet-900">Aucune affectation</p>
                     <p className="text-xs text-violet-400">Vos projets affectés apparaîtront ici</p>
                   </div>
                 </div>

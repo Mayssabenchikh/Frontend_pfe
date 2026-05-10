@@ -72,7 +72,7 @@ export function EmployeeCard({ row, onViewDetails, compact = false }: Props) {
               </h3>
               <span
                 className={`rounded-full font-bold uppercase ${
-                  compact ? "px-2 py-0.5 text-[9px] tracking-[0.07em]" : "px-2.5 py-1 text-[10px] tracking-[0.08em]"
+                  compact ? "px-2 py-0.5 text-xs tracking-wide" : "px-2.5 py-1 text-xs tracking-wide"
                 } ${statusBadge.className}`}
               >
                 {statusBadge.label}
@@ -81,7 +81,7 @@ export function EmployeeCard({ row, onViewDetails, compact = false }: Props) {
             <p className={`mt-0.5 truncate font-medium text-slate-400 ${compact ? "text-xs" : "text-sm"}`}>{row.email}</p>
             <p
               className={`font-semibold uppercase text-slate-400 ${
-                compact ? "mt-1 text-[9px] tracking-[0.1em]" : "mt-1.5 text-[10px] tracking-[0.12em]"
+                compact ? "mt-1 text-xs tracking-wide" : "mt-1.5 text-xs tracking-wide"
               }`}
             >
               Couverture: {met}/{total}
@@ -96,7 +96,7 @@ export function EmployeeCard({ row, onViewDetails, compact = false }: Props) {
             onClick={onViewDetails}
             aria-label={`Voir le détail de ${row.display_name || row.email}`}
             className={`inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-white font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:w-auto sm:justify-start ${
-              compact ? "px-2 py-1.5 text-[11px]" : "px-3 py-2 text-sm"
+              compact ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm"
             }`}
           >
             Détails
@@ -108,10 +108,10 @@ export function EmployeeCard({ row, onViewDetails, compact = false }: Props) {
       <div className={`grid gap-2.5 sm:grid-cols-2 ${compact ? "mt-2.5" : "mt-4"}`}>
         <div>
           <div className="mb-1.5 flex items-baseline justify-between">
-            <span className={`font-bold uppercase tracking-[0.1em] text-slate-500 ${compact ? "text-[10px]" : "text-[11px]"}`}>
+            <span className={`font-bold uppercase tracking-wide text-slate-500 ${compact ? "text-xs" : "text-xs"}`}>
               Score de correspondance
             </span>
-            <span className={`font-extrabold leading-none text-violet-600 ${compact ? "text-lg" : "text-xl"}`}>{matchPercent}</span>
+            <span className={`font-bold leading-none text-violet-600 ${compact ? "text-lg" : "text-xl"}`}>{matchPercent}</span>
           </div>
           <div className={`${compact ? "h-1.5" : "h-2"} rounded-full bg-violet-100`}>
             <div
@@ -122,10 +122,10 @@ export function EmployeeCard({ row, onViewDetails, compact = false }: Props) {
         </div>
         <div>
           <div className="mb-1.5 flex items-baseline justify-between">
-            <span className={`font-bold uppercase tracking-[0.1em] text-slate-500 ${compact ? "text-[10px]" : "text-[11px]"}`}>
+            <span className={`font-bold uppercase tracking-wide text-slate-500 ${compact ? "text-xs" : "text-xs"}`}>
               Confiance
             </span>
-            <span className={`font-extrabold leading-none text-emerald-600 ${compact ? "text-lg" : "text-xl"}`}>{confidencePercent}</span>
+            <span className={`font-bold leading-none text-emerald-600 ${compact ? "text-lg" : "text-xl"}`}>{confidencePercent}</span>
           </div>
           <div className={`${compact ? "h-1.5" : "h-2"} rounded-full bg-emerald-100`}>
             <div

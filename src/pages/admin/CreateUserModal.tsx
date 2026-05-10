@@ -78,7 +78,7 @@ function FormInput({ id, type = "text", value, onChange, onBlur, onFocus, placeh
 
 function FormLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
-    <label htmlFor={htmlFor} className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1.5">
+    <label htmlFor={htmlFor} className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
       {children}
     </label>
   );
@@ -257,7 +257,7 @@ export function CreateUserModal({
 
           {/* Informations professionnelles */}
           <div className="border-t border-slate-100 pt-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Informations professionnelles</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Informations professionnelles</p>
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -309,7 +309,7 @@ export function CreateUserModal({
               {MESSAGES.cancel}
             </button>
             <button type="submit" disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-5 py-2 text-sm font-bold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-none bg-gradient-to-r from-indigo-700 to-violet-700 px-5 py-2 text-sm font-semibold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto">
               {loading && <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />}
               {loading ? MESSAGES.submit : MESSAGES.create}
             </button>

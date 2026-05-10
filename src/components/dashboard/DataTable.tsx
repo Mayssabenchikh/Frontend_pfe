@@ -32,7 +32,7 @@ export function DataTable({
   return (
     <article className="dashboard-card dashboard-fade-up">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-sm font-extrabold text-slate-900">{translateDashboardText(title)}</h2>
+        <h2 className="text-base font-semibold text-slate-900">{translateDashboardText(title)}</h2>
         <input value={query} onChange={(e) => { setQuery(e.target.value); setPage(0); }} placeholder="Rechercher..." className="dashboard-input w-full sm:w-64" />
       </div>
       {filtered.length ? (
@@ -40,7 +40,7 @@ export function DataTable({
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="px-3 py-3">Nom</th>
                   <th className="px-3 py-3">Statut</th>
                   <th className="px-3 py-3">{valueLabel}</th>
@@ -51,7 +51,7 @@ export function DataTable({
                 {pageRows.map((row) => (
                   <tr key={`${row.id}-${row.title}`} className="border-b border-slate-50 transition hover:bg-violet-50/50">
                     <td className="px-3 py-3">
-                      <p className="font-bold text-slate-800">{translateDashboardText(row.title)}</p>
+                      <p className="font-medium text-slate-800">{translateDashboardText(row.title)}</p>
                       {row.subtitle ? <p className="mt-0.5 text-xs text-slate-500">{translateDashboardText(row.subtitle)}</p> : null}
                     </td>
                     <td className="px-3 py-3"><StatusBadge status={row.status} /></td>
@@ -60,7 +60,7 @@ export function DataTable({
                         valueMode === "progress" ? (
                           <ProgressBar value={row.primaryValue} label="" />
                         ) : (
-                          <span className="text-sm font-bold tabular-nums text-slate-700">{row.primaryValue}</span>
+                          <span className="text-sm font-semibold tabular-nums text-slate-700">{row.primaryValue}</span>
                         )
                       ) : (
                         <span className="text-xs text-slate-400">—</span>
@@ -72,7 +72,7 @@ export function DataTable({
               </tbody>
             </table>
           </div>
-          <div className="mt-4 flex items-center justify-between text-xs font-bold text-slate-500">
+          <div className="mt-4 flex items-center justify-between text-xs font-medium text-slate-500">
             <span>{filtered.length} résultat{filtered.length > 1 ? "s" : ""}</span>
             <div className="flex items-center gap-2">
               <button type="button" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))} className="dashboard-page-button">Précédent</button>

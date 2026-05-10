@@ -111,16 +111,16 @@ export function ChatInput({
   };
 
   return (
-    <div className="relative border-t border-slate-200 bg-white p-3">
-      <div ref={pickerRef} className={`absolute bottom-full left-3 right-3 z-30 mb-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition ${pickerOpen ? "block" : "hidden"}`}>
-        <EmojiPicker onEmojiClick={handleEmojiClick} width="100%" height={360} />
+    <div className="relative shrink-0 border-t border-slate-200 bg-white p-2 sm:p-3">
+      <div ref={pickerRef} className={`absolute bottom-full left-2 right-2 z-30 mb-2 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition sm:left-3 sm:right-3 ${pickerOpen ? "block" : "hidden"}`}>
+        <EmojiPicker onEmojiClick={handleEmojiClick} width="100%" height={320} />
       </div>
 
       {selectedReplyMessage ? (
-        <div className="mb-2 flex items-start justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2">
+        <div className="mb-2 flex min-w-0 items-start justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-violet-700">Réponse à {selectedReplyMessage.senderName || "Utilisateur"}</p>
-            <p className="truncate text-sm text-slate-700">
+            <p className="truncate text-sm font-semibold text-violet-700">Réponse à {selectedReplyMessage.senderName || "Utilisateur"}</p>
+            <p className="truncate text-xs text-slate-700 sm:text-sm">
               {selectedReplyMessage.deleted
                 ? "Message original indisponible"
                 : selectedReplyMessage.content || (selectedReplyMessage.attachments?.length ? "Pièce jointe" : "Message original indisponible")}
@@ -139,10 +139,10 @@ export function ChatInput({
       ) : null}
 
       {pendingFile ? (
-        <div className="mb-2 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+        <div className="mb-2 flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
           <div className="min-w-0">
-            <p className="truncate text-base font-medium text-slate-800">{pendingFile.name}</p>
-            <p className="text-sm text-slate-500">{formatBytes(pendingFile.size)}</p>
+            <p className="truncate text-sm font-medium text-slate-800">{pendingFile.name}</p>
+            <p className="text-xs text-slate-500">{formatBytes(pendingFile.size)}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -158,12 +158,12 @@ export function ChatInput({
         </div>
       ) : null}
 
-      <div className="flex items-end gap-2">
+      <div className="flex min-w-0 items-end gap-1.5 sm:gap-2">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || uploading}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-60 sm:h-11 sm:w-11"
           title="Joindre un fichier"
         >
           <FontAwesomeIcon icon={faPaperclip} className="h-4 w-4" />
@@ -172,7 +172,7 @@ export function ChatInput({
           type="button"
           onClick={() => setPickerOpen((open) => !open)}
           disabled={disabled || uploading}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-60 sm:h-11 sm:w-11"
           title="Ajouter un emoji"
         >
           <FontAwesomeIcon icon={faFaceSmile} className="h-4 w-4" />
@@ -189,14 +189,14 @@ export function ChatInput({
           }}
           placeholder="Écrivez votre message..."
           rows={1}
-          className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-300 px-3 py-2 text-base text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none disabled:bg-slate-50"
+          className="min-h-10 min-w-0 flex-1 resize-none rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none disabled:bg-slate-50 sm:min-h-[44px]"
           disabled={disabled || uploading}
         />
         <button
           type="button"
           onClick={handleSend}
           disabled={disabled || uploading || (!value.trim() && !pendingFile)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
           title="Envoyer"
         >
           {uploading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />}

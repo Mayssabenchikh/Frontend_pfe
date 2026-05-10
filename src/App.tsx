@@ -32,6 +32,13 @@ import { TrainingManagerDashboard } from "./pages/training-manager/TrainingManag
 import { TrainingManagerSubmissions } from "./pages/training-manager/TrainingManagerSubmissions";
 import { TrainingManagerProfile } from "./pages/training-manager/TrainingManagerProfile";
 import ProjectChatPage from "./pages/chat/ProjectChatPage";
+import ForumShell from "./pages/forum/ForumShell";
+import { ForumPage } from "./pages/forum/ForumPage";
+import { ForumPostDetailPage } from "./pages/forum/ForumPostDetailPage";
+import { MyForumPostsPage } from "./pages/forum/MyForumPostsPage";
+import { SavedForumPostsPage } from "./pages/forum/SavedForumPostsPage";
+import { ForumReportsPage } from "./pages/forum/ForumReportsPage";
+import { ForumResourcesPage } from "./pages/forum/ForumResourcesPage";
 
 const EmployeeQuiz = lazy(() =>
   import("./pages/employee/EmployeeQuiz").then((module) => ({ default: module.EmployeeQuiz })),
@@ -165,6 +172,21 @@ function App() {
           <Route path="chat" element={<ProjectChatPage scope="manager" />} />
           <Route path="chat/:projectUuid" element={<ProjectChatPage scope="manager" />} />
           <Route path="profile" element={<ManagerProfile />} />
+        </Route>
+        <Route
+          path="/forum"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN", "MANAGER", "EMPLOYEE", "TRAINING_MANAGER"]}>
+              <ForumShell />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ForumPage />} />
+          <Route path="post/:postUuid" element={<ForumPostDetailPage />} />
+          <Route path="my-posts" element={<MyForumPostsPage />} />
+          <Route path="saved" element={<SavedForumPostsPage />} />
+          <Route path="reports" element={<ForumReportsPage />} />
+          <Route path="resources" element={<ForumResourcesPage />} />
         </Route>
         <Route
           path="/training-manager"

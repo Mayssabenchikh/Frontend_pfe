@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { ChevronLeftIcon, ChevronRightIcon } from "../icons/heroicons/outline";
+import { ArrowRightOnRectangleIcon, ChevronLeftIcon, ChevronRightIcon } from "../icons/heroicons/outline";
 
 type DashboardSidebarProps = {
   mobileOpen?: boolean;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  footer?: ReactNode;
   children: ReactNode;
 };
 
@@ -20,9 +21,14 @@ type DashboardSidebarNavItemProps = {
   onClick?: () => void;
 };
 
+type DashboardSidebarLogoutProps = {
+  onLogout: () => void;
+  collapsed?: boolean;
+};
+
 function itemClasses(active: boolean, collapsed?: boolean) {
   return [
-    "admin-nav-item group relative flex min-h-12 w-full items-center rounded-xl border text-sm font-bold transition-all duration-200 ease-out",
+    "admin-nav-item group relative flex min-h-12 w-full items-center rounded-xl border text-sm font-medium transition-all duration-200 ease-out",
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
     collapsed ? "justify-center px-0" : "gap-3 px-3.5 text-left",
     active
@@ -55,14 +61,14 @@ function DashboardSidebarNavContent({ label, icon, active, collapsed, subtitle }
       {!collapsed && (
         <span className="flex min-w-0 flex-1 flex-col leading-tight">
           <span className="truncate">{label}</span>
-          {subtitle ? <span className={`mt-0.5 truncate text-[11px] font-semibold ${active ? "text-violet-700/80" : "text-slate-400"}`}>{subtitle}</span> : null}
+          {subtitle ? <span className={`mt-0.5 truncate text-xs font-medium ${active ? "text-violet-700/80" : "text-slate-400"}`}>{subtitle}</span> : null}
         </span>
       )}
     </>
   );
 }
 
-export function DashboardSidebar({ mobileOpen, collapsed = false, onToggleCollapse, children }: DashboardSidebarProps) {
+export function DashboardSidebar({ mobileOpen, collapsed = false, onToggleCollapse, footer, children }: DashboardSidebarProps) {
   return (
     <aside className={`admin-sidebar flex flex-col${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
       <div
@@ -93,9 +99,10 @@ export function DashboardSidebar({ mobileOpen, collapsed = false, onToggleCollap
         ) : null}
       </div>
 
-      <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 pb-5 pt-7">
+      <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 pb-4 pt-7">
         <div className="flex flex-col gap-2">{children}</div>
       </nav>
+      {footer ? <div className="admin-sidebar-footer shrink-0 px-3 pb-4">{footer}</div> : null}
     </aside>
   );
 }
@@ -125,6 +132,27 @@ export function DashboardSidebarNavItem({ label, icon, collapsed = false, to, en
       className={itemClasses(isActive, collapsed)}
     >
       <DashboardSidebarNavContent label={label} icon={icon} collapsed={collapsed} active={isActive} subtitle={subtitle} />
+    </button>
+  );
+}
+
+export function DashboardSidebarLogout({ onLogout, collapsed = false }: DashboardSidebarLogoutProps) {
+  return (
+    <button
+      type="button"
+      onClick={onLogout}
+      className={[
+        "group flex min-h-12 w-full items-center rounded-2xl text-sm font-medium text-rose-600 transition-all duration-200 ease-out",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/25",
+        collapsed ? "justify-center p-2" : "justify-start gap-3 px-3.5 py-2.5 text-left",
+      ].join(" ")}
+      title={collapsed ? "Déconnexion" : undefined}
+      aria-label="Déconnexion"
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-rose-600">
+        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+      </span>
+      {!collapsed ? <span className="truncate">Déconnexion</span> : null}
     </button>
   );
 }
