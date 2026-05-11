@@ -7,6 +7,7 @@ import {
 } from "../../icons/heroicons/outline";
 import type { NavId } from "./types";
 import { getAvatarColor, getDisplayNameInitials } from "./utils";
+import { NotificationBell } from "../../components/notifications/NotificationBell";
 
 type Props = {
   displayName: string | null;
@@ -51,6 +52,7 @@ export function AdminHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        <NotificationBell />
         <div className="relative">
           <button
             type="button"
