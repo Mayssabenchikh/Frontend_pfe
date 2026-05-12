@@ -17,68 +17,85 @@ type Props = {
   sort: ForumPostsSort;
   onSortChange: (s: ForumPostsSort) => void;
   onApply: () => void;
+  onClear: () => void;
 };
 
-export function ForumFilters({ q, onQChange, tag, onTagChange, sort, onSortChange, onApply }: Props) {
+export function ForumFilters({ q, onQChange, tag, onTagChange, sort, onSortChange, onApply, onClear }: Props) {
   return (
-    <div className="space-y-3">
-      {/* Search bar */}
-      <div className="relative">
-        <FontAwesomeIcon
-          icon={faMagnifyingGlass}
-          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-        />
-        <input
-          value={q}
-          onChange={(e) => onQChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onApply()}
-          placeholder="Rechercher une discussion, question, ressource…"
-          className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-300/30"
-        />
-      </div>
-
-      {/* Tag + Sort + Apply */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[160px] flex-1">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="relative">
           <FontAwesomeIcon
-            icon={faTags}
-            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+            icon={faMagnifyingGlass}
+            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
           />
           <input
-            value={tag}
-            onChange={(e) => onTagChange(e.target.value)}
+            value={q}
+            onChange={(e) => onQChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onApply()}
-            placeholder="Filtrer par tag…"
-            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-300/30"
+            placeholder="Rechercher une discussion, question, ressource…"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 pl-11 pr-4 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-300/30"
           />
         </div>
-
-        {/* Sort pills */}
-        <div className="flex gap-1.5">
-          {SORT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onSortChange(opt.value); onApply(); }}
-              className={[
-                "rounded-lg px-3 py-2 text-xs font-medium transition-colors",
-                sort === opt.value
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50",
-              ].join(" ")}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={onClear}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:min-w-[96px]"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            onClick={onApply}
+            className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-violet-700 lg:min-w-[132px]"
+          >
+            Rechercher
+          </button>
         </div>
+      </div>
 
-        <button
-          type="button"
-          onClick={onApply}
-          className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-violet-700 transition-colors"
-        >
-          Rechercher
-        </button>
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Tag
+          <div className="relative mt-1.5">
+            <FontAwesomeIcon
+              icon={faTags}
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              value={tag}
+              onChange={(e) => onTagChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onApply()}
+              placeholder="Filtrer par tag…"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-300/30"
+            />
+          </div>
+        </label>
+
+        <div className="min-w-0">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Tri</p>
+          <div className="flex max-w-full gap-1.5 overflow-x-auto pb-1">
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onSortChange(opt.value);
+                  onApply();
+                }}
+                className={[
+                  "shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
+                  sort === opt.value
+                    ? "bg-violet-600 text-white shadow-sm"
+                    : "bg-slate-50 text-slate-600 ring-1 ring-slate-200 hover:bg-violet-50 hover:text-violet-700",
+                ].join(" ")}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

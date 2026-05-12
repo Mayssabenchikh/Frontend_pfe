@@ -73,8 +73,8 @@ export function ForumPostCard({ post, onVote, onSave }: Props) {
   const typeColor = TYPE_COLOR[post.type] ?? "bg-slate-100 text-slate-700";
 
   return (
-    <article className="group flex w-full gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      {/* Votes column */}
+    <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-violet-100 hover:shadow-md">
+      <div className="flex">
       <div className="flex shrink-0 flex-col items-center border-r border-slate-100 bg-slate-50/60 px-2 py-4">
         <ForumVoteButtons
           score={post.score}
@@ -83,9 +83,7 @@ export function ForumPostCard({ post, onVote, onSave }: Props) {
         />
       </div>
 
-      {/* Content */}
       <div className="min-w-0 flex-1 p-4">
-        {/* Badges row */}
         <div className="flex flex-wrap items-center gap-1.5">
           {post.pinned ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
@@ -119,33 +117,28 @@ export function ForumPostCard({ post, onVote, onSave }: Props) {
           ) : null}
         </div>
 
-        {/* Title */}
         <Link
           to={`/forum/post/${post.uuid}`}
-          className="mt-2 block text-base font-semibold leading-snug text-slate-900 hover:text-violet-700 transition-colors"
+          className="mt-3 block text-base font-semibold leading-snug text-slate-900 transition-colors hover:text-violet-700 sm:text-lg"
         >
           {post.title}
         </Link>
 
-        {/* Content preview */}
         {post.contentPreview ? (
-          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-slate-500">{post.contentPreview}</p>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{post.contentPreview}</p>
         ) : null}
 
-        {/* Tags */}
         {post.tags.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {post.tags.slice(0, 5).map((t) => (
-              <span key={t.uuid} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              <span key={t.uuid} className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
                 #{t.name}
               </span>
             ))}
           </div>
         ) : null}
 
-        {/* Footer row */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500">
-          {/* Author avatar + name */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[9px] font-bold text-violet-700">
               {getAuthorInitials(post.author.fullName)}
@@ -164,7 +157,6 @@ export function ForumPostCard({ post, onVote, onSave }: Props) {
             {post.viewCount}
           </span>
 
-          {/* Actions */}
           <div className="ml-auto flex items-center gap-0.5">
             <button
               type="button"
@@ -182,6 +174,7 @@ export function ForumPostCard({ post, onVote, onSave }: Props) {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </article>
   );

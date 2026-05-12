@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPenToSquare,
   faComments,
-  faMagnifyingGlass,
   faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { forumService } from "../../services/forumService";
@@ -15,12 +14,14 @@ import { ForumPostCard } from "../../components/forum/ForumPostCard";
 import { ForumPostEditor } from "../../components/forum/ForumPostEditor";
 import { ForumEmptyState } from "../../components/forum/ForumEmptyState";
 import { ForumLoadingState } from "../../components/forum/ForumLoadingState";
+import { ForumPagination } from "../../components/forum/ForumPagination";
 import type { ForumCategoryDto } from "../../types/forum";
 
 export function ForumPage() {
   const [categories, setCategories] = useState<ForumCategoryDto[]>([]);
   const [posts, setPosts] = useState<ForumPostSummaryDto[]>([]);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(15);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +49,7 @@ export function ForumPage() {
         tag: tag || undefined,
         sort,
         page,
-        size: 15,
+        size: pageSize,
       });
       setPosts(res.data.items);
       setTotalPages(res.data.totalPages);
@@ -58,7 +59,7 @@ export function ForumPage() {
     } finally {
       setLoading(false);
     }
-  }, [q, categoryUuid, postType, tag, sort, page]);
+  }, [q, categoryUuid, postType, tag, sort, page, pageSize]);
 
   useEffect(() => {
     loadCategories();
@@ -100,63 +101,62 @@ export function ForumPage() {
 
   return (
     <>
-      {/* Forum Hero Header */}
-      <div className="mb-6 overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-slate-50 shadow-sm">
-        <div className="px-6 py-6 sm:px-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-600 shadow-md">
-                <FontAwesomeIcon icon={faComments} className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Forum Skillify</h1>
-                <p className="mt-0.5 text-sm text-slate-500">
-                  Partagez des ressources, posez vos questions et améliorez les formations.
-                </p>
-              </div>
+      <div className="mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-600 shadow-sm">
+              <FontAwesomeIcon icon={faComments} className="h-5 w-5 text-white" />
             </div>
-            <button
-              type="button"
-              onClick={() => setEditorOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-violet-700"
-            >
-              <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4" />
-              Nouveau post
-            </button>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Fil du forum</h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+                Retrouvez les questions, ressources, annonces et discussions partagées par la communauté Skillify.
+              </p>
+            </div>
           </div>
-
-          {/* Quick search */}
-          <div className="relative mt-5">
-            <FontAwesomeIcon
-              icon={faMagnifyingGlass}
-              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              value={qDraft}
-              onChange={(e) => setQDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setPage(0);
-                  setQ(qDraft);
-                }
-              }}
-              placeholder="Rechercher une discussion, question, ressource…"
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-300/30"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setEditorOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-violet-700 sm:w-auto"
+          >
+            <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4" />
+            Nouveau post
+          </button>
         </div>
       </div>
 
       <ForumLayout
         main={
-          <div className="space-y-4">
+          <div className="space-y-5">
+            <ForumFilters
+              q={qDraft}
+              onQChange={setQDraft}
+              tag={tagDraft}
+              onTagChange={setTagDraft}
+              sort={sort}
+              onSortChange={(s) => { setPage(0); setSort(s); }}
+              onApply={() => {
+                setPage(0);
+                setQ(qDraft);
+                setTag(tagDraft);
+              }}
+              onClear={() => {
+                setPage(0);
+                setQDraft("");
+                setQ("");
+                setTagDraft("");
+                setTag("");
+                setSort("new");
+              }}
+            />
+
             <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-3">
+                <div className="px-1">
                   <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Catégories</h2>
                   <p className="mt-1 text-xs text-slate-500">Filtrez le fil sans quitter la page.</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
                   <button
                     type="button"
                     onClick={() => {
@@ -181,7 +181,7 @@ export function ForumPage() {
                         setCategoryUuid(c.uuid);
                       }}
                       className={[
-                        "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                        "shrink-0 rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                         categoryUuid === c.uuid
                           ? "bg-violet-100 text-violet-800 ring-1 ring-violet-200"
                           : "bg-slate-50 text-slate-600 hover:bg-violet-50 hover:text-violet-700",
@@ -194,23 +194,7 @@ export function ForumPage() {
               </div>
             </div>
 
-            {/* Type filter pills */}
             <ForumCategoryTabs value={postType} onChange={(t) => { setPage(0); setPostType(t); }} />
-
-            {/* Tag + sort filters */}
-            <ForumFilters
-              q={qDraft}
-              onQChange={setQDraft}
-              tag={tagDraft}
-              onTagChange={setTagDraft}
-              sort={sort}
-              onSortChange={(s) => { setPage(0); setSort(s); }}
-              onApply={() => {
-                setPage(0);
-                setQ(qDraft);
-                setTag(tagDraft);
-              }}
-            />
 
             {/* Error */}
             {error ? (
@@ -257,30 +241,17 @@ export function ForumPage() {
               </div>
             ) : null}
 
-            {/* Pagination */}
-            {totalPages > 1 ? (
-              <div className="flex items-center justify-center gap-2 pt-4">
-                <button
-                  type="button"
-                  disabled={page <= 0}
-                  onClick={() => setPage((x) => Math.max(0, x - 1))}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-40 transition-colors"
-                >
-                  ← Précédent
-                </button>
-                <span className="text-sm text-slate-500">
-                  Page <strong className="text-slate-800">{page + 1}</strong> / {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((x) => x + 1)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-40 transition-colors"
-                >
-                  Suivant →
-                </button>
-              </div>
-            ) : null}
+            <ForumPagination
+              page={page}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              disabled={loading}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPage(0);
+                setPageSize(size);
+              }}
+            />
           </div>
         }
         right={

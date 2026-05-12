@@ -26,7 +26,14 @@ type Props = {
 
 export function ForumCategoryTabs({ value, onChange }: Props) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Types de contenu</h2>
+          <p className="mt-1 text-xs text-slate-500">Affinez le fil par nature de publication.</p>
+        </div>
+      </div>
+      <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
       {TYPES.map((t) => {
         const active = t.id === "ALL" ? value === null : value === t.id;
         return (
@@ -35,10 +42,10 @@ export function ForumCategoryTabs({ value, onChange }: Props) {
             type="button"
             onClick={() => onChange(t.id === "ALL" ? null : t.id)}
             className={[
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
               active
                 ? "bg-violet-600 text-white shadow-sm"
-                : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50",
+                : "bg-slate-50 text-slate-600 ring-1 ring-slate-200 hover:bg-violet-50 hover:text-violet-700",
             ].join(" ")}
           >
             <FontAwesomeIcon icon={t.icon} className="h-3 w-3" />
@@ -46,6 +53,7 @@ export function ForumCategoryTabs({ value, onChange }: Props) {
           </button>
         );
       })}
+      </div>
     </div>
   );
 }

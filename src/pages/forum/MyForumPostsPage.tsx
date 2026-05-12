@@ -6,23 +6,25 @@ import type { ForumPostSummaryDto, ForumVoteType } from "../../types/forum";
 import { ForumPostCard } from "../../components/forum/ForumPostCard";
 import { ForumLoadingState } from "../../components/forum/ForumLoadingState";
 import { ForumEmptyState } from "../../components/forum/ForumEmptyState";
+import { ForumPagination } from "../../components/forum/ForumPagination";
 
 export function MyForumPostsPage() {
   const [posts, setPosts] = useState<ForumPostSummaryDto[]>([]);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(15);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await forumService.getMyPosts(page, 15);
+      const r = await forumService.getMyPosts(page, pageSize);
       setPosts(r.data.items);
       setTotalPages(r.data.totalPages);
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, pageSize]);
 
   useEffect(() => {
     void load();
@@ -70,29 +72,17 @@ export function MyForumPostsPage() {
           ))}
         </div>
       )}
-      {totalPages > 1 ? (
-        <div className="flex items-center justify-center gap-2 pt-2">
-          <button
-            type="button"
-            disabled={page <= 0}
-            onClick={() => setPage((x) => x - 1)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-40 transition-colors"
-          >
-            ← Précédent
-          </button>
-          <span className="text-sm text-slate-500">
-            Page <strong className="text-slate-800">{page + 1}</strong> / {totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((x) => x + 1)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-40 transition-colors"
-          >
-            Suivant →
-          </button>
-        </div>
-      ) : null}
+      <ForumPagination
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        disabled={loading}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPage(0);
+          setPageSize(size);
+        }}
+      />
     </div>
   );
 }

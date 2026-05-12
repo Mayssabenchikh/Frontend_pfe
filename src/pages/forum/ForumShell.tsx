@@ -15,6 +15,8 @@ import {
   Squares2X2Icon,
   UsersIcon,
 } from "../../icons/heroicons/outline";
+import { meApi } from "../../api/meApi";
+import { trainingManagerApi } from "../../api/trainingManagerApi";
 import { getPrimaryRole, type AppRole } from "../../auth/roles";
 import { DashboardShell } from "../../components/DashboardShell";
 import { DashboardSidebar, DashboardSidebarForumGroup, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
@@ -85,8 +87,38 @@ export default function ForumShell() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(token?.picture ?? null);
 
   useEffect(() => {
+    if (primary === "MANAGER") {
+      meApi
+        .manager()
+        .then((res) => setAvatarUrl(res.data?.avatarUrl ?? token?.picture ?? null))
+        .catch(() => setAvatarUrl(token?.picture ?? null));
+      return;
+    }
+
+    if (primary === "EMPLOYEE") {
+      meApi
+        .employee()
+        .then((res) => setAvatarUrl(res.data?.avatarUrl ?? token?.picture ?? null))
+        .catch(() => setAvatarUrl(token?.picture ?? null));
+      return;
+    }
+
+    if (primary === "TRAINING_MANAGER") {
+      trainingManagerApi
+        .me()
+        .then((res) => setAvatarUrl(res.data?.avatarUrl ?? token?.picture ?? null))
+        .catch(() => setAvatarUrl(token?.picture ?? null));
+      return;
+    }
+
+    if (primary === "ADMIN") {
+      const adminAvatarKey = keycloak.subject ? `admin_avatar_${keycloak.subject}` : null;
+      setAvatarUrl(adminAvatarKey ? (localStorage.getItem(adminAvatarKey) ?? token?.picture ?? null) : token?.picture ?? null);
+      return;
+    }
+
     setAvatarUrl(token?.picture ?? null);
-  }, [token?.picture]);
+  }, [keycloak.subject, primary, token?.picture]);
 
   const backHref = homePathForRole(primary);
   const crumbs = getForumBreadcrumbs(location.pathname);
@@ -169,7 +201,7 @@ export default function ForumShell() {
           initials={null}
           avatarUrl={avatarUrl}
           avatarSeed={avatarSeed}
-          roleLabel={`${roleLabel(primary)} · Forum`}
+          roleLabel={roleLabel(primary)}
           onMenuToggle={toggleSidebar}
           onProfile={() => {
             switch (primary) {
