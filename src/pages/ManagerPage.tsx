@@ -81,6 +81,8 @@ export default function ManagerPage() {
           roleLabel="Manager"
           onMenuToggle={toggleSidebar}
           onProfile={() => navigate("/manager/profile")}
+          onProjectChat={() => navigate("/manager/chat")}
+          projectChatActive={isChatPage}
           onLogout={() => keycloak.logout({ redirectUri: ROOT_REDIRECT_URI })}
         />
       )}

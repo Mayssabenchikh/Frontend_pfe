@@ -76,6 +76,8 @@ export default function EmployeePage() {
           roleLabel="Employé"
           onMenuToggle={toggleSidebar}
           onProfile={() => navigate("/employee/profile")}
+          onProjectChat={() => navigate("/employee/chat")}
+          projectChatActive={isChatPage}
           onLogout={() => keycloak.logout({ redirectUri: `${window.location.origin}/` })}
         />
       )}

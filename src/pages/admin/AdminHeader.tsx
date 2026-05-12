@@ -4,6 +4,7 @@ import {
   UserCircleIcon,
   Bars3Icon,
   ChevronDownIcon,
+  ChatBubbleIcon,
 } from "../../icons/heroicons/outline";
 import type { NavId } from "./types";
 import { getAvatarColor, getDisplayNameInitials } from "./utils";
@@ -19,6 +20,9 @@ type Props = {
   onNavigate?: (view: NavId) => void;
   onProfile?: () => void;
   onMenuToggle: () => void;
+  onProjectChat?: () => void;
+  projectChatActive?: boolean;
+  projectChatBadge?: number;
 };
 
 export function AdminHeader({
@@ -31,6 +35,9 @@ export function AdminHeader({
   onNavigate,
   onProfile,
   onMenuToggle,
+  onProjectChat,
+  projectChatActive = false,
+  projectChatBadge,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const safeName = displayName || "Administrateur";
@@ -52,6 +59,26 @@ export function AdminHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        {onProjectChat ? (
+          <button
+            type="button"
+            onClick={onProjectChat}
+            title="Ouvrir le chat projets"
+            aria-label="Ouvrir le chat projets"
+            className={`group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border shadow-sm transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/30 ${
+              projectChatActive
+                ? "border-cyan-200 bg-cyan-50 text-cyan-700 shadow-cyan-100/70"
+                : "border-slate-200 bg-white/95 text-slate-600 shadow-slate-100 hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 hover:shadow-md hover:shadow-cyan-100/70"
+            }`}
+          >
+            <ChatBubbleIcon className="h-5 w-5" />
+            {typeof projectChatBadge === "number" && projectChatBadge > 0 ? (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                {projectChatBadge > 9 ? "9+" : projectChatBadge}
+              </span>
+            ) : null}
+          </button>
+        ) : null}
         <NotificationBell />
         <div className="relative">
           <button

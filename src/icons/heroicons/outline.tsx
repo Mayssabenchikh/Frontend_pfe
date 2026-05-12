@@ -57,6 +57,7 @@ import {
   faCircleUser as faCircleUserRegular,
   faCircleXmark as faCircleXmarkRegular,
   faClipboard as faClipboardRegular,
+  faComment as faCommentRegular,
   faClock as faClockRegular,
   faComments as faCommentsRegular,
   faEnvelope as faEnvelopeRegular,
@@ -87,6 +88,7 @@ export const CalendarDaysIcon = makeFaIcon(faCalendarDaysRegular);
 export const CameraIcon = makeFaIcon(faCamera);
 export const ChartBarSquareIcon = makeFaIcon(faChartColumn);
 export const ChatBubbleLeftRightIcon = makeFaIcon(faCommentsRegular);
+export const ChatBubbleIcon = makeFaIcon(faCommentRegular);
 export const CheckCircleIcon = makeFaIcon(faCircleCheckRegular);
 export const ChevronDownIcon = makeFaIcon(faChevronDown);
 export const ChevronLeftIcon = makeFaIcon(faChevronLeft);

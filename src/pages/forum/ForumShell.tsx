@@ -53,6 +53,12 @@ function roleLabel(role: AppRole | null): string {
   }
 }
 
+function projectChatPath(role: AppRole | null): string | null {
+  if (role === "MANAGER") return "/manager/chat";
+  if (role === "EMPLOYEE") return "/employee/chat";
+  return null;
+}
+
 function getForumBreadcrumbs(pathname: string): { label: string; to?: string }[] {
   const parts = pathname.replace(/^\/+/, "").split("/");
 
@@ -121,6 +127,7 @@ export default function ForumShell() {
   }, [keycloak.subject, primary, token?.picture]);
 
   const backHref = homePathForRole(primary);
+  const chatHref = projectChatPath(primary);
   const crumbs = getForumBreadcrumbs(location.pathname);
   const renderRoleNav = (collapsed: boolean) => {
     switch (primary) {
@@ -221,6 +228,8 @@ export default function ForumShell() {
                 navigate(backHref);
             }
           }}
+          onProjectChat={chatHref ? () => navigate(chatHref) : undefined}
+          projectChatActive={chatHref ? location.pathname.startsWith(chatHref) : false}
           onLogout={() => keycloak.logout({ redirectUri: `${window.location.origin}/` })}
         />
       )}
