@@ -5,9 +5,11 @@ import RoleRedirect from "./components/RoleRedirect";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { LocationTracker } from "./components/LocationTracker";
 import { TopLoadingBar } from "./components/TopLoadingBar";
+import { ManagerDashboardPage } from "./features/dashboard/pages/ManagerDashboardPage";
+import { EmployeeDashboardPage } from "./features/dashboard/pages/EmployeeDashboardPage";
+import { TrainingManagerDashboardPage } from "./features/dashboard/pages/TrainingManagerDashboardPage";
 import AdminPage from "./pages/AdminPage";
 import ManagerPage from "./pages/ManagerPage";
-import { ManagerDashboard } from "./pages/manager/ManagerDashboard";
 import ProjectsList from "./pages/manager/ProjectsList";
 import { ProjectDetail } from "./pages/manager/ProjectDetail";
 import { ManagerMatchingHub } from "./pages/manager/ManagerMatchingHub";
@@ -18,7 +20,6 @@ import { EmployeeLearningPrograms } from "./pages/employee/EmployeeLearningProgr
 import { EmployeeLearningProgramPlayer } from "./pages/employee/EmployeeLearningProgramPlayer";
 import { EmployeeLearningProgramQuiz } from "./pages/employee/EmployeeLearningProgramQuiz";
 import EmployeePage from "./pages/EmployeePage";
-import { EmployeeDashboard } from "./pages/employee/EmployeeDashboard";
 import { EmployeeCvExtraction, EmployeeMyProfile } from "./pages/employee/EmployeeMyProfile";
 import { EmployeeAssignments } from "./pages/employee/EmployeeAssignments";
 import { EmployeeProjects } from "./pages/employee/EmployeeProjects";
@@ -28,7 +29,6 @@ import { UserDetailPage } from "./pages/UserDetailPage";
 import { TrainingManagerPrograms } from "./pages/employee/TrainingManagerPrograms";
 import { TrainingManagerProgramEditor } from "./pages/employee/TrainingManagerProgramEditor";
 import TrainingManagerPage from "./pages/training-manager/TrainingManagerPage";
-import { TrainingManagerDashboard } from "./pages/training-manager/TrainingManagerDashboard";
 import { TrainingManagerSubmissions } from "./pages/training-manager/TrainingManagerSubmissions";
 import { TrainingManagerProfile } from "./pages/training-manager/TrainingManagerProfile";
 import ProjectChatPage from "./pages/chat/ProjectChatPage";
@@ -147,8 +147,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<ManagerDashboard />} />
-          <Route path="dashboard" element={<ManagerDashboard />} />
+          <Route index element={<ManagerDashboardPage />} />
+          <Route path="dashboard" element={<ManagerDashboardPage />} />
           <Route path="cv-extraction" element={<ManagerCvExtraction />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="matching/:id/workspace" element={<ProjectTalentWorkspace />} />
@@ -193,8 +193,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<TrainingManagerDashboard />} />
-          <Route path="dashboard" element={<TrainingManagerDashboard />} />
+          <Route index element={<TrainingManagerDashboardPage />} />
+          <Route path="dashboard" element={<TrainingManagerDashboardPage />} />
           <Route path="programs" element={<TrainingManagerPrograms />} />
           <Route path="programs/:uuid" element={<TrainingManagerProgramEditor />} />
           <Route path="submissions" element={<TrainingManagerSubmissions />} />
@@ -208,8 +208,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<EmployeeDashboard />} />
-          <Route path="dashboard" element={<EmployeeDashboard />} />
+          <Route index element={<EmployeeDashboardPage />} />
+          <Route path="dashboard" element={<EmployeeDashboardPage />} />
           <Route path="cv-extraction" element={<EmployeeCvExtraction />} />
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="assignments" element={<EmployeeAssignments />} />
