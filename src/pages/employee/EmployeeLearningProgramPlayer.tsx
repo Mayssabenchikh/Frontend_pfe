@@ -21,7 +21,6 @@ import {
   ClipboardDocumentListIcon,
   ClockIcon,
   CommandLineIcon,
-  DocumentTextIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   LockClosedIcon,
@@ -937,7 +936,7 @@ export function EmployeeLearningProgramPlayer() {
       <div
         className={cn(
           "grid w-full items-start gap-6 px-4 pb-6 pt-3 sm:px-6 lg:px-8",
-          modulesSidebarOpen ? "lg:grid-cols-[380px_minmax(0,1fr)_380px]" : "lg:grid-cols-[minmax(0,1fr)_380px]",
+          modulesSidebarOpen ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "lg:grid-cols-[minmax(0,1fr)]",
         )}
       >
         {modulesSidebarOpen ? (
@@ -1355,127 +1354,6 @@ export function EmployeeLearningProgramPlayer() {
             </article>
           ) : null}
         </main>
-
-        {selectedStep ? (
-          <aside className="learning-player-inner-scroll flex flex-col space-y-4 lg:sticky lg:top-24">
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", tone?.iconBg, tone?.iconText)}>
-                  <SelectedIcon className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-base font-bold text-slate-950">Focus étape</h3>
-                  <p className="text-base text-slate-500">{stepKindLabel(selectedStep)}</p>
-                </div>
-              </div>
-              <p className="mt-4 text-base leading-6 text-slate-600">
-                {selectedStep.stepKind === "TEXT"
-                  ? "Lisez le contenu puis confirmez la lecture pour débloquer la suite."
-                  : selectedStep.stepKind === "VIDEO"
-                    ? "Regardez la vidéo puis lancez le quiz associé dès qu'il est disponible."
-                    : "Suivez les consignes, préparez votre soumission et validez l'activité."}
-              </p>
-            </section>
-
-            <section
-              className={cn(
-                "rounded-2xl border p-5 shadow-sm",
-                selectedStep.unlocked ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50",
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
-                  {selectedStep.unlocked ? (
-                    <CheckCircleIcon className="h-5 w-5 text-emerald-700" />
-                  ) : (
-                    <LockClosedIcon className="h-5 w-5 text-orange-700" />
-                  )}
-                </span>
-                <div>
-                  <h3 className={cn("text-base font-bold", selectedStep.unlocked ? "text-emerald-950" : "text-orange-950")}>
-                    Accès
-                  </h3>
-                  <p className={cn("text-base font-bold", selectedStep.unlocked ? "text-emerald-700" : "text-orange-700")}>
-                    {selectedStep.unlocked ? "Disponible" : "Verrouillé"}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-base font-bold text-slate-950">Ressources</h3>
-              <div className="mt-4 space-y-2">
-                {selectedStep.stepKind === "VIDEO" ? (
-                  <a
-                    href={selectedStep.uploadedVideoUrl ?? `https://www.youtube.com/watch?v=${selectedStep.youtubeVideoId}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
-                  >
-                    <span className="flex items-center gap-2">
-                      <PlayCircleIcon className="h-4 w-4" />
-                      Vidéo source
-                    </span>
-                    <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
-                  </a>
-                ) : null}
-
-                {selectedStep.activityResourceUrl?.trim() ? (
-                  <a
-                    href={selectedStep.activityResourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
-                  >
-                    <span className="flex items-center gap-2">
-                      <DocumentTextIcon className="h-4 w-4" />
-                      Document associé
-                    </span>
-                    <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
-                  </a>
-                ) : null}
-
-                {selectedStep.stepKind === "VIDEO" && selectedStep.quizStatus === "READY" && selectedStep.videoUuid != null ? (
-                  <Link
-                    to={`${base}/learning-programs/quiz/${player.enrollmentUuid}/${selectedStep.videoUuid}`}
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
-                  >
-                    <span className="flex items-center gap-2">
-                      <QuestionMarkCircleIcon className="h-4 w-4" />
-                      Quiz vidéo
-                    </span>
-                    <ChevronRightIcon className="h-4 w-4" />
-                  </Link>
-                ) : null}
-
-                {selectedStep.stepKind !== "VIDEO" && !selectedStep.activityResourceUrl?.trim() ? (
-                  <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-center text-base text-slate-500">
-                    Aucune ressource additionnelle
-                  </p>
-                ) : null}
-              </div>
-            </section>
-
-            <section className="mt-auto rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
-              <p className="text-base font-semibold uppercase tracking-wide text-violet-700">Prochaine étape</p>
-              {nextUnlockedIndex != null ? (
-                <button
-                  type="button"
-                  onClick={() => setSelectedStepIndex(nextUnlockedIndex)}
-                  className="mt-3 w-full rounded-2xl bg-violet-50 p-4 text-left transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
-                >
-                  <p className="text-base font-bold leading-5 text-slate-950">{player.steps[nextUnlockedIndex]?.title}</p>
-                  <p className="mt-2 flex items-center gap-2 text-base font-bold text-violet-700">
-                    {stepKindLabel(player.steps[nextUnlockedIndex]!)}
-                    <ChevronRightIcon className="h-3.5 w-3.5" />
-                  </p>
-                </button>
-              ) : (
-                <p className="mt-3 rounded-2xl bg-slate-50 p-4 text-base leading-6 text-slate-600">Vous êtes sur la dernière étape débloquée.</p>
-              )}
-            </section>
-          </aside>
-        ) : null}
       </div>
     </div>
   );
