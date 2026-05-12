@@ -39,6 +39,23 @@ export function formatStatusLabel(status?: string | null) {
     HIGH: "Élevée",
     MEDIUM: "Moyenne",
     LOW: "Faible",
+    FAILED: "Échoué",
+    FAIL: "Échoué",
+    PASSED: "Réussi",
+    SUCCESS: "Réussi",
+    READY: "Prêt",
+    GENERATING: "En génération",
+    SUBMITTED: "Soumis",
+    REVIEWED: "Corrigé",
+    ACTIVITY_REVIEWED: "Activité corrigée",
+    CHAT_MESSAGE: "Message de chat",
+    FORUM_COMMENT: "Commentaire forum",
+    FORUM_REPLY: "Réponse forum",
+    FORUM_ACCEPTED_ANSWER: "Réponse acceptée",
+    PROJECT_ASSIGNMENT: "Affectation projet",
+    PROJECT_ASSIGNMENT_REMOVED: "Affectation retirée",
+    ACTIVITY_SUBMITTED: "Activité soumise",
+    SYSTEM_ANNOUNCEMENT: "Annonce système",
   };
   return labels[normalized] ?? status;
 }
