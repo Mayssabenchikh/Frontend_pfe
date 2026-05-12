@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
   employeeLearningProgramApi,
@@ -13,6 +13,7 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
+  Bars3Icon,
   BookOpenIcon,
   CheckCircleIcon,
   ChevronRightIcon,
@@ -469,6 +470,11 @@ export function EmployeeLearningProgramPlayer() {
   const [reviewNote, setReviewNote] = useState<string>("");
   const [reviewSaving, setReviewSaving] = useState(false);
   const [reviewSavedAt, setReviewSavedAt] = useState<string | null>(null);
+  const contentCardRef = useRef<HTMLElement | null>(null);
+  const modulesHeaderRef = useRef<HTMLDivElement | null>(null);
+  const modulesListRef = useRef<HTMLElement | null>(null);
+  const [contentCardHeight, setContentCardHeight] = useState<number | null>(null);
+  const [modulesNeedsScroll, setModulesNeedsScroll] = useState(false);
 
   const reload = useCallback(async () => {
     if (!enrollmentUuid) return null;
@@ -528,6 +534,65 @@ export function EmployeeLearningProgramPlayer() {
     player && player.steps.length > 0 ? Math.min(Math.max(0, selectedStepIndex), player.steps.length - 1) : 0;
   const selectedStep = player?.steps[activeIndex] ?? null;
   const programCompleted = player?.status === "COMPLETED";
+
+  useEffect(() => {
+    const element = contentCardRef.current;
+    if (!element || typeof ResizeObserver === "undefined") {
+      setContentCardHeight(null);
+      return;
+    }
+
+    const updateHeight = () => {
+      setContentCardHeight(Math.ceil(element.getBoundingClientRect().height));
+    };
+
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(element);
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [selectedStep, modulesSidebarOpen]);
+
+  useEffect(() => {
+    if (!modulesSidebarOpen || !contentCardHeight) {
+      setModulesNeedsScroll(false);
+      return;
+    }
+
+    const header = modulesHeaderRef.current;
+    const list = modulesListRef.current;
+    if (!header || !list) {
+      setModulesNeedsScroll(false);
+      return;
+    }
+
+    const updateScrollNeed = () => {
+      const headerHeight = header.getBoundingClientRect().height;
+      const listContentHeight = list.scrollHeight;
+      setModulesNeedsScroll(headerHeight + listContentHeight > contentCardHeight + 1);
+    };
+
+    updateScrollNeed();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateScrollNeed);
+      return () => window.removeEventListener("resize", updateScrollNeed);
+    }
+
+    const observer = new ResizeObserver(updateScrollNeed);
+    observer.observe(header);
+    observer.observe(list);
+    window.addEventListener("resize", updateScrollNeed);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateScrollNeed);
+    };
+  }, [contentCardHeight, modulesSidebarOpen, player?.steps.length, toc]);
 
   useEffect(() => {
     if (!enrollmentUuid || !selectedStep || selectedStep.stepKind !== "ACTIVITY" || !selectedStep.unlocked || selectedStep.stepDone || !selectedStep.activityUuid) {
@@ -772,60 +837,51 @@ export function EmployeeLearningProgramPlayer() {
 
   return (
     <div className="flex w-full flex-col app-page-bg text-slate-950">
-      <header className="z-30 shrink-0 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="flex min-h-12 w-full items-center gap-3 px-4 py-1.5 sm:px-6 lg:px-8">
+      <header className="z-30 shrink-0 px-4 pt-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-20 w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
           <Link
             to={backTo}
-            className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Retour
           </Link>
 
-          <div className="hidden h-8 w-px bg-slate-200 sm:block" />
+          <div className="hidden h-11 w-px bg-slate-200 sm:block" />
 
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="hidden h-2.5 w-2.5 rounded-full bg-violet-600 sm:block" />
-              <h1 className="truncate text-base font-bold text-slate-950 sm:text-lg">{player.programTitle}</h1>
-              <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-violet-800 md:inline-flex">
-                {playerStatusLabel(player.status)}
-              </span>
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span className="hidden h-2.5 w-2.5 rounded-full bg-violet-600 sm:block" />
+                <h1 className="truncate text-base font-bold text-slate-950 sm:text-lg">{player.programTitle}</h1>
+                <span className="hidden rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-violet-800 md:inline-flex">
+                  {playerStatusLabel(player.status)}
+                </span>
+              </div>
+              <p className="mt-0.5 hidden truncate text-sm text-slate-500 sm:block">
+                {player.programSkillName ? (
+                  <>
+                    {player.programSkillName}
+                    <span className="mx-2 text-slate-300">/</span>
+                  </>
+                ) : null}
+                Niveau cible {player.programTargetSkillLevel}
+              </p>
             </div>
-            <p className="mt-0.5 hidden truncate text-sm text-slate-500 sm:block">
-              {player.programSkillName ? (
-                <>
-                  {player.programSkillName}
-                  <span className="mx-2 text-slate-300">/</span>
-                </>
-              ) : null}
-              Niveau cible {player.programTargetSkillLevel}
-            </p>
           </div>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden min-w-[260px] items-center gap-4 md:flex">
             <div className="text-right">
-              <p className="text-sm font-semibold text-slate-950">{pct}%</p>
+              <p className="text-base font-bold text-slate-950">{pct}%</p>
               <p className="text-sm text-slate-500">
                 {doneCount}/{player.steps.length} étapes
               </p>
             </div>
-            <div className="h-2 w-28 overflow-hidden rounded-full bg-violet-100">
+            <div className="h-2.5 w-40 overflow-hidden rounded-full bg-violet-100">
               <div className="h-full rounded-full bg-violet-700 transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
             </div>
           </div>
 
-          {!modulesSidebarOpen ? (
-            <button
-              type="button"
-              onClick={() => setModulesSidebarOpen(true)}
-              className="hidden min-h-9 shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 text-sm font-semibold text-violet-700 shadow-sm transition hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:inline-flex"
-              title="Afficher les modules"
-            >
-              <ClipboardDocumentListIcon className="h-4 w-4" />
-              Afficher modules
-            </button>
-          ) : null}
         </div>
       </header>
 
@@ -936,12 +992,15 @@ export function EmployeeLearningProgramPlayer() {
       <div
         className={cn(
           "grid w-full items-start gap-6 px-4 pb-6 pt-3 sm:px-6 lg:px-8",
-          modulesSidebarOpen ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "lg:grid-cols-[minmax(0,1fr)]",
+          modulesSidebarOpen ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "lg:grid-cols-[54px_minmax(0,1fr)]",
         )}
       >
         {modulesSidebarOpen ? (
-          <aside className="hidden flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-24 lg:flex">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 p-4 pb-3">
+          <aside
+            className="hidden min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:flex"
+            style={contentCardHeight ? { maxHeight: `${contentCardHeight}px` } : undefined}
+          >
+          <div ref={modulesHeaderRef} className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 p-4 pb-3">
             <div>
               <p className="text-base font-bold text-slate-950">Modules</p>
               <p className="text-base text-slate-500">{player.steps.length} étape{player.steps.length > 1 ? "s" : ""}</p>
@@ -957,7 +1016,11 @@ export function EmployeeLearningProgramPlayer() {
             </button>
           </div>
           <nav
-            className="learning-player-inner-scroll space-y-5 px-4 pb-4 pt-2"
+            ref={modulesListRef}
+            className={cn(
+              "learning-player-inner-scroll min-h-0 flex-1 space-y-5 px-4 pb-4 pt-2",
+              modulesNeedsScroll ? "overflow-y-auto" : "overflow-y-visible",
+            )}
             aria-label="Plan du programme"
           >
             {toc.map((part) => (
@@ -989,7 +1052,22 @@ export function EmployeeLearningProgramPlayer() {
         </aside>
         ) : null}
 
-        <main className="learning-player-inner-scroll flex min-w-0 flex-col space-y-5">
+        {!modulesSidebarOpen ? (
+          <button
+            type="button"
+            onClick={() => setModulesSidebarOpen(true)}
+            className="hidden h-[132px] w-14 self-start flex-col items-center justify-center gap-2 rounded-r-2xl border border-violet-300 bg-white/95 text-violet-700 shadow-lg shadow-violet-100/70 transition hover:border-violet-400 hover:bg-violet-50 hover:text-violet-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 lg:inline-flex"
+            aria-label="Afficher les modules"
+            title="Afficher les modules"
+          >
+            <Bars3Icon className="h-5 w-5 shrink-0" />
+            <span className="rotate-180 text-xs font-extrabold uppercase tracking-wide [writing-mode:vertical-rl]">
+              Modules
+            </span>
+          </button>
+        ) : null}
+
+        <main className="flex min-w-0 flex-col gap-5">
           <div className="lg:hidden">
             <label htmlFor="step-selector" className="mb-2 block text-base font-semibold uppercase tracking-wide text-slate-500">
               Étape de la formation
@@ -1008,8 +1086,23 @@ export function EmployeeLearningProgramPlayer() {
             </select>
           </div>
 
+          {!modulesSidebarOpen ? (
+            <button
+              type="button"
+              onClick={() => setModulesSidebarOpen(true)}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-4 text-sm font-bold text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:hidden"
+            >
+              <Bars3Icon className="h-4 w-4" />
+              Modules
+            </button>
+          ) : null}
+
           {selectedStep ? (
-            <article key={stepKey(selectedStep)} className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm animate-profile-section">
+            <article
+              ref={contentCardRef}
+              key={stepKey(selectedStep)}
+              className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
               <div className={cn("h-1.5 bg-gradient-to-r", tone?.accent)} />
               <header className="border-b border-slate-200 p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1043,10 +1136,10 @@ export function EmployeeLearningProgramPlayer() {
                       <LockedPanel />
                     ) : (
                       <>
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-lg shadow-slate-200">
+                        <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-lg shadow-slate-200">
                           <div className="aspect-video w-full">
                             {selectedStep.uploadedVideoUrl ? (
-                              <video title={selectedStep.title} className="h-full w-full" controls src={selectedStep.uploadedVideoUrl} />
+                              <video title={selectedStep.title} className="h-full w-full bg-slate-950 object-contain" controls src={selectedStep.uploadedVideoUrl} />
                             ) : (
                               <iframe
                                 title={selectedStep.title}
