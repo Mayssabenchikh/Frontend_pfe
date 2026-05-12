@@ -16,7 +16,6 @@ export type TrainingManagerSubmissionSummary = {
   learnerName: string;
   learnerEmail: string;
   submittedAt: string;
-  aiCorrectionReady: boolean;
   humanReviewed: boolean;
   finalScore: number | null;
 };

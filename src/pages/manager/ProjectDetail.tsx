@@ -382,6 +382,8 @@ export function ProjectDetail() {
     () => Object.fromEntries((matches?.employees ?? []).map((row) => [row.employee_keycloak_id, row])),
     [matches?.employees],
   );
+  const hasDraftRequirement = form.requirements.some((r) => !r.skillUuid);
+  const selectedRequirementCount = form.requirements.filter((r) => Boolean(r.skillUuid)).length;
 
   const currentStatus = statusMeta(project?.status);
   const leadSource = project?.leadName || project?.leadEmail || managerName || managerEmail || "?";
@@ -440,6 +442,10 @@ export function ProjectDetail() {
       toast.error("Le nom du projet est obligatoire");
       return;
     }
+    if (form.requirements.some((r) => !r.skillUuid)) {
+      toast.error("Sélectionnez une compétence avant d'enregistrer le projet.");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -457,21 +463,19 @@ export function ProjectDetail() {
   };
 
   const addRequirement = () => {
-    const used = new Set(form.requirements.map((r) => r.skillUuid));
-    const availableSkill = skills.find((s) => !used.has(s.uuid));
-    if (!availableSkill) return;
+    if (hasDraftRequirement || selectedRequirementCount >= skills.length) return;
     setForm((prev) => ({
       ...prev,
-      requirements: [...prev.requirements, { skillUuid: availableSkill.uuid, levelMin: availableSkill.levelMin }],
+      requirements: [...prev.requirements, { skillUuid: "", levelMin: 1 }],
     }));
   };
 
-  const updateRequirementSkill = (oldSkillUuid: string, newSkillUuid: string) => {
+  const updateRequirementSkill = (index: number, newSkillUuid: string) => {
     const selectedSkill = skills.find((s) => s.uuid === newSkillUuid);
     setForm((prev) => ({
       ...prev,
-      requirements: prev.requirements.map((r) =>
-        r.skillUuid === oldSkillUuid
+      requirements: prev.requirements.map((r, i) =>
+        i === index
           ? {
               skillUuid: newSkillUuid,
               levelMin: selectedSkill
@@ -483,10 +487,10 @@ export function ProjectDetail() {
     }));
   };
 
-  const updateRequirementLevel = (skillUuid: string, levelMin: number) => {
+  const updateRequirementLevel = (index: number, levelMin: number) => {
     setForm((prev) => ({
       ...prev,
-      requirements: prev.requirements.map((r) => (r.skillUuid === skillUuid ? { ...r, levelMin } : r)),
+      requirements: prev.requirements.map((r, i) => (i === index ? { ...r, levelMin } : r)),
     }));
   };
 
@@ -719,7 +723,7 @@ export function ProjectDetail() {
                     <button
                     type="button"
                     onClick={addRequirement}
-                    disabled={skills.length === 0 || form.requirements.length >= skills.length}
+                    disabled={skills.length === 0 || hasDraftRequirement || selectedRequirementCount >= skills.length}
                       className="inline-flex items-center gap-2 rounded-[10px] border border-violet-200 bg-white px-3 py-2 text-sm font-semibold text-violet-800 hover:bg-violet-50 disabled:opacity-50"
                   >
                     <PlusIcon className="h-4 w-4" />
@@ -730,20 +734,24 @@ export function ProjectDetail() {
 
               {isEditing ? (
                 <div className="mt-5 space-y-3">
-                  {form.requirements.map((req) => {
+                  {form.requirements.map((req, index) => {
                     const skill = skills.find((s) => s.uuid === req.skillUuid);
-                    const used = new Set(form.requirements.map((r) => r.skillUuid));
-                    used.delete(req.skillUuid);
+                    const used = new Set(
+                      form.requirements
+                        .filter((_, i) => i !== index)
+                        .map((r) => r.skillUuid)
+                        .filter(Boolean),
+                    );
                     return (
-                      <div key={req.skillUuid} className="min-w-0 rounded-[10px] border border-violet-100 bg-white p-3 shadow-sm">
+                      <div key={`${req.skillUuid || "draft"}-${index}`} className="min-w-0 rounded-[10px] border border-violet-100 bg-white p-3 shadow-sm">
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <div className="min-w-0">
                             <p className="text-xs font-semibold uppercase tracking-wide text-violet-500">Compétence</p>
-                            <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">{skill?.name ?? "Compétence requise"}</p>
+                            <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">{skill?.name ?? "Aucune compétence sélectionnée"}</p>
                           </div>
                           <button
                             type="button"
-                            onClick={() => setForm((prev) => ({ ...prev, requirements: prev.requirements.filter((r) => r.skillUuid !== req.skillUuid) }))}
+                            onClick={() => setForm((prev) => ({ ...prev, requirements: prev.requirements.filter((_, i) => i !== index) }))}
                             className="shrink-0 rounded-[10px] border border-red-100 bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700 transition hover:border-red-200 hover:bg-red-100"
                           >
                             Retirer
@@ -755,9 +763,12 @@ export function ProjectDetail() {
                             Nom et catégorie
                             <select
                               value={req.skillUuid}
-                              onChange={(e) => updateRequirementSkill(req.skillUuid, e.target.value)}
+                              onChange={(e) => updateRequirementSkill(index, e.target.value)}
                               className={`${controlClass} mt-1.5 min-w-0 w-full`}
                             >
+                              <option value="" disabled>
+                                Sélectionner une compétence
+                              </option>
                               {skills
                                 .filter((s) => !used.has(s.uuid))
                                 .map((s) => (
@@ -774,7 +785,8 @@ export function ProjectDetail() {
                               min={skill?.levelMin ?? 1}
                               max={skill?.levelMax ?? 5}
                               value={req.levelMin}
-                              onChange={(e) => updateRequirementLevel(req.skillUuid, Math.max(skill?.levelMin ?? 1, Number(e.target.value) || 1))}
+                              onChange={(e) => updateRequirementLevel(index, Math.max(skill?.levelMin ?? 1, Number(e.target.value) || 1))}
+                              disabled={!skill}
                               className={`${controlClass} mt-1.5 w-full text-center`}
                             />
                           </label>

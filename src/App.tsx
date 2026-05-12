@@ -180,6 +180,7 @@ function App() {
           }
         >
           <Route index element={<ForumPage />} />
+          <Route path="feed" element={<ForumPage />} />
           <Route path="post/:postUuid" element={<ForumPostDetailPage />} />
           <Route path="my-posts" element={<MyForumPostsPage />} />
           <Route path="saved" element={<SavedForumPostsPage />} />

@@ -5,12 +5,11 @@ import {
   Squares2X2Icon,
   ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
-  InboxStackIcon,
 } from "../../icons/heroicons/outline";
 import { AdminHeader } from "../admin/AdminHeader";
 import { trainingManagerApi } from "../../api/trainingManagerApi";
 import { DashboardShell } from "../../components/DashboardShell";
-import { DashboardSidebar, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
+import { DashboardSidebar, DashboardSidebarForumGroup, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
 import { TrainingManagerBreadcrumbs } from "./TrainingManagerBreadcrumbs";
 
 const ROOT = `${window.location.origin}/`;
@@ -23,6 +22,7 @@ export default function TrainingManagerPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isProgramsSection = location.pathname.startsWith("/training-manager/programs");
+  const isProgramsListRoute = location.pathname === "/training-manager/programs";
   const isSubmissionsSection = location.pathname.startsWith("/training-manager/submissions");
   const isDashboardRoute = location.pathname === "/training-manager" || location.pathname === "/training-manager/dashboard";
 
@@ -50,7 +50,7 @@ export default function TrainingManagerPage() {
         >
           <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/training-manager" end collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Mes formations" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/training-manager/programs" active={isProgramsSection} collapsed={sidebarCollapsed} />
-          <DashboardSidebarNavItem label="Forum" icon={<InboxStackIcon className="h-5 w-5" />} to="/forum" collapsed={sidebarCollapsed} />
+          <DashboardSidebarForumGroup collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Soumissions" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/training-manager/submissions" active={isSubmissionsSection} collapsed={sidebarCollapsed} />
         </DashboardSidebar>
       )}
@@ -69,8 +69,8 @@ export default function TrainingManagerPage() {
     >
         <main className="flex min-w-0 flex-1 flex-col overflow-visible">
           <TrainingManagerBreadcrumbs />
-          <div className={`${isDashboardRoute ? "" : "dashboard-padding "}training-manager-app flex w-full flex-col overflow-visible`}>
-            <div className="tm-scroll-area relative flex w-full flex-col overflow-visible">
+          <div className={`${isDashboardRoute || isProgramsListRoute ? "" : "dashboard-padding "}training-manager-app flex w-full flex-col ${isProgramsListRoute ? "overflow-hidden" : "overflow-visible"}`}>
+            <div className={`tm-scroll-area relative flex w-full flex-col ${isProgramsListRoute ? "overflow-hidden" : "overflow-visible"}`}>
               <Outlet context={{ onAvatarUpdate: setAvatarUrl }} />
             </div>
           </div>

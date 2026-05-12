@@ -9,13 +9,12 @@ import {
   ClipboardDocumentListIcon,
   SparklesIcon,
   ChatBubbleLeftRightIcon,
-  InboxStackIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
 import { ManagerBreadcrumbs } from "./manager/ManagerBreadcrumbs";
 import { AdminHeader } from "./admin/AdminHeader";
 import { DashboardShell } from "../components/DashboardShell";
-import { DashboardSidebar, DashboardSidebarLogout, DashboardSidebarNavItem } from "../components/DashboardSidebar";
+import { DashboardSidebar, DashboardSidebarForumGroup, DashboardSidebarLogout, DashboardSidebarNavItem } from "../components/DashboardSidebar";
 
 const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 
@@ -35,6 +34,7 @@ export default function ManagerPage() {
   const isChatPage = location.pathname.startsWith("/manager/chat");
   const isFullBleed =
     location.pathname.startsWith("/manager/projects") ||
+    location.pathname.startsWith("/manager/assignments") ||
     isCvExtractionPage ||
     isQuizPage ||
     isChatPage ||
@@ -68,7 +68,7 @@ export default function ManagerPage() {
           <DashboardSidebarNavItem label="Projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/manager/projects" collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/manager/assignments" collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Chat projets" icon={<ChatBubbleLeftRightIcon className="h-5 w-5" />} to="/manager/chat" collapsed={sidebarCollapsed} />
-          <DashboardSidebarNavItem label="Forum" icon={<InboxStackIcon className="h-5 w-5" />} to="/forum" collapsed={sidebarCollapsed} />
+          <DashboardSidebarForumGroup collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/manager/training-recommendations" collapsed={sidebarCollapsed} />
         </DashboardSidebar>
       )}

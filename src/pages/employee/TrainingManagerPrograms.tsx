@@ -33,8 +33,8 @@ export function TrainingManagerPrograms() {
   }, [page, size]);
 
   return (
-    <div className="w-full space-y-10 px-4 pb-0 pt-2 sm:px-6 sm:pt-4">
-      <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+    <section className="flex h-[calc(100dvh-7.5rem)] w-full flex-col overflow-hidden app-page-bg px-4 pb-3 pt-2 sm:px-6 sm:pb-4 sm:pt-4">
+      <header className="shrink-0 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-violet-700/90">Catalogue interne</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-3xl">Mes formations</h1>
@@ -50,19 +50,19 @@ export function TrainingManagerPrograms() {
       </header>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200/80 bg-rose-50 px-5 py-4 text-sm text-rose-900 shadow-sm">
+        <div className="mt-6 shrink-0 rounded-2xl border border-rose-200/80 bg-rose-50 px-5 py-4 text-sm text-rose-900 shadow-sm">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid shrink-0 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <ProgramCardSkeleton />
           <ProgramCardSkeleton />
           <ProgramCardSkeleton />
         </div>
       ) : items.length === 0 ? (
-        <div className="tm-empty-state relative overflow-hidden rounded-3xl px-8 py-20">
+        <div className="tm-empty-state relative mt-10 min-h-0 flex-1 overflow-hidden rounded-3xl px-8 py-20">
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-300/50 to-transparent"
             aria-hidden
@@ -77,63 +77,65 @@ export function TrainingManagerPrograms() {
           </Link>
         </div>
       ) : (
-        <div className="flex min-h-[calc(100vh-18rem)] flex-col">
-          <ul className="grid gap-5 pb-8 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((p) => (
-              <li key={p.uuid}>
-                <Link
-                  to={`/training-manager/programs/${p.uuid}`}
-                  className="group relative flex h-full min-h-[200px] flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.02] transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300/60 hover:shadow-[0_12px_40px_-16px_rgba(99,102,241,0.22)]"
-                >
-                  <span
-                    className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-teal-500 opacity-90 transition-opacity group-hover:opacity-100"
-                    aria-hidden
-                  />
-                  <div className="flex items-start justify-between gap-3">
-                    <h2 className="line-clamp-2 min-w-0 flex-1 text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-violet-900">
-                      {p.title}
-                    </h2>
+        <div className="mt-10 flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1 pb-4">
+            <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((p) => (
+                <li key={p.uuid}>
+                  <Link
+                    to={`/training-manager/programs/${p.uuid}`}
+                    className="group relative flex h-full min-h-[200px] flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.02] transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300/60 hover:shadow-[0_12px_40px_-16px_rgba(99,102,241,0.22)]"
+                  >
                     <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ${
-                        p.published
-                          ? "bg-emerald-50 text-emerald-800 ring-emerald-200/80"
-                          : "bg-amber-50 text-amber-900 ring-amber-200/80"
-                      }`}
-                    >
-                      {p.published ? "Publié" : "Brouillon"}
-                    </span>
-                  </div>
-                  {p.skillName && (
-                    <p className="mt-3 inline-flex max-w-full items-center rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800 ring-1 ring-violet-100">
-                      {p.skillName}
-                    </p>
-                  )}
-                  <p className="mt-3 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
-                    {p.description || "Aucune description — à compléter dans l’éditeur."}
-                  </p>
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500">
-                    <div className="flex flex-wrap gap-x-3 gap-y-1">
-                      <span>
-                        Niveau <strong className="font-semibold text-slate-800">{p.targetSkillLevel}</strong>
-                      </span>
-                      <span className="text-slate-300" aria-hidden>
-                        ·
-                      </span>
-                      <span>
-                        {p.courseCount} module{p.courseCount > 1 ? "s" : ""} · {p.videoCount} vidéo
-                        {p.videoCount > 1 ? "s" : ""}
+                      className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-teal-500 opacity-90 transition-opacity group-hover:opacity-100"
+                      aria-hidden
+                    />
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="line-clamp-2 min-w-0 flex-1 text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-violet-900">
+                        {p.title}
+                      </h2>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ${
+                          p.published
+                            ? "bg-emerald-50 text-emerald-800 ring-emerald-200/80"
+                            : "bg-amber-50 text-amber-900 ring-amber-200/80"
+                        }`}
+                      >
+                        {p.published ? "Publié" : "Brouillon"}
                       </span>
                     </div>
-                    <span className="flex items-center gap-0.5 text-sm font-semibold text-violet-700 transition group-hover:gap-1">
-                      Éditer
-                      <ChevronRightIcon className="h-4 w-4" />
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="sticky bottom-0 mt-auto pt-4">
+                    {p.skillName && (
+                      <p className="mt-3 inline-flex max-w-full items-center rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800 ring-1 ring-violet-100">
+                        {p.skillName}
+                      </p>
+                    )}
+                    <p className="mt-3 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
+                      {p.description || "Aucune description — à compléter dans l’éditeur."}
+                    </p>
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500">
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        <span>
+                          Niveau <strong className="font-semibold text-slate-800">{p.targetSkillLevel}</strong>
+                        </span>
+                        <span className="text-slate-300" aria-hidden>
+                          ·
+                        </span>
+                        <span>
+                          {p.courseCount} module{p.courseCount > 1 ? "s" : ""} · {p.videoCount} vidéo
+                          {p.videoCount > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <span className="flex items-center gap-0.5 text-sm font-semibold text-violet-700 transition group-hover:gap-1">
+                        Éditer
+                        <ChevronRightIcon className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="mt-auto shrink-0 border-t border-violet-500/10 pt-3">
             <div className="-mx-1 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/95 px-5 py-3 text-sm shadow-[0_-10px_24px_-18px_rgba(15,23,42,0.35)] backdrop-blur">
               <p className="text-slate-600">
                 {totalElements} formations au total — page {page + 1} / {Math.max(1, totalPages)}
@@ -150,6 +152,6 @@ export function TrainingManagerPrograms() {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

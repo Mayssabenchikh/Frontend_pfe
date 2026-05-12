@@ -10,7 +10,7 @@ import {
   Squares2X2Icon,
   UsersIcon,
 } from "../../icons/heroicons/outline";
-import { DashboardSidebar, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
+import { DashboardSidebar, DashboardSidebarForumGroup, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
 
 type NavItem = { id: NavId; label: string; icon: ReactNode };
 type Props = {
@@ -58,12 +58,7 @@ export function AdminSidebar({
           onClick={() => onNavChange(item.id)}
         />
       ))}
-      <DashboardSidebarNavItem
-        label="Forum"
-        icon={<InboxStackIcon className="h-5 w-5" />}
-        to="/forum"
-        collapsed={collapsed}
-      />
+      <DashboardSidebarForumGroup collapsed={collapsed} />
     </DashboardSidebar>
   );
 }

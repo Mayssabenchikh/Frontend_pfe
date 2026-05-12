@@ -47,7 +47,7 @@ export function ManagerAssignmentsHistory() {
 
   return (
     <section className="flex h-[calc(100dvh-7.5rem)] w-full flex-col overflow-hidden app-page-bg">
-      <div className="flex min-h-0 flex-1 flex-col app-page-bg px-6 py-4">
+      <div className="flex min-h-0 flex-1 flex-col app-page-bg px-6 pb-0 pt-4">
         <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
           <FiltersPanel
             title="Historique d'affectation"

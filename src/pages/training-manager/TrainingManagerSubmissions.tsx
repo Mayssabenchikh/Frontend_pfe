@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { trainingManagerSubmissionsApi, type TrainingManagerSubmissionDetail, type TrainingManagerSubmissionSummary } from "../../api/trainingManagerSubmissionsApi";
-import { ClipboardDocumentCheckIcon, SparklesIcon } from "../../icons/heroicons/outline";
+import { ClipboardDocumentCheckIcon } from "../../icons/heroicons/outline";
 
 export function TrainingManagerSubmissions() {
   const [submissions, setSubmissions] = useState<TrainingManagerSubmissionSummary[]>([]);
@@ -107,9 +107,6 @@ export function TrainingManagerSubmissions() {
             La validation finale reste humaine.
           </p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-          <SparklesIcon className="h-4 w-4" /> IA active
-        </span>
       </header>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -119,13 +116,6 @@ export function TrainingManagerSubmissions() {
               <ClipboardDocumentCheckIcon className="h-5 w-5 text-violet-600" />
               <h2 className="text-base font-semibold">Soumissions recentes</h2>
             </div>
-            <button
-              type="button"
-              onClick={() => setSelectedId(null)}
-              className="tm-btn tm-btn-ghost"
-            >
-              Reinitialiser
-            </button>
           </div>
           <div className="tm-card-body space-y-4">
             {listError && (
@@ -165,9 +155,6 @@ export function TrainingManagerSubmissions() {
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase">
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">{item.activityKind}</span>
-                      {item.aiCorrectionReady && (
-                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-violet-700">IA prete</span>
-                      )}
                       {item.humanReviewed && (
                         <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Validee</span>
                       )}
@@ -194,7 +181,7 @@ export function TrainingManagerSubmissions() {
                 disabled={!selectedId || aiLoading || loadingDetail}
                 className="tm-btn tm-btn-primary"
               >
-                {aiLoading ? "Correction..." : "Corriger avec IA"}
+                {aiLoading ? "Génération…" : "Corriger avec IA"}
               </button>
             </div>
             <div className="tm-card-body">
@@ -263,9 +250,6 @@ export function TrainingManagerSubmissions() {
                           <div className="flex flex-wrap gap-2">
                             <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                               Score: {detail.aiCorrection.suggestedScore}/{detail.aiCorrection.maxScore}
-                            </span>
-                            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                              Confiance: {detail.aiCorrection.confidenceLevel}
                             </span>
                           </div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Resume</p>

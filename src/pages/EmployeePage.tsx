@@ -9,13 +9,12 @@ import {
   ClipboardDocumentListIcon,
   SparklesIcon,
   ChatBubbleLeftRightIcon,
-  InboxStackIcon,
 } from "../icons/heroicons/outline";
 import { meApi } from "../api/meApi";
 import { EmployeeBreadcrumbs } from "./employee/EmployeeBreadcrumbs";
 import { AdminHeader } from "./admin/AdminHeader";
 import { DashboardShell } from "../components/DashboardShell";
-import { DashboardSidebar, DashboardSidebarLogout, DashboardSidebarNavItem } from "../components/DashboardSidebar";
+import { DashboardSidebar, DashboardSidebarForumGroup, DashboardSidebarLogout, DashboardSidebarNavItem } from "../components/DashboardSidebar";
 
 export default function EmployeePage() {
   const { keycloak } = useKeycloak();
@@ -64,7 +63,7 @@ export default function EmployeePage() {
           <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/employee/assignments" collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/employee/training-recommendations" collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Chat projets" icon={<ChatBubbleLeftRightIcon className="h-5 w-5" />} to="/employee/chat" collapsed={sidebarCollapsed} />
-          <DashboardSidebarNavItem label="Forum" icon={<InboxStackIcon className="h-5 w-5" />} to="/forum" collapsed={sidebarCollapsed} />
+          <DashboardSidebarForumGroup collapsed={sidebarCollapsed} />
           <DashboardSidebarNavItem label="Mes projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/employee/projects" collapsed={sidebarCollapsed} />
         </DashboardSidebar>
       )}

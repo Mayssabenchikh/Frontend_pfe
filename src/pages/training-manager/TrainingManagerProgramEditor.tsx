@@ -2013,31 +2013,39 @@ export function TrainingManagerProgramEditor() {
 
           {editorWorkspaceTab === "activities" && detail && (
             <div className="min-w-0">
-            <section className="tm-section rounded-2xl border border-slate-200/60 bg-white/95 p-5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Exercices &amp; activités pratiques</h2>
-
-              <div className="mt-4 space-y-4 rounded-2xl border border-teal-200/70 bg-gradient-to-b from-teal-50/60 to-white p-4 shadow-sm ring-1 ring-teal-100/80 sm:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-100 pb-3">
-                  <p className="text-sm font-semibold text-teal-900">Nouvelle activité pour la partie sélectionnée</p>
-                  <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-teal-800">Pratique</span>
+              <section className="tm-section rounded-2xl border border-slate-200/60 bg-slate-50/60 p-4 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.03] backdrop-blur-sm sm:p-6">
+                <div className="flex flex-col gap-2 border-b border-slate-200/70 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Exercices &amp; activités pratiques</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Construisez une activité claire pour la partie sélectionnée, avec consignes, ressources et critères.
+                    </p>
+                  </div>
+                  <span className="self-start rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-violet-800 ring-1 ring-violet-200 sm:self-auto">
+                    {selectedCourse ? selectedCourse.title : "Aucune partie sélectionnée"}
+                  </span>
                 </div>
-                <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-sm ring-1 ring-violet-100">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+
+                <div className="mt-5 space-y-4 rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
+                  <div className="flex flex-col gap-3 rounded-xl border border-violet-200 bg-violet-50/70 p-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <SparklesIcon className="h-5 w-5 text-violet-600" />
-                        <p className="text-sm font-semibold text-slate-900">Assistant IA</p>
-                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-violet-800">
+                        <p className="text-sm font-semibold text-slate-950">Assistant IA</p>
+                        <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-violet-800 ring-1 ring-violet-200">
                           Validation humaine obligatoire
                         </span>
                       </div>
+                      <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600">
+                        Génère une proposition à relire, puis applique-la au formulaire seulement si elle convient.
+                      </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
                       <button
                         type="button"
                         disabled={!selectedCourse || aiActivityStatus === "loading"}
                         onClick={() => void requestAiActivitySuggestion()}
-                        className="tm-btn tm-btn-primary px-3 py-1.5 text-xs"
+                        className="tm-btn tm-btn-primary px-3 py-2 text-xs sm:w-auto"
                       >
                         {aiActivityStatus === "loading" ? "Génération…" : aiActivitySuggestion ? "Régénérer" : "Suggérer avec IA"}
                       </button>
@@ -2046,7 +2054,7 @@ export function TrainingManagerProgramEditor() {
                           <button
                             type="button"
                             onClick={() => applyAiActivitySuggestion(aiActivitySuggestion)}
-                            className="tm-btn tm-btn-ghost px-3 py-1.5 text-xs"
+                            className="tm-btn tm-btn-ghost px-3 py-2 text-xs sm:w-auto"
                           >
                             Appliquer au formulaire
                           </button>
@@ -2057,7 +2065,7 @@ export function TrainingManagerProgramEditor() {
                               setAiActivityStatus("idle");
                               setAiActivityError(null);
                             }}
-                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 sm:w-auto"
                           >
                             Annuler
                           </button>
@@ -2065,32 +2073,34 @@ export function TrainingManagerProgramEditor() {
                       )}
                     </div>
                   </div>
+
                   {aiActivityStatus === "error" && aiActivityError && (
-                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{aiActivityError}</div>
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{aiActivityError}</div>
                   )}
+
                   {aiActivitySuggestion && (
-                    <div className="mt-4 grid gap-3 rounded-xl border border-violet-100 bg-violet-50/50 p-3 sm:grid-cols-2">
-                      <div className="sm:col-span-2">
+                    <div className="grid gap-3 rounded-xl border border-violet-100 bg-violet-50/40 p-3 lg:grid-cols-2">
+                      <div className="lg:col-span-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Suggestion IA à vérifier</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{aiActivitySuggestion.title || "Titre proposé par l’IA"}</p>
                         {aiActivitySuggestion.description && <p className="mt-1 text-xs leading-5 text-slate-600">{aiActivitySuggestion.description}</p>}
                       </div>
                       {aiActivitySuggestion.learningObjective && (
-                        <div className="rounded-lg bg-white/80 p-3">
+                        <div className="rounded-lg border border-white bg-white/85 p-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Objectif</p>
                           <p className="mt-1 text-xs text-slate-700">{aiActivitySuggestion.learningObjective}</p>
                         </div>
                       )}
                       {aiActivitySuggestion.totalPoints > 0 && (
-                        <div className="rounded-lg bg-white/80 p-3">
+                        <div className="rounded-lg border border-white bg-white/85 p-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Barème</p>
                           <p className="mt-1 text-xs text-slate-700">{aiActivitySuggestion.totalPoints} points proposés</p>
                         </div>
                       )}
                       {aiActivitySuggestion.evaluationCriteria?.length > 0 && (
-                        <div className="rounded-lg bg-white/80 p-3 sm:col-span-2">
+                        <div className="rounded-lg border border-white bg-white/85 p-3 lg:col-span-2">
                           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Critères d’évaluation</p>
-                          <ul className="mt-2 space-y-1 text-xs text-slate-700">
+                          <ul className="mt-2 grid gap-1 text-xs text-slate-700 sm:grid-cols-2">
                             {aiActivitySuggestion.evaluationCriteria.slice(0, 4).map((criterion, index) => (
                               <li key={`${criterion.criterion}-${index}`}>
                                 <span className="font-semibold">{criterion.criterion}</span>
@@ -2101,167 +2111,184 @@ export function TrainingManagerProgramEditor() {
                         </div>
                       )}
                       {aiActivityHistory.length > 1 && (
-                        <p className="text-xs font-medium text-slate-500 sm:col-span-2">
+                        <p className="text-xs font-medium text-slate-500 lg:col-span-2">
                           {aiActivityHistory.length} suggestions générées pendant cette session.
                         </p>
                       )}
                     </div>
                   )}
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs text-slate-600 sm:col-span-2">
-                    Type
-                    <select
-                      className="tm-select mt-1"
-                      value={actKind}
-                      onChange={(e) => setActKind(e.target.value as CourseActivityKind)}
-                    >
-                      <option value="EXERCISE">Exercice guidé</option>
-                      <option value="PRACTICAL">Activité pratique</option>
-                    </select>
-                    <p className="mt-1 text-xs leading-4 text-slate-500">
-                      Définit la nature de l’activité dans la partie (exercice pas-à-pas ou mise en pratique).
-                    </p>
-                  </label>
-                  <label className="text-xs text-slate-600 sm:col-span-2">
-                    Réponse attendue de l’apprenant
-                    <select
-                      className="tm-select mt-1"
-                      value={actSubmissionMode}
-                      onChange={(e) => setActSubmissionMode(e.target.value as ActivitySubmissionMode)}
-                    >
-                      <option value="TEXT">Texte libre</option>
-                      <option value="CODE">Code / extrait technique</option>
-                      <option value="FILE">Fichier (téléversement)</option>
-                    </select>
-                    <p className="mt-1 text-xs leading-4 text-slate-500">
-                      Choisit le mode de rendu : l’apprenant répond en texte, fournit du code, ou téléverse un fichier.
-                    </p>
-                  </label>
-                  <label className="text-xs text-slate-600 sm:col-span-2">
-                    Titre
-                    <input
-                      className="tm-input mt-1"
-                      value={actTitle}
-                      onChange={(e) => setActTitle(e.target.value)}
-                      placeholder="ex. Lab : déployer un pod Kubernetes"
-                    />
-                    <p className="mt-1 text-xs leading-4 text-slate-500">
-                      Nom affiché dans la partie sélectionnée et côté apprenant.
-                    </p>
-                  </label>
-                  <label className="text-xs text-slate-600 sm:col-span-2">
-                    Consignes (Markdown simple ou texte)
-                    <textarea
-                      className="tm-textarea mt-1"
-                      rows={3}
-                      value={actInstr}
-                      onChange={(e) => setActInstr(e.target.value)}
-                    />
-                    <p className="mt-1 text-xs leading-4 text-slate-500">
-                      Contenu principal de l’exercice : contexte, étapes, livrables. Le Markdown simple est accepté.
-                    </p>
-                  </label>
-                  <div className="sm:col-span-2">
-                    <input
-                      ref={activityAssetInputRef}
-                      type="file"
-                      accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp4,.mov,.webm"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) void uploadTextAssetAndInsert(f, "activity");
-                        e.currentTarget.value = "";
-                      }}
-                    />
-                    <button
-                      type="button"
-                      disabled={!uuid || isNew}
-                      onClick={() => activityAssetInputRef.current?.click()}
-                      className="tm-btn tm-btn-ghost px-3 py-1.5 text-xs"
-                    >
-                      Uploader pièce jointe pour consigne
-                    </button>
-                    <p className="mt-1 text-xs leading-4 text-slate-500">
-                      Ajoute une pièce jointe (image, PDF, document…) liée à la consigne.
-                    </p>
-                  </div>
-                  <label className="text-xs text-slate-600 sm:col-span-2">
-                    Lien ressource (optionnel)
-                    <input
-                      className="tm-input mt-1"
-                      value={actUrl}
-                      onChange={(e) => setActUrl(e.target.value)}
-                      placeholder="https://…"
-                    />
-                    <p className="mt-1 text-xs leading-4 text-slate-500">
-                      URL vers une documentation, un dépôt, un outil ou une ressource de référence.
-                    </p>
-                  </label>
-                  <div className="sm:col-span-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Details pedagogiques</p>
-                      <button type="button" onClick={addActCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-xs">
-                        Ajouter critere
-                      </button>
+
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Informations générales</h3>
+                      <p className="mt-1 text-xs text-slate-500">Définissez le type, le rendu attendu et le titre visible par l’apprenant.</p>
                     </div>
-                    <p className="mt-2 text-xs leading-4 text-slate-500">
-                      Sert à cadrer l’évaluation et à guider la génération IA (si utilisée).
-                    </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <label className="text-xs text-slate-600">
-                        Objectif pedagogique
-                        <input className="tm-input mt-1" value={actLearningObjective} onChange={(e) => setActLearningObjective(e.target.value)} />
-                        <p className="mt-1 text-xs leading-4 text-slate-500">Ce que l’apprenant doit savoir faire à la fin (formulation action + résultat).</p>
+                    <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <label className="block text-sm font-medium text-slate-700">
+                        Type
+                        <select
+                          className="tm-select mt-1.5 h-11"
+                          value={actKind}
+                          onChange={(e) => setActKind(e.target.value as CourseActivityKind)}
+                        >
+                          <option value="EXERCISE">Exercice guidé</option>
+                          <option value="PRACTICAL">Activité pratique</option>
+                        </select>
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Exercice pas-à-pas ou mise en pratique.</p>
                       </label>
-                      <label className="text-xs text-slate-600">
-                        Competence evaluee
-                        <input className="tm-input mt-1" value={actTargetSkill} onChange={(e) => setActTargetSkill(e.target.value)} />
-                        <p className="mt-1 text-xs leading-4 text-slate-500">Compétence principalement visée par l’activité (utile pour le suivi).</p>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Réponse attendue de l’apprenant
+                        <select
+                          className="tm-select mt-1.5 h-11"
+                          value={actSubmissionMode}
+                          onChange={(e) => setActSubmissionMode(e.target.value as ActivitySubmissionMode)}
+                        >
+                          <option value="TEXT">Texte libre</option>
+                          <option value="CODE">Code / extrait technique</option>
+                          <option value="FILE">Fichier (téléversement)</option>
+                        </select>
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Texte, code ou fichier téléversé.</p>
                       </label>
-                      <label className="text-xs text-slate-600">
-                        Niveau de difficulte
-                        <input className="tm-input mt-1" value={actDifficultyLevel} onChange={(e) => setActDifficultyLevel(e.target.value)} placeholder="beginner / intermediate / advanced" />
-                        <p className="mt-1 text-xs leading-4 text-slate-500">Niveau attendu (aligné sur le niveau cible de la formation).</p>
+                      <label className="block text-sm font-medium text-slate-700 lg:col-span-2">
+                        Titre
+                        <input
+                          className="tm-input mt-1.5 h-11 max-w-3xl"
+                          value={actTitle}
+                          onChange={(e) => setActTitle(e.target.value)}
+                          placeholder="ex. Lab : déployer un pod Kubernetes"
+                        />
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Nom affiché dans la partie sélectionnée et côté apprenant.</p>
                       </label>
-                      <label className="text-xs text-slate-600">
-                        Duree estimee
-                        <input className="tm-input mt-1" value={actEstimatedDuration} onChange={(e) => setActEstimatedDuration(e.target.value)} placeholder="ex. 30 min" />
-                        <p className="mt-1 text-xs leading-4 text-slate-500">Temps indicatif pour réaliser l’activité (aide à la planification).</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Contenu de l’activité</h3>
+                      <p className="mt-1 text-xs text-slate-500">Rédigez la consigne principale. Ce champ mérite toute la largeur.</p>
+                    </div>
+                    <label className="mt-4 block text-sm font-medium text-slate-700">
+                      Consignes (Markdown simple ou texte)
+                      <textarea
+                        className="tm-textarea mt-1.5 min-h-[132px]"
+                        rows={5}
+                        value={actInstr}
+                        onChange={(e) => setActInstr(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs leading-4 text-slate-500">Contexte, étapes, livrables et contraintes de rendu.</p>
+                    </label>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Ressources et pièce jointe</h3>
+                      <p className="mt-1 text-xs text-slate-500">Ajoutez une ressource externe ou un support à joindre aux consignes.</p>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                      <label className="block text-sm font-medium text-slate-700">
+                        Lien ressource (optionnel)
+                        <input
+                          className="tm-input mt-1.5 h-11"
+                          value={actUrl}
+                          onChange={(e) => setActUrl(e.target.value)}
+                          placeholder="https://…"
+                        />
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Documentation, dépôt, outil ou ressource de référence.</p>
                       </label>
-                      <label className="text-xs text-slate-600">
+                      <div>
+                        <input
+                          ref={activityAssetInputRef}
+                          type="file"
+                          accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp4,.mov,.webm"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) void uploadTextAssetAndInsert(f, "activity");
+                            e.currentTarget.value = "";
+                          }}
+                        />
+                        <button
+                          type="button"
+                          disabled={!uuid || isNew}
+                          onClick={() => activityAssetInputRef.current?.click()}
+                          className="tm-btn tm-btn-ghost h-11 px-3 text-xs sm:w-auto"
+                        >
+                          Uploader pièce jointe
+                        </button>
+                        <p className="mt-1 text-xs leading-4 text-slate-500 lg:text-right">Image, PDF, document ou vidéo.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Détails pédagogiques</h3>
+                      <p className="mt-1 text-xs text-slate-500">Ces champs cadrent l’évaluation et guident l’assistant IA.</p>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                      <label className="block text-sm font-medium text-slate-700 xl:col-span-2">
+                        Objectif pédagogique
+                        <input className="tm-input mt-1.5 h-11" value={actLearningObjective} onChange={(e) => setActLearningObjective(e.target.value)} />
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Ce que l’apprenant doit savoir faire à la fin.</p>
+                      </label>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Compétence évaluée
+                        <input className="tm-input mt-1.5 h-11 max-w-md" value={actTargetSkill} onChange={(e) => setActTargetSkill(e.target.value)} />
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Compétence principale suivie.</p>
+                      </label>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Niveau de difficulté
+                        <input className="tm-input mt-1.5 h-11 max-w-sm" value={actDifficultyLevel} onChange={(e) => setActDifficultyLevel(e.target.value)} placeholder="beginner / intermediate / advanced" />
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Aligné sur le niveau cible.</p>
+                      </label>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Durée estimée
+                        <input className="tm-input mt-1.5 h-11 max-w-[220px]" value={actEstimatedDuration} onChange={(e) => setActEstimatedDuration(e.target.value)} placeholder="ex. 30 min" />
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Temps indicatif.</p>
+                      </label>
+                      <label className="block text-sm font-medium text-slate-700">
                         Barème total
                         <input
-                          className="tm-input mt-1"
+                          className="tm-input mt-1.5 h-11 max-w-[180px]"
                           type="number"
                           min={0}
                           value={actTotalPoints}
                           onChange={(e) => setActTotalPoints(e.target.value === "" ? "" : Number(e.target.value))}
                         />
-                        <p className="mt-1 text-xs leading-4 text-slate-500">
-                          Total de points pour la notation (idéalement égal à la somme des critères).
-                        </p>
+                        <p className="mt-1 text-xs leading-4 text-slate-500">Total de points.</p>
                       </label>
                     </div>
+                  </div>
 
-                    {actEvaluationCriteria.length > 0 && (
-                      <div className="mt-3 space-y-2">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold text-slate-900">Critères d’évaluation</h3>
+                        <p className="mt-1 text-xs text-slate-500">Ajoutez les critères utilisés pour corriger la réponse.</p>
+                      </div>
+                      <button type="button" onClick={addActCriterion} className="tm-btn tm-btn-ghost px-3 py-2 text-xs sm:w-auto">
+                        Ajouter critère
+                      </button>
+                    </div>
+
+                    {actEvaluationCriteria.length > 0 ? (
+                      <div className="mt-4 space-y-3">
                         {actEvaluationCriteria.map((criterion, index) => (
-                          <div key={`crit-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1.5fr_0.4fr_auto]">
+                          <div key={`crit-${index}`} className="grid gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_120px_auto] lg:items-start">
                             <input
-                              className="tm-input"
+                              className="tm-input h-11"
                               value={criterion.criterion}
                               onChange={(e) => updateActCriterion(index, { criterion: e.target.value })}
-                              placeholder="Critere"
+                              placeholder="Critère"
                             />
                             <input
-                              className="tm-input"
+                              className="tm-input h-11"
                               value={criterion.description ?? ""}
                               onChange={(e) => updateActCriterion(index, { description: e.target.value })}
                               placeholder="Description"
                             />
                             <input
-                              className="tm-input"
+                              className="tm-input h-11"
                               type="number"
                               min={0}
                               value={criterion.points}
@@ -2271,62 +2298,84 @@ export function TrainingManagerProgramEditor() {
                             <button
                               type="button"
                               onClick={() => removeActCriterion(index)}
-                              className="tm-btn tm-btn-danger h-10"
+                              className="tm-btn tm-btn-danger h-11 px-3 text-xs sm:w-auto"
                             >
                               Supprimer
                             </button>
                           </div>
                         ))}
-                        <p className="text-xs leading-4 text-slate-500">
-                          Les critères servent à évaluer la réponse (attendu + description optionnelle + points).
-                        </p>
+                        <p className="text-xs leading-4 text-slate-500">Attendu + description optionnelle + points.</p>
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+                        Aucun critère ajouté pour le moment.
                       </div>
                     )}
                   </div>
+
+                  <div className="sticky bottom-3 z-10 rounded-xl border border-violet-100 bg-white/95 p-3 shadow-lg shadow-slate-200/70 backdrop-blur">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xs leading-5 text-slate-500">
+                        L’activité sera ajoutée à la partie sélectionnée dans la liste à gauche.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={!selectedCourseUuid || !actTitle.trim()}
+                        onClick={() => void addCourseActivity()}
+                        className="tm-btn tm-btn-primary sm:w-auto"
+                      >
+                        Ajouter à la partie sélectionnée
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-end">
-                  <p className="mr-auto self-center text-xs text-slate-500">
-                    L’activité sera ajoutée à la partie sélectionnée dans la liste à gauche.
-                  </p>
-                  <button
-                    type="button"
-                    disabled={!selectedCourseUuid || !actTitle.trim()}
-                    onClick={() => void addCourseActivity()}
-                    className="tm-btn tm-btn-primary"
-                  >
-                    Ajouter à la partie sélectionnée
-                  </button>
-                </div>
-              </div>
-              <ul className="mt-4 space-y-3">
-                {selectedCourse ? (
-                  <li key={selectedCourse.uuid} className="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
-                    <p className="text-xs font-bold text-slate-600">{selectedCourse.title}</p>
-                    <ul className="mt-2 space-y-1">
-                      {(selectedCourse.activities ?? []).length === 0 ? (
-                        <li className="text-xs text-slate-400">Aucune activité</li>
+
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Activités existantes</h3>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {selectedCourse ? `Partie : ${selectedCourse.title}` : "Sélectionnez une partie pour voir ses activités."}
+                      </p>
+                    </div>
+                    {selectedCourse && (
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                        {(selectedCourse.activities ?? []).length} activité{(selectedCourse.activities ?? []).length > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+
+                  <ul className="mt-4 space-y-3">
+                    {selectedCourse ? (
+                      (selectedCourse.activities ?? []).length === 0 ? (
+                        <li className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                          Aucune activité pour cette partie.
+                        </li>
                       ) : (
                         [...(selectedCourse.activities ?? [])]
                           .sort((a, b) => a.sortOrder - b.sortOrder)
                           .map((a) => (
-                            <li key={a.uuid} className="rounded-lg border border-slate-100 bg-white p-3 shadow-sm">
-                                <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-800">
-                                  <span>
-                                    {a.kind === "PRACTICAL" ? "Pratique" : "Exercice"} — {a.title}
-                                    <span className="ml-1 text-xs font-semibold uppercase text-slate-400">
-                                      [
-                                      {(a.submissionMode ?? "TEXT") === "CODE"
-                                        ? "code"
-                                        : (a.submissionMode ?? "TEXT") === "FILE"
-                                          ? "fichier"
-                                          : "texte"}
-                                      ]
-                                    </span>
-                                  </span>
-                                  <div className="flex flex-wrap gap-2">
+                            <li key={a.uuid} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-100">
+                                        {a.kind === "PRACTICAL" ? "Pratique" : "Exercice"}
+                                      </span>
+                                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase text-slate-600">
+                                        {(a.submissionMode ?? "TEXT") === "CODE"
+                                          ? "code"
+                                          : (a.submissionMode ?? "TEXT") === "FILE"
+                                            ? "fichier"
+                                            : "texte"}
+                                      </span>
+                                    </div>
+                                    <p className="mt-2 text-sm font-semibold text-slate-900">{a.title}</p>
+                                  </div>
+                                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                                     <button
                                       type="button"
-                                      className="text-xs font-semibold text-teal-800 hover:underline"
+                                      className="rounded-lg border border-violet-100 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-100"
                                       onClick={() => {
                                         setEditingText(null);
                                         setEditingVideo(null);
@@ -2352,18 +2401,23 @@ export function TrainingManagerProgramEditor() {
                                     <button
                                       type="button"
                                       onClick={() => void removeActivity(selectedCourse.uuid, a.uuid)}
-                                      className="text-xs font-semibold text-rose-600 hover:underline"
+                                      className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100"
                                     >
                                       Supprimer
                                     </button>
                                   </div>
                                 </div>
                                 {editingActivity?.uuid === a.uuid && editingActivity.courseUuid === selectedCourse.uuid && (
-                                  <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
-                                    <label className="text-xs text-slate-600 sm:col-span-2">
+                                  <div className="mt-4 space-y-4 rounded-xl border border-violet-100 bg-slate-50/70 p-4">
+                                    <div>
+                                      <p className="text-sm font-semibold text-slate-900">Modifier l’activité</p>
+                                      <p className="mt-1 text-xs text-slate-500">Ajustez les informations sans changer la structure de la partie.</p>
+                                    </div>
+                                    <div className="grid gap-4 lg:grid-cols-2">
+                                    <label className="block text-sm font-medium text-slate-700">
                                       Type
                                       <select
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                        className="tm-select mt-1.5 h-11"
                                         value={editingActivity.kind}
                                         onChange={(e) =>
                                           setEditingActivity((ed) =>
@@ -2375,10 +2429,10 @@ export function TrainingManagerProgramEditor() {
                                         <option value="PRACTICAL">Activité pratique</option>
                                       </select>
                                     </label>
-                                    <label className="text-xs text-slate-600 sm:col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700">
                                       Réponse attendue
                                       <select
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                        className="tm-select mt-1.5 h-11"
                                         value={editingActivity.submissionMode}
                                         onChange={(e) =>
                                           setEditingActivity((ed) =>
@@ -2391,28 +2445,41 @@ export function TrainingManagerProgramEditor() {
                                         <option value="FILE">Fichier (téléversement)</option>
                                       </select>
                                     </label>
-                                    <label className="text-xs text-slate-600 sm:col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 lg:col-span-2">
                                       Titre
                                       <input
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                        className="tm-input mt-1.5 h-11 max-w-3xl"
                                         value={editingActivity.title}
                                         onChange={(e) =>
                                           setEditingActivity((ed) => (ed ? { ...ed, title: e.target.value } : null))
                                         }
                                       />
                                     </label>
-                                    <label className="text-xs text-slate-600 sm:col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 lg:col-span-2">
                                       Consignes
                                       <textarea
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                        rows={4}
+                                        className="tm-textarea mt-1.5 min-h-[120px]"
+                                        rows={5}
                                         value={editingActivity.instructions}
                                         onChange={(e) =>
                                           setEditingActivity((ed) => (ed ? { ...ed, instructions: e.target.value } : null))
                                         }
                                       />
                                     </label>
-                                    <div className="sm:col-span-2">
+                                    </div>
+                                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                                    <label className="block text-sm font-medium text-slate-700">
+                                      Lien ressource
+                                      <input
+                                        className="tm-input mt-1.5 h-11"
+                                        value={editingActivity.resourceUrl}
+                                        onChange={(e) =>
+                                          setEditingActivity((ed) => (ed ? { ...ed, resourceUrl: e.target.value } : null))
+                                        }
+                                        placeholder="https://…"
+                                      />
+                                    </label>
+                                    <div>
                                       <input
                                         ref={activityEditAssetInputRef}
                                         type="file"
@@ -2428,66 +2495,59 @@ export function TrainingManagerProgramEditor() {
                                         type="button"
                                         disabled={!uuid || isNew}
                                         onClick={() => activityEditAssetInputRef.current?.click()}
-                                        className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-100 disabled:opacity-50"
+                                        className="tm-btn tm-btn-ghost h-11 px-3 text-xs sm:w-auto"
                                       >
-                                        Uploader pièce jointe pour consigne
+                                        Uploader pièce jointe
                                       </button>
                                     </div>
-                                    <label className="text-xs text-slate-600 sm:col-span-2">
-                                      Lien ressource
-                                      <input
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                        value={editingActivity.resourceUrl}
-                                        onChange={(e) =>
-                                          setEditingActivity((ed) => (ed ? { ...ed, resourceUrl: e.target.value } : null))
-                                        }
-                                        placeholder="https://…"
-                                      />
-                                    </label>
-                                    <div className="sm:col-span-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-3">
-                                      <div className="flex items-center justify-between">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Details pedagogiques</p>
-                                        <button type="button" onClick={addEditingCriterion} className="tm-btn tm-btn-ghost px-2 py-1 text-xs">
-                                          Ajouter critere
+                                    </div>
+                                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div>
+                                          <p className="text-sm font-semibold text-slate-900">Détails pédagogiques</p>
+                                          <p className="mt-1 text-xs text-slate-500">Objectif, compétence, niveau, durée, barème et critères.</p>
+                                        </div>
+                                        <button type="button" onClick={addEditingCriterion} className="tm-btn tm-btn-ghost px-3 py-2 text-xs sm:w-auto">
+                                          Ajouter critère
                                         </button>
                                       </div>
-                                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                        <label className="text-xs text-slate-600">
-                                          Objectif pedagogique
+                                      <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                                        <label className="block text-sm font-medium text-slate-700 xl:col-span-2">
+                                          Objectif pédagogique
                                           <input
-                                            className="tm-input mt-1"
+                                            className="tm-input mt-1.5 h-11"
                                             value={editingActivity.learningObjective}
                                             onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, learningObjective: e.target.value } : null))}
                                           />
                                         </label>
-                                        <label className="text-xs text-slate-600">
-                                          Competence evaluee
+                                        <label className="block text-sm font-medium text-slate-700">
+                                          Compétence évaluée
                                           <input
-                                            className="tm-input mt-1"
+                                            className="tm-input mt-1.5 h-11 max-w-md"
                                             value={editingActivity.targetSkill}
                                             onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, targetSkill: e.target.value } : null))}
                                           />
                                         </label>
-                                        <label className="text-xs text-slate-600">
-                                          Niveau de difficulte
+                                        <label className="block text-sm font-medium text-slate-700">
+                                          Niveau de difficulté
                                           <input
-                                            className="tm-input mt-1"
+                                            className="tm-input mt-1.5 h-11 max-w-sm"
                                             value={editingActivity.difficultyLevel}
                                             onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, difficultyLevel: e.target.value } : null))}
                                           />
                                         </label>
-                                        <label className="text-xs text-slate-600">
-                                          Duree estimee
+                                        <label className="block text-sm font-medium text-slate-700">
+                                          Durée estimée
                                           <input
-                                            className="tm-input mt-1"
+                                            className="tm-input mt-1.5 h-11 max-w-[220px]"
                                             value={editingActivity.estimatedDuration}
                                             onChange={(e) => setEditingActivity((ed) => (ed ? { ...ed, estimatedDuration: e.target.value } : null))}
                                           />
                                         </label>
-                                        <label className="text-xs text-slate-600">
+                                        <label className="block text-sm font-medium text-slate-700">
                                           Barème total
                                           <input
-                                            className="tm-input mt-1"
+                                            className="tm-input mt-1.5 h-11 max-w-[180px]"
                                             type="number"
                                             min={0}
                                             value={editingActivity.totalPoints}
@@ -2501,23 +2561,23 @@ export function TrainingManagerProgramEditor() {
                                       </div>
 
                                       {editingActivity.evaluationCriteria.length > 0 && (
-                                        <div className="mt-3 space-y-2">
+                                        <div className="mt-4 space-y-3">
                                           {editingActivity.evaluationCriteria.map((criterion, index) => (
-                                            <div key={`edit-crit-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1.5fr_0.4fr_auto]">
+                                            <div key={`edit-crit-${index}`} className="grid gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_120px_auto]">
                                               <input
-                                                className="tm-input"
+                                                className="tm-input h-11"
                                                 value={criterion.criterion}
                                                 onChange={(e) => updateEditingCriterion(index, { criterion: e.target.value })}
-                                                placeholder="Critere"
+                                                placeholder="Critère"
                                               />
                                               <input
-                                                className="tm-input"
+                                                className="tm-input h-11"
                                                 value={criterion.description ?? ""}
                                                 onChange={(e) => updateEditingCriterion(index, { description: e.target.value })}
                                                 placeholder="Description"
                                               />
                                               <input
-                                                className="tm-input"
+                                                className="tm-input h-11"
                                                 type="number"
                                                 min={0}
                                                 value={criterion.points}
@@ -2527,7 +2587,7 @@ export function TrainingManagerProgramEditor() {
                                               <button
                                                 type="button"
                                                 onClick={() => removeEditingCriterion(index)}
-                                                className="tm-btn tm-btn-danger h-10"
+                                                className="tm-btn tm-btn-danger h-11 px-3 text-xs sm:w-auto"
                                               >
                                                 Supprimer
                                               </button>
@@ -2536,19 +2596,19 @@ export function TrainingManagerProgramEditor() {
                                         </div>
                                       )}
                                     </div>
-                                    <div className="flex flex-wrap gap-2 sm:col-span-2">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                                       <button
                                         type="button"
                                         disabled={savingItemKey === `act:${a.uuid}`}
                                         onClick={() => void saveEditingActivity()}
-                                        className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                                        className="tm-btn tm-btn-primary sm:w-auto"
                                       >
                                         {savingItemKey === `act:${a.uuid}` ? "Enregistrement…" : "Enregistrer"}
                                       </button>
                                       <button
                                         type="button"
                                         onClick={() => setEditingActivity(null)}
-                                        className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                        className="tm-btn tm-btn-secondary sm:w-auto"
                                       >
                                         Annuler
                                       </button>
@@ -2557,14 +2617,15 @@ export function TrainingManagerProgramEditor() {
                                 )}
                             </li>
                           ))
-                      )}
-                    </ul>
-                  </li>
-                ) : (
-                  <li className="text-xs text-slate-400">Sélectionnez un module actif.</li>
-                )}
-              </ul>
-            </section>
+                      )
+                    ) : (
+                      <li className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                        Sélectionnez une partie active.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </section>
             </div>
           )}
 

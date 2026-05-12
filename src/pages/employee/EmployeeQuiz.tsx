@@ -1658,7 +1658,7 @@ export function EmployeeQuiz() {
 
           {/* ══════════════ SUBMITTED ══════════════ */}
           {phase === "submitted" && result && (
-            <section className="quiz-enter space-y-5 pb-5">
+            <section className="quiz-enter flex min-h-[calc(100dvh-8.5rem)] flex-1 flex-col gap-5 pb-0">
               <div className="quiz-enter quiz-enter-delay-1 rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/80 px-6 py-6 shadow-lg shadow-violet-100/60">
                   <div className="grid gap-5 md:grid-cols-[132px_minmax(0,1fr)] md:items-center">
                   <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-white">
@@ -1781,7 +1781,7 @@ export function EmployeeQuiz() {
                 </div>
               )}
 
-              <div className="quiz-enter quiz-enter-delay-2 space-y-3">
+              <div className="quiz-enter quiz-enter-delay-2 flex min-h-0 flex-1 flex-col gap-3">
                 <div className="flex items-center gap-2 text-slate-800">
                   <FontAwesomeIcon icon={faClipboardCheck} className="h-4 w-4 text-slate-600" />
                   <h3 className="text-xl font-bold">Détail des réponses</h3>
@@ -1845,7 +1845,7 @@ export function EmployeeQuiz() {
                   );
                 })}
                 {reviewTotalPages > 1 && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 px-5 py-4 shadow-sm shadow-violet-100/60">
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 px-5 py-4 shadow-sm shadow-violet-100/60">
                     <p className="text-sm font-semibold text-slate-600">
                       Page {reviewPage + 1} sur {reviewTotalPages}
                       <span className="ml-2 text-slate-400">

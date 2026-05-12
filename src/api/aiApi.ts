@@ -56,7 +56,6 @@ export type AiSubmissionCorrectionResponse = {
   skillsToImprove: string[];
   personalizedFeedback: string;
   recommendations: string[];
-  confidenceLevel: "low" | "medium" | "high" | string;
   requiresHumanReview: boolean;
 };
 

@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
-import { ArrowRightOnRectangleIcon, ChevronLeftIcon, ChevronRightIcon } from "../icons/heroicons/outline";
+import { NavLink, useLocation } from "react-router-dom";
+import {
+  ArrowRightOnRectangleIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DocumentTextIcon,
+  InboxStackIcon,
+} from "../icons/heroicons/outline";
 
 type DashboardSidebarProps = {
   mobileOpen?: boolean;
@@ -25,6 +32,12 @@ type DashboardSidebarLogoutProps = {
   onLogout: () => void;
   collapsed?: boolean;
 };
+
+const FORUM_LINKS = [
+  { label: "Fil du forum", to: "/forum", end: true, icon: <ChatBubbleLeftRightIcon className="h-3.5 w-3.5" /> },
+  { label: "Mes publications", to: "/forum/my-posts", icon: <DocumentTextIcon className="h-3.5 w-3.5" /> },
+  { label: "Enregistrés", to: "/forum/saved", icon: <InboxStackIcon className="h-3.5 w-3.5" /> },
+];
 
 function itemClasses(active: boolean, collapsed?: boolean) {
   return [
@@ -133,6 +146,58 @@ export function DashboardSidebarNavItem({ label, icon, collapsed = false, to, en
     >
       <DashboardSidebarNavContent label={label} icon={icon} collapsed={collapsed} active={isActive} subtitle={subtitle} />
     </button>
+  );
+}
+
+export function DashboardSidebarForumGroup({ collapsed = false }: { collapsed?: boolean }) {
+  const location = useLocation();
+  const forumActive = location.pathname.startsWith("/forum");
+
+  return (
+    <div className="flex flex-col">
+      <DashboardSidebarNavItem
+        label="Forum"
+        icon={<InboxStackIcon className="h-5 w-5" />}
+        to="/forum"
+        active={forumActive}
+        collapsed={collapsed}
+      />
+      <div
+        className={[
+          "overflow-hidden transition-all duration-200 ease-out",
+          collapsed ? "max-h-0 opacity-0" : "max-h-36 opacity-100",
+        ].join(" ")}
+      >
+        <div className="ml-5 mt-1 flex flex-col gap-1 border-l border-violet-100 pl-3">
+          {FORUM_LINKS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                {
+                  const active = isActive || (item.to === "/forum" && location.pathname === "/forum/feed");
+                  return [
+                    "group flex min-h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-semibold transition-colors",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/25",
+                    active
+                      ? "bg-violet-50 text-violet-800 ring-1 ring-violet-100"
+                      : "text-slate-500 hover:bg-violet-50/70 hover:text-violet-700",
+                  ].join(" ");
+                }
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span className={isActive || (item.to === "/forum" && location.pathname === "/forum/feed") ? "text-violet-700" : "text-slate-400 group-hover:text-violet-600"}>{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

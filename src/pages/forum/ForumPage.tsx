@@ -9,7 +9,6 @@ import {
 import { forumService } from "../../services/forumService";
 import type { ForumPostSummaryDto, ForumPostType, ForumPostsSort, ForumVoteType } from "../../types/forum";
 import { ForumLayout } from "../../components/forum/ForumLayout";
-import { ForumSidebar } from "../../components/forum/ForumSidebar";
 import { ForumFilters } from "../../components/forum/ForumFilters";
 import { ForumCategoryTabs } from "../../components/forum/ForumCategoryTabs";
 import { ForumPostCard } from "../../components/forum/ForumPostCard";
@@ -149,18 +148,52 @@ export function ForumPage() {
       </div>
 
       <ForumLayout
-        left={
-          <ForumSidebar
-            categories={categories}
-            selectedUuid={categoryUuid}
-            onSelectCategory={(id) => {
-              setPage(0);
-              setCategoryUuid(id);
-            }}
-          />
-        }
         main={
           <div className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Catégories</h2>
+                  <p className="mt-1 text-xs text-slate-500">Filtrez le fil sans quitter la page.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPage(0);
+                      setCategoryUuid(null);
+                    }}
+                    className={[
+                      "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                      categoryUuid === null
+                        ? "bg-violet-100 text-violet-800 ring-1 ring-violet-200"
+                        : "bg-slate-50 text-slate-600 hover:bg-violet-50 hover:text-violet-700",
+                    ].join(" ")}
+                  >
+                    Toutes
+                  </button>
+                  {categories.map((c) => (
+                    <button
+                      key={c.uuid}
+                      type="button"
+                      onClick={() => {
+                        setPage(0);
+                        setCategoryUuid(c.uuid);
+                      }}
+                      className={[
+                        "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                        categoryUuid === c.uuid
+                          ? "bg-violet-100 text-violet-800 ring-1 ring-violet-200"
+                          : "bg-slate-50 text-slate-600 hover:bg-violet-50 hover:text-violet-700",
+                      ].join(" ")}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Type filter pills */}
             <ForumCategoryTabs value={postType} onChange={(t) => { setPage(0); setPostType(t); }} />
 

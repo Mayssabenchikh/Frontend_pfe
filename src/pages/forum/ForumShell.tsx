@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowLeft,
-  faComments,
-  faFileLines,
-  faBookmark,
-} from "@fortawesome/free-solid-svg-icons";
+  ArchiveBoxIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  ChatBubbleLeftRightIcon,
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentListIcon,
+  DocumentTextIcon,
+  FolderIcon,
+  InboxStackIcon,
+  SparklesIcon,
+  Squares2X2Icon,
+  UsersIcon,
+} from "../../icons/heroicons/outline";
 import { getPrimaryRole, type AppRole } from "../../auth/roles";
 import { DashboardShell } from "../../components/DashboardShell";
-import { DashboardSidebar, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
+import { DashboardSidebar, DashboardSidebarForumGroup, DashboardSidebarLogout, DashboardSidebarNavItem } from "../../components/DashboardSidebar";
 import { AdminHeader } from "../admin/AdminHeader";
 import { ChevronRightIcon, HomeIcon } from "../../icons/heroicons/outline";
 
@@ -83,6 +90,60 @@ export default function ForumShell() {
 
   const backHref = homePathForRole(primary);
   const crumbs = getForumBreadcrumbs(location.pathname);
+  const renderRoleNav = (collapsed: boolean) => {
+    switch (primary) {
+      case "ADMIN":
+        return (
+          <>
+            <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/admin/dashboard" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Utilisateurs" icon={<UsersIcon className="h-5 w-5" />} onClick={() => navigate("/admin", { state: { view: "users" } })} collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Archives" icon={<ArchiveBoxIcon className="h-5 w-5" />} onClick={() => navigate("/admin", { state: { view: "archives" } })} collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} onClick={() => navigate("/admin", { state: { view: "projects" } })} collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Référentiel compétences" icon={<BookOpenIcon className="h-5 w-5" />} onClick={() => navigate("/admin", { state: { view: "skills" } })} collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Demandes compétences" icon={<InboxStackIcon className="h-5 w-5" />} onClick={() => navigate("/admin", { state: { view: "skillRequests" } })} collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Catégories" icon={<FolderIcon className="h-5 w-5" />} onClick={() => navigate("/admin", { state: { view: "skillCategories" } })} collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} onClick={() => navigate("/admin", { state: { view: "assignments" } })} collapsed={collapsed} />
+            <DashboardSidebarForumGroup collapsed={collapsed} />
+          </>
+        );
+      case "MANAGER":
+        return (
+          <>
+            <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/manager" end collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Extraction CV" icon={<DocumentTextIcon className="h-5 w-5" />} to="/manager/cv-extraction" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/manager/quiz" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/manager/projects" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/manager/assignments" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Chat projets" icon={<ChatBubbleLeftRightIcon className="h-5 w-5" />} to="/manager/chat" collapsed={collapsed} />
+            <DashboardSidebarForumGroup collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/manager/training-recommendations" collapsed={collapsed} />
+          </>
+        );
+      case "TRAINING_MANAGER":
+        return (
+          <>
+            <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/training-manager" end collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Mes formations" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/training-manager/programs" collapsed={collapsed} />
+            <DashboardSidebarForumGroup collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Soumissions" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/training-manager/submissions" collapsed={collapsed} />
+          </>
+        );
+      case "EMPLOYEE":
+      default:
+        return (
+          <>
+            <DashboardSidebarNavItem label="Tableau de bord" icon={<Squares2X2Icon className="h-5 w-5" />} to="/employee" end collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Analyse du CV" icon={<DocumentTextIcon className="h-5 w-5" />} to="/employee/cv-extraction" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Quiz" icon={<ClipboardDocumentCheckIcon className="h-5 w-5" />} to="/employee/quiz" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Affectations" icon={<BriefcaseIcon className="h-5 w-5" />} to="/employee/assignments" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Formations" icon={<SparklesIcon className="h-5 w-5" />} to="/employee/training-recommendations" collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Chat projets" icon={<ChatBubbleLeftRightIcon className="h-5 w-5" />} to="/employee/chat" collapsed={collapsed} />
+            <DashboardSidebarForumGroup collapsed={collapsed} />
+            <DashboardSidebarNavItem label="Mes projets" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} to="/employee/projects" collapsed={collapsed} />
+          </>
+        );
+    }
+  };
 
   return (
     <DashboardShell
@@ -99,31 +160,7 @@ export default function ForumShell() {
             />
           }
         >
-          <DashboardSidebarNavItem
-            label="Retour au tableau de bord"
-            icon={<FontAwesomeIcon icon={faArrowLeft} className="h-4 w-4" />}
-            to={backHref}
-            collapsed={sidebarCollapsed}
-          />
-          <DashboardSidebarNavItem
-            label="Fil du forum"
-            icon={<FontAwesomeIcon icon={faComments} className="h-4 w-4" />}
-            to="/forum"
-            end
-            collapsed={sidebarCollapsed}
-          />
-          <DashboardSidebarNavItem
-            label="Mes publications"
-            icon={<FontAwesomeIcon icon={faFileLines} className="h-4 w-4" />}
-            to="/forum/my-posts"
-            collapsed={sidebarCollapsed}
-          />
-          <DashboardSidebarNavItem
-            label="Enregistrés"
-            icon={<FontAwesomeIcon icon={faBookmark} className="h-4 w-4" />}
-            to="/forum/saved"
-            collapsed={sidebarCollapsed}
-          />
+          {renderRoleNav(sidebarCollapsed)}
         </DashboardSidebar>
       )}
       renderHeader={({ toggleSidebar }) => (
