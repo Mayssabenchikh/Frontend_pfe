@@ -36,6 +36,11 @@ const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 const ARCHIVED_DEDUPE_TTL_MS = 3000;
 const ADMIN_LAST_VIEW_KEY = "skillify_admin_last_view";
 
+type CreateUserResponse = {
+  uuid?: string;
+  keycloakUserId?: string;
+};
+
 let archivedUsersInFlight: Promise<ArchivedUserDto[]> | null = null;
 let archivedUsersInFlightKey: string | null = null;
 let archivedUsersCache: { key: string; at: number; value: ArchivedUserDto[] } | null = null;
@@ -263,13 +268,13 @@ export default function AdminPage() {
   const handleCreateUser = useCallback((e: React.FormEvent, avatarFile: File | null) => {
     e.preventDefault();
     setCreateLoading(true);
-    http.post<{ keycloakUserId: string }>(USERS_API, {
+    http.post<CreateUserResponse>(USERS_API, {
       email: createEmail, firstName: createFirstName, lastName: createLastName, role: createRole,
       department: createDepartment || null, jobTitle: createJobTitle || null,
       phone: createPhone || null, hireDate: createHireDate || null,
     })
       .then(async (res) => {
-        const newUserId = res.data?.keycloakUserId;
+        const newUserId = res.data?.keycloakUserId ?? res.data?.uuid;
         if (avatarFile && newUserId) {
           try {
             const formData = new FormData();
@@ -291,7 +296,8 @@ export default function AdminPage() {
       .catch((err) => {
         const msg = getApiError(err, MESSAGES.errorGeneric);
         const isConflict = msg.toLowerCase().includes("already exists") || msg.toLowerCase().includes("existe");
-        toast.error(isConflict ? "Email déjà utilisé" : "Échec de la création", { description: msg });
+        const isEmailFailure = msg.toLowerCase().includes("activation") && msg.toLowerCase().includes("smtp");
+        toast.error(isConflict ? "Email déjà utilisé" : isEmailFailure ? "Email d'activation non envoyé" : "Échec de la création", { description: msg });
       })
       .finally(() => setCreateLoading(false));
   }, [createEmail, createFirstName, createLastName, createRole, createDepartment, createJobTitle, createPhone, createHireDate, loadUsers, resetCreateForm]);
@@ -359,7 +365,7 @@ export default function AdminPage() {
         />
       )}
     >
-        <main className={`flex min-w-0 flex-1 flex-col ${isDashboardView ? "overflow-auto" : "overflow-hidden"}`}>
+        <main className="flex min-w-0 flex-1 flex-col overflow-visible">
           <AdminBreadcrumbs
             currentView={isUserDetailRoute ? "users" : currentView}
             detailLabel={isUserDetailRoute ? "Détail utilisateur" : undefined}
@@ -387,19 +393,19 @@ export default function AdminPage() {
           )}
 
           {!isUserDetailRoute && currentView === "skills" && (
-            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
+            <section className="w-full app-page-bg">
               <SkillsCatalog />
             </section>
           )}
 
           {!isUserDetailRoute && currentView === "skillCategories" && (
-            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
+            <section className="w-full app-page-bg">
               <SkillCategories />
             </section>
           )}
 
           {!isUserDetailRoute && currentView === "skillRequests" && (
-            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
+            <section className="w-full app-page-bg">
               <PendingSkillRequests />
             </section>
           )}
@@ -413,9 +419,9 @@ export default function AdminPage() {
           )}
 
           {!isUserDetailRoute && currentView === "archives" && (
-            <section className="flex flex-1 flex-col overflow-hidden app-page-bg">
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-3 py-3 sm:px-6 sm:py-4">
-                <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+            <section className="flex h-[calc(100dvh-7.5rem)] w-full flex-col overflow-hidden app-page-bg">
+              <div className="flex min-h-0 flex-1 flex-col app-page-bg px-3 py-3 sm:px-6 sm:py-4">
+                <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
                   <div className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-gradient-to-r from-amber-400/10 to-amber-400/5 px-4 py-3 text-amber-900 shadow-sm">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-400/25 bg-amber-400/20">
                       <ArchiveBoxIcon className="h-4 w-4 text-amber-800" />
@@ -489,7 +495,7 @@ export default function AdminPage() {
                     </div>
                   </FiltersPanel>
 
-                  <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                  <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
                     <ArchivedUsersTable
                       users={archivedUsers} loading={archivedLoading} error={archivedError}
                       restoringId={restoringId} deletingId={deletingId}
@@ -502,7 +508,7 @@ export default function AdminPage() {
           )}
 
           {!isUserDetailRoute && currentView === "users" && (
-            <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg">
+            <section className="flex h-[calc(100dvh-7.5rem)] w-full flex-col overflow-hidden app-page-bg">
               <div className="users-toolbar flex w-full shrink-0 items-center justify-end border-b border-violet-500/10 px-3 py-3 sm:px-6 sm:py-3.5">
                 <button
                   type="button"
@@ -514,8 +520,8 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-3 py-3 sm:px-6 sm:py-4">
-                <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col app-page-bg px-3 py-3 sm:px-6 sm:py-4">
+                <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
                   <FiltersPanel
                     title="Filtres"
                     resultsLabel={`${usersList.length} résultat${usersList.length !== 1 ? "s" : ""}`}
@@ -593,7 +599,7 @@ export default function AdminPage() {
                       </div>
                   </FiltersPanel>
 
-                  <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                  <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
                     <UsersTable
                       users={usersList}
                       loading={usersLoading}

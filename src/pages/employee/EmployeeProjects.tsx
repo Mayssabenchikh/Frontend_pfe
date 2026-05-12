@@ -41,9 +41,9 @@ export function EmployeeProjects() {
   const onOpen = (p: ProjectDto) => navigate(`/employee/projects/${p.uuid}`);
 
   return (
-    <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-6 py-4">
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+    <section className="flex h-[calc(100dvh-7.5rem)] w-full flex-col overflow-hidden app-page-bg">
+      <div className="flex min-h-0 flex-1 flex-col app-page-bg px-6 py-4">
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
           <FiltersPanel
             title="Mes projets"
             resultsLabel={loading ? "…" : `${items.length} projet${items.length !== 1 ? "s" : ""}`}
@@ -124,7 +124,7 @@ export function EmployeeProjects() {
             </div>
           </FiltersPanel>
 
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
             <EmployeeProjectsTable rows={items} loading={loading} onOpen={onOpen} />
           </div>
         </div>

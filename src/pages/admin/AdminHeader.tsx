@@ -92,7 +92,7 @@ export function AdminHeader({
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-[110]" onClick={() => setMenuOpen(false)} />
-            <div className="fixed left-3 right-3 top-[calc(5rem+env(safe-area-inset-top,0px)+8px)] z-[130] max-h-[min(70vh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-2xl border border-violet-100 bg-white p-2 shadow-2xl shadow-violet-200/50 sm:absolute sm:left-auto sm:right-0 sm:top-16 sm:max-h-none sm:min-w-[250px] sm:overflow-visible">
+            <div className="no-visible-scrollbar fixed left-3 right-3 top-[calc(5rem+env(safe-area-inset-top,0px)+8px)] z-[130] max-h-[min(70vh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-2xl border border-violet-100 bg-white p-2 shadow-2xl shadow-violet-200/50 sm:absolute sm:left-auto sm:right-0 sm:top-16 sm:max-h-none sm:min-w-[250px] sm:overflow-visible">
               <div className="flex flex-col gap-1">
                 <button
                   type="button"

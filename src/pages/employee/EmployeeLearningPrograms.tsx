@@ -45,7 +45,7 @@ export function EmployeeLearningPrograms() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-10">
+    <div className="w-full p-6 space-y-10">
       <header>
         <h1 className="text-2xl font-semibold text-slate-900">Formations guidées</h1>
         <p className="text-slate-600 mt-1 text-sm">

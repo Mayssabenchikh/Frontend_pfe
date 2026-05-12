@@ -126,15 +126,6 @@ function quizKindForSkill(skill?: EmployeeSkillDto | null): QuizStartResponse["q
   if (status === "EXTRACTED" || status === "QUIZ_PENDING") return "initial";
   return "progression";
 }
-function levelName(level?: number | null): string {
-  const value = Number(level ?? 0);
-  if (value >= 5) return "Expert";
-  if (value >= 4) return "Avancé";
-  if (value >= 3) return "Intermédiaire";
-  if (value >= 2) return "Junior";
-  if (value >= 1) return "Débutant";
-  return "À estimer";
-}
 function statusBadgeConfig(status: string, validatedLevel?: number | null): { label: string; className: string } {
   const raw = String(status ?? "").toUpperCase();
   const validated = Number(validatedLevel ?? 0) || 0;
@@ -168,6 +159,7 @@ export function EmployeeQuiz() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [startingSkillId, setStartingSkillId] = useState<string | null>(null);
   const [openedReviewQuestionId, setOpenedReviewQuestionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cooldownAlertMessage, setCooldownAlertMessage] = useState<string | null>(null);
@@ -356,7 +348,7 @@ export function EmployeeQuiz() {
       setCooldownAlertMessage([`Prochaine tentative autorisée après le ${formatFrenchDateTime(activeSkill.quizNextAllowedAt)}.`, "", `Après un score inférieur à 70 %, un délai de ${QUIZ_FAIL_COOLDOWN_DAYS} jours est obligatoire avant une nouvelle tentative.`].join("\n"));
       return;
     }
-    setError(null); setStarting(true);
+    setError(null); setStarting(true); setStartingSkillId(activeSkillId);
     const loadingStartedAt = Date.now();
     try {
       const res = await quizApi.startQuiz({ skillId: activeSkillId, skillName: activeSkill?.skillName || "Compétence", level: levelUsedForQuizStart(activeSkill), skillStatus: activeSkill?.status, quizKind: quizKindForSkill(activeSkill), questionCount: QUESTION_COUNT, timeLimitSeconds: TIME_LIMIT_SECONDS });
@@ -377,6 +369,7 @@ export function EmployeeQuiz() {
       const elapsed = Date.now() - loadingStartedAt;
       if (elapsed < MIN_START_LOADING_MS) await sleep(MIN_START_LOADING_MS - elapsed);
       setStarting(false);
+      setStartingSkillId(null);
     }
   }
 
@@ -494,13 +487,53 @@ export function EmployeeQuiz() {
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; }
 
-    .eq-wrap {  display: flex; flex: 1; flex-direction: column; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
-    .eq-body  { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 0 !important; }
+    .eq-wrap {  position: relative; display: flex; flex: 1; flex-direction: column; width: 100%; height: 100%; min-height: calc(100dvh - 7.5rem); overflow: hidden; }
+    .eq-body  { padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; padding-bottom: 0 !important; }
     .eq-body > *:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; }
     .eq-browser { display: flex; flex: 1; min-height: 0; flex-direction: column; }
     .eq-browser-main { flex: 1; min-height: 0; overflow-y: auto; padding-top: 4px; padding-bottom: 10px; }
     .eq-skills-grid { margin-bottom: 0 !important; }
     .eq-empty-wrap { margin-bottom: 0 !important; padding-bottom: 0 !important; }
+    .eq-in-progress {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      min-height: calc(100dvh - 8.5rem);
+      width: 100%;
+      max-width: 100%;
+    }
+    .eq-in-progress-inner {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+    }
+    .eq-in-progress-grid {
+      display: grid;
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      align-items: start;
+      gap: 14px;
+      padding: 8px 0 10px;
+    }
+    .eq-in-progress-main {
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .eq-question-card {
+      display: block;
+      min-height: 0;
+    }
+    .eq-options-stack {
+      display: block;
+    }
+    @media (min-width: 1280px) {
+      .eq-in-progress-grid { grid-template-columns: minmax(0, 1fr) 320px; }
+    }
 
     /* ── Animations ── */
     @keyframes eq-spin    { to { transform: rotate(360deg); } }
@@ -529,27 +562,27 @@ export function EmployeeQuiz() {
         linear-gradient(135deg, #FFFFFF 0%, #FAF8FF 42%, #F8FAFC 70%, #F0FDF4 100%);
       border: 1px solid rgba(221, 214, 254, 0.86);
       border-radius: 14px;
-      padding: 14px 16px;
-      box-shadow: 0 12px 28px rgba(76, 29, 149, 0.08), inset 0 0 0 5px rgba(255, 255, 255, 0.58);
+      padding: 10px 12px;
+      box-shadow: 0 8px 22px rgba(76, 29, 149, 0.07), inset 0 0 0 4px rgba(255, 255, 255, 0.58);
       animation: eq-fade-in 0.25s ease both;
     }
     /* ── Selected skill header ── */
-    .eq-sel-header { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #F0EEF9; margin-bottom: 16px; }
+    .eq-sel-header { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #F0EEF9; margin-bottom: 10px; }
     .eq-sel-avatar {
-      width: 46px; height: 46px; flex-shrink: 0; border-radius: 12px;
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px;
       background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 1px 4px rgba(109,40,217,0.12);
     }
-    .eq-sel-avatar img { width: 22px; height: 22px; object-fit: contain; }
-    .eq-sel-name { font-size: 18px; font-weight: 700; color: #1E1B4B; }
-    .eq-sel-meta { font-size: 14px; color: #7C3AED; margin-top: 3px; font-weight: 500; }
+    .eq-sel-avatar img { width: 18px; height: 18px; object-fit: contain; }
+    .eq-sel-name { font-size: 16px; font-weight: 700; color: #1E1B4B; }
+    .eq-sel-meta { font-size: 12px; color: #7C3AED; margin-top: 2px; font-weight: 500; }
 
     /* ── Stats row ── */
     .eq-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .eq-stat { border-radius: 10px; padding: 12px 14px; border: 1px solid transparent; }
-    .eq-stat-val { font-size: 22px; font-weight: 700; line-height: 1; }
-    .eq-stat-lbl { font-size: 12px; margin-top: 5px; font-weight: 500; opacity: 0.75; }
+    .eq-stat { border-radius: 9px; padding: 8px 10px; border: 1px solid transparent; }
+    .eq-stat-val { font-size: 18px; font-weight: 700; line-height: 1; }
+    .eq-stat-lbl { font-size: 11px; margin-top: 3px; font-weight: 500; opacity: 0.75; }
     .eq-stat.s-violet  { background: #EDE9FE; border-color: #DDD6FE; }
     .eq-stat.s-violet  .eq-stat-val { color: #5B21B6; }
     .eq-stat.s-violet  .eq-stat-lbl { color: #5B21B6; }
@@ -564,26 +597,26 @@ export function EmployeeQuiz() {
     .eq-stat.s-amber   .eq-stat-lbl { color: #92400E; }
 
     /* ── Info row ── */
-    .eq-info-row { display: flex; gap: 10px; margin-top: 12px; }
-    .eq-info-cell { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #FAFAFA; border: 1px solid #EAE7F8; border-radius: 10px; transition: border-color 0.15s; }
+    .eq-info-row { display: flex; gap: 8px; margin-top: 8px; }
+    .eq-info-cell { flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #FAFAFA; border: 1px solid #EAE7F8; border-radius: 9px; transition: border-color 0.15s; }
     .eq-info-cell:hover { border-color: #DDD6FE; }
-    .eq-info-ico { width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .eq-info-ico { width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
     .eq-info-ico.violet { background: #EDE9FE; }
     .eq-info-ico.teal   { background: #CFFAFE; }
     .eq-info-ico.violet svg { color: #6D28D9; width: 14px; height: 14px; }
     .eq-info-ico.teal   svg { color: #0891B2; width: 14px; height: 14px; }
-    .eq-info-lbl { font-size: 14px; font-weight: 600; color: #1E1B4B; }
-    .eq-info-sub { font-size: 12px; color: #6B7280; margin-top: 1px; }
+    .eq-info-lbl { font-size: 12px; font-weight: 600; color: #1E1B4B; }
+    .eq-info-sub { font-size: 11px; color: #6B7280; margin-top: 1px; }
 
     /* ── Buttons ── */
     .eq-btn-primary {
-      width: 100%; padding: 11px;
+      width: 100%; padding: 9px;
       background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
       color: #fff;
       border: none; border-radius: 10px;
       font-size: 14px; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 16px;
+      margin-top: 10px;
       transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
       box-shadow: 0 2px 8px rgba(109,40,217,0.22);
     }
@@ -774,7 +807,7 @@ export function EmployeeQuiz() {
     .eq-empty-action svg { width: 13px; height: 13px; }
 
     /* ── Skills grid ── */
-    .eq-skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .eq-skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
     @media (min-width: 1280px) {
       .eq-skills-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
@@ -782,33 +815,33 @@ export function EmployeeQuiz() {
       margin-top: auto;
       border-top: 1px solid rgba(139, 92, 246, 0.1);
       background: #fff;
-      padding: 8px 18px 10px;
+      padding: 6px 14px 8px;
       box-shadow: 0 -8px 18px rgba(109, 40, 217, 0.035);
     }
     .eq-skill-card {
       position: relative;
       overflow: hidden;
-      min-height: 205px;
+      min-height: 188px;
       padding: 14px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       gap: 10px;
       border: 1px solid rgba(221, 214, 254, 0.86);
-      border-radius: 18px;
+      border-radius: 15px;
       background:
         radial-gradient(circle at 12% 16%, rgba(124, 58, 237, 0.11), transparent 24%),
         radial-gradient(circle at 92% 18%, rgba(59, 130, 246, 0.08), transparent 27%),
         radial-gradient(circle at 96% 92%, rgba(16, 185, 129, 0.08), transparent 30%),
         linear-gradient(135deg, #FFFFFF 0%, #FAF8FF 42%, #F8FAFC 70%, #F0FDF4 100%);
-      box-shadow: 0 12px 28px rgba(76, 29, 149, 0.08), inset 0 0 0 5px rgba(255, 255, 255, 0.58);
+      box-shadow: 0 8px 22px rgba(76, 29, 149, 0.07), inset 0 0 0 4px rgba(255, 255, 255, 0.58);
       transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
     }
     .eq-skill-card::before {
       content: "";
       position: absolute;
-      inset: 6px;
-      border-radius: 16px;
+      inset: 5px;
+      border-radius: 13px;
       border: 1px solid rgba(255, 255, 255, 0.72);
       pointer-events: none;
     }
@@ -828,30 +861,30 @@ export function EmployeeQuiz() {
     }
     .eq-sk-top { display: flex; align-items: flex-start; justify-content: space-between; }
     .eq-sk-ico {
-      width: 46px; height: 46px; flex-shrink: 0; border-radius: 14px;
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 12px;
       background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 58%, #2563EB 100%);
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 12px 20px rgba(91, 33, 182, 0.22);
     }
-    .eq-sk-ico img { width: 25px; height: 25px; object-fit: contain; filter: brightness(0) invert(1); }
-    .eq-sk-ico svg { width: 23px; height: 23px; color: #FFFFFF; }
+    .eq-sk-ico img { width: 21px; height: 21px; object-fit: contain; filter: brightness(0) invert(1); }
+    .eq-sk-ico svg { width: 20px; height: 20px; color: #FFFFFF; }
     .eq-skill-card .eq-pill {
-      min-height: 30px;
-      padding: 6px 10px;
+      min-height: 24px;
+      padding: 4px 8px;
       border-radius: 999px;
       font-size: 11px;
       font-weight: 800;
       box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
     }
-    .eq-sk-name { font-size: 20px; font-weight: 900; color: #071452; line-height: 1.08; letter-spacing: 0; }
-    .eq-sk-lvl  { font-size: 12px; color: #5B36F2; margin-top: 5px; font-weight: 800; line-height: 1.35; }
+    .eq-sk-name { font-size: 17px; font-weight: 900; color: #071452; line-height: 1.08; letter-spacing: 0; }
+    .eq-sk-lvl  { font-size: 11px; color: #5B36F2; margin-top: 3px; font-weight: 800; line-height: 1.3; }
     .eq-sk-footer {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 8px;
+      gap: 6px;
+      padding: 6px;
       border: 1px solid rgba(221, 214, 254, 0.78);
-      border-radius: 14px;
+      border-radius: 12px;
       background: rgba(255, 255, 255, 0.66);
       box-shadow: 0 8px 20px rgba(76, 29, 149, 0.05);
     }
@@ -863,8 +896,8 @@ export function EmployeeQuiz() {
     }
     .eq-sk-metric-icon {
       display: inline-flex;
-      width: 26px;
-      height: 26px;
+      width: 22px;
+      height: 22px;
       flex-shrink: 0;
       align-items: center;
       justify-content: center;
@@ -872,19 +905,19 @@ export function EmployeeQuiz() {
       background: #EEF2FF;
       color: #4F46E5;
     }
-    .eq-sk-metric-icon svg { width: 13px; height: 13px; color: #4F46E5; }
-    .eq-sk-metric-val { font-size: 12px; font-weight: 900; color: #071452; line-height: 1.1; }
+    .eq-sk-metric-icon svg { width: 11px; height: 11px; color: #4F46E5; }
+    .eq-sk-metric-val { font-size: 11px; font-weight: 900; color: #071452; line-height: 1.1; }
     .eq-sk-metric-lbl { margin-top: 2px; font-size: 9px; font-weight: 700; color: #64709D; line-height: 1.1; }
     .eq-sk-unavailable {
       display: flex;
-      min-height: 44px;
+      min-height: 36px;
       flex-direction: row;
       align-items: center;
       justify-content: center;
       gap: 8px;
       overflow: hidden;
       border: 1.5px dashed #C4B5FD;
-      border-radius: 15px;
+      border-radius: 12px;
       background:
         radial-gradient(circle at 7% 78%, rgba(124, 58, 237, 0.11), transparent 26%),
         radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.08), transparent 28%),
@@ -894,8 +927,8 @@ export function EmployeeQuiz() {
     }
     .eq-sk-unavailable-icon {
       display: inline-flex;
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       align-items: center;
       justify-content: center;
       border-radius: 999px;
@@ -903,7 +936,7 @@ export function EmployeeQuiz() {
       color: #6D28D9;
     }
     .eq-sk-unavailable-icon svg { width: 13px; height: 13px; }
-    .eq-sk-unavailable-title { font-size: 12px; font-weight: 900; line-height: 1; }
+    .eq-sk-unavailable-title { font-size: 11px; font-weight: 900; line-height: 1; }
     .eq-sk-start {
       width: 100%; padding: 10px;
       background: linear-gradient(135deg, #6D28D9 0%, #4F46E5 68%, #0EA5E9 100%);
@@ -912,8 +945,44 @@ export function EmployeeQuiz() {
       transition: opacity 0.15s, box-shadow 0.15s;
       box-shadow: 0 10px 20px rgba(109, 40, 217, 0.22);
     }
+    .eq-sk-start .eq-start-btn-icon { margin-right: 6px; animation: eq-spin 0.8s linear infinite; }
     .eq-sk-start:hover:not(:disabled)  { opacity: 0.9; box-shadow: 0 3px 10px rgba(109,40,217,0.26); }
     .eq-sk-start:disabled { background: #F3F4F6; color: #9CA3AF; cursor: not-allowed; box-shadow: none; }
+    .eq-start-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(248, 250, 252, 0.72);
+      backdrop-filter: blur(10px);
+    }
+    .eq-start-loading-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 280px;
+      border: 1px solid rgba(196, 181, 253, 0.8);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.94);
+      padding: 18px 20px;
+      box-shadow: 0 20px 45px rgba(76, 29, 149, 0.16);
+    }
+    .eq-start-loading-icon {
+      display: inline-flex;
+      width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6D28D9, #4F46E5);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(109, 40, 217, 0.28);
+    }
+    .eq-start-loading-icon svg { animation: eq-spin 0.8s linear infinite; }
+    .eq-start-loading-title { font-size: 14px; font-weight: 800; color: #1E1B4B; }
+    .eq-start-loading-sub { margin-top: 2px; font-size: 12px; color: #7C3AED; }
     @media (max-width: 700px) {
       .eq-skills-grid { grid-template-columns: 1fr; }
       .eq-skill-card { min-height: 0; padding: 14px; border-radius: 18px; }
@@ -938,7 +1007,7 @@ export function EmployeeQuiz() {
     .eq-dot.cur  { background: #EDE9FE; border-color: #7C3AED; color: #5B21B6; }
 
     /* ── Page buttons ── */
-    .eq-page-btn { min-width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #E6E6F0; background: #fff; color: #4B5563; font-weight: 700; cursor: pointer; padding: 0 10px; }
+    .eq-page-btn { min-width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; border: 1px solid #E6E6F0; background: #fff; color: #4B5563; font-weight: 700; cursor: pointer; padding: 0 10px; }
     .eq-page-btn:hover { border-color: #C4B5FD; color: #6D28D9; }
     .eq-page-btn.active { background: #6D28D9; color: #fff; border-color: #6D28D9; }
     .eq-page-btn.disabled { opacity: 0.45; cursor: not-allowed; }
@@ -1054,6 +1123,19 @@ export function EmployeeQuiz() {
       <div className="eq-wrap">
         <div className="eq-body">
           {error && <AlertBanner message={error} />}
+          {starting && (
+            <div className="eq-start-loading" role="status" aria-live="polite">
+              <div className="eq-start-loading-card">
+                <span className="eq-start-loading-icon">
+                  <FontAwesomeIcon icon={faSpinner} />
+                </span>
+                <div>
+                  <div className="eq-start-loading-title">Préparation du quiz...</div>
+                  <div className="eq-start-loading-sub">Génération des questions en cours</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ══════════════ SETUP ══════════════ */}
           {phase === "setup" && (
@@ -1093,8 +1175,12 @@ export function EmployeeQuiz() {
                         disabled={loadingSkills || starting}
                         onClick={() => void startQuiz()}
                       >
-                        <FontAwesomeIcon icon={faWandSparkles} style={{ width: 14, height: 14 }} />
-                        Démarrer le quiz
+                        <FontAwesomeIcon
+                          icon={starting ? faSpinner : faWandSparkles}
+                          className={starting ? "animate-spin" : undefined}
+                          style={{ width: 14, height: 14 }}
+                        />
+                        {starting ? "Préparation..." : "Démarrer le quiz"}
                       </button>
                     )}
                   </div>
@@ -1214,6 +1300,7 @@ export function EmployeeQuiz() {
                           const iconUrl = resolveSkillIconUrl(skill);
                           const isSelected = selectedSkillId === skill.skillUuid;
                           const cooldown = isQuizCooldownActive(skill.quizNextAllowedAt);
+                          const isStartingThisSkill = starting && startingSkillId === skill.skillUuid;
                           return (
                             <div
                               key={`${skill.skillUuid}-${skill.uuid}`}
@@ -1271,7 +1358,8 @@ export function EmployeeQuiz() {
                                     void startQuiz(skill.skillUuid);
                                   }}
                                 >
-                                  Commencer
+                                  {isStartingThisSkill && <FontAwesomeIcon icon={faSpinner} className="eq-start-btn-icon" />}
+                                  {isStartingThisSkill ? "Préparation..." : "Commencer"}
                                 </button>
                               )}
                             </div>
@@ -1350,31 +1438,31 @@ export function EmployeeQuiz() {
 
           {/* ══════════════ IN PROGRESS ══════════════ */}
           {phase === "in_progress" && startData && currentQuestion && (
-            <section className="quiz-enter -m-3 app-page-bg text-slate-950">
-              <div>
-                <div className="grid w-full items-start gap-6 p-4 pb-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:p-8 xl:pb-6">
-                  <main className="space-y-4">
-                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
-                      <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
+            <section className="quiz-enter app-page-bg text-slate-950 eq-in-progress">
+              <div className="eq-in-progress-inner">
+                <div className="eq-in-progress-grid">
+                  <main className="eq-in-progress-main">
+                    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
                           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
                             <FontAwesomeIcon icon={faClipboardCheck} className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="text-xl font-bold">Session en cours</p>
+                            <p className="text-lg font-bold">Session en cours</p>
                             <p className="text-sm font-medium text-slate-500">{answeredCount} / {questions.length} réponses complétées</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                           <div className="text-right">
-                            <p className={["text-sm font-semibold uppercase tracking-wide", isUrgent ? "text-rose-600" : "text-rose-700"].join(" ")}>Temps restant</p>
+                            <p className={["text-xs font-semibold uppercase tracking-wide", isUrgent ? "text-rose-600" : "text-rose-700"].join(" ")}>Temps restant</p>
                             <p className={["font-mono text-3xl font-bold leading-none", isUrgent ? "text-rose-700" : "text-slate-950"].join(" ")}>{formatTime(remainingSeconds)}</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => setQuitConfirmOpen(true)}
                             disabled={submitting}
-                            className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-2xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
                             Quitter
@@ -1383,8 +1471,8 @@ export function EmployeeQuiz() {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
-                      <div className="flex flex-nowrap justify-between gap-1.5">
+                    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
+                      <div className="flex flex-nowrap justify-between gap-2">
                         {questions.map((q, index) => {
                           const answered = Boolean(answers[q.id]);
                           const marked = Boolean(bookmarkedQuestions[q.id]);
@@ -1414,7 +1502,7 @@ export function EmployeeQuiz() {
                           );
                         })}
                       </div>
-                      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                      <div className="mt-3 h-1 overflow-hidden rounded-full bg-slate-200">
                         <div
                           className="h-full rounded-full bg-violet-700 transition-all duration-300"
                           style={{ width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%` }}
@@ -1422,33 +1510,33 @@ export function EmployeeQuiz() {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-5 shadow-sm shadow-violet-100/70">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="eq-question-card rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-5 shadow-sm shadow-violet-100/70">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-violet-700 px-3.5 py-1.5 text-sm font-semibold text-white">Question {activeQuestion + 1} / {questions.length}</span>
-                          <span className="rounded-full border border-violet-200 bg-slate-100 px-3.5 py-1.5 text-sm font-semibold text-slate-700">{currentQuestion.category || "Compréhension"}</span>
+                          <span className="rounded-full bg-violet-700 px-4 py-1.5 text-sm font-semibold text-white">Question {activeQuestion + 1} / {questions.length}</span>
+                          <span className="rounded-full border border-violet-200 bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-700">{currentQuestion.category || "Compréhension"}</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => toggleBookmark(currentQuestion.id)}
                           aria-pressed={currentQuestionMarked}
                           className={[
-                            "inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition",
+                            "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition",
                             currentQuestionMarked
                               ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
                               : "text-slate-700 hover:bg-slate-100",
                           ].join(" ")}
                         >
-                          <FontAwesomeIcon icon={faBookmark} className="h-5 w-5" />
+                          <FontAwesomeIcon icon={faBookmark} className="h-4 w-4" />
                           {currentQuestionMarked ? "Marqué" : "Marquer"}
                         </button>
                       </div>
 
-                      <h2 className="mt-6 text-xl font-bold leading-snug tracking-tight text-slate-950 md:text-2xl">
+                      <h2 className="mt-4 text-xl font-bold leading-snug tracking-tight text-slate-950 md:text-2xl">
                         {currentQuestion.question}
                       </h2>
 
-                      <div key={`options-${currentQuestion.id}`} className="quiz-question-swap mt-5 space-y-3">
+                      <div key={`options-${currentQuestion.id}`} className="quiz-question-swap eq-options-stack mt-4 space-y-3">
                         {currentQuestion.options.map((option) => {
                           const selected = answers[currentQuestion.id] === option.key;
                           return (
@@ -1457,7 +1545,7 @@ export function EmployeeQuiz() {
                               type="button"
                               onClick={() => pickAnswer(currentQuestion.id, option.key)}
                               className={[
-                                "group flex w-full items-center gap-4 rounded-xl border px-4 py-3.5 text-left transition-all duration-150",
+                                "group flex w-full items-center gap-4 rounded-xl border px-4 py-4 text-left transition-all duration-150",
                                 selected
                                   ? "border-violet-700 bg-violet-50 shadow-sm ring-2 ring-violet-500"
                                   : "border-violet-100 bg-white/90 hover:border-violet-400 hover:bg-violet-50/60",
@@ -1474,19 +1562,19 @@ export function EmployeeQuiz() {
                               <span className={["min-w-0 flex-1 text-base font-semibold leading-relaxed md:text-lg", selected ? "text-violet-800" : "text-slate-800"].join(" ")}>
                                 {option.text}
                               </span>
-                              {selected && <FontAwesomeIcon icon={faCircleCheck} className="h-6 w-6 shrink-0 text-violet-700" />}
+                              {selected && <FontAwesomeIcon icon={faCircleCheck} className="h-5 w-5 shrink-0 text-violet-700" />}
                             </button>
                           );
                         })}
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <button
                         type="button"
                         onClick={() => setActiveQuestion((v) => Math.max(0, v - 1))}
                         disabled={activeQuestion === 0}
-                        className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-6 py-3 text-base font-bold text-slate-700 shadow-sm transition hover:border-violet-400 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-white px-5 py-3 text-base font-bold text-slate-700 shadow-sm transition hover:border-violet-400 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <FontAwesomeIcon icon={faChevronLeft} className="h-4 w-4" />
                         Précédent
@@ -1495,7 +1583,7 @@ export function EmployeeQuiz() {
                         type="button"
                         onClick={() => setActiveQuestion((v) => Math.min(questions.length - 1, v + 1))}
                         disabled={activeQuestion === questions.length - 1}
-                        className="px-6 py-3 text-base font-semibold text-slate-700 transition hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-2xl px-5 py-3 text-base font-semibold text-slate-700 transition hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Sauter
                       </button>
@@ -1506,7 +1594,7 @@ export function EmployeeQuiz() {
                           setActiveQuestion((v) => Math.min(questions.length - 1, v + 1));
                         }}
                         disabled={submitting || (!isLastQuestion && !hasCurrentAnswer)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-8 py-3 text-base font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-violet-700 px-6 py-3 text-base font-bold text-white shadow-md shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
                       >
                         {submitting ? (
                           <>
@@ -1523,17 +1611,13 @@ export function EmployeeQuiz() {
                     </div>
                   </main>
 
-                  <aside className="space-y-4 self-start">
-                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
-                      <div className="flex items-center gap-3">
-                        <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4 text-violet-700" />
-                        <h3 className="text-xl font-bold">Aperçu</h3>
+                  <aside className="min-w-0 space-y-3 self-start">
+                    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
+                      <div className="flex items-center gap-2">
+                        <FontAwesomeIcon icon={faChartSimple} className="h-5 w-5 text-violet-700" />
+                        <h3 className="text-lg font-bold">Aperçu</h3>
                       </div>
-                      <div className="mt-4 space-y-3">
-                        <div className="flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2">
-                          <span className="text-base font-medium text-slate-600">Niveau estimé</span>
-                          <span className="rounded-md bg-orange-100 px-3 py-1 text-sm font-semibold text-slate-900">{levelName(startData.level)}</span>
-                        </div>
+                      <div className="mt-3 space-y-2">
                         <div className="flex items-center justify-between text-base">
                           <span className="font-medium text-slate-600">Réponses données</span>
                           <span className="font-mono text-2xl font-bold text-emerald-600">{String(answeredCount).padStart(2, "0")}</span>
@@ -1549,19 +1633,19 @@ export function EmployeeQuiz() {
                       </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-2xl bg-violet-700 p-4 text-white shadow-lg shadow-violet-200">
-                      <div className="flex items-center gap-3">
+                    <div className="overflow-hidden rounded-xl bg-violet-700 p-4 text-white shadow-md shadow-violet-200">
+                      <div className="flex items-center gap-2">
                         <FontAwesomeIcon icon={faShieldHalved} className="h-5 w-5" />
-                        <h3 className="text-xl font-bold">Prêt à finir ?</h3>
+                        <h3 className="text-lg font-bold">Prêt à finir ?</h3>
                       </div>
-                      <p className="mt-3 text-sm font-medium leading-relaxed text-violet-50">
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-violet-50">
                         Vous pouvez revoir vos réponses à tout moment avant de soumettre définitivement votre évaluation.
                       </p>
                       <button
                         type="button"
                         onClick={handleSubmit}
                         disabled={submitting}
-                        className="mt-4 w-full rounded-xl bg-white px-4 py-3 text-base font-bold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:bg-violet-100"
+                        className="mt-3 w-full rounded-2xl bg-white px-4 py-2.5 text-base font-bold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:bg-violet-100"
                       >
                         {submitting ? "Soumission..." : "Soumettre le quiz"}
                       </button>
@@ -1574,8 +1658,8 @@ export function EmployeeQuiz() {
 
           {/* ══════════════ SUBMITTED ══════════════ */}
           {phase === "submitted" && result && (
-            <section className="quiz-enter space-y-4 pb-5">
-              <div className="quiz-enter quiz-enter-delay-1 rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 px-5 py-6 shadow-sm shadow-violet-100/60">
+            <section className="quiz-enter space-y-5 pb-5">
+              <div className="quiz-enter quiz-enter-delay-1 rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/80 px-6 py-6 shadow-lg shadow-violet-100/60">
                   <div className="grid gap-5 md:grid-cols-[132px_minmax(0,1fr)] md:items-center">
                   <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-white">
                     <div className="relative h-28 w-28">
@@ -1605,7 +1689,7 @@ export function EmployeeQuiz() {
                         <h2 className="text-2xl font-bold tracking-tight text-slate-900">Résultat du quiz</h2>
                         <span
                           className={[
-                            "rounded px-2.5 py-1 text-xs font-semibold uppercase tracking-wide",
+                            "rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide",
                             passed ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
                           ].join(" ")}
                         >
@@ -1623,7 +1707,7 @@ export function EmployeeQuiz() {
                       <button
                         type="button"
                         onClick={resetFlow}
-                        className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-100"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-100"
                       >
                         <FontAwesomeIcon icon={faWandSparkles} className="h-4 w-4" />
                         Démarrer nouveau quiz
@@ -1633,49 +1717,13 @@ export function EmployeeQuiz() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-emerald-50 text-emerald-600">
-                      <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Correctes</p>
-                      <p className="text-xl font-bold leading-tight text-slate-900">{result.result?.correctAnswers ?? 0}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-slate-50 text-slate-500">
-                      <FontAwesomeIcon icon={faClipboardCheck} className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Questions</p>
-                      <p className="text-xl font-bold leading-tight text-slate-900">{questions.length}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-4 shadow-sm shadow-violet-100/60">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-violet-50 text-violet-700">
-                      <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Niveau</p>
-                      <p className="text-xl font-bold leading-tight text-slate-900">{levelName(result.level)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <div className={["grid gap-4", result.nextAllowedAt ? "lg:grid-cols-2" : "lg:grid-cols-[minmax(0,1fr)_auto]"].join(" ")}>
                 <div
                   className={[
-                    "border-l-4 p-4",
+                    "rounded-3xl border border-l-4 p-5 shadow-sm",
                     result.passed
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-800"
-                      : "border-rose-500 bg-rose-50 text-rose-800",
+                      ? "border-emerald-200 border-l-emerald-500 bg-gradient-to-br from-emerald-50 to-white text-emerald-800 shadow-emerald-100/70"
+                      : "border-rose-200 border-l-rose-500 bg-gradient-to-br from-rose-50 to-white text-rose-800 shadow-rose-100/70",
                   ].join(" ")}
                 >
                   <div className="flex items-start gap-3">
@@ -1698,7 +1746,7 @@ export function EmployeeQuiz() {
                 </div>
 
                 {result.nextAllowedAt && (
-                  <div className="border-l-4 border-amber-500 bg-amber-50 p-4 text-amber-800">
+                  <div className="rounded-3xl border border-l-4 border-amber-200 border-l-amber-500 bg-gradient-to-br from-amber-50 to-white p-5 text-amber-800 shadow-sm shadow-amber-100/70">
                     <div className="flex items-start gap-3">
                       <FontAwesomeIcon icon={faCalendarDays} className="mt-0.5 h-4 w-4" />
                       <div>
@@ -1717,7 +1765,7 @@ export function EmployeeQuiz() {
               </div>
 
               {(result.feedbackStatus === "PENDING" || result.feedbackStatus === "GENERATING") && (
-                <div className="rounded-2xl border border-violet-300 bg-violet-50/70 p-4">
+                <div className="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5 shadow-sm shadow-violet-100/70">
                   <p className="text-base font-semibold text-violet-800">Génération du feedback en cours</p>
                   <p className="mt-1 text-sm text-violet-700/90">
                     Le score est déjà disponible. Le détail IA continue de se compléter automatiquement.
@@ -1725,7 +1773,7 @@ export function EmployeeQuiz() {
                 </div>
               )}
               {result.feedbackStatus === "FAILED" && (
-                <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4">
+                <div className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm shadow-amber-100/70">
                   <p className="text-base font-semibold text-amber-800">Feedback IA indisponible</p>
                   <p className="mt-1 text-sm text-amber-700/90">
                     Le détail local reste visible. Vous pouvez réessayer plus tard.
@@ -1746,8 +1794,8 @@ export function EmployeeQuiz() {
                       type="button"
                       onClick={() => setOpenedReviewQuestionId((prev) => prev === card.questionId ? null : card.questionId)}
                       className={[
-                        "w-full rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/60 p-4 text-left transition-all hover:border-violet-300",
-                        expanded ? "shadow-md" : "shadow-sm",
+                        "w-full rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 p-5 text-left transition-all hover:border-violet-300 hover:shadow-md",
+                        expanded ? "shadow-lg shadow-violet-100/80 ring-1 ring-violet-100" : "shadow-sm shadow-violet-100/60",
                       ].join(" ")}
                     >
                       <div className="flex items-start justify-between gap-4">
@@ -1761,7 +1809,7 @@ export function EmployeeQuiz() {
                         </div>
                         <span
                           className={[
-                            "shrink-0 rounded px-3 py-1 text-xs font-semibold uppercase tracking-wide",
+                            "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide",
                             card.isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
                           ].join(" ")}
                         >
@@ -1771,13 +1819,13 @@ export function EmployeeQuiz() {
 
                       {expanded && (
                         <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
-                          <div className="rounded border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
                             <span className="mr-2">✓</span>
                             <span className="font-bold">Bonne réponse :</span> {card.correctText}
                           </div>
                           <div
                             className={[
-                              "rounded border px-4 py-3 text-sm font-semibold",
+                              "rounded-2xl border px-4 py-3 text-sm font-semibold",
                               card.isCorrect
                                 ? "border-slate-100 bg-white text-slate-600"
                                 : "border-rose-100 bg-rose-50 text-rose-700",
@@ -1797,7 +1845,7 @@ export function EmployeeQuiz() {
                   );
                 })}
                 {reviewTotalPages > 1 && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/60 px-4 py-3 shadow-sm shadow-violet-100/60">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-slate-50 to-violet-50/70 px-5 py-4 shadow-sm shadow-violet-100/60">
                     <p className="text-sm font-semibold text-slate-600">
                       Page {reviewPage + 1} sur {reviewTotalPages}
                       <span className="ml-2 text-slate-400">
@@ -1812,7 +1860,7 @@ export function EmployeeQuiz() {
                           else setReviewPage((p) => Math.max(0, p - 1));
                         }}
                         disabled={(result.questionPage ? !result.questionPage.hasPrevious : reviewPage === 0) || submitting || reviewLoading}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-45"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-45"
                       >
                         <FontAwesomeIcon icon={faChevronLeft} className="h-3.5 w-3.5" />
                         Précédent
@@ -1864,7 +1912,7 @@ export function EmployeeQuiz() {
                           else setReviewPage((p) => Math.min(reviewTotalPages - 1, p + 1));
                         }}
                         disabled={(result.questionPage ? !result.questionPage.hasNext : reviewPage >= reviewTotalPages - 1) || submitting || reviewLoading}
-                        className="inline-flex items-center gap-2 rounded-lg bg-violet-700 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-45"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-violet-700 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-45"
                       >
                         Suivant
                         <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5" />

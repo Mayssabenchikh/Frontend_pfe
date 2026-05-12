@@ -6,6 +6,11 @@
 
 @layer base {
   * { box-sizing: border-box; }
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
   :root {
     --app-bg: radial-gradient(circle at 16% -10%, rgba(167, 139, 250, 0.1), transparent 40%),
       radial-gradient(circle at 84% 4%, rgba(129, 140, 248, 0.07), transparent 36%),
@@ -21,6 +26,7 @@
     background: var(--app-bg);
     color: #1e293b;
     min-height: 100vh;
+    overflow-x: hidden;
   }
   html {
     scrollbar-gutter: auto;
@@ -191,21 +197,31 @@
 
 /* Admin layout root */
 .admin-layout {
-  display: flex;
-  height: 100vh;
-  height: 100dvh;
+  display: block;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--app-bg);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .app-page-bg {
   background: var(--app-bg);
 }
 
+.no-visible-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-visible-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .admin-layout.dashboard-page {
   background: #ffffff;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .admin-layout.dashboard-page .admin-content,
@@ -224,7 +240,8 @@
   min-width: 280px;
   max-width: min(280px, 100vw - 24px);
   flex-shrink: 0;
-  position: sticky;
+  position: fixed;
+  left: 0;
   top: 0;
   z-index: 140;
   height: 100vh;
@@ -247,16 +264,7 @@
   border-bottom: 1px solid rgba(221, 214, 254, 0.72);
 }
 .admin-sidebar nav {
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(124, 58, 237, 0.28) transparent;
-}
-.admin-sidebar nav::-webkit-scrollbar {
-  width: 5px;
-}
-.admin-sidebar nav::-webkit-scrollbar-thumb {
-  background: rgba(124, 58, 237, 0.24);
-  border-radius: 999px;
+  overflow: visible;
 }
 .admin-sidebar.collapsed {
   width: 72px;
@@ -280,24 +288,27 @@
 
 /* Main content area */
 .admin-content {
-  flex: 1;
-  width: 100%;
+  width: auto;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
+  margin-left: 280px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: visible;
   min-width: 0;
 }
 
 .admin-layout.dashboard-page .admin-content {
-  overflow: hidden;
+  overflow: visible;
+}
+
+.admin-layout[data-sidebar-collapsed] .admin-content {
+  margin-left: 72px;
 }
 
 .admin-layout.dashboard-page .admin-content > main {
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 /* Décalage sous le header fixe + encoche (notch) */
@@ -305,24 +316,16 @@
   padding-top: calc(5rem + env(safe-area-inset-top, 0px));
   width: 100%;
   max-width: none;
-  min-height: 0;
+  min-height: 100vh;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(124, 58, 237, 0.28) transparent;
-}
-.admin-content > main::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.admin-content > main::-webkit-scrollbar-thumb {
-  background: rgba(124, 58, 237, 0.24);
-  border-radius: 999px;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 /* Header spans the full viewport width */
 .admin-header-fixed {
   position: fixed;
-  top: 0; right: 0; left: 0;
+  top: 0; right: 0; left: 280px;
   z-index: 120;
   height: 80px;
   display: flex;
@@ -344,22 +347,14 @@
 /* Fil d’Ariane : défilement horizontal sur petits écrans (libellés longs) */
 .admin-breadcrumbs {
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
   background: transparent;
 }
 
 .admin-layout.dashboard-page .admin-breadcrumbs {
   background: #fff;
 }
-.admin-breadcrumbs::-webkit-scrollbar {
-  height: 4px;
-}
-.admin-breadcrumbs::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.35);
-  border-radius: 999px;
-}
 .admin-layout[data-sidebar-collapsed] .admin-header-fixed {
-  left: 0;}
+  left: 72px;}
 
 /* Hamburger button — hidden on desktop */
 .hamburger-btn {
@@ -392,29 +387,9 @@
   overflow: visible;
 }
 
-/* Ne pas forcer overflow ici : TrainingManagerPage applique overflow-auto sur cette zone ;
-   une règle overflow:visible écrasait les utilitaires Tailwind et bloquait le scroll de page. */
-.tm-scroll-area::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.tm-scroll-area::-webkit-scrollbar-thumb {
-  background: rgba(124, 58, 237, 0.24);
-  border-radius: 999px;
-}
-
-/* Lecteur formation : zones défilantes (plan modules, contenu) — barre fine visible */
+/* Lecteur formation : laisse le scroll vertical au navigateur. */
 .learning-player-inner-scroll {
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(124, 58, 237, 0.28) transparent;
-}
-.learning-player-inner-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-.learning-player-inner-scroll::-webkit-scrollbar-thumb {
-  background: rgba(124, 58, 237, 0.24);
-  border-radius: 999px;
 }
 
 .tm-section {
@@ -574,10 +549,9 @@
   .admin-sidebar.collapsed .admin-nav-item { justify-content: flex-start; padding-left: 14px; padding-right: 14px; }
   /* Sidebar becomes a drawer */
   .admin-sidebar {
-    position: fixed;
     top: 0; left: 0;
     height: 100vh;
-    z-index: 30;
+    z-index: 140;
     transform: translateX(-100%);
   }
   .admin-sidebar.open {
@@ -586,6 +560,14 @@
   }
   .sidebar-backdrop.open {
     display: block;
+  }
+
+  .admin-content {
+    margin-left: 0;
+  }
+
+  .admin-layout[data-sidebar-collapsed] .admin-content {
+    margin-left: 0;
   }
 
   /* Header spans full width */

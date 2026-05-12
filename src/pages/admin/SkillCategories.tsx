@@ -154,7 +154,7 @@ export function SkillCategories() {
         .fade-up { animation: fadeUp 0.4s ease both; }
       `}</style>
 
-      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg">
+      <section className="relative flex min-h-[calc(100dvh-7.5rem)] w-full flex-col overflow-visible app-page-bg">
         {/* ── Toolbar ── */}
         <div className="relative z-10 flex flex-wrap items-center gap-3 border-b border-violet-500/10 px-6 py-2">
           {/* Left: search */}
@@ -198,7 +198,7 @@ export function SkillCategories() {
         {/* ──────────────────────────────────────────
             Content
         ────────────────────────────────────────── */}
-        <main className="relative z-10 flex-1 overflow-auto px-6 py-2">
+        <main className="relative z-10 w-full flex-1 overflow-visible px-6 py-2">
 
           {/* Loading skeletons (grille de cartes) */}
           {loading && (
@@ -267,7 +267,7 @@ export function SkillCategories() {
 
         {/* ── Pagination (fixée en bas) ── */}
         {!loading && !error && categories.length > 0 && pageData && (
-          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-violet-500/10 px-6 pb-3 pt-2">
+          <div className="mt-auto flex shrink-0 items-center justify-between gap-3 border-t border-violet-500/10 px-6 pb-3 pt-2">
             <p className="text-sm text-slate-400">
               Page {page + 1} sur {pageData.totalPages}
               {" · "}

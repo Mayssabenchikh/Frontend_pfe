@@ -395,7 +395,7 @@ export function UserDetailPage({ source, refreshKey = 0, onAdminSaved }: Props) 
   const labelClass = "text-xs font-semibold uppercase tracking-wide text-slate-400";
 
   return (
-    <div className="min-h-full overflow-y-auto bg-[#fbfaff] px-4 py-5 sm:px-6 lg:px-8">
+    <div className="w-full bg-[#fbfaff] px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1320px] space-y-5">
         <div className="flex flex-wrap items-center gap-3 px-0 py-0">
           <button

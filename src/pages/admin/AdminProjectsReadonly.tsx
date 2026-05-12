@@ -158,9 +158,9 @@ export function AdminProjectsReadonly() {
   );
 
   return (
-    <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-6 py-4">
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+    <section className="flex h-[calc(100dvh-7.5rem)] w-full flex-col overflow-hidden app-page-bg">
+      <div className="flex min-h-0 flex-1 flex-col app-page-bg px-6 py-4">
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
           <FiltersPanel
             title="Projets"
             resultsLabel={loading ? "…" : `${items.length} résultat${items.length !== 1 ? "s" : ""}`}
@@ -241,9 +241,9 @@ export function AdminProjectsReadonly() {
             </div>
           </FiltersPanel>
 
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
             <style>{PROJECTS_AG_THEME}</style>
-            <div className="ag-theme-quartz ag-theme-projects absolute inset-0">
+            <div className="ag-theme-quartz ag-theme-projects h-full w-full">
               <AgGridReact<ProjectDto>
                 ref={gridRef}
                 theme="legacy"
@@ -257,8 +257,10 @@ export function AdminProjectsReadonly() {
                 paginationPageSize={8}
                 paginationPageSizeSelector={false}
                 suppressCellFocus
+                suppressHorizontalScroll
                 rowHeight={56}
                 headerHeight={42}
+                domLayout="normal"
                 noRowsOverlayComponent={() => (
                   <div className="flex flex-col items-center gap-3 py-20">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/15 bg-violet-500/10 shadow-sm">

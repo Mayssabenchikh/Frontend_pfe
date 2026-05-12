@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBookmark,
-  faFlag,
   faCommentDots,
   faEye,
   faThumbtack,
@@ -22,7 +21,6 @@ type Props = {
   post: ForumPostSummaryDto;
   onVote: (uuid: string, t: ForumVoteType) => void;
   onSave: (uuid: string) => void;
-  onReport?: (post: ForumPostSummaryDto) => void;
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -70,7 +68,7 @@ function getAuthorInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function ForumPostCard({ post, onVote, onSave, onReport }: Props) {
+export function ForumPostCard({ post, onVote, onSave }: Props) {
   const typeIcon = TYPE_ICON[post.type] ?? faLayerGroup;
   const typeColor = TYPE_COLOR[post.type] ?? "bg-slate-100 text-slate-700";
 
@@ -182,16 +180,6 @@ export function ForumPostCard({ post, onVote, onSave, onReport }: Props) {
               <FontAwesomeIcon icon={faBookmark} className="h-3.5 w-3.5" />
               {post.savedByMe ? <span>Enregistré</span> : null}
             </button>
-            {onReport ? (
-              <button
-                type="button"
-                onClick={() => onReport(post)}
-                title="Signaler"
-                className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-              >
-                <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
-              </button>
-            ) : null}
           </div>
         </div>
       </div>

@@ -561,8 +561,8 @@ export function RoleProfilePage({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden app-page-bg font-['Inter',sans-serif]">
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
+    <div className="flex w-full flex-col overflow-visible app-page-bg font-['Inter',sans-serif]">
+      <div className="mx-auto flex w-full max-w-none flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
         <header className="relative shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-white px-6 py-5 shadow-[0_10px_30px_rgba(79,70,229,0.06)]">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-700 via-fuchsia-500 to-indigo-500" />
           <div className="pointer-events-none absolute right-0 top-0 h-28 w-56 bg-gradient-to-l from-violet-50 to-transparent" />
@@ -627,8 +627,8 @@ export function RoleProfilePage({
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-hidden luxury-animate-in" style={{ animationDelay: "0.1s" }}>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <main className="w-full overflow-visible luxury-animate-in" style={{ animationDelay: "0.1s" }}>
+            <div className="w-full overflow-visible">
               {section === "personal" && (
                 <PersonalSection
                   firstName={editedFirstName || firstName}
@@ -806,7 +806,7 @@ export function RoleCvExtractionPage({ config }: { config: RoleProfileConfig }) 
   }
 
   return (
-    <div className="min-h-full w-full overflow-auto px-4 py-7 sm:px-6 lg:px-9">
+    <div className="w-full overflow-visible px-4 py-7 sm:px-6 lg:px-9">
       <div className="flex w-full flex-col gap-7">
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">

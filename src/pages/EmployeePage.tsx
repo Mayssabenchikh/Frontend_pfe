@@ -81,21 +81,21 @@ export default function EmployeePage() {
         />
       )}
     >
-        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-auto" : "overflow-hidden"}`}>
+        <main className="flex min-w-0 flex-1 flex-col overflow-visible">
           <EmployeeBreadcrumbs />
           <div
             className={
               isProfilePage
-                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
+                ? "flex w-full flex-col overflow-visible app-page-bg px-4 pb-4 pt-6 md:px-6 md:pb-6 md:pt-8"
                 : isCvExtractionPage || isQuizPage
-                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
+                ? "flex w-full flex-col overflow-visible app-page-bg px-0 py-0"
                 : isAssignmentsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
+                  ? "flex w-full flex-col overflow-visible app-page-bg px-0 py-0"
                 : isLearningPage || isRecommendationsPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-auto overscroll-contain app-page-bg px-4 py-4 sm:px-6 sm:py-6"
+                  ? "flex w-full flex-col overflow-visible app-page-bg px-4 py-4 sm:px-6 sm:py-6"
                 : isProjectsPage || isChatPage
-                  ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg px-0 py-0"
-                : `flex min-h-0 min-w-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "dashboard-padding overflow-auto overscroll-contain"}`
+                  ? "flex w-full flex-col overflow-visible app-page-bg px-0 py-0"
+                : `flex min-w-0 flex-col ${isDashboardRoute ? "overflow-visible" : "dashboard-padding overflow-visible"}`
             }
           >
             <Outlet context={{ employeeAvatarUrl: avatarUrl, employeeName: displayName, employeeEmail: email, currentPath: location.pathname, onAvatarUpdate: setAvatarUrl }} />

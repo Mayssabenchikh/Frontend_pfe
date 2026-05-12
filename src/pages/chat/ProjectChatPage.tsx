@@ -248,7 +248,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-100/80 via-slate-50 to-white px-0 pb-0 pt-0 sm:px-3 sm:pb-3 md:px-5">
+    <div className="flex h-[calc(100dvh-7.5rem)] min-h-0 w-full flex-col overflow-hidden bg-gradient-to-b from-slate-100/80 via-slate-50 to-white px-0 pb-0 pt-0 sm:px-3 sm:pb-3 md:px-5">
       <ProjectChatLayout
         sidebarOpen={mobileProjectListOpen}
         onCloseSidebar={() => setMobileProjectListOpen(false)}
@@ -265,7 +265,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
         content={
           selectedProject ? (
             loadingMessages ? (
-              <div className="flex flex-1 items-center justify-center text-sm text-slate-500">Chargement des messages...</div>
+              <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-slate-500">Chargement des messages...</div>
             ) : (
               <ProjectChat
                 project={selectedProject}
@@ -283,7 +283,7 @@ export default function ProjectChatPage({ scope }: { scope: "manager" | "employe
               />
             )
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-slate-50">
+            <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50">
               <ChatEmptyState message={projects.length ? "Sélectionnez un projet pour ouvrir la conversation." : "Aucun projet disponible pour le chat."} />
             </div>
           )

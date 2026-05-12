@@ -16,7 +16,6 @@ import { ForumPostCard } from "../../components/forum/ForumPostCard";
 import { ForumPostEditor } from "../../components/forum/ForumPostEditor";
 import { ForumEmptyState } from "../../components/forum/ForumEmptyState";
 import { ForumLoadingState } from "../../components/forum/ForumLoadingState";
-import { ForumReportModal } from "../../components/forum/ForumReportModal";
 import type { ForumCategoryDto } from "../../types/forum";
 
 export function ForumPage() {
@@ -34,7 +33,6 @@ export function ForumPage() {
   const [tag, setTag] = useState("");
   const [sort, setSort] = useState<ForumPostsSort>("new");
   const [editorOpen, setEditorOpen] = useState(false);
-  const [reportPost, setReportPost] = useState<ForumPostSummaryDto | null>(null);
 
   const loadCategories = useCallback(() => {
     forumService.getCategories().then((r) => setCategories(r.data)).catch(() => setCategories([]));
@@ -221,7 +219,7 @@ export function ForumPage() {
             {!loading && pinnedFirst.length > 0 ? (
               <div className="space-y-3">
                 {pinnedFirst.map((p) => (
-                  <ForumPostCard key={p.uuid} post={p} onVote={onVote} onSave={onSave} onReport={setReportPost} />
+                  <ForumPostCard key={p.uuid} post={p} onVote={onVote} onSave={onSave} />
                 ))}
               </div>
             ) : null}
@@ -260,7 +258,7 @@ export function ForumPage() {
                 {[
                   "Liez vos questions à une formation ou compétence.",
                   "Votez pour faire remonter les meilleures réponses.",
-                  "Signalez les contenus inappropriés.",
+                  "Gardez des échanges respectueux et utiles.",
                   "Utilisez des tags pour faciliter la recherche.",
                 ].map((tip) => (
                   <li key={tip} className="flex items-start gap-2">
@@ -281,15 +279,6 @@ export function ForumPage() {
         onCreated={() => void loadPosts()}
         createPost={async (payload) => {
           await forumService.createPost(payload);
-        }}
-      />
-      <ForumReportModal
-        open={reportPost !== null}
-        title="Signaler une publication"
-        onClose={() => setReportPost(null)}
-        onSubmit={async (reason, details) => {
-          if (!reportPost) return;
-          await forumService.reportPost(reportPost.uuid, { reason, details });
         }}
       />
     </>

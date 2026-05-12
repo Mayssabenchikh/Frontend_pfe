@@ -171,7 +171,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5 sm:py-4">
+        <div className="no-visible-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5 sm:py-4">
           {!row ? (
             <p className="text-sm text-slate-500">Aucun employé sélectionné.</p>
           ) : (

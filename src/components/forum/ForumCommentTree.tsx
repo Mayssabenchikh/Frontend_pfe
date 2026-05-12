@@ -11,7 +11,6 @@ type Props = {
   onVote: (commentUuid: string, t: ForumVoteType) => void;
   onReply: (parentUuid: string, content: string) => Promise<void>;
   onAccept?: (commentUuid: string) => void;
-  onReport?: (comment: ForumCommentDto) => void;
 };
 
 export function ForumCommentTree({
@@ -24,7 +23,6 @@ export function ForumCommentTree({
   onVote,
   onReply,
   onAccept,
-  onReport,
 }: Props) {
   const itemProps = {
     postType,
@@ -35,7 +33,6 @@ export function ForumCommentTree({
     onVote,
     onReply,
     onAccept,
-    onReport,
   };
   return (
     <ul className="space-y-3">

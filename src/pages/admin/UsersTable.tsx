@@ -208,38 +208,16 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
   }
 
   return (
-    /*
-     * Conteneur racine : flex colonne, prend toute la hauteur disponible.
-     * Le parent DOIT avoir une hauteur définie (h-full / flex-1) pour que
-     * la cascade height:100% fonctionne jusqu'à AG Grid.
-     */
-    <div className="flex h-full w-full flex-col overflow-hidden">
-
-      {/* ── Zone tableau (flex-1 = tout l'espace restant) ── */}
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       {loading ? (
-        <div className="flex-1 overflow-auto  pt-4">
+        <div className="min-h-0 flex-1 overflow-hidden pt-4">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : (
-        /*
-         * flex-1 + min-h-0 : occupe tout l'espace vertical restant après
-         * la barre de filtres, sans jamais déborder du parent.
-         * overflow-hidden évite tout scrollbar parasite sur ce conteneur.
-         */
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
           <style>{PROJECTS_AG_THEME}</style>
 
-          {/*
-           * Technique "absolute fill" : le div parent est relative + flex-1,
-           * l'ag-theme est absolute inset-0 → il reçoit des dimensions pixel
-           * concrètes, ce qu'AG Grid exige pour calculer sizeColumnsToFit()
-           * et positionner sa pagination en bas.
-           * Le padding-bottom réserve l'espace du compteur d'utilisateurs.
-           */}
-          <div
-            className="ag-theme-quartz ag-theme-projects absolute inset-0"
-            style={{ paddingBottom: "28px" }}
-          >
+          <div className="ag-theme-quartz ag-theme-projects absolute inset-0" style={{ paddingBottom: "28px" }}>
             <AgGridReact<UserListDto>
               ref={gridRef}
               theme="legacy"
@@ -253,8 +231,10 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
               paginationPageSize={8}
               paginationPageSizeSelector={false}
               suppressCellFocus
+              suppressHorizontalScroll
               rowHeight={56}
               headerHeight={42}
+              domLayout="normal"
               noRowsOverlayComponent={() => (
                 <div className="flex flex-col items-center gap-3 py-16">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-200/80 bg-violet-50">
@@ -266,7 +246,6 @@ export function UsersTable({ users, loading, error, togglingId, archivingId, onV
             />
           </div>
 
-          {/* Compteur collé en bas, au-dessus de la pagination AG Grid */}
           <div className="absolute bottom-0 right-0 z-10 border-t border-violet-500/10 bg-white px-4 py-1.5 text-right text-xs font-semibold text-violet-600">
             {users.length} utilisateur{users.length !== 1 ? "s" : ""} affiché{users.length !== 1 ? "s" : ""} sur {users.length}
           </div>

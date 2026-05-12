@@ -45,6 +45,22 @@ export const PROJECTS_AG_THEME = `
     font-weight: 500;
   }
 
+  .ag-theme-projects .ag-body-vertical-scroll,
+  .ag-theme-projects .ag-body-horizontal-scroll {
+    display: none !important;
+  }
+
+  .ag-theme-projects .ag-body-viewport,
+  .ag-theme-projects .ag-center-cols-viewport {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ag-theme-projects .ag-body-viewport::-webkit-scrollbar,
+  .ag-theme-projects .ag-center-cols-viewport::-webkit-scrollbar {
+    display: none;
+  }
+
   @media (max-width: 767px) {
     .ag-theme-projects {
       --ag-font-size: 12px;

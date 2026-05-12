@@ -546,7 +546,7 @@ export function ProjectDetail() {
     "h-10 rounded-[10px] border border-violet-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100";
 
   return (
-    <div className="min-h-full overflow-y-auto bg-slate-50 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
+    <div className="w-full bg-slate-50 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <div className="flex w-full flex-col gap-6">
         <header className="flex flex-col gap-5 pb-6">
           <button

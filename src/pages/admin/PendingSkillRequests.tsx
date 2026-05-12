@@ -360,7 +360,7 @@ export function PendingSkillRequests() {
   }[resolveAction];
 
   return (
-    <section className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden app-page-bg">
+    <section className="relative flex w-full flex-col overflow-visible app-page-bg">
       <style>{`
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(10px); }
@@ -368,8 +368,8 @@ export function PendingSkillRequests() {
         }
         .fade-up { animation: fadeUp 0.3s ease both; }
       `}</style>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden app-page-bg px-6 py-4">
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+      <div className="w-full app-page-bg px-6 py-4">
+        <div className="flex w-full flex-col gap-4">
           <div className="rounded-3xl border border-violet-100/70 bg-white shadow-[0_8px_24px_rgba(124,58,237,0.06)]">
             <div className="grid grid-cols-1 items-end gap-3 px-4 py-4 lg:grid-cols-[1fr_220px_auto] lg:px-5">
               <div className="min-w-0">
@@ -429,8 +429,8 @@ export function PendingSkillRequests() {
             </div>
           </div>
 
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-violet-100/70 bg-white shadow-[0_8px_30px_rgba(124,58,237,0.07)]">
-            <div className="relative min-h-0 flex-1 overflow-auto px-3 py-3 md:px-4 lg:px-6">
+          <div className="relative w-full overflow-hidden rounded-3xl border border-violet-100/70 bg-white shadow-[0_8px_30px_rgba(124,58,237,0.07)]">
+            <div className="relative px-3 py-3 md:px-4 lg:px-6">
 
               {loading && (
                 <div className="space-y-2">
@@ -759,7 +759,7 @@ export function PendingSkillRequests() {
                 <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
               </button>
             </div>
-            <div className="max-h-[62vh] space-y-2.5 overflow-y-auto px-5 py-4">
+            <div className="no-visible-scrollbar max-h-[62vh] space-y-2.5 overflow-y-auto px-5 py-4">
               {requestersModal.requesters.map((r) => (
                 <div key={r.keycloakId} className="rounded-2xl border border-violet-100 bg-gradient-to-r from-white to-violet-50/60 px-4 py-3 shadow-sm">
                   <p className="text-sm font-semibold text-slate-900">{r.name || "Utilisateur"}</p>

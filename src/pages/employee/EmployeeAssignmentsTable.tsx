@@ -101,7 +101,7 @@ export function EmployeeAssignmentsTable({ rows, loading }: Props) {
   );
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       <style>{PROJECTS_AG_THEME}</style>
       {loading ? (
         <div className="flex-1  pt-3">
@@ -125,6 +125,7 @@ export function EmployeeAssignmentsTable({ rows, loading }: Props) {
               paginationPageSize={8}
               paginationPageSizeSelector={false}
               suppressCellFocus
+              suppressHorizontalScroll
               rowHeight={56}
               headerHeight={42}
               domLayout="normal"

@@ -184,7 +184,7 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
   );
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       <style>{PROJECTS_AG_THEME}</style>
       <style>{`.ag-theme-projects .ag-row { cursor: pointer; }`}</style>
       {loading ? (
@@ -212,6 +212,7 @@ export function EmployeeProjectsTable({ rows, loading, onOpen }: Props) {
               paginationPageSize={8}
               paginationPageSizeSelector={false}
               suppressCellFocus
+              suppressHorizontalScroll
               rowHeight={58}
               headerHeight={44}
               domLayout="normal"

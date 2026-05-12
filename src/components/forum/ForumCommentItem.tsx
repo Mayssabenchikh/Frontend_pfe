@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faFlag,
   faCircleCheck,
   faReply,
 } from "@fortawesome/free-solid-svg-icons";
@@ -20,7 +19,6 @@ type Props = {
   onVote: (commentUuid: string, t: ForumVoteType) => void;
   onReply: (parentUuid: string, content: string) => Promise<void>;
   onAccept?: (commentUuid: string) => void;
-  onReport?: (comment: ForumCommentDto) => void;
 };
 
 function getAuthorInitials(name: string): string {
@@ -54,7 +52,6 @@ export function ForumCommentItem({
   onVote,
   onReply,
   onAccept,
-  onReport,
 }: Props) {
   const [replyOpen, setReplyOpen] = useState(false);
   const canAccept = postType === "QUESTION" && (postAuthorKeycloakId === currentUserKeycloakId || isAdmin);
@@ -81,7 +78,6 @@ export function ForumCommentItem({
                 onVote={onVote}
                 onReply={onReply}
                 onAccept={onAccept}
-                onReport={onReport}
               />
             ))}
           </ul>
@@ -158,16 +154,6 @@ export function ForumCommentItem({
                   Accepter cette réponse
                 </button>
               ) : null}
-              {onReport && !comment.deleted ? (
-                <button
-                  type="button"
-                  onClick={() => onReport(comment)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 transition-colors hover:text-rose-600"
-                >
-                  <FontAwesomeIcon icon={faFlag} className="h-3 w-3" />
-                  Signaler
-                </button>
-              ) : null}
             </div>
 
             {/* Reply editor */}
@@ -203,7 +189,6 @@ export function ForumCommentItem({
               onVote={onVote}
               onReply={onReply}
               onAccept={onAccept}
-              onReport={onReport}
             />
           ))}
         </ul>

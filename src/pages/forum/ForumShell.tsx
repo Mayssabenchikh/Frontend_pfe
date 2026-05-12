@@ -7,7 +7,6 @@ import {
   faComments,
   faFileLines,
   faBookmark,
-  faFlag,
 } from "@fortawesome/free-solid-svg-icons";
 import { getPrimaryRole, type AppRole } from "../../auth/roles";
 import { DashboardShell } from "../../components/DashboardShell";
@@ -64,10 +63,6 @@ function getForumBreadcrumbs(pathname: string): { label: string; to?: string }[]
     return [{ label: "Publications enregistrées" }];
   }
 
-  if (parts[1] === "reports") {
-    return [{ label: "Signalements" }];
-  }
-
   return [];
 }
 
@@ -86,7 +81,6 @@ export default function ForumShell() {
     setAvatarUrl(token?.picture ?? null);
   }, [token?.picture]);
 
-  const isAdmin = primary === "ADMIN";
   const backHref = homePathForRole(primary);
   const crumbs = getForumBreadcrumbs(location.pathname);
 
@@ -130,14 +124,6 @@ export default function ForumShell() {
             to="/forum/saved"
             collapsed={sidebarCollapsed}
           />
-          {isAdmin ? (
-            <DashboardSidebarNavItem
-              label="Signalements"
-              icon={<FontAwesomeIcon icon={faFlag} className="h-4 w-4" />}
-              to="/forum/reports"
-              collapsed={sidebarCollapsed}
-            />
-          ) : null}
         </DashboardSidebar>
       )}
       renderHeader={({ toggleSidebar }) => (
@@ -170,7 +156,7 @@ export default function ForumShell() {
         />
       )}
     >
-      <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50">
+      <main className="flex min-w-0 flex-1 flex-col overflow-visible bg-slate-50">
         <nav
           className="admin-breadcrumbs flex h-10 min-w-0 shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 pt-1 text-xs text-slate-500 sm:gap-2 sm:px-6 sm:text-sm md:px-8"
           aria-label="Fil d'Ariane forum"
@@ -200,7 +186,7 @@ export default function ForumShell() {
             </span>
           ))}
         </nav>
-        <div className="flex min-h-0 w-full flex-1 flex-col overflow-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="flex w-full flex-col overflow-visible px-4 py-6 sm:px-6 lg:px-8">
           <Outlet />
         </div>
       </main>

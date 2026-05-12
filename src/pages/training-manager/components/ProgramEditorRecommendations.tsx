@@ -178,7 +178,7 @@ export function ProgramEditorRecommendations({
           </p>
         )}
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        <div className="no-visible-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           {recs.map((rec) => {
             const key = rec.trainingUuid;
             const videos = playlistByKey[key];
@@ -242,7 +242,7 @@ export function ProgramEditorRecommendations({
                   </div>
                 </div>
                 {playlistMode && videos && videos.length > 0 && (
-                  <ul className="max-h-56 space-y-1.5 overflow-y-auto border-t border-slate-100 bg-slate-50/50 p-2">
+                  <ul className="no-visible-scrollbar max-h-56 space-y-1.5 overflow-y-auto border-t border-slate-100 bg-slate-50/50 p-2">
                     {videos.map((v) => (
                       <li
                         key={v.videoId}

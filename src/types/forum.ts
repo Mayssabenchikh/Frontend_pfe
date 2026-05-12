@@ -2,10 +2,6 @@ export type ForumPostType = "QUESTION" | "RESOURCE" | "DISCUSSION" | "TRAINING_F
 
 export type ForumVoteType = "UPVOTE" | "DOWNVOTE";
 
-export type ForumReportTargetType = "POST" | "COMMENT";
-
-export type ForumReportStatus = "PENDING" | "REVIEWED" | "REJECTED";
-
 export type ForumCategoryDto = {
   uuid: string;
   name: string;
@@ -139,20 +135,6 @@ export type VoteResponse = {
 export type SavePostResponse = {
   postUuid: string;
   saved: boolean;
-};
-
-export type ForumReportDto = {
-  uuid: string;
-  targetType: ForumReportTargetType;
-  targetUuid: string;
-  reporter: ForumAuthorDto;
-  reason: string;
-  details: string | null;
-  status: ForumReportStatus;
-  reviewedByKeycloakId: string | null;
-  adminNotes: string | null;
-  createdAt: string;
-  reviewedAt: string | null;
 };
 
 export type ForumPostsSort = "new" | "top" | "popular" | "hot";

@@ -222,21 +222,11 @@
   }
 }
 
-/* Scrollbar styling for tooltip */
+.explanation-tooltip-body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .explanation-tooltip-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.explanation-tooltip-body::-webkit-scrollbar-track {
-  background: rgba(71, 85, 105, 0.1);
-  border-radius: 3px;
-}
-
-.explanation-tooltip-body::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
-  border-radius: 3px;
-}
-
-.explanation-tooltip-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  display: none;
 }

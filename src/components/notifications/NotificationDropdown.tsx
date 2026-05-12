@@ -41,7 +41,7 @@ export function NotificationDropdown({
         </button>
       </div>
 
-      <div className="max-h-[60vh] overflow-y-auto overscroll-contain p-3">
+      <div className="no-visible-scrollbar max-h-[60vh] overflow-y-auto overscroll-contain p-3">
         {loading ? (
           <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-slate-500">
             <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin" />

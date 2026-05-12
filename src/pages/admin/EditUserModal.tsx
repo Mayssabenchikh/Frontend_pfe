@@ -171,7 +171,7 @@ export function EditUserModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg max-h-[min(92dvh,900px)] overflow-y-auto rounded-2xl border border-slate-100 bg-white shadow-2xl animate-[modalIn_0.2s_cubic-bezier(0.16,1,0.3,1)_both]"
+        className="no-visible-scrollbar w-full max-w-lg max-h-[min(92dvh,900px)] overflow-y-auto rounded-2xl border border-slate-100 bg-white shadow-2xl animate-[modalIn_0.2s_cubic-bezier(0.16,1,0.3,1)_both]"
       >
         <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
 

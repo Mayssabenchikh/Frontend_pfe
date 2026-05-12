@@ -48,7 +48,7 @@ export function ReasonModal({
     <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0 bg-slate-900/25" onClick={onCancel} aria-hidden="true" />
 
-      <div className="relative max-h-[min(92dvh,720px)] w-full max-w-md overflow-hidden overflow-y-auto rounded-3xl border border-violet-500/16 bg-white shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
+      <div className="no-visible-scrollbar relative max-h-[min(92dvh,720px)] w-full max-w-md overflow-hidden overflow-y-auto rounded-3xl border border-violet-500/16 bg-white shadow-[0_18px_48px_rgba(109,40,217,0.14)]">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-7 sm:py-5">
           <div className="min-w-0">
             <h3 className="truncate text-sm font-bold text-violet-950">{title}</h3>

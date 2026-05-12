@@ -85,18 +85,14 @@ export default function ManagerPage() {
         />
       )}
     >
-        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-auto" : "overflow-hidden"}`}>
+        <main className="flex min-w-0 flex-1 flex-col overflow-visible">
           <ManagerBreadcrumbs />
           <div
             className={
               isQuizPage || isCvExtractionPage
-                ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden px-0 py-0"
+                ? "flex w-full flex-col overflow-visible px-0 py-0"
                 : `${isFullBleed || isDashboardRoute ? "" : "dashboard-padding "}${
-                    isDashboardRoute
-                      ? "flex min-w-0 flex-1 flex-col overflow-visible"
-                      : isFullBleed
-                        ? "flex min-w-0 flex-1 flex-col overflow-hidden"
-                        : "flex min-h-0 min-w-0 flex-1 flex-col overflow-auto"
+                    "flex min-w-0 flex-col overflow-visible"
                   }`
             }
           >

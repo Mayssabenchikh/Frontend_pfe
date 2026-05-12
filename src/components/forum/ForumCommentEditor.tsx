@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "sonner";
 
 type Props = {
   placeholder?: string;
@@ -28,6 +29,9 @@ export function ForumCommentEditor({
     try {
       await onSubmit(content.trim());
       setContent("");
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { error?: string } } };
+      toast.error(err?.response?.data?.error ?? "Impossible d'envoyer le commentaire.");
     } finally {
       setSaving(false);
     }

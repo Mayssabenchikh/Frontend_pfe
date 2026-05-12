@@ -1055,7 +1055,7 @@ export function TrainingManagerProgramEditor() {
       {showMetaEditor && (
         <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0" onClick={() => setShowMetaEditor(false)} aria-hidden="true" />
-          <div className="relative max-h-[min(88dvh,760px)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-violet-100 bg-white shadow-2xl shadow-violet-950/15">
+          <div className="no-visible-scrollbar relative max-h-[min(88dvh,760px)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-violet-100 bg-white shadow-2xl shadow-violet-950/15">
             <div className="flex items-start justify-between gap-4 border-b border-violet-100 bg-gradient-to-r from-violet-50 via-white to-indigo-50 px-5 py-4 sm:px-6">
               <div>
                 <h2 className="text-lg font-bold text-violet-950">Modifier la formation</h2>
@@ -1181,7 +1181,7 @@ export function TrainingManagerProgramEditor() {
                 <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
+            <div className="no-visible-scrollbar min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
               <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>

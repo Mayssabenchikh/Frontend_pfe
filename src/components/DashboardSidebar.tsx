@@ -70,7 +70,7 @@ function DashboardSidebarNavContent({ label, icon, active, collapsed, subtitle }
 
 export function DashboardSidebar({ mobileOpen, collapsed = false, onToggleCollapse, footer, children }: DashboardSidebarProps) {
   return (
-    <aside className={`admin-sidebar flex flex-col${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
+    <aside className={`admin-sidebar fixed left-0 top-0 z-[140] flex h-screen flex-col${mobileOpen ? " open" : ""}${collapsed ? " collapsed" : ""}`}>
       <div
         className={[
           "admin-sidebar-header relative flex shrink-0 items-center",
@@ -99,7 +99,7 @@ export function DashboardSidebar({ mobileOpen, collapsed = false, onToggleCollap
         ) : null}
       </div>
 
-      <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 pb-4 pt-7">
+      <nav className="flex flex-1 flex-col overflow-visible px-3 pb-4 pt-7">
         <div className="flex flex-col gap-2">{children}</div>
       </nav>
       {footer ? <div className="admin-sidebar-footer shrink-0 px-3 pb-4">{footer}</div> : null}

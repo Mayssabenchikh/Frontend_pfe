@@ -175,7 +175,7 @@ export function CreateProjectModal({ onClose, onSubmit, initialProject, leadAvat
 
   const modalContent = (
     <div className="app-modal-backdrop fixed inset-0 z-[200] flex items-center justify-center px-3 py-4 sm:px-4">
-      <div className="max-h-[min(92dvh,900px)] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-3xl bg-white shadow-2xl">
+      <div className="no-visible-scrollbar max-h-[min(92dvh,900px)] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-3xl bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
           <div>

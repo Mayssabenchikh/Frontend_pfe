@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
   faBookmark,
-  faFlag,
   faThumbtack,
   faLock,
   faGraduationCap,
@@ -28,7 +27,6 @@ import { ForumAttachmentPreview } from "../../components/forum/ForumAttachmentPr
 import { ForumCommentTree } from "../../components/forum/ForumCommentTree";
 import { ForumCommentEditor } from "../../components/forum/ForumCommentEditor";
 import { ForumLoadingState } from "../../components/forum/ForumLoadingState";
-import { ForumReportModal } from "../../components/forum/ForumReportModal";
 
 const TYPE_LABEL: Record<string, string> = {
   QUESTION: "Question",
@@ -87,7 +85,6 @@ export function ForumPostDetailPage() {
   const [post, setPost] = useState<ForumPostDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reportTarget, setReportTarget] = useState<{ type: "POST" | "COMMENT"; comment?: ForumCommentDto } | null>(null);
 
   const load = useCallback(async () => {
     if (!postUuid) return;
@@ -345,14 +342,6 @@ export function ForumPostDetailPage() {
                     <FontAwesomeIcon icon={faBookmark} className="h-3.5 w-3.5" />
                     {post.savedByMe ? "Enregistré" : "Enregistrer"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setReportTarget({ type: "POST" })}
-                    className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
-                  >
-                    <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
-                    Signaler
-                  </button>
                 </div>
 
                 {/* Admin moderation */}
@@ -424,7 +413,6 @@ export function ForumPostDetailPage() {
               onVote={onVoteComment}
               onReply={onReply}
               onAccept={onAccept}
-              onReport={(c) => setReportTarget({ type: "COMMENT", comment: c })}
             />
           </section>
         </div>
@@ -518,20 +506,6 @@ export function ForumPostDetailPage() {
           </div>
         </aside>
       </div>
-
-      {/* Modals */}
-      <ForumReportModal
-        open={reportTarget !== null}
-        title={reportTarget?.type === "COMMENT" ? "Signaler un commentaire" : "Signaler la publication"}
-        onClose={() => setReportTarget(null)}
-        onSubmit={async (reason, details) => {
-          if (reportTarget?.type === "COMMENT" && reportTarget.comment) {
-            await forumService.reportComment(reportTarget.comment.uuid, { reason, details });
-          } else if (postUuid) {
-            await forumService.reportPost(postUuid, { reason, details });
-          }
-        }}
-      />
 
     </div>
   );

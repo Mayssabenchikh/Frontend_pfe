@@ -67,10 +67,10 @@ export default function TrainingManagerPage() {
         />
       )}
     >
-        <main className={`flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-auto" : "overflow-hidden"}`}>
+        <main className="flex min-w-0 flex-1 flex-col overflow-visible">
           <TrainingManagerBreadcrumbs />
-          <div className={`${isDashboardRoute ? "" : "dashboard-padding "}training-manager-app flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-hidden"}`}>
-            <div className={`tm-scroll-area relative flex min-h-0 flex-1 flex-col ${isDashboardRoute ? "overflow-visible" : "overflow-auto"}`}>
+          <div className={`${isDashboardRoute ? "" : "dashboard-padding "}training-manager-app flex w-full flex-col overflow-visible`}>
+            <div className="tm-scroll-area relative flex w-full flex-col overflow-visible">
               <Outlet context={{ onAvatarUpdate: setAvatarUrl }} />
             </div>
           </div>

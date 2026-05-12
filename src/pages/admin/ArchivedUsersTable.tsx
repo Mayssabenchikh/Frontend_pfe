@@ -199,7 +199,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
   }
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       <style>{AG_THEME}</style>
 
       {/* Content */}
@@ -223,6 +223,7 @@ export function ArchivedUsersTable({ users, loading, error, restoringId, deletin
               paginationPageSize={8}
               paginationPageSizeSelector={false}
               suppressCellFocus
+              suppressHorizontalScroll
               rowHeight={56}
               headerHeight={42}
               domLayout="normal"

@@ -7,8 +7,6 @@ import type {
   ForumPostPageDto,
   ForumPostsFilters,
   ForumPostType,
-  ForumReportDto,
-  ForumReportStatus,
   ForumVoteType,
   SavePostResponse,
   VoteResponse,
@@ -99,19 +97,8 @@ export const forumService = {
     return http.post<ForumAttachmentDto>(`${BASE}/comments/${commentUuid}/attachments`, fd);
   },
 
-  reportPost: (postUuid: string, data: { reason: string; details?: string | null }) =>
-    http.post(`${BASE}/posts/${postUuid}/report`, data),
-
-  reportComment: (commentUuid: string, data: { reason: string; details?: string | null }) =>
-    http.post(`${BASE}/comments/${commentUuid}/report`, data),
-
   acceptAnswer: (postUuid: string, commentUuid: string) =>
     http.post(`${BASE}/posts/${postUuid}/accept-answer/${commentUuid}`),
-
-  getReports: () => http.get<ForumReportDto[]>(`${BASE}/admin/reports`),
-
-  reviewReport: (reportUuid: string, data: { status: ForumReportStatus; adminNotes?: string | null }) =>
-    http.post<ForumReportDto>(`${BASE}/admin/reports/${reportUuid}/review`, data),
 
   moderatePost: (postUuid: string, data: { pinned?: boolean; hidden?: boolean; locked?: boolean }) =>
     http.patch<ForumPostDetailDto>(`${BASE}/admin/posts/${postUuid}/moderation`, {}, { params: data }),
