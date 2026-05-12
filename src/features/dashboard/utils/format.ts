@@ -56,6 +56,11 @@ export function formatStatusLabel(status?: string | null) {
     PROJECT_ASSIGNMENT_REMOVED: "Affectation retirée",
     ACTIVITY_SUBMITTED: "Activité soumise",
     SYSTEM_ANNOUNCEMENT: "Annonce système",
+    IA_DISPONIBLE: "À revoir",
+    AI_AVAILABLE: "À revoir",
+    A_REVOIR: "À revoir",
+    CORRIGE: "Corrigé",
+    CORRIGÉ: "Corrigé",
   };
   return labels[normalized] ?? status;
 }

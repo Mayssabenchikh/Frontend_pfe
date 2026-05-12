@@ -2,7 +2,24 @@ import type { ChartOptions, TooltipItem } from "chart.js";
 import type { DashboardChart, DashboardChartDataset } from "../types/dashboard";
 import { formatPriorityLabel, formatRoleLabel, formatStatusLabel } from "./format";
 
-const fallbackColors = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#06B6D4", "#6366F1", "#64748B", "#8B5CF6"];
+const fallbackColors = [
+  "#7C3AED",
+  "#EC4899",
+  "#F59E0B",
+  "#F97316",
+  "#EF4444",
+  "#A855F7",
+  "#F43F5E",
+  "#E11D48",
+  "#FB7185",
+  "#D946EF",
+  "#FBBF24",
+  "#C026D3",
+  "#F472B6",
+  "#EA580C",
+  "#B91C1C",
+  "#9333EA",
+];
 
 function formatChartLabel(label: string, chart: DashboardChart) {
   const axis = `${chart.xAxisTitle} ${chart.yAxisTitle} ${chart.title}`.toLowerCase();
