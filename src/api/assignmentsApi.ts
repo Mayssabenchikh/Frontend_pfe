@@ -56,8 +56,8 @@ export const assignmentsApi = {
   listProjectAssignments: (projectUuid: string) =>
     http.get<AssignmentDto[]>(`/api/manager/projects/${projectUuid}/assignments`),
 
-  invite: (projectUuid: string, employeeKeycloakId: string) =>
-    http.post<AssignmentDto>(`/api/manager/projects/${projectUuid}/assignments/invite`, { employeeKeycloakId }),
+  assign: (projectUuid: string, employeeKeycloakId: string) =>
+    http.post<AssignmentDto>(`/api/manager/projects/${projectUuid}/assignments/assign`, { employeeKeycloakId }),
 
   remove: (assignmentUuid: string, reason: string) =>
     http.post<AssignmentDto>(`/api/manager/projects/assignments/${assignmentUuid}/remove`, { reason }),

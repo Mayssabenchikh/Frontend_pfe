@@ -40,8 +40,7 @@ function priorityMeta(priority?: string | null) {
 
 function assignmentStatusMeta(status?: string | null) {
   if (status === "ACCEPTED") return { label: "Affecté", cls: "border-emerald-200 bg-emerald-50 text-emerald-700" };
-  if (status === "PENDING") return { label: "En attente", cls: "border-orange-200 bg-orange-50 text-orange-700" };
-  if (status === "REFUSED") return { label: "Refusé", cls: "border-rose-200 bg-rose-50 text-rose-700" };
+  if (status === "PENDING" || status === "REFUSED") return { label: "Non active", cls: "border-slate-200 bg-slate-50 text-slate-600" };
   return { label: "Retiré", cls: "border-slate-200 bg-slate-50 text-slate-600" };
 }
 

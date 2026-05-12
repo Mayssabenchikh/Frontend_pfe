@@ -37,7 +37,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
   const activeAssignment = useMemo(() => {
     if (!row) return null;
     const items = assignments.filter(
-      (a) => a.projectUuid === projectUuid && a.employeeKeycloakId === row.employee_keycloak_id && (a.status === "PENDING" || a.status === "ACCEPTED"),
+      (a) => a.projectUuid === projectUuid && a.employeeKeycloakId === row.employee_keycloak_id && a.status === "ACCEPTED",
     );
     return items[0] ?? null;
   }, [assignments, projectUuid, row]);
@@ -100,7 +100,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
     if (!row) return;
     setAssignLoading(true);
     try {
-      await assignmentsApi.invite(projectUuid, row.employee_keycloak_id);
+      await assignmentsApi.assign(projectUuid, row.employee_keycloak_id);
       const res = await assignmentsApi.listProjectAssignments(projectUuid);
       onAssignmentsChange(Array.isArray(res.data) ? res.data : []);
       setEmployeeAcceptedCount((prev) => prev + 1);
@@ -232,7 +232,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
               onClick={handleRemove}
               className="w-full rounded-2xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {activeAssignment.status === "PENDING" ? "Annuler l’affectation" : "Désaffecter (retirer du projet)"}
+              Désaffecter (retirer du projet)
             </button>
           ) : (
             <button
@@ -242,7 +242,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
               className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(109,40,217,0.24)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {assignLoading
-                ? "Envoi…"
+                ? "Affectation…"
                 : isProjectFull
                   ? "Équipe complète"
                   : employeeAcceptedCount >= employeeAcceptedMax

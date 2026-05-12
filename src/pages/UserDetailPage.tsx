@@ -83,9 +83,9 @@ function validateAdminFields(fields: {
 
 function assignmentStatusBadge(status?: string | null) {
   if (status === "ACCEPTED") return { label: "Affecté", className: "border-emerald-200 bg-emerald-50 text-emerald-700" };
-  if (status === "PENDING") return { label: "En attente", className: "border-amber-200 bg-amber-50 text-amber-700" };
+  if (status === "PENDING") return { label: "Non active", className: "border-slate-200 bg-slate-50 text-slate-600" };
   if (status === "REMOVED") return { label: "Retiré", className: "border-slate-200 bg-slate-50 text-slate-600" };
-  return { label: status || "—", className: "border-rose-200 bg-rose-50 text-rose-700" };
+  return { label: "Non active", className: "border-slate-200 bg-slate-50 text-slate-600" };
 }
 
 function InfoField({ label, value, icon }: { label: string; value?: string | null; icon: ReactNode }) {

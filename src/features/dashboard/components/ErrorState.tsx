@@ -1,6 +1,11 @@
-import { ExclamationTriangleIcon } from "../../icons/heroicons/outline";
+import { ExclamationTriangleIcon } from "../../../icons/heroicons/outline";
 
-export function ErrorState({ message, onRetry }: { message?: string | null; onRetry?: () => void }) {
+type ErrorStateProps = {
+  message?: string | null;
+  onRetry?: () => void;
+};
+
+export function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
     <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-800">
       <div className="flex items-start gap-3">

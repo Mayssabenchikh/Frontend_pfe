@@ -367,7 +367,7 @@ export function ProjectDetail() {
   };
 
   const activeAssignments = useMemo(
-    () => assignments.filter((a) => a.status === "PENDING" || a.status === "ACCEPTED"),
+    () => assignments.filter((a) => a.status === "ACCEPTED"),
     [assignments],
   );
 
@@ -507,10 +507,10 @@ export function ProjectDetail() {
 
     setAssigningId(row.employee_keycloak_id);
     try {
-      await assignmentsApi.invite(projectUuid, row.employee_keycloak_id);
+      await assignmentsApi.assign(projectUuid, row.employee_keycloak_id);
       const res = await assignmentsApi.listProjectAssignments(projectUuid);
       setAssignments(Array.isArray(res.data) ? res.data : []);
-      toast.success("Affectation envoyée");
+      toast.success("Employé affecté au projet");
     } catch (err) {
       toast.error(getApiError(err, "Impossible d'affecter cet employé."));
     } finally {

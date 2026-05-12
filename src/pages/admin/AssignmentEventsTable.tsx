@@ -42,8 +42,8 @@ function formatDate(iso: string): string {
 function actionToFrench(action: unknown): string {
   const value = String(action ?? "").toUpperCase();
   if (value === "ASSIGNED") return "Affecté";
-  if (value === "ACCEPTED") return "Affectation confirmée";
-  if (value === "REFUSED") return "Refusé";
+  if (value === "ACCEPTED") return "Affecté";
+  if (value === "REFUSED") return "Non active";
   if (value === "REMOVED") return "Retiré";
   return String(action ?? "—");
 }

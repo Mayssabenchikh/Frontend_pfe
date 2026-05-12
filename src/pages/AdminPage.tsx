@@ -26,7 +26,7 @@ import { PendingSkillRequests } from "./admin/PendingSkillRequests";
 import { AdminProfile } from "./admin/AdminProfile";
 import { AdminAssignmentsAudit } from "./admin/AdminAssignmentsAudit";
 import { AdminProjectsReadonly } from "./admin/AdminProjectsReadonly";
-import { AdminDashboard } from "./dashboards/AdminDashboard";
+import { AdminDashboardPage } from "../features/dashboard/pages/AdminDashboardPage";
 import { CreateUserModal } from "./admin/CreateUserModal";
 import { FiltersPanel } from "../components/FiltersPanel";
 import { ArchiveBoxIcon } from "../icons/heroicons/outline";
@@ -378,7 +378,7 @@ export default function AdminPage() {
               refreshKey={userDetailRefreshKey}
               onAdminSaved={handleUserDetailSaved}
             />
-          ) : currentView === "dashboard" && <AdminDashboard />}
+          ) : currentView === "dashboard" && <AdminDashboardPage />}
 
           {!isUserDetailRoute && currentView === "profile" && (
             <AdminProfile
