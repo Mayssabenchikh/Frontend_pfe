@@ -36,6 +36,31 @@ const ROOT_REDIRECT_URI = `${window.location.origin}/`;
 const ARCHIVED_DEDUPE_TTL_MS = 3000;
 const ADMIN_LAST_VIEW_KEY = "skillify_admin_last_view";
 
+const ADMIN_NAV_IDS: readonly NavId[] = [
+  "dashboard",
+  "users",
+  "archives",
+  "projects",
+  "skills",
+  "skillRequests",
+  "skillCategories",
+  "assignments",
+  "profile",
+] as const;
+
+function isAdminNavId(value: string | null | undefined): value is NavId {
+  return !!value && (ADMIN_NAV_IDS as readonly string[]).includes(value);
+}
+
+function adminViewFromSearch(search: string): NavId | null {
+  try {
+    const raw = new URLSearchParams(search).get("view");
+    return raw && isAdminNavId(raw) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
 type CreateUserResponse = {
   uuid?: string;
   keycloakUserId?: string;
@@ -108,13 +133,16 @@ export default function AdminPage() {
 
   const [currentView, setCurrentView] = useState<NavId>(() => {
     const requestedView = (location.state as { view?: NavId } | null)?.view;
-    if (requestedView) return requestedView;
+    if (requestedView && isAdminNavId(requestedView)) return requestedView;
+    const fromUrl = adminViewFromSearch(location.search);
+    if (fromUrl) return fromUrl;
     try {
-      const storedView = sessionStorage.getItem(ADMIN_LAST_VIEW_KEY) as NavId | null;
-      return storedView ?? "dashboard";
+      const storedView = sessionStorage.getItem(ADMIN_LAST_VIEW_KEY);
+      if (storedView && isAdminNavId(storedView)) return storedView;
     } catch {
-      return "dashboard";
+      // ignore
     }
+    return "dashboard";
   });
   const adminAvatarKey = keycloak.subject ? `admin_avatar_${keycloak.subject}` : null;
   const [adminAvatarUrl, setAdminAvatarUrl] = useState<string | null>(
@@ -311,13 +339,19 @@ export default function AdminPage() {
 
   useEffect(() => {
     const requestedView = (location.state as { view?: NavId } | null)?.view;
-    if (!isUserDetailRoute && requestedView) {
+    if (!isUserDetailRoute && requestedView && isAdminNavId(requestedView)) {
       setCurrentView(requestedView);
+      return;
+    }
+    const fromUrl = adminViewFromSearch(location.search);
+    if (!isUserDetailRoute && fromUrl) {
+      setCurrentView(fromUrl);
+      return;
     }
     if (!isUserDetailRoute && location.pathname === "/admin/dashboard") {
       setCurrentView("dashboard");
     }
-  }, [isUserDetailRoute, location.pathname, location.state]);
+  }, [isUserDetailRoute, location.pathname, location.search, location.state]);
 
   useEffect(() => {
     if (isUserDetailRoute) return;
@@ -330,8 +364,19 @@ export default function AdminPage() {
 
   const handleNavChange = (view: NavId) => {
     triggerTopLoadingBar();
-    if (isUserDetailRoute) navigate("/admin", { state: { view } });
-    if (!isUserDetailRoute && view === "dashboard" && location.pathname !== "/admin/dashboard") navigate("/admin/dashboard");
+    if (isUserDetailRoute) {
+      navigate("/admin", { state: { view } });
+      setCurrentView(view);
+      return;
+    }
+    if (view === "dashboard") {
+      if (location.pathname !== "/admin/dashboard" || location.search) {
+        navigate({ pathname: "/admin/dashboard" }, { replace: true });
+      }
+      setCurrentView(view);
+      return;
+    }
+    navigate({ pathname: "/admin", search: `?view=${encodeURIComponent(view)}` }, { replace: true });
     setCurrentView(view);
   };
 

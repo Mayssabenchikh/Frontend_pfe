@@ -7,6 +7,7 @@ import {
   faComments,
   faGraduationCap,
   faMessage,
+  faUserShield,
 } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { NotificationDto, NotificationType } from "../../types/notification";
@@ -34,6 +35,11 @@ const typeIcons: Partial<Record<NotificationType, IconDefinition>> = {
   FORUM_MENTION: faComments,
   CHAT_MESSAGE: faMessage,
   SYSTEM_ANNOUNCEMENT: faBullhorn,
+  ADMIN_PROJECT_ASSIGNED: faUserShield,
+  ADMIN_PROJECT_CREATED: faUserShield,
+  ADMIN_SKILL_REQUEST_CREATED: faUserShield,
+  ADMIN_FORUM_POST_CREATED: faUserShield,
+  ADMIN_FORUM_COMMENT_ADDED: faUserShield,
 };
 
 function formatDate(value: string) {
@@ -48,6 +54,7 @@ function formatDate(value: string) {
 }
 
 function typeLabel(type: NotificationType) {
+  if (type.startsWith("ADMIN")) return "Administration";
   if (type.startsWith("PROJECT")) return "Projet";
   if (type.startsWith("TRAINING") || type.startsWith("ACTIVITY")) return "Formation";
   if (type.startsWith("QUIZ")) return "Quiz";
