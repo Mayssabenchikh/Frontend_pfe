@@ -214,6 +214,7 @@ function App() {
           <Route path="quiz" element={<EmployeeQuiz />} />
           <Route path="assignments" element={<EmployeeAssignments />} />
           <Route path="training-recommendations" element={<EmployeeTrainingRecommendations />} />
+          <Route path="training/recommendations" element={<Navigate to="../training-recommendations" replace />} />
           <Route path="learning-programs" element={<EmployeeLearningPrograms />} />
           <Route path="learning-programs/play/:enrollmentUuid" element={<EmployeeLearningProgramPlayer />} />
           <Route path="learning-programs/quiz/:enrollmentUuid/:videoUuid" element={<EmployeeLearningProgramQuiz />} />

@@ -1,68 +1,116 @@
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import {
+  faBookOpen,
+  faBriefcase,
+  faChartSimple,
+  faCircleCheck,
+  faClipboardCheck,
+  faClipboardList,
+  faGraduationCap,
+  faLayerGroup,
+  faListCheck,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { DashboardKpi } from "../types/dashboard";
 import { formatNumber } from "../utils/format";
 
 const toneClasses: Record<
   string,
-  { card: string; orb: string; ring: string }
+  { accent: string; iconBg: string; iconRing: string; iconText: string }
 > = {
   violet: {
-    card: "from-violet-50/80 via-white to-white",
-    orb: "from-violet-200/80 to-fuchsia-200/70",
-    ring: "ring-violet-200/50",
+    accent: "bg-fuchsia-500",
+    iconBg: "bg-fuchsia-50",
+    iconRing: "ring-fuchsia-100",
+    iconText: "text-fuchsia-600",
   },
   blue: {
-    card: "from-sky-50/80 via-white to-white",
-    orb: "from-sky-200/80 to-indigo-200/70",
-    ring: "ring-sky-200/50",
+    accent: "bg-indigo-500",
+    iconBg: "bg-blue-50",
+    iconRing: "ring-blue-100",
+    iconText: "text-indigo-600",
   },
   green: {
-    card: "from-emerald-50/80 via-white to-white",
-    orb: "from-emerald-200/80 to-lime-200/70",
-    ring: "ring-emerald-200/50",
+    accent: "bg-emerald-500",
+    iconBg: "bg-emerald-50",
+    iconRing: "ring-emerald-100",
+    iconText: "text-emerald-500",
   },
   orange: {
-    card: "from-amber-50/80 via-white to-white",
-    orb: "from-amber-200/80 to-orange-200/70",
-    ring: "ring-amber-200/50",
+    accent: "bg-amber-400",
+    iconBg: "bg-amber-50",
+    iconRing: "ring-amber-100",
+    iconText: "text-orange-500",
   },
   red: {
-    card: "from-rose-50/80 via-white to-white",
-    orb: "from-rose-200/80 to-pink-200/70",
-    ring: "ring-rose-200/50",
+    accent: "bg-orange-600",
+    iconBg: "bg-orange-50",
+    iconRing: "ring-orange-100",
+    iconText: "text-orange-600",
   },
   cyan: {
-    card: "from-cyan-50/80 via-white to-white",
-    orb: "from-cyan-200/80 to-teal-200/70",
-    ring: "ring-cyan-200/50",
+    accent: "bg-teal-400",
+    iconBg: "bg-cyan-50",
+    iconRing: "ring-cyan-100",
+    iconText: "text-teal-500",
   },
   indigo: {
-    card: "from-indigo-50/80 via-white to-white",
-    orb: "from-indigo-200/80 to-violet-200/70",
-    ring: "ring-indigo-200/50",
+    accent: "bg-violet-500",
+    iconBg: "bg-violet-50",
+    iconRing: "ring-violet-100",
+    iconText: "text-violet-600",
   },
   gray: {
-    card: "from-slate-50/80 via-white to-white",
-    orb: "from-slate-200/70 to-slate-100/70",
-    ring: "ring-slate-200/50",
+    accent: "bg-slate-400",
+    iconBg: "bg-slate-50",
+    iconRing: "ring-slate-100",
+    iconText: "text-slate-500",
   },
 };
 
+const kpiVisuals: Record<string, { icon: IconDefinition; tone: keyof typeof toneClasses }> = {
+  declaredSkills: { icon: faBookOpen, tone: "violet" },
+  validatedSkills: { icon: faCircleCheck, tone: "green" },
+  averageLevel: { icon: faChartSimple, tone: "blue" },
+  quizPassed: { icon: faClipboardCheck, tone: "orange" },
+  recommendations: { icon: faGraduationCap, tone: "violet" },
+  inProgressTrainings: { icon: faBookOpen, tone: "red" },
+  pendingActivities: { icon: faUser, tone: "cyan" },
+  assignedProjects: { icon: faBriefcase, tone: "blue" },
+};
+
+const toneIcons: Record<string, IconDefinition> = {
+  violet: faLayerGroup,
+  blue: faChartSimple,
+  green: faCircleCheck,
+  orange: faClipboardCheck,
+  red: faClipboardList,
+  cyan: faListCheck,
+  indigo: faGraduationCap,
+  gray: faLayerGroup,
+};
+
 export function KpiCard({ kpi }: { kpi: DashboardKpi }) {
-  const tone = toneClasses[kpi.tone ?? "violet"] ?? toneClasses.violet;
+  const visual = kpiVisuals[kpi.key];
+  const toneKey = visual?.tone ?? kpi.tone ?? "violet";
+  const tone = toneClasses[toneKey] ?? toneClasses.violet;
+  const icon = visual?.icon ?? toneIcons[toneKey] ?? faLayerGroup;
 
   return (
-    <article className={`relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br ${tone.card} p-4 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.45)]`}
-    >
-      <span className={`pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${tone.orb} blur-2xl`} />
-      <span className={`pointer-events-none absolute -left-10 -bottom-10 h-24 w-24 rounded-full bg-gradient-to-br ${tone.orb} opacity-60 blur-3xl`} />
-      <div className="relative flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">{kpi.label}</p>
-          <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{formatNumber(kpi.value, kpi.unit)}</p>
-          {kpi.description ? <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-500">{kpi.description}</p> : null}
+    <article className="relative min-h-[112px] overflow-hidden rounded-xl border border-slate-200/80 bg-white px-4 pb-4 pt-5 shadow-[0_8px_22px_-14px_rgba(15,23,42,0.45)]">
+      <div className="flex items-start gap-4">
+        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${tone.iconBg} ${tone.iconText} ring-1 ${tone.iconRing}`}>
+          <FontAwesomeIcon icon={icon} className="h-6 w-6" />
+        </span>
+
+        <div className="min-w-0 pt-0.5">
+          <p className="truncate text-[10px] font-extrabold uppercase leading-4 tracking-wide text-slate-500">{kpi.label}</p>
+          <p className="mt-0.5 text-[28px] font-black leading-none tracking-normal text-slate-950">{formatNumber(kpi.value, kpi.unit)}</p>
+          {kpi.description ? <p className="mt-2 line-clamp-2 text-[11px] font-medium leading-4 text-slate-500">{kpi.description}</p> : null}
         </div>
-        <span className={`mt-1 h-11 w-11 shrink-0 rounded-2xl bg-gradient-to-br ${tone.orb} ring-1 ${tone.ring}`} />
       </div>
+      <span className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full ${tone.accent}`} />
     </article>
   );
 }
