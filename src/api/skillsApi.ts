@@ -78,7 +78,7 @@ export const skillsApi = {
     http.post(`${BASE}/skills/${skillUuid}/synonyms`, { alias }),
   removeSynonym: (skillUuid: string, alias: string) =>
     http.delete(`${BASE}/skills/${skillUuid}/synonyms`, { params: { alias } }),
-  listPendingSkillRequests: (opts?: { page?: number; size?: number; status?: PendingStatus }) => {
+  listPendingSkillRequests: (opts?: { page?: number; size?: number; status?: PendingStatus; search?: string }) => {
     const params = buildPaginationParams(opts);
     if (opts?.status) params.status = opts.status;
     return http.get<PendingSkillRequestPageDto>(`${BASE}/pending-skills`, { params });

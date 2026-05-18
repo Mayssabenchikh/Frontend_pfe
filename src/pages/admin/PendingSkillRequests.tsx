@@ -62,16 +62,263 @@ type MergeSuggestion = {
   source: "ai" | "local";
 };
 
+type MergeCandidate = MergeSuggestion & {
+  skill: SkillDto;
+};
+
+const SUGGESTION_MIN_CONFIDENCE = 0.62;
+const AUTO_SELECT_MIN_CONFIDENCE = 0.82;
+const TECH_STOP_WORDS = new Set([
+  "de",
+  "des",
+  "du",
+  "la",
+  "le",
+  "les",
+  "en",
+  "et",
+  "avec",
+  "pour",
+  "sur",
+  "aux",
+  "au",
+  "a",
+  "the",
+  "of",
+  "and",
+  "in",
+  "to",
+]);
+
+const SEMANTIC_SKILL_RELATIONS: Record<string, string[]> = {
+  pandas: ["python"],
+  numpy: ["python"],
+  scipy: ["python"],
+  sklearn: ["python"],
+  scikitlearn: ["python"],
+  matplotlib: ["python"],
+  seaborn: ["python"],
+  fastapi: ["python"],
+  django: ["python"],
+  flask: ["python"],
+  pytest: ["python"],
+  springweb: ["spring boot", "spring"],
+  springmvc: ["spring boot", "spring"],
+  springsecurity: ["spring boot", "spring"],
+  springdata: ["spring boot", "spring"],
+  springcloud: ["spring boot", "spring"],
+  springbatch: ["spring boot", "spring"],
+  hibernate: ["java", "spring boot"],
+  jpa: ["java", "spring boot"],
+  maven: ["java"],
+  gradle: ["java"],
+  junit: ["java"],
+  gitops: ["git"],
+  githubactions: ["github", "ci cd"],
+  gitlabci: ["gitlab", "ci cd"],
+  jenkins: ["ci cd"],
+  dockercompose: ["docker"],
+  kubernetes: ["docker"],
+  k8s: ["kubernetes"],
+  helm: ["kubernetes"],
+  terraform: [],
+  ansible: [],
+  reactrouter: ["react"],
+  redux: ["react", "javascript"],
+  nextjs: ["react", "javascript"],
+  vite: ["javascript", "typescript", "react"],
+  nestjs: ["nodejs", "typescript"],
+  express: ["nodejs", "javascript"],
+  expressjs: ["nodejs", "javascript"],
+  angularmaterial: ["angular"],
+  rxjs: ["angular", "javascript"],
+  tailwindcss: ["css"],
+  bootstrap: ["css"],
+  sass: ["css"],
+  scss: ["css"],
+  laravel: ["php"],
+  symfony: ["php"],
+  aspnet: ["csharp", ".net"],
+  aspnetcore: ["csharp", ".net"],
+  entityframework: ["csharp", ".net"],
+  dotnet: ["csharp", ".net"],
+  rails: ["ruby"],
+  rubyonrails: ["ruby"],
+  androidjetpack: ["kotlin"],
+  jetpackcompose: ["kotlin"],
+  swiftui: ["swift"],
+  powerbi: [],
+  tableau: [],
+};
+
 function normalizeKey(raw: string) {
   const s0 = (raw ?? "").trim().toLowerCase();
   if (!s0) return "";
   const noAccents = s0.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const spaced = noAccents
     .replace(/[\s\u00A0]+/g, " ")
-    .replace(/["'`.,;:()\[\]{}\\/|_-]+/g, " ")
+    .replace(/["'`.,;:()[\]{}\\/|_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   return spaced;
+}
+
+function normalizeSkillName(raw: string) {
+  const protectedTerms = (raw ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/(^|\s)c\s*#(?=\s|$)/g, " csharp ")
+    .replace(/(^|\s)f\s*#(?=\s|$)/g, " fsharp ")
+    .replace(/(^|\s)c\+\+(?=\s|$)/g, " cpp ");
+
+  return normalizeKey(protectedTerms)
+    .replace(/\bc\s*sharp\b/g, "csharp")
+    .replace(/\bf\s*sharp\b/g, "fsharp")
+    .replace(/\bc\s*plus\s*plus\b/g, "cpp")
+    .replace(/\bnode\s*js\b/g, "nodejs")
+    .replace(/\breact\s*js\b/g, "react")
+    .replace(/\bvue\s*js\b/g, "vue")
+    .replace(/\bangular\s*js\b/g, "angularjs")
+    .replace(/\bjs\b/g, "javascript")
+    .replace(/\bts\b/g, "typescript")
+    .replace(/\bpy\b/g, "python")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizeSkill(raw: string) {
+  return normalizeSkillName(raw)
+    .split(" ")
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2 && !TECH_STOP_WORDS.has(t));
+}
+
+function compactTechnicalKey(raw: string) {
+  return normalizeSkillName(raw).replace(/[^a-z0-9]/g, "");
+}
+
+function semanticTargetNames(rawSkillName: string) {
+  const rawCompact = compactTechnicalKey(rawSkillName);
+  if (!rawCompact) return [];
+  const targets = new Set<string>();
+
+  for (const [concept, targetNames] of Object.entries(SEMANTIC_SKILL_RELATIONS)) {
+    if (rawCompact === concept || rawCompact.includes(concept)) {
+      targetNames.forEach((target) => targets.add(normalizeSkillName(target)));
+    }
+  }
+
+  return Array.from(targets);
+}
+
+function semanticRelationScore(rawSkillName: string, skill: SkillDto) {
+  const targets = semanticTargetNames(rawSkillName);
+  if (!targets.length) return 0;
+  if (normalizeSkillName(skill.name) === normalizeSkillName(skill.categoryName)) return 0;
+
+  const names = [skill.name, ...(skill.synonyms ?? [])].map((name) => normalizeSkillName(name));
+  return names.some((name) => targets.includes(name)) ? 0.9 : 0;
+}
+
+function acronymOf(raw: string) {
+  return tokenizeSkill(raw)
+    .map((t) => t[0])
+    .join("");
+}
+
+function levenshtein(a: string, b: string) {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const curr = Array.from({ length: b.length + 1 }, () => 0);
+  for (let i = 1; i <= a.length; i += 1) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j += 1) prev[j] = curr[j];
+  }
+  return prev[b.length];
+}
+
+function editSimilarity(a: string, b: string) {
+  const maxLen = Math.max(a.length, b.length);
+  if (maxLen === 0) return 0;
+  return 1 - levenshtein(a, b) / maxLen;
+}
+
+function tokenSimilarity(raw: string, candidate: string) {
+  const rawTokens = tokenizeSkill(raw);
+  const candidateTokens = tokenizeSkill(candidate);
+  if (!rawTokens.length || !candidateTokens.length) return 0;
+
+  const candidateSet = new Set(candidateTokens);
+  const exactOverlap = rawTokens.filter((t) => candidateSet.has(t)).length;
+  const fuzzyOverlap = rawTokens.filter((t) =>
+    candidateTokens.some((ct) => t === ct || (t.length >= 4 && ct.length >= 4 && editSimilarity(t, ct) >= 0.84))
+  ).length;
+  const containment = fuzzyOverlap / rawTokens.length;
+  const union = new Set([...rawTokens, ...candidateTokens]).size;
+  const jaccard = union ? exactOverlap / union : 0;
+  const lengthBalance = Math.min(rawTokens.length, candidateTokens.length) / Math.max(rawTokens.length, candidateTokens.length);
+
+  return Math.max(containment * 0.72 + lengthBalance * 0.18 + jaccard * 0.1, jaccard);
+}
+
+function scoreSkillCandidate(rawSkillName: string, skill: SkillDto): { score: number; reason: string } {
+  const raw = normalizeSkillName(rawSkillName);
+  const skillName = normalizeSkillName(skill.name);
+  if (!raw || !skillName) return { score: 0, reason: "" };
+
+  if (raw === skillName) {
+    return { score: 0.99, reason: "Correspondance exacte avec une compétence existante" };
+  }
+
+  for (const alias of skill.synonyms ?? []) {
+    if (raw === normalizeSkillName(alias)) {
+      return { score: 0.97, reason: `Correspondance exacte avec le synonyme « ${alias} »` };
+    }
+  }
+
+  const semanticScore = semanticRelationScore(rawSkillName, skill);
+  if (semanticScore > 0) {
+    return {
+      score: semanticScore,
+      reason: `Relation technique: « ${rawSkillName} » appartient à l'écosystème de « ${skill.name} »`,
+    };
+  }
+
+  const rawAcronym = acronymOf(rawSkillName);
+  const nameAcronym = acronymOf(skill.name);
+  if (raw.length >= 2 && raw === nameAcronym && nameAcronym.length >= 2) {
+    return { score: 0.9, reason: `Acronyme probable de « ${skill.name} »` };
+  }
+  if (rawAcronym.length >= 2 && rawAcronym === skillName) {
+    return { score: 0.88, reason: `Nom proche de l'acronyme « ${rawAcronym.toUpperCase()} »` };
+  }
+
+  const names = [skill.name, ...(skill.synonyms ?? [])];
+  const scored = names.map((name) => {
+    const normalized = normalizeSkillName(name);
+    const tokenScore = tokenSimilarity(rawSkillName, name);
+    const editScore = raw.length >= 4 && normalized.length >= 4 ? editSimilarity(raw, normalized) : 0;
+    const score = Math.max(tokenScore, editScore * 0.88);
+    return { name, score };
+  });
+  const best = scored.reduce((acc, item) => (item.score > acc.score ? item : acc), { name: "", score: 0 });
+  const rawTokenCount = tokenizeSkill(rawSkillName).length;
+  const adjustedScore = rawTokenCount <= 1 && best.score < 0.9 ? best.score * 0.82 : best.score;
+
+  return {
+    score: Number(adjustedScore.toFixed(2)),
+    reason: best.name && best.name !== skill.name
+      ? `Similarité avec le synonyme « ${best.name} »`
+      : "Similarité forte avec le nom de la compétence",
+  };
 }
 
 function findCatalogCollision(
@@ -108,7 +355,7 @@ export function PendingSkillRequests() {
   const [resolveNotes, setResolveNotes] = useState("");
   const [resolveLoading, setResolveLoading] = useState(false);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
-  const [mergeSuggestion, setMergeSuggestion] = useState<MergeSuggestion | null>(null);
+  const [aiRecommendations, setAiRecommendations] = useState<MergeSuggestion[]>([]);
   const [categories, setCategories] = useState<SkillCategoryDto[]>([]);
   const [skills, setSkills] = useState<SkillDto[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -120,6 +367,7 @@ export function PendingSkillRequests() {
       page,
       size: PAGE_SIZE,
       status: statusFilter === "ALL" ? undefined : statusFilter,
+      search: search.trim() || undefined,
     })
       .then((res) => {
         const payload = res.data;
@@ -136,7 +384,7 @@ export function PendingSkillRequests() {
         setData(null);
       })
       .finally(() => setLoading(false));
-  }, [page, statusFilter]);
+  }, [page, statusFilter, search]);
 
   useEffect(() => {
     loadPage();
@@ -144,7 +392,7 @@ export function PendingSkillRequests() {
 
   useEffect(() => {
     setPage(0);
-  }, [statusFilter]);
+  }, [statusFilter, search]);
 
   useEffect(() => {
     skillsApi.listCategories()
@@ -161,84 +409,74 @@ export function PendingSkillRequests() {
   };
 
   const requests = data?.content ?? [];
-  const mergeSkills = useMemo(() => {
-    if (!skills.length) return [];
-    if (!mergeSuggestion?.skillUuid) return [];
-    const suggested = skills.find((s) => s.uuid === mergeSuggestion.skillUuid);
-    if (!suggested) return [];
-    return [suggested];
-  }, [skills, mergeSuggestion]);
+  const mergeCandidates = useMemo<MergeCandidate[]>(() => {
+    if (!skills.length || !resolveModal) return [];
 
-  const filteredRequests = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return requests;
-    return requests.filter((r) => {
-      const hay = [
-        r.rawSkillName ?? "",
-        r.requestedByName ?? "",
-        r.requestedByEmail ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
-    });
-  }, [requests, search]);
+    const byUuid = new Map<string, MergeCandidate>();
+    for (const skill of skills) {
+      const local = scoreSkillCandidate(resolveModal.rawSkillName, skill);
+      if (local.score >= SUGGESTION_MIN_CONFIDENCE) {
+        byUuid.set(skill.uuid, {
+          skill,
+          skillUuid: skill.uuid,
+          confidence: local.score,
+          reason: local.reason,
+          source: "local",
+        });
+      }
+    }
+
+    for (const recommendation of aiRecommendations) {
+      const aiSkill = skills.find((s) => s.uuid === recommendation.skillUuid);
+      if (!aiSkill) continue;
+      const existing = byUuid.get(aiSkill.uuid);
+      byUuid.set(aiSkill.uuid, {
+        skill: aiSkill,
+        skillUuid: aiSkill.uuid,
+        confidence: Math.max(existing?.confidence ?? 0, recommendation.confidence),
+        reason: recommendation.reason || existing?.reason || "Recommandation IA depuis le référentiel",
+        source: recommendation.source,
+      });
+    }
+
+    return Array.from(byUuid.values())
+      .sort((a, b) => b.confidence - a.confidence || a.skill.name.localeCompare(b.skill.name))
+      .slice(0, 5);
+  }, [skills, resolveModal, aiRecommendations]);
+
+  const skillsByCategory = useMemo(() => {
+    const groups = new Map<string, SkillDto[]>();
+    for (const skill of [...skills].sort((a, b) => a.name.localeCompare(b.name))) {
+      const category = skill.categoryName || "Sans catégorie";
+      groups.set(category, [...(groups.get(category) ?? []), skill]);
+    }
+    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [skills]);
+
+  const filteredRequests = requests;
 
   const openResolveModal = (req: PendingSkillRequestDto) => {
     setResolveModal(req);
     setResolveAction("APPROVE");
-    setResolveCategoryId(categories[0]?.uuid ?? "");
+    setResolveCategoryId("");
     setResolveSkillId("");
     setResolveNotes("");
-    setMergeSuggestion(null);
+    setAiRecommendations([]);
   };
 
   const findLocalSuggestion = useCallback((rawSkillName: string): MergeSuggestion | null => {
-    const key = normalizeKey(rawSkillName);
-    if (!key) return null;
-
+    let best: { skill: SkillDto; score: number; reason: string } | null = null;
     for (const skill of skills) {
-      if (normalizeKey(skill.name) === key) {
-        return {
-          skillUuid: skill.uuid,
-          confidence: 0.99,
-          reason: "Correspondance exacte avec une compétence existante",
-          source: "local",
-        };
-      }
-      const alias = skill.synonyms?.find((a) => normalizeKey(a) === key);
-      if (alias) {
-        return {
-          skillUuid: skill.uuid,
-          confidence: 0.97,
-          reason: `Correspondance exacte avec le synonyme « ${alias} »`,
-          source: "local",
-        };
+      const scored = scoreSkillCandidate(rawSkillName, skill);
+      if (!best || scored.score > best.score) {
+        best = { skill, score: scored.score, reason: scored.reason };
       }
     }
-
-    const tokens = key
-      .split(" ")
-      .map((t) => t.trim())
-      .filter((t) => t.length >= 2);
-    if (!tokens.length) return null;
-    let best: { skill: SkillDto; score: number } | null = null;
-    for (const skill of skills) {
-      const pool = [skill.name, ...(skill.synonyms ?? [])]
-        .map((v) => normalizeKey(v))
-        .join(" ");
-      if (!pool) continue;
-      const overlap = tokens.filter((t) => pool.includes(t)).length;
-      const score = tokens.length === 0 ? 0 : overlap / tokens.length;
-      if (!best || score > best.score) {
-        best = { skill, score };
-      }
-    }
-    if (!best || best.score < 0.4) return null;
+    if (!best || best.score < SUGGESTION_MIN_CONFIDENCE) return null;
     return {
       skillUuid: best.skill.uuid,
-      confidence: Number(best.score.toFixed(2)),
-      reason: "Suggestion locale basée sur similarité de termes",
+      confidence: best.score,
+      reason: best.reason,
       source: "local",
     };
   }, [skills]);
@@ -246,8 +484,10 @@ export function PendingSkillRequests() {
   const loadMergeSuggestion = useCallback(async (req: PendingSkillRequestDto) => {
     const local = findLocalSuggestion(req.rawSkillName);
     if (local) {
-      setMergeSuggestion(local);
-      setResolveSkillId(local.skillUuid);
+      setAiRecommendations([local]);
+      if (local.confidence >= AUTO_SELECT_MIN_CONFIDENCE) {
+        setResolveSkillId(local.skillUuid);
+      }
       setResolveAction("MERGE");
     }
 
@@ -256,21 +496,39 @@ export function PendingSkillRequests() {
       const res = await skillsApi.suggestMergeForPendingSkillRequest(req.uuid);
       const payload = res.data;
       if (!payload?.suggestedSkillUuid) return;
+      const aiSkill = skills.find((s) => s.uuid === payload.suggestedSkillUuid);
+      if (!aiSkill) return;
+      const localScore = scoreSkillCandidate(req.rawSkillName, aiSkill);
+      const aiConfidence = Number(payload.confidence ?? 0);
+      const confidence = Number(Math.max(aiConfidence, localScore.score).toFixed(2));
+      if (confidence < SUGGESTION_MIN_CONFIDENCE) return;
       const reason = payload.reason?.trim() || "Suggestion IA basée sur similarité sémantique";
-      setMergeSuggestion({
+      const primaryRecommendation: MergeSuggestion = {
         skillUuid: payload.suggestedSkillUuid,
-        confidence: Number(payload.confidence ?? 0),
-        reason,
+        confidence,
+        reason: localScore.score >= AUTO_SELECT_MIN_CONFIDENCE ? localScore.reason : reason,
         source: "ai",
-      });
-      setResolveSkillId(payload.suggestedSkillUuid);
+      };
+      const alternativeRecommendations = (payload.alternatives ?? [])
+        .filter((alt) => alt.skillUuid && alt.skillUuid !== payload.suggestedSkillUuid)
+        .map((alt): MergeSuggestion => ({
+          skillUuid: alt.skillUuid,
+          confidence: Number(alt.confidence ?? 0),
+          reason: alt.reason?.trim() || "Alternative recommandée par l'IA",
+          source: "ai",
+        }))
+        .filter((alt) => skills.some((s) => s.uuid === alt.skillUuid));
+      setAiRecommendations([primaryRecommendation, ...alternativeRecommendations]);
+      if (confidence >= AUTO_SELECT_MIN_CONFIDENCE) {
+        setResolveSkillId(payload.suggestedSkillUuid);
+      }
       setResolveAction("MERGE");
     } catch {
       // Fallback silencieux vers la suggestion locale.
     } finally {
       setSuggestionLoading(false);
     }
-  }, [findLocalSuggestion]);
+  }, [findLocalSuggestion, skills]);
 
   useEffect(() => {
     if (!resolveModal) return;
@@ -640,9 +898,9 @@ export function PendingSkillRequests() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="inline-flex items-center gap-2 font-semibold text-violet-700">
                       <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3.5 w-3.5" />
-                      {mergeSuggestion
-                        ? `Suggestion ${mergeSuggestion.source === "ai" ? "IA" : "auto"} appliquée à la liste`
-                        : "Aucune suggestion fiable, sélection manuelle"}
+                      {mergeCandidates.length
+                        ? `${mergeCandidates.length} recommandation${mergeCandidates.length > 1 ? "s" : ""} proposée${mergeCandidates.length > 1 ? "s" : ""} depuis le référentiel`
+                        : "Aucune recommandation automatique, sélection manuelle"}
                     </p>
                     <button
                       type="button"
@@ -656,10 +914,10 @@ export function PendingSkillRequests() {
                       {suggestionLoading ? (
                         <>
                           <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-violet-600" />
-                          Suggestions...
+                          Recommandation IA...
                         </>
                       ) : (
-                        "Refaire la suggestion"
+                        "Relancer l'IA"
                       )}
                     </button>
                   </div>
@@ -688,18 +946,37 @@ export function PendingSkillRequests() {
                   <select
                     value={resolveSkillId}
                     onChange={(e) => setResolveSkillId(e.target.value)}
-                    disabled={!mergeSuggestion}
+                    disabled={skills.length === 0}
                     className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-300/25 disabled:cursor-not-allowed disabled:bg-slate-50"
                   >
                     <option value="">
-                      {mergeSuggestion ? "Sélectionner la suggestion" : "Aucune suggestion disponible"}
+                      {skills.length ? "Sélectionner une compétence du référentiel" : "Aucune compétence disponible"}
                     </option>
-                    {mergeSkills.map((skill) => (
-                      <option key={skill.uuid} value={skill.uuid}>
-                        • Suggestion - {skill.name} - {skill.categoryName}
-                      </option>
+                    {mergeCandidates.length > 0 && (
+                      <optgroup label={mergeCandidates.some((candidate) => candidate.source === "ai") ? "Recommandations IA" : "Recommandations du référentiel"}>
+                        {mergeCandidates.map((candidate) => (
+                          <option key={`suggestion-${candidate.skill.uuid}`} value={candidate.skill.uuid}>
+                            {candidate.source === "ai" ? "IA recommande" : "Recommandé"} - {candidate.skill.name} - {candidate.skill.categoryName}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {skillsByCategory.map(([category, list]) => (
+                      <optgroup key={category} label={category}>
+                        {list.map((skill) => (
+                          <option key={skill.uuid} value={skill.uuid}>
+                            {skill.name}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
+                  {resolveSkillId && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      {mergeCandidates.find((c) => c.skillUuid === resolveSkillId)?.reason
+                        ?? "Sélection manuelle depuis le référentiel compétences."}
+                    </p>
+                  )}
                 </div>
               )}
 

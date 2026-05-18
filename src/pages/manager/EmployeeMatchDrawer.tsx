@@ -54,6 +54,7 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
     setGapsLoading(true);
     setExplainLoading(Boolean(row.match_result_uuid));
     setExplain(null);
+    let cancelled = false;
 
     matchingApi
       .getEmployeeGap(projectUuid, row.employee_keycloak_id)
@@ -63,10 +64,16 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
 
     if (row.match_result_uuid) {
       matchingApi
-        .explainMatch(row.match_result_uuid)
-        .then((res) => setExplain(res.data))
-        .catch(() => setExplain(null))
-        .finally(() => setExplainLoading(false));
+        .explainMatch(row.match_result_uuid, { include_ai: true })
+        .then((res) => {
+          if (!cancelled) setExplain(res.data);
+        })
+        .catch(() => {
+          if (!cancelled) setExplain(null);
+        })
+        .finally(() => {
+          if (!cancelled) setExplainLoading(false);
+        });
     } else {
       setExplain({
         match_result_uuid: "",
@@ -76,6 +83,10 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
       });
       setExplainLoading(false);
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [open, row, projectUuid]);
 
   useEffect(() => {
@@ -209,9 +220,6 @@ export function EmployeeMatchDrawer({ open, onClose, projectUuid, projectTeamSiz
               <section className="rounded-2xl border border-violet-100 bg-white p-4">
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Synthèse</h3>
                 <ExplanationBox
-                  deterministicSummary={
-                    explain?.deterministic_summary ?? "Explication déterministe indisponible pour cette correspondance."
-                  }
                   aiExplanation={explain?.ai_explanation ?? null}
                   loading={explainLoading && Boolean(row.match_result_uuid)}
                 />

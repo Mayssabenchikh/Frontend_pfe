@@ -160,6 +160,6 @@ export const matchingApi = {
       { params },
     ),
 
-  explainMatch: (matchResultUuid: string) =>
-    matchingHttp.get<ExplainResponseDto>(`/matches/${encodeURIComponent(matchResultUuid)}/explain`),
+  explainMatch: (matchResultUuid: string, params?: { include_ai?: boolean }) =>
+    matchingHttp.get<ExplainResponseDto>(`/matches/${encodeURIComponent(matchResultUuid)}/explain`, { params }),
 };
