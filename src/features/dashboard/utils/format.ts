@@ -22,9 +22,11 @@ export function formatStatusLabel(status?: string | null) {
     DISABLED: "Désactivé",
     ARCHIVED: "Archivé",
     PENDING: "En attente",
-    ACCEPTED: "Accepté",
+    ACCEPTED: "Affecté",
+    APPROVED: "Approuvée",
     REJECTED: "Refusé",
     REFUSED: "Refusé",
+    MERGED: "Fusionnée",
     COMPLETED: "Terminé",
     CLOSED: "Terminé",
     IN_PROGRESS: "En cours",
@@ -67,6 +69,14 @@ export function formatStatusLabel(status?: string | null) {
     A_REVOIR: "À revoir",
     CORRIGE: "Corrigé",
     CORRIGÉ: "Corrigé",
+    TRAINING_RECOMMENDED: "Formation recommandée",
+    TRAINING_ENROLLED: "Inscription formation",
+    TRAINING_COMPLETED: "Formation terminée",
+    QUIZ_AVAILABLE: "Quiz disponible",
+    QUIZ_PASSED: "Quiz réussi",
+    QUIZ_FAILED: "Quiz échoué",
+    REMOVED: "Retiré",
+    EXTRACTED: "Extrait",
   };
   return labels[normalized] ?? status;
 }

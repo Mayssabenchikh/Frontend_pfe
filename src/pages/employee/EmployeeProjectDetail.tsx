@@ -278,7 +278,7 @@ export function EmployeeProjectDetail() {
                   <div className="flex min-h-[280px] flex-col items-center justify-center gap-3 p-8 text-center">
                     <UserGroupIcon className="h-12 w-12 text-violet-300" />
                     <p className="text-base font-bold text-slate-900">Aucun membre d'équipe</p>
-                    <p className="max-w-md text-sm leading-6 text-slate-500">Aucun membre accepté n'est renvoyé pour ce projet.</p>
+                    <p className="max-w-md text-sm leading-6 text-slate-500">Aucun membre affecté n'est renvoyé pour ce projet.</p>
                   </div>
                 ) : (
                   <div className="grid gap-4 p-5 md:grid-cols-2">

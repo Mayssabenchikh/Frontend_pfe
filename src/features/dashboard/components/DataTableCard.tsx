@@ -8,9 +8,9 @@ import { EyeIcon } from "../../../icons/heroicons/outline";
 const badgeClasses: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   actif: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  accepted: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  accepte: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  accepté: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  accepted: "bg-blue-50 text-blue-700 ring-blue-200",
+  accepte: "bg-blue-50 text-blue-700 ring-blue-200",
+  accepté: "bg-blue-50 text-blue-700 ring-blue-200",
   published: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   publie: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   publié: "bg-emerald-50 text-emerald-700 ring-emerald-200",
